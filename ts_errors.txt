@@ -1,0 +1,3 @@
+client/src/pages/Simulation.tsx(99,221): error TS2741: Property 'desc' is missing in type '{ id: string; label: string; correct: true; }' but required in type 'RescueOption'.
+client/src/pages/Simulation.tsx(99,279): error TS2741: Property 'desc' is missing in type '{ id: string; label: string; correct: false; }' but required in type 'RescueOption'.
+client/src/pages/Simulation.tsx(449,50): error TS2367: This comparison appears to be unintentional because the types '"playing" | "rescue"' and '"intro"' have no overlap.
