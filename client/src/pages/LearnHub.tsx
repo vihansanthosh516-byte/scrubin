@@ -252,8 +252,11 @@ export default function LearnHub() {
                           "Heart Bypass (CABG)": "cabg",
                           "Craniotomy": "craniotomy",
                           "Cholecystectomy": "cholecystectomy",
-                          "ACL Reconstruction": "acl",
-                          "C-Section": "csection",
+                          "ACL Reconstruction": "acl-reconstruction",
+                          "C-Section": "c-section",
+                          "Spinal Fusion": "spinal-fusion",
+                          "Total Knee Replacement": "total-knee-replacement",
+                          "Emergency Exploratory Laparotomy": "exploratory-laparotomy",
                         };
                         const procId = PROC_ID_MAP[rel] || "appendectomy";
                         return (

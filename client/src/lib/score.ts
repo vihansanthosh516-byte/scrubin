@@ -80,7 +80,8 @@ export function calculateProcedureOutcome(history: DecisionHistoryItem[], failed
       badge = "FAILED";
       colorClass = "bg-red-950 border-red-500 text-red-500";
       xpMultiplier = 0.2;
-      const deathCause = history[history.length - 1]?.complication || "cardiopulmonary collapse";
+      const deathCause = (history[history.length - 1]?.complication || "cardiopulmonary collapse")
+        .split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
       summary = `FAILED: Patient suffered irreversible ${deathCause} during decision ${history.length}.`;
   } else if (failedRescues === 1) {
       badge = "CRITICAL CONDITION";

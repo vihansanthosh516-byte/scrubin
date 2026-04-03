@@ -5,10 +5,13 @@ export type VitalZone = "NORMAL" | "WARNING" | "CRITICAL" | "GAME_OVER";
 export type ComplicationType = "NONE" | "HEMORRHAGE" | "ANESTHESIA_OVERDOSE" | "ANESTHESIA_UNDERDOSE" | "BOWEL_PERFORATION" | "NERVE_DAMAGE" | "PNEUMOTHORAX" | "CARDIAC_INJURY" | "WRONG_INCISION_SITE" | "MALIGNANT_HYPERTHERMIA" | "WRONG_DIAGNOSIS";
 
 export interface PatientProfile {
+  name: string;
   age: number;
   weight: string;
+  bloodType?: string;
+  admission: string;
   comorbidities: string[]; // "hypertension", "diabetes", "copd", "obese"
-  procedureCategory: "emergency" | "elective" | "elective-low";
+  procedureCategory: "emergency" | "elective" | "elective-low" | "obgyn" | "orthopedic" | "neurosurgery";
 }
 
 export interface VitalsSnapshot {
@@ -26,6 +29,7 @@ export interface VitalsState {
   spo2: { value: number; zone: VitalZone };
   rr: { value: number; zone: VitalZone };
   temp: { value: number; zone: VitalZone };
+  fetalHr?: { value: number; zone: VitalZone }; // Specifically for C-Section
   overallZone: VitalZone;
 }
 
@@ -59,8 +63,17 @@ export function calculateBaselines(patient: PatientProfile): VitalsSnapshot {
   }
   
   if (patient.procedureCategory === "emergency") {
-    hr += 12;
-    bpSys -= 5;
+    hr = 110; // Trauma baseline tachycardia
+    bpSys = 95; // Borderline hypotensive
+    bpDia = 65;
+    rr = 22;
+  }
+  
+  // Specific override for 'Gunshot' or 'Shock' admissions
+  if (patient.admission?.toLowerCase().includes("shock") || patient.admission?.toLowerCase().includes("gunshot")) {
+    hr = 130;
+    bpSys = 85; 
+    rr = 24;
   }
   if (patient.procedureCategory === "elective-low") {
     hr -= 4;
@@ -113,6 +126,7 @@ export function useVitalsEngine({ patient, isActive, complications, decisionsSin
     spo2: { value: baselines.current.spo2, zone: "NORMAL" },
     rr: { value: baselines.current.rr, zone: "NORMAL" },
     temp: { value: baselines.current.temp, zone: "NORMAL" },
+    fetalHr: patient.admission?.toLowerCase().includes("fetal") ? { value: 140, zone: "NORMAL" } : undefined,
     overallZone: "NORMAL"
   });
 
@@ -293,6 +307,10 @@ export function useVitalsEngine({ patient, isActive, complications, decisionsSin
         spo2: { value: curSpO2, zone: finalZSpO2 },
         rr: { value: curRR, zone: zRR },
         temp: { value: curTemp, zone: zTemp },
+        fetalHr: patient.admission?.toLowerCase().includes("fetal") ? { 
+          value: Math.round(140 + Math.sin(t * 0.4) * 5 + (Math.random() - 0.5)), 
+          zone: "NORMAL" 
+        } : undefined,
         overallZone
       });
 

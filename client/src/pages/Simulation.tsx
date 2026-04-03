@@ -7,19 +7,32 @@ import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
-import { Activity, Heart, Wind, Thermometer, Circle, Clock, Volume2, VolumeX, ActivitySquare } from "lucide-react";
+import { Activity, Heart, Wind, Thermometer, Circle, Clock, Volume2, VolumeX, ActivitySquare, BookOpen } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useVitalsEngine, ComplicationType, PatientProfile, VitalZone } from "../lib/vitals";
 import { audioEngine } from "../lib/audio";
 import { VitalsGraph, DecisionHistoryItem } from "../components/VitalsGraph";
 import { appendectomyData } from "../data/appendectomy";
 import { cabgData } from "../data/cabg";
 import { craniotomyData } from "../data/craniotomy";
+import { cholecystectomyData } from "../data/cholecystectomy";
+import { aclReconstructionData } from "../data/acl_reconstruction";
+import { cSectionData } from "../data/c_section";
+import { spinalFusionData } from "../data/spinal_fusion";
+import { totalKneeReplacementData } from "../data/total_knee_replacement";
+import { exploratoryLaparotomyData } from "../data/exploratory_laparotomy";
 import { calculateProcedureOutcome, ScoreData } from "../lib/score";
 
 const REGISTRY: Record<string, any> = {
   appendectomy: appendectomyData,
   cabg: cabgData,
-  craniotomy: craniotomyData
+  craniotomy: craniotomyData,
+  cholecystectomy: cholecystectomyData,
+  "acl-reconstruction": aclReconstructionData,
+  "c-section": cSectionData,
+  "spinal-fusion": spinalFusionData,
+  "total-knee-replacement": totalKneeReplacementData,
+  "exploratory-laparotomy": exploratoryLaparotomyData
 };
 
 function EcgCanvas({ hr, zone }: { hr: number, zone: VitalZone }) {
@@ -100,7 +113,6 @@ export default function Simulation() {
 
   const [isAudioMuted, setIsAudioMuted] = useState(audioEngine.getMuted());
   const [scoreData, setScoreData] = useState<ScoreData | null>(null);
-  const [attendingNotes, setAttendingNotes] = useState<string>("Analyzing procedure history...");
   
   const currentDecision = DECISIONS[Math.min(currentDecisionIdx, DECISIONS.length - 1)];
 
@@ -117,19 +129,6 @@ export default function Simulation() {
       setScoreData(data);
       setGameState(data.badge === "FAILED" ? "gameover" : "complete");
       audioEngine.stopAll();
-
-      try {
-         const procedureName = procData.PATIENT?.procedure || (procId === "cabg" ? "Heart Bypass (CABG)" : procId === "craniotomy" ? "Craniotomy" : "Appendectomy");
-         const res = await fetch("/api/evaluate", {
-             method: "POST", headers: { "Content-Type": "application/json" },
-             body: JSON.stringify({ patient: PATIENT, procedureName, outcomeBadge: data.badge, outcomeSummary: data.summary, history: hist, totalDecisions: DECISIONS.length })
-         });
-         const result = await res.json();
-         if (result.notes) setAttendingNotes(result.notes);
-         else setAttendingNotes("Attending is unavailable for debrief.");
-      } catch (e) {
-         setAttendingNotes("Network error contacting Attending. Please review vitals yourself.");
-      }
   };
 
   useEffect(() => {
@@ -285,15 +284,29 @@ export default function Simulation() {
           </div>
 
           <div className="flex flex-col gap-6">
-             {/* Attending Notes Clipboard */}
-             <div className="bg-yellow-100 dark:bg-amber-100/10 border-t-8 border-t-amber-800 dark:border-t-amber-950 border-x border-b border-border rounded-md shadow-2xl p-6 relative">
-                 <div className="absolute top-2 right-4 flex items-center gap-2 text-amber-900/40">
-                    <div className="w-12 h-1.5 bg-amber-900/20 rounded-full"></div>
-                 </div>
-                 <h3 className="font-serif text-2xl text-amber-900 dark:text-amber-200 mb-4 border-b border-amber-900/20 pb-2">Attending Notes</h3>
-                 <p className="font-serif text-amber-950 dark:text-amber-100 leading-relaxed text-lg whitespace-pre-wrap">
-                    {attendingNotes}
-                 </p>
+             {/* History Log Card */}
+             <div className="bg-card border border-border rounded-xl p-6 h-full flex flex-col">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><BookOpen /> Session History</h2>
+                <div className="flex-1 overflow-y-auto space-y-4 max-h-[400px] pr-2 custom-scrollbar">
+                   {history.map((h, i) => (
+                      <div key={i} className="border-l-2 border-primary pl-4 py-1">
+                         <div className="flex justify-between items-start mb-1">
+                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Decision {h.decisionNumber}</span>
+                            {h.isCorrect ? (
+                               <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px]">Correct</Badge>
+                            ) : (
+                               <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 text-[10px]">Incorrect</Badge>
+                            )}
+                         </div>
+                         <p className="text-sm font-medium leading-tight mb-2">{h.decisionTitle}</p>
+                         {h.complication && h.complication !== "NONE" && (
+                            <div className="text-[10px] bg-red-950/30 text-red-400 p-2 rounded border border-red-900/30">
+                               <span className="font-bold">Complication:</span> {h.complication.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')}
+                            </div>
+                         )}
+                      </div>
+                   ))}
+                </div>
              </div>
           </div>
           
@@ -327,11 +340,20 @@ export default function Simulation() {
                   vital.zone === 'WARNING' ? 'border-amber-500 bg-amber-500/20 text-amber-500' : 'border-transparent text-foreground'
                 }`}>
                    <div className="text-[10px] opacity-70 flex gap-1 items-center">
-                     {key === 'SpO2' && "%"} {key}
+                     {key === 'SpO2' && <Wind className="w-2.5 h-2.5" />} {key}
                    </div>
                    <div className="text-lg md:text-xl font-bold">{vital.value}</div>
                 </div>
              ))}
+
+             {vitals.fetalHr && (
+                <div className={`flex flex-col items-center px-3 py-1 rounded-md border border-pink-500/50 bg-pink-500/10 text-pink-500 animate-pulse transition-colors`}>
+                   <div className="text-[10px] opacity-70 flex gap-1 items-center">
+                     <Heart className="w-2.5 h-2.5" /> FETAL HR
+                   </div>
+                   <div className="text-lg md:text-xl font-bold">{vitals.fetalHr.value} <span className="text-[10px]">bpm</span></div>
+                </div>
+             )}
 
           </div>
           <div className="ml-auto flex items-center gap-3 flex-shrink-0">
