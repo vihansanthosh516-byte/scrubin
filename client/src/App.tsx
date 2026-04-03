@@ -10,6 +10,8 @@ import Simulation from "./pages/Simulation";
 import Leaderboard from "./pages/Leaderboard";
 import LearnHub from "./pages/LearnHub";
 import Profile from "./pages/Profile";
+import Signin from "./pages/Signin";
+import { AuthProvider } from "./contexts/AuthContext";
 
 function Router() {
   return (
@@ -21,6 +23,7 @@ function Router() {
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/learn" component={LearnHub} />
       <Route path="/profile" component={Profile} />
+      <Route path="/signin" component={Signin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -30,12 +33,14 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="dark" switchable>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider defaultTheme="dark" switchable>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

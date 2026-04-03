@@ -7,8 +7,17 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Moon, Sun, Menu, X, Activity } from "lucide-react";
+import { Moon, Sun, Menu, X, Activity, User, LogOut, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 const NAV_LINKS = [
   { href: "/procedures", label: "Procedures" },
   { href: "/leaderboard", label: "Leaderboard" },
@@ -24,6 +33,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { user, logout } = useAuth();
   const ecgRef = useRef<SVGPathElement>(null);
 
   useEffect(() => {
@@ -101,16 +111,48 @@ export default function Navbar() {
               )}
             </Button>
 
-            {/* CTA */}
-            <Link href="/procedures">
-              <Button
-                size="sm"
-                className="hidden md:flex bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg px-4 baby-blue-glow transition-all"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-              >
-                Enter OR
-              </Button>
-            </Link>
+            {/* CTA or Profile */}
+            {user ? (
+               <DropdownMenu>
+                 <DropdownMenuTrigger asChild>
+                   <Button variant="ghost" className="hidden md:flex items-center gap-2 px-2 h-9 border border-border/50 hover:border-primary/40 hover:bg-primary/10 transition-all rounded-lg">
+                      <img 
+                        src={user.avatar_url} 
+                        alt={user.name} 
+                        className="w-6 h-6 rounded-full border border-primary/20"
+                      />
+                      <span className="text-xs font-semibold font-mono-data pr-1">{user.name.split(' ')[0]}</span>
+                      <ChevronDown className="w-3 h-3 opacity-50" />
+                   </Button>
+                 </DropdownMenuTrigger>
+                 <DropdownMenuContent align="end" className="w-56 bg-background/95 backdrop-blur-md border-border">
+                   <DropdownMenuLabel className="font-bold flex flex-col">
+                      <span className="text-sm">{user.name}</span>
+                      <span className="text-[10px] text-muted-foreground font-mono-data font-normal">@{user.login}</span>
+                   </DropdownMenuLabel>
+                   <DropdownMenuSeparator />
+                   <Link href="/profile">
+                     <DropdownMenuItem className="cursor-pointer gap-2">
+                       <User className="w-4 h-4" /> Profile
+                     </DropdownMenuItem>
+                   </Link>
+                   <DropdownMenuSeparator />
+                   <DropdownMenuItem onClick={logout} className="cursor-pointer gap-2 text-red-500 focus:text-red-500">
+                     <LogOut className="w-4 h-4" /> Sign Out
+                   </DropdownMenuItem>
+                 </DropdownMenuContent>
+               </DropdownMenu>
+            ) : (
+              <Link href="/signin">
+                <Button
+                  size="sm"
+                  className="hidden md:flex bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg px-4 baby-blue-glow transition-all"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                >
+                  Sign In
+                </Button>
+              </Link>
+            )}
 
             {/* Mobile Menu Toggle */}
             <Button
@@ -171,11 +213,26 @@ export default function Navbar() {
                 </div>
               </Link>
             ))}
-            <Link href="/procedures">
-              <div className="mt-2 px-3 py-2 rounded-md text-sm font-semibold text-primary-foreground bg-primary text-center">
-                Enter OR
-              </div>
-            </Link>
+            {user ? (
+               <div className="pt-4 mt-4 border-t border-border space-y-1">
+                 <div className="flex items-center gap-3 px-3 py-2">
+                    <img src={user.avatar_url} className="w-8 h-8 rounded-full border border-primary/20" alt="" />
+                    <div>
+                      <div className="text-sm font-bold">{user.name}</div>
+                      <div className="text-xs text-muted-foreground">@{user.login}</div>
+                    </div>
+                 </div>
+                 <Button variant="ghost" className="w-full justify-start text-red-500" onClick={logout}>
+                   <LogOut className="w-4 h-4 mr-2" /> Sign Out
+                 </Button>
+               </div>
+            ) : (
+              <Link href="/signin">
+                <div className="mt-2 px-3 py-2 rounded-md text-sm font-semibold text-primary-foreground bg-primary text-center">
+                  Sign In
+                </div>
+              </Link>
+            )}
           </div>
         </div>
       )}

@@ -2,9 +2,13 @@
  * ScrubIn Profile/Dashboard — Clinical Precision Design
  * Rank display, stats grid, surgery history, achievements
  */
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Link } from "wouter";
 import Navbar from "@/components/Navbar";
-import { Activity, Star, Trophy, Shield, BookOpen, Zap, Target, Award, TrendingUp } from "lucide-react";
+import { Activity, Star, Trophy, Shield, BookOpen, Zap, Target, Award, TrendingUp, Github } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const STATS = [
   { label: "Total Surgeries", value: "3", icon: <Activity className="w-4 h-4" /> },
@@ -36,6 +40,80 @@ const XP = 340;
 const XP_NEXT = 500;
 
 export default function Profile() {
+  const { user, login, loading: authLoading } = useAuth();
+  const [history, setHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      const stored = localStorage.getItem(`scrubin_history_${user.id}`);
+      if (stored) {
+        try {
+          setHistory(JSON.parse(stored));
+        } catch (e) {
+          console.error("Failed to parse history", e);
+        }
+      }
+    }
+  }, [user]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#0a0f1e] flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md bg-[#161b2c] border border-white/10 rounded-2xl p-8 shadow-2xl text-center"
+          >
+            <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center mb-6 mx-auto">
+              <Activity className="w-6 h-6 text-baby-blue" />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Sign in to view Profile</h1>
+            <p className="text-gray-400 mb-8 text-sm">
+              Track your rank, XP, and detailed surgery performance across every session.
+            </p>
+            <Button 
+               onClick={login}
+               className="w-full h-12 bg-white hover:bg-gray-100 text-black font-semibold rounded-lg flex items-center justify-center gap-3 transition-all"
+            >
+              <Github className="w-5 h-5" />
+              Continue with GitHub
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate stats from dynamic history
+  const totalSurgeries = history.length;
+  const avgScore = totalSurgeries > 0 
+    ? Math.round(history.reduce((acc, h) => acc + parseInt(h.score), 0) / totalSurgeries)
+    : 0;
+  const complications = history.filter(h => h.outcome === "Complicated" || h.outcome === "Critical").length;
+  
+  const stats = [
+    { label: "Total Surgeries", value: totalSurgeries.toString(), icon: <Activity className="w-4 h-4" /> },
+    { label: "Best Score", value: totalSurgeries > 0 ? Math.max(...history.map(h => parseInt(h.score))) + "%" : "N/A", icon: <Star className="w-4 h-4" /> },
+    { label: "Avg Safety Score", value: avgScore + "%", icon: <Shield className="w-4 h-4" /> },
+    { label: "Complications", value: complications.toString(), icon: <Zap className="w-4 h-4" /> },
+    { label: "Experience Points", value: (totalSurgeries * 120).toString(), icon: <TrendingUp className="w-4 h-4" /> },
+    { label: "Certifications", value: totalSurgeries > 5 ? "1" : "0", icon: <Award className="w-4 h-4" /> },
+  ];
+
+  const currentRankIndex = Math.min(Math.floor(totalSurgeries / 2), RANKS.length - 1);
+  const currentXP = totalSurgeries * 120;
+  const nextRankXP = (currentRankIndex + 1) * 250;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -51,8 +129,8 @@ export default function Profile() {
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             {/* Avatar */}
             <div className="relative">
-              <div className="w-20 h-20 rounded-2xl bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-4xl">
-                👨‍⚕️
+              <div className="w-20 h-20 rounded-2xl border-2 border-primary/40 overflow-hidden bg-muted">
+                <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
               </div>
               <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-400 border-2 border-background flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white" />
@@ -66,26 +144,26 @@ export default function Profile() {
                   className="text-2xl font-bold text-foreground"
                   style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 >
-                  Dr. Student
+                  {user.name}
                 </h1>
                 <span className="px-2.5 py-1 rounded-full bg-primary/15 border border-primary/30 text-xs font-semibold text-primary font-mono-data">
-                  {RANKS[CURRENT_RANK]}
+                  {RANKS[currentRankIndex]}
                 </span>
               </div>
-              <p className="text-muted-foreground text-sm mb-4 font-mono-data">Joined March 2026 · 3 surgeries · 66.7% success rate</p>
+              <p className="text-muted-foreground text-sm mb-4 font-mono-data">{user.email || `@${user.login}`} · {totalSurgeries} surgeries · {avgScore}% avg score</p>
 
               {/* XP Bar */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="label-mono text-muted-foreground">
-                    {RANKS[CURRENT_RANK]} → {RANKS[CURRENT_RANK + 1]}
+                    Level Up Progress
                   </span>
-                  <span className="label-mono text-primary">{XP} / {XP_NEXT} XP</span>
+                  <span className="label-mono text-primary">{currentXP} / {nextRankXP} XP</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${(XP / XP_NEXT) * 100}%` }}
+                    animate={{ width: `${Math.min((currentXP / nextRankXP) * 100, 100)}%` }}
                     transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
                     className="h-full bg-primary rounded-full"
                   />
@@ -96,8 +174,8 @@ export default function Profile() {
             {/* Rank progression */}
             <div className="hidden lg:flex flex-col gap-1">
               {RANKS.map((rank, i) => (
-                <div key={rank} className={`flex items-center gap-2 text-xs ${i === CURRENT_RANK ? "text-primary font-semibold" : i < CURRENT_RANK ? "text-emerald-400" : "text-muted-foreground opacity-50"}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${i === CURRENT_RANK ? "bg-primary" : i < CURRENT_RANK ? "bg-emerald-400" : "bg-muted"}`} />
+                <div key={rank} className={`flex items-center gap-2 text-xs ${i === currentRankIndex ? "text-primary font-semibold" : i < currentRankIndex ? "text-emerald-400" : "text-muted-foreground opacity-50"}`}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${i === currentRankIndex ? "bg-primary" : i < currentRankIndex ? "bg-emerald-400" : "bg-muted"}`} />
                   <span className="font-mono-data">{rank}</span>
                 </div>
               ))}
@@ -107,7 +185,7 @@ export default function Profile() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-          {STATS.map((stat, i) => (
+          {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 15 }}
@@ -136,10 +214,10 @@ export default function Profile() {
             >
               Surgery History
             </h2>
-            <span className="label-mono text-muted-foreground">{HISTORY.length} procedures</span>
+            <span className="label-mono text-muted-foreground">{history.length} procedures</span>
           </div>
           <div className="divide-y divide-border/50">
-            {HISTORY.map((entry, i) => (
+            {history.length > 0 ? history.map((entry, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0 }}
@@ -155,11 +233,11 @@ export default function Profile() {
                     >
                       {entry.procedure}
                     </div>
-                    <div className="text-xs text-muted-foreground font-mono-data">{entry.patient} · {entry.date}</div>
+                    <div className="text-xs text-muted-foreground font-mono-data">{entry.date} · {entry.time} · {entry.id}</div>
                   </div>
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, j) => (
-                      <Star key={j} className={`w-3 h-3 ${j < entry.stars ? "fill-primary text-primary" : "text-muted"}`} />
+                      <Star key={j} className={`w-3 h-3 ${j < (parseInt(entry.score) / 20) ? "fill-primary text-primary" : "text-muted"}`} />
                     ))}
                   </div>
                   <span className={`px-2.5 py-1 rounded-full text-xs font-semibold font-mono-data ${
@@ -174,7 +252,14 @@ export default function Profile() {
                   <span className="text-sm font-bold text-primary font-mono-data w-12 text-right">{entry.score}</span>
                 </div>
               </motion.div>
-            ))}
+            )) : (
+              <div className="px-6 py-12 text-center">
+                 <div className="text-muted-foreground text-sm font-mono-data">No surgery records found for this account.</div>
+                 <Link href="/procedures">
+                    <Button variant="link" className="text-primary mt-2">Enter the OR to start your career</Button>
+                 </Link>
+              </div>
+            )}
           </div>
         </div>
 

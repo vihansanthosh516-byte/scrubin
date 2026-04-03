@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useVitalsEngine, ComplicationType, PatientProfile, VitalZone } from "../lib/vitals";
 import { audioEngine } from "../lib/audio";
 import { VitalsGraph, DecisionHistoryItem } from "../components/VitalsGraph";
+import { useAuth } from "../contexts/AuthContext";
 import { appendectomyData } from "../data/appendectomy";
 import { cabgData } from "../data/cabg";
 import { craniotomyData } from "../data/craniotomy";
@@ -93,6 +94,7 @@ type GameState = "intro" | "induction" | "playing" | "rescue" | "complete" | "ga
 export default function Simulation() {
   const [procId] = useState(() => new URLSearchParams(window.location.search).get("proc") || "appendectomy");
   const procData = REGISTRY[procId] || REGISTRY["appendectomy"];
+  const { user } = useAuth();
   const PATIENT = procData.PATIENT;
   const PHASES: any[] = procData.PHASES;
   const DECISIONS: import("../data/appendectomy").Decision[] = procData.DECISIONS;
@@ -129,6 +131,24 @@ export default function Simulation() {
       setScoreData(data);
       setGameState(data.badge === "FAILED" ? "gameover" : "complete");
       audioEngine.stopAll();
+
+      // Save to localStorage if logged in
+      if (user) {
+        const historyKey = `scrubin_history_${user.id}`;
+        const existing = localStorage.getItem(historyKey);
+        const historyData = existing ? JSON.parse(existing) : [];
+        
+        const newEntry = {
+          id: `#${Math.floor(Math.random() * 90000) + 10000}`,
+          procedure: procData.PATIENT.procedureCategory === "emergency" ? "Exploratory Laparotomy" : (procId.charAt(0).toUpperCase() + procId.slice(1).replace('-', ' ')),
+          outcome: data.badge === "FAILED" ? "Critical" : data.badge === "COMPLICATED" ? "Complicated" : "Successful",
+          score: Math.round((data.totalXP / 500) * 100).toString() + "%",
+          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          time: formatTime(elapsedTime)
+        };
+
+        localStorage.setItem(historyKey, JSON.stringify([newEntry, ...historyData].slice(0, 50)));
+      }
   };
 
   useEffect(() => {
@@ -448,4 +468,10 @@ export default function Simulation() {
       </div>
     </div>
   );
+}
+
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }

@@ -63,12 +63,69 @@ async function startServer() {
     }
   });
 
+  // GitHub OAuth Proxy Endpoint
+  app.post("/api/auth/github", async (req, res) => {
+    try {
+      const { code } = req.body;
+      const client_id = process.env.VITE_GITHUB_CLIENT_ID;
+      const client_secret = process.env.GITHUB_CLIENT_SECRET;
+
+      if (!client_id || !client_secret) {
+        throw new Error("GitHub credentials not configured in .env");
+      }
+
+      // 1. Exchange code for access_token
+      const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          client_id,
+          client_secret,
+          code,
+        }),
+      });
+
+      const tokenData = (await tokenResponse.json()) as any;
+      const access_token = tokenData.access_token;
+
+      if (!access_token) {
+        throw new Error("Failed to obtain access token from GitHub");
+      }
+
+      // 2. Fetch User Profile
+      const userResponse = await fetch("https://api.github.com/user", {
+        headers: {
+          Authorization: `token ${access_token}`,
+          Accept: "application/json",
+        },
+      });
+
+      const userData = (await userResponse.json()) as any;
+
+      res.json({
+        user: {
+          id: userData.id.toString(),
+          name: userData.name || userData.login,
+          login: userData.login,
+          avatar_url: userData.avatar_url,
+          email: userData.email,
+        },
+      });
+    } catch (error: any) {
+      console.error("GitHub OAuth Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Handle client-side routing - serve index.html for all routes
   app.get("*", (_req, res) => {
     res.sendFile(path.join(staticPath, "index.html"));
   });
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 5000;
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
