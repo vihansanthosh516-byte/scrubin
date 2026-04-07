@@ -394,7 +394,7 @@ export default function Simulation() {
         </div>
       )}
 
-      <div className="flex flex-1 pt-40 max-w-7xl mx-auto w-full px-4 pb-8 gap-6 relative">
+      <div className="flex flex-1 pt-44 max-w-7xl mx-auto w-full px-4 pb-8 gap-6 relative">
           
         {gameState === "induction" ? (
            <div className="flex-1 flex flex-col items-center justify-center">
