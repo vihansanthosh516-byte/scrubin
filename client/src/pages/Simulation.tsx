@@ -394,36 +394,7 @@ export default function Simulation() {
         </div>
       )}
 
-							{/* Patient Info Header */}
-							{gameState !== "intro" && gameState !== "complete" && gameState !== "gameover" && (
-								<div className="fixed top-[140px] left-0 right-0 z-20 bg-background/80 backdrop-blur-sm border-b border-border">
-									<div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-										<div className="flex items-center gap-3">
-											<div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center">
-												<span className="text-xs font-bold text-primary">{PATIENT.name.split(' ').map(n => n[0]).join('')}</span>
-											</div>
-											<div>
-												<span className="text-sm font-bold text-foreground">{PATIENT.name}</span>
-												<span className="text-muted-foreground mx-2">-</span>
-												<span className="text-sm text-muted-foreground">{PATIENT.age}y {PATIENT.sex}</span>
-											</div>
-										</div>
-										<div className="text-xs font-mono-data text-muted-foreground">
-											{procId === 'cabg' ? 'Heart Bypass (CABG)' :
-											 procId === 'craniotomy' ? 'Craniotomy' :
-											 procId === 'cholecystectomy' ? 'Cholecystectomy' :
-											 procId === 'acl-reconstruction' ? 'ACL Reconstruction' :
-											 procId === 'c-section' ? 'C-Section' :
-											 procId === 'spinal-fusion' ? 'Spinal Fusion' :
-											 procId === 'total-knee-replacement' ? 'Total Knee Replacement' :
-											 procId === 'exploratory-laparotomy' ? 'Exploratory Laparotomy' :
-											 'Appendectomy'}
-										</div>
-									</div>
-								</div>
-							)}
-
-      <div className="flex flex-1 pt-48 max-w-7xl mx-auto w-full px-4 pb-8 gap-6 relative">
+      <div className="flex flex-1 pt-40 max-w-7xl mx-auto w-full px-4 pb-8 gap-6 relative">
           
         {gameState === "induction" ? (
            <div className="flex-1 flex flex-col items-center justify-center">
