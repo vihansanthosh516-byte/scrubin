@@ -345,7 +345,7 @@ export default function Simulation() {
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-700 ${pageBgClass}`}>
       <Navbar />
-      <div className={`fixed top-20 left-0 right-0 z-30 border-b transition-colors duration-500 backdrop-blur-md 
+      <div className={`fixed top-[72px] left-0 right-0 z-30 border-b transition-colors duration-500 backdrop-blur-md 
         ${vitals.overallZone === "CRITICAL" ? "bg-red-950/80 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]" : 
           vitals.overallZone === "WARNING" ? "bg-amber-950/80 border-amber-500/50" : "bg-card/95 border-border"}`}>
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-4 overflow-x-auto">
@@ -389,12 +389,12 @@ export default function Simulation() {
       </div>
 
       {vitals.overallZone === "CRITICAL" && (
-        <div className="fixed top-28 left-0 right-0 bg-red-600 text-white text-center font-bold font-mono tracking-widest py-1 z-50 animate-pulse">
+        <div className="fixed top-[100px] left-0 right-0 bg-red-600 text-white text-center font-bold font-mono tracking-widest py-1 z-50 animate-pulse">
            CRITICAL EVENT — PATIENT DETERIORATING
         </div>
       )}
 
-      <div className="flex flex-1 pt-32 max-w-7xl mx-auto w-full px-4 pb-8 gap-6 relative">
+      <div className="flex flex-1 pt-36 max-w-7xl mx-auto w-full px-4 pb-8 gap-6 relative">
           
         {gameState === "induction" ? (
            <div className="flex-1 flex flex-col items-center justify-center">
