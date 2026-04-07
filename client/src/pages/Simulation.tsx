@@ -170,7 +170,7 @@ export default function Simulation() {
 		}
 	};
 
-	useEffectct(() => {
+	useEffect(() => {
     if (vitals.overallZone === "GAME_OVER" && gameState !== "gameover" && gameState !== "complete") {
       generateScoreAndFetchAI(history, failedRescues, true);
     } else if (vitals.overallZone === "CRITICAL" && gameState === "playing") {
