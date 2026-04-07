@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import { Activity, Star, Trophy, Shield, BookOpen, Zap, Target, Award, TrendingUp, Github } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { ScrubinCard, ScrubinStaticPanel } from "@/components/ui/scrubin-card";
 
 const STATS = [
   { label: "Total Surgeries", value: "3", icon: <Activity className="w-4 h-4" /> },
@@ -69,10 +70,10 @@ export default function Profile() {
       <div className="min-h-screen bg-[#0a0f1e] flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center p-4">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md bg-[#161b2c] border border-white/10 rounded-2xl p-8 shadow-2xl text-center"
+            className="w-full max-w-md rounded-2xl p-8 text-center bg-card/90 backdrop-blur-xl border border-border shadow-[0_0_30px_rgba(126,200,227,0.1)]"
           >
             <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center mb-6 mx-auto">
               <Activity className="w-6 h-6 text-baby-blue" />
@@ -81,12 +82,11 @@ export default function Profile() {
             <p className="text-gray-400 mb-8 text-sm">
               Track your rank, XP, and detailed surgery performance across every session.
             </p>
-            <Button 
-               onClick={login}
-               className="w-full h-12 bg-white hover:bg-gray-100 text-black font-semibold rounded-lg flex items-center justify-center gap-3 transition-all"
+            <Button
+              onClick={login}
+              className="w-full h-12 bg-white hover:bg-gray-100 text-black font-semibold rounded-lg flex items-center justify-center gap-3 transition-all"
             >
-              <Github className="w-5 h-5" />
-              Continue with GitHub
+              <Github className="w-5 h-5" /> Continue with GitHub
             </Button>
           </motion.div>
         </div>
@@ -96,11 +96,11 @@ export default function Profile() {
 
   // Calculate stats from dynamic history
   const totalSurgeries = history.length;
-  const avgScore = totalSurgeries > 0 
+  const avgScore = totalSurgeries > 0
     ? Math.round(history.reduce((acc, h) => acc + parseInt(h.score), 0) / totalSurgeries)
     : 0;
   const complications = history.filter(h => h.outcome === "Complicated" || h.outcome === "Critical").length;
-  
+
   const stats = [
     { label: "Total Surgeries", value: totalSurgeries.toString(), icon: <Activity className="w-4 h-4" /> },
     { label: "Best Score", value: totalSurgeries > 0 ? Math.max(...history.map(h => parseInt(h.score))) + "%" : "N/A", icon: <Star className="w-4 h-4" /> },
@@ -124,7 +124,7 @@ export default function Profile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="glass-card-light rounded-2xl border border-border p-8 mb-8"
+          className="rounded-2xl p-8 mb-8 bg-card/90 backdrop-blur-xl border border-border shadow-[0_0_30px_rgba(126,200,227,0.1)]"
         >
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             {/* Avatar */}
@@ -142,7 +142,7 @@ export default function Profile() {
               <div className="flex items-center gap-3 mb-1">
                 <h1
                   className="text-2xl font-bold text-foreground"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  style={{ fontFamily: "'Syne', sans-serif" }}
                 >
                   {user.name}
                 </h1>
@@ -191,12 +191,12 @@ export default function Profile() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: i * 0.07 }}
-              className="glass-card-light rounded-xl p-5 border border-border"
+              className="rounded-xl p-5 bg-card/90 backdrop-blur-xl border border-border hover:border-primary/30 hover:shadow-[0_0_20px_rgba(126,200,227,0.1)] transition-all"
             >
               <div className="flex items-center gap-2 mb-3 text-primary">{stat.icon}</div>
               <div
                 className="text-2xl font-bold text-foreground mb-1"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ fontFamily: "'Syne', sans-serif" }}
               >
                 {stat.value}
               </div>
@@ -206,11 +206,11 @@ export default function Profile() {
         </div>
 
         {/* Surgery History */}
-        <div className="glass-card-light rounded-2xl border border-border overflow-hidden mb-8">
+        <div className="rounded-2xl overflow-hidden mb-8 bg-card/90 backdrop-blur-xl border border-border">
           <div className="px-6 py-4 border-b border-border flex items-center justify-between">
             <h2
               className="font-bold text-foreground"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ fontFamily: "'Syne', sans-serif" }}
             >
               Surgery History
             </h2>
@@ -223,13 +223,13 @@ export default function Profile() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3, delay: i * 0.1 }}
-                className="px-6 py-4 hover:bg-muted/20 transition-colors"
+                className="px-6 py-4 hover:bg-muted/30 transition-colors"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1">
                     <div
                       className="font-semibold text-sm text-foreground mb-0.5"
-                      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                      style={{ fontFamily: "'Syne', sans-serif" }}
                     >
                       {entry.procedure}
                     </div>
@@ -254,10 +254,10 @@ export default function Profile() {
               </motion.div>
             )) : (
               <div className="px-6 py-12 text-center">
-                 <div className="text-muted-foreground text-sm font-mono-data">No surgery records found for this account.</div>
-                 <Link href="/procedures">
-                    <Button variant="link" className="text-primary mt-2">Enter the OR to start your career</Button>
-                 </Link>
+                <div className="text-muted-foreground text-sm font-mono-data">No surgery records found for this account.</div>
+                <Link href="/procedures">
+                  <Button variant="link" className="text-primary mt-2">Enter the OR to start your career</Button>
+                </Link>
               </div>
             )}
           </div>
@@ -267,7 +267,7 @@ export default function Profile() {
         <div>
           <h2
             className="font-bold text-foreground mb-5"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            style={{ fontFamily: "'Syne', sans-serif" }}
           >
             Achievements
           </h2>
@@ -278,16 +278,12 @@ export default function Profile() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: i * 0.07 }}
-                className={`glass-card-light rounded-xl p-4 border transition-all ${
-                  badge.unlocked
-                    ? "border-primary/30 baby-blue-glow"
-                    : "border-border opacity-50 grayscale"
-                }`}
+                className={`rounded-xl p-4 bg-card/90 backdrop-blur-xl border ${badge.unlocked ? "border-primary/30 shadow-[0_0_20px_rgba(126,200,227,0.1)]" : "border-border opacity-60"} transition-all hover:border-primary/40`}
               >
                 <div className="text-3xl mb-3">{badge.icon}</div>
                 <div
                   className="font-semibold text-sm text-foreground mb-1"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  style={{ fontFamily: "'Syne', sans-serif" }}
                 >
                   {badge.name}
                 </div>

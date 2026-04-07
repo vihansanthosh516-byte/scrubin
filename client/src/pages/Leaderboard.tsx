@@ -6,6 +6,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import { Trophy, Medal, Star, TrendingUp, Activity } from "lucide-react";
+import { ScrubinCard, ScrubinStaticPanel } from "@/components/ui/scrubin-card";
 
 const TABS = ["Global", "This Week", "By Procedure"];
 
@@ -42,7 +43,7 @@ export default function Leaderboard() {
           <span className="label-mono block mb-3">Rankings</span>
           <h1
             className="text-4xl md:text-6xl font-bold text-foreground mb-3"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            style={{ fontFamily: "'Syne', sans-serif" }}
           >
             Top Surgeons
           </h1>
@@ -78,18 +79,18 @@ export default function Leaderboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
                 className={`glass-card-light rounded-2xl p-5 border text-center ${
-                  isFirst ? "border-primary/40 baby-blue-glow" : "border-border"
+                  isFirst ? "border-primary/40 shadow-[0_0_30px_rgba(126,200,227,0.15)]" : "border-border"
                 }`}
               >
                 <div className="text-3xl mb-2">{surgeon.badge}</div>
                 <div
                   className="font-bold text-foreground text-sm mb-1"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  style={{ fontFamily: "'Syne', sans-serif" }}
                 >
                   {surgeon.name}
                 </div>
                 <div className="label-mono text-muted-foreground mb-3">{surgeon.title}</div>
-                <div className="text-2xl font-bold text-primary" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                <div className="text-2xl font-bold text-primary" style={{ fontFamily: "'Syne', sans-serif" }}>
                   {surgeon.avgScore}
                 </div>
                 <div className="label-mono text-muted-foreground">avg score</div>
@@ -99,7 +100,7 @@ export default function Leaderboard() {
         </div>
 
         {/* Table */}
-        <div className="glass-card-light rounded-2xl border border-border overflow-hidden">
+        <div className="rounded-2xl border border-border overflow-hidden bg-card/90 backdrop-blur-xl">
           <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-0 text-xs font-mono-data text-muted-foreground uppercase tracking-wider px-5 py-3 border-b border-border bg-muted/30">
             <span className="w-10">#</span>
             <span>Surgeon</span>
@@ -125,7 +126,7 @@ export default function Leaderboard() {
               <div>
                 <div
                   className={`font-semibold text-sm ${entry.isYou ? "text-primary" : "text-foreground"}`}
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  style={{ fontFamily: "'Syne', sans-serif" }}
                 >
                   {entry.name} {entry.isYou && <span className="text-xs text-primary/70 font-mono-data">(you)</span>}
                 </div>
@@ -147,9 +148,9 @@ export default function Leaderboard() {
             { icon: <Activity className="w-5 h-5" />, label: "Surgeries Done", value: "3" },
             { icon: <Star className="w-5 h-5" />, label: "Avg Score", value: "74%" },
           ].map(stat => (
-            <div key={stat.label} className="glass-card-light rounded-xl p-4 border border-border text-center">
+            <div key={stat.label} className="rounded-xl p-4 border border-border text-center bg-card/90 backdrop-blur-xl hover:border-primary/30 hover:shadow-[0_0_20px_rgba(126,200,227,0.1)] transition-all">
               <div className="text-primary mb-2 flex justify-center">{stat.icon}</div>
-              <div className="text-xl font-bold text-foreground mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              <div className="text-xl font-bold text-foreground mb-1" style={{ fontFamily: "'Syne', sans-serif" }}>
                 {stat.value}
               </div>
               <div className="label-mono text-muted-foreground">{stat.label}</div>
