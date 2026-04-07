@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import { Lock, Clock, Shuffle, Star, ArrowRight, Search } from "lucide-react";
+import { ProcedureCard } from "@/components/ui/scrubin-card";
 
 const FILTERS = ["All", "Beginner", "Intermediate", "Advanced", "Emergency", "Cardiovascular", "Neurological"];
 
@@ -174,7 +175,7 @@ export default function ProcedureLibrary() {
             <span className="label-mono block mb-3">Procedure Library</span>
             <h1
               className="text-4xl md:text-6xl font-bold text-foreground mb-3"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ fontFamily: "'Syne', sans-serif" }}
             >
               Choose Your Procedure
             </h1>
@@ -191,7 +192,7 @@ export default function ProcedureLibrary() {
                   placeholder="Search procedures..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all font-mono-data"
+                  className="w-full pl-9 pr-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all font-mono-data"
                 />
               </div>
               <div className="flex gap-2 flex-wrap">
@@ -199,9 +200,9 @@ export default function ProcedureLibrary() {
                   <button
                     key={f}
                     onClick={() => setActiveFilter(f)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all font-mono-data uppercase tracking-wide ${
+                    className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all font-mono-data uppercase tracking-wide ${
                       activeFilter === f
-                        ? "bg-primary text-primary-foreground"
+                        ? "bg-primary text-primary-foreground shadow-sm"
                         : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground border border-border"
                     }`}
                   >
@@ -218,93 +219,18 @@ export default function ProcedureLibrary() {
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((proc, i) => (
-            <motion.div
-              key={proc.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: i * 0.07 }}
-              whileHover={proc.unlocked ? { y: -5 } : {}}
-              className={`relative glass-card-light rounded-2xl border overflow-hidden transition-all duration-300 ${
-                proc.unlocked
-                  ? "border-border hover:border-primary/40 hover:baby-blue-glow cursor-pointer"
-                  : "border-border opacity-70"
-              }`}
-            >
-              {/* Illustration Area */}
-              <div className="relative h-36 overflow-hidden bg-gradient-to-br from-muted/50 to-muted/20 flex items-center justify-center">
-                <div
-                  className="absolute inset-0 opacity-20"
-                  style={{
-                    backgroundImage: `url(https://d2xsxph8kpxj0f.cloudfront.net/310519663492570043/KFxREKjUwBni37ALGkPJdZ/scrubin-procedure-cards-bg-HaZ4FXRRzrU3VFauehtyWN.webp)`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
+            <Link key={proc.id} href={proc.unlocked ? `/simulation?proc=${proc.id}` : "#"}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.07 }}
+              >
+                <ProcedureCard
+                  {...proc}
+                  onClick={proc.unlocked ? () => {} : undefined}
                 />
-                <span className="relative text-5xl">{proc.icon}</span>
-                {/* Difficulty badge */}
-                <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold border ${proc.diffBg} ${proc.diffColor} font-mono-data`}>
-                  {proc.difficulty}
-                </div>
-                {/* Lock overlay */}
-                {!proc.unlocked && (
-                  <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
-                    <Lock className="w-6 h-6 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground font-mono-data">
-                      Reach {proc.requiredRank}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Content */}
-              <div className="p-5">
-                <div className="flex items-start justify-between mb-2">
-                  <h3
-                    className="text-lg font-bold text-foreground"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                  >
-                    {proc.name}
-                  </h3>
-                </div>
-                <span className="label-mono text-muted-foreground block mb-3">{proc.tag}</span>
-                <p className="text-xs text-muted-foreground leading-relaxed mb-4">{proc.description}</p>
-
-                <div className="flex items-center gap-4 text-xs text-muted-foreground font-mono-data mb-4">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {proc.time}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Shuffle className="w-3 h-3" /> {proc.decisions} decisions
-                  </span>
-                  {proc.bestScore && (
-                    <span className="flex items-center gap-1 text-primary">
-                      <Star className="w-3 h-3 fill-primary" /> {proc.bestScore}%
-                    </span>
-                  )}
-                </div>
-
-                {proc.unlocked ? (
-                  <Link href={`/simulation?proc=${proc.id}`}>
-                    <Button
-                      size="sm"
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold"
-                      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                    >
-                      Enter OR <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-                    </Button>
-                  </Link>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled
-                    className="w-full rounded-xl opacity-50"
-                  >
-                    <Lock className="w-3.5 h-3.5 mr-1.5" /> Locked
-                  </Button>
-                )}
-              </div>
-            </motion.div>
+              </motion.div>
+            </Link>
           ))}
         </div>
 

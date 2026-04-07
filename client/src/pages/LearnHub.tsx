@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import { Clock, BookOpen, ChevronRight, ArrowRight, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { ScrubinCard, ScrubinStaticPanel } from "@/components/ui/scrubin-card";
 
 const CATEGORIES = ["All", "Anatomy", "Procedures", "Pharmacology", "Complications", "Career"];
 
@@ -119,7 +120,7 @@ export default function LearnHub() {
             <span className="label-mono block mb-3">Knowledge Base</span>
             <h1
               className="text-4xl md:text-5xl font-bold text-foreground mb-3"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ fontFamily: "'Syne', sans-serif" }}
             >
               Learn Hub
             </h1>
@@ -136,8 +137,8 @@ export default function LearnHub() {
                 onClick={() => setActiveCategory(cat)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all font-mono-data uppercase tracking-wide ${
                   activeCategory === cat
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border"
+                    ? "bg-teal-500 text-white"
+                    : "bg-muted/50 text-muted-foreground hover:bg-teal-500/10 hover:border-teal-400/30 border border-border"
                 }`}
               >
                 {cat}
@@ -160,19 +161,19 @@ export default function LearnHub() {
                   onClick={() => setSelectedArticle(article)}
                   className={`w-full text-left p-4 rounded-xl border transition-all ${
                     selectedArticle.id === article.id
-                      ? "border-primary/40 bg-primary/5 baby-blue-glow"
-                      : "border-border glass-card-light hover:border-primary/20 hover:bg-muted/30"
+                      ? "border-teal-400/40 bg-teal-400/5 shadow-[0_0_20px_rgba(93,202,165,0.15)]"
+                      : "border-border bg-card/90 hover:border-teal-400/20 hover:bg-card"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <h3
                       className="text-sm font-semibold text-foreground leading-snug"
-                      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                      style={{ fontFamily: "'Syne', sans-serif" }}
                     >
                       {article.title}
                     </h3>
                     <ChevronRight className={`w-4 h-4 flex-shrink-0 mt-0.5 transition-colors ${
-                      selectedArticle.id === article.id ? "text-primary" : "text-muted-foreground"
+                      selectedArticle.id === article.id ? "text-teal-400" : "text-muted-foreground"
                     }`} />
                   </div>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono-data">
@@ -194,7 +195,7 @@ export default function LearnHub() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="glass-card-light rounded-2xl border border-border p-8 sticky top-24"
+                className="rounded-2xl border border-teal-400/20 bg-card/90 backdrop-blur-xl p-8 sticky top-24 shadow-[0_0_30px_rgba(93,202,165,0.1)]"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-semibold font-mono-data ${
@@ -212,7 +213,7 @@ export default function LearnHub() {
 
                 <h2
                   className="text-2xl font-bold text-foreground mb-4 leading-tight"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  style={{ fontFamily: "'Syne', sans-serif" }}
                 >
                   {selectedArticle.title}
                 </h2>
