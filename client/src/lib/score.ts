@@ -48,7 +48,7 @@ export function calculateProcedureOutcome(
   failedRescues: number,
   isGameOver: boolean,
   baseXP: number,
-  hintsUsed: number,
+  isFirstCompletion: boolean,
   totalTimeSeconds: number,
   failedConsequenceEscalations = 0
 ): ScoreData {
@@ -88,7 +88,7 @@ export function calculateProcedureOutcome(
   if (hasGameOver) {
       badge = "FAILED";
       colorClass = "bg-red-950 border-red-500 text-red-500";
-      xpMultiplier = 0.2;
+      xpMultiplier = 0; // -500 fixed penalty
       const deathCause = (history[history.length - 1]?.complication || "cardiopulmonary collapse")
         .split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
       summary = `FAILED: Patient suffered irreversible ${deathCause} during decision ${history.length}.`;
@@ -127,12 +127,7 @@ export function calculateProcedureOutcome(
   }
 
   // Calculate bonuses
-  const speedBonus = totalTimeSeconds < 600 ? 50 : 0; // arbitrary threshold for now
-  const noHintsBonus = hintsUsed === 0 ? 100 : 0;
-  const noCompBonus = badge === "PERFECT" ? 150 : 0;
-  const firstCompletionBonus = 200; // Assuming first completion
-
-  const totalXP = Math.round((baseXP * xpMultiplier) + speedBonus + noHintsBonus + noCompBonus + firstCompletionBonus);
+  const firstCompletionBonus = isFirstCompletion ? 50 : 0; let totalXP = badge === "FAILED" ? -500 : Math.round((baseXP * xpMultiplier) + firstCompletionBonus);
 
   return {
       badge,

@@ -128,7 +128,7 @@ export default function Simulation() {
   });
 
   const generateScoreAndFetchAI = async (hist: DecisionHistoryItem[], failures: number, gameOverState: boolean) => {
-      const data = calculateProcedureOutcome(hist, failures, gameOverState, 500, hintsUsed, elapsedTime);
+      const data = calculateProcedureOutcome(hist, failures, gameOverState, 200, true, elapsedTime);
       setScoreData(data);
       setGameState(data.badge === "FAILED" ? "gameover" : "complete");
       audioEngine.stopAll();
@@ -143,7 +143,7 @@ export default function Simulation() {
           id: `#${Math.floor(Math.random() * 90000) + 10000}`,
           procedure: procData.PATIENT.procedureCategory === "emergency" ? "Exploratory Laparotomy" : (procId.charAt(0).toUpperCase() + procId.slice(1).replace('-', ' ')),
           outcome: data.badge === "FAILED" ? "Critical" : data.badge === "COMPLICATED" ? "Complicated" : "Successful",
-          score: Math.round((data.totalXP / 500) * 100).toString() + "%",
+          score: Math.round((data.totalXP / 200) * 100).toString() + "%",
           date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
           time: formatTime(elapsedTime)
         };
@@ -476,7 +476,7 @@ export default function Simulation() {
                         }`}
                       >
                          <div className="text-sm font-semibold mb-0.5">{option.label}</div>
-                         <div className="text-xs opacity-70">{option.desc}</div>
+                         
                       </button>
                     ))}
                   </div>
