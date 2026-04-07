@@ -3,12 +3,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* 
-  ScrubIn Design System — Clinical Precision
-  Design: Neo-Medical Minimalism + Glassmorphism
-  Fonts: Space Grotesk (display), DM Sans (body), JetBrains Mono (data)
-  Primary: Baby Blue (#7EC8E3 light / #5BA8C9 dark)
-  Style: Asymmetric layouts, frosted glass cards, animated ECG navbar
+/*
+ScrubIn Design System — Clinical Precision
+Design: Neo-Medical Minimalism + Glassmorphism
+Fonts: Syne (display), Inter (body), IBM Plex Mono (data)
+Primary: Baby Blue (#7EC8E3 light / #5BA8C9 dark)
+Style: Asymmetric layouts, frosted glass cards, animated ECG navbar
 */
 
 @theme inline {
@@ -135,10 +135,10 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Syne', sans-serif;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -184,12 +184,14 @@
 
   /* ScrubIn Custom Utilities */
   .font-display {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Syne', sans-serif;
   }
 
   .font-mono-data {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'IBM Plex Mono', monospace;
   }
+
+  /* ── GLASS CARDS ───────────────────────────────── */
 
   .glass-card {
     background: rgba(255, 255, 255, 0.08);
@@ -204,16 +206,133 @@
   }
 
   .glass-card-light {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(126, 200, 227, 0.3);
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(200, 215, 230, 0.5);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 
   .dark .glass-card-light {
-    background: rgba(20, 35, 55, 0.7);
-    border: 1px solid rgba(126, 200, 227, 0.2);
+    background: rgba(14, 28, 48, 0.75);
+    border: 1px solid rgba(126, 200, 227, 0.12);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.2);
   }
+
+  /* Premium Glass Card */
+  .glass-card-pro {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(126, 200, 227, 0.25);
+    box-shadow: 0 8px 40px rgba(126, 200, 227, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark .glass-card-pro {
+    background: rgba(10, 22, 40, 0.85);
+    border: 1px solid rgba(126, 200, 227, 0.18);
+    box-shadow: 0 8px 40px rgba(126, 200, 227, 0.12), 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Procedure Card */
+  .procedure-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(200, 215, 230, 0.6);
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .procedure-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(126, 200, 227, 0.5);
+    box-shadow: 0 24px 48px rgba(126, 200, 227, 0.15), 0 8px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  .dark .procedure-card {
+    background: rgba(14, 28, 48, 0.8);
+    border: 1px solid rgba(126, 200, 227, 0.1);
+  }
+
+  .dark .procedure-card:hover {
+    border-color: rgba(126, 200, 227, 0.3);
+    box-shadow: 0 24px 48px rgba(126, 200, 227, 0.12), 0 8px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Stats Card */
+  .stats-card {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(200, 215, 230, 0.45);
+    border-radius: 0.875rem;
+    transition: all 0.3s ease;
+  }
+
+  .stats-card:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(126, 200, 227, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(126, 200, 227, 0.1);
+  }
+
+  .dark .stats-card {
+    background: rgba(18, 38, 62, 0.7);
+    border: 1px solid rgba(126, 200, 227, 0.08);
+  }
+
+  .dark .stats-card:hover {
+    background: rgba(20, 42, 70, 0.8);
+    border-color: rgba(126, 200, 227, 0.2);
+    box-shadow: 0 12px 24px rgba(126, 200, 227, 0.08);
+  }
+
+  /* Achievement Card */
+  .achievement-card {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(200, 215, 230, 0.4);
+    border-radius: 0.875rem;
+    transition: all 0.3s ease;
+  }
+
+  .achievement-card.unlocked {
+    border-color: rgba(126, 200, 227, 0.45);
+    box-shadow: 0 6px 24px rgba(126, 200, 227, 0.12);
+  }
+
+  .achievement-card.locked {
+    opacity: 0.55;
+    filter: grayscale(0.4);
+  }
+
+  .dark .achievement-card {
+    background: rgba(18, 38, 62, 0.65);
+    border: 1px solid rgba(126, 200, 227, 0.06);
+  }
+
+  .dark .achievement-card.unlocked {
+    border-color: rgba(126, 200, 227, 0.25);
+    box-shadow: 0 6px 24px rgba(126, 200, 227, 0.1);
+  }
+
+  /* History Row Card */
+  .history-row {
+    transition: all 0.2s ease;
+  }
+
+  .history-row:hover {
+    background: rgba(126, 200, 227, 0.04);
+  }
+
+  .dark .history-row:hover {
+    background: rgba(126, 200, 227, 0.06);
+  }
+
+  /* ── UTILITY CLASSES ─────────────────────────── */
 
   .baby-blue-glow {
     box-shadow: 0 0 20px rgba(126, 200, 227, 0.25), 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -240,7 +359,7 @@
   }
 
   .label-mono {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 0.7rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
@@ -253,7 +372,8 @@
   }
 }
 
-/* ECG Animation */
+/* ── ANIMATIONS ───────────────────────────────── */
+
 @keyframes ecg-scroll {
   0% { stroke-dashoffset: 1000; }
   100% { stroke-dashoffset: 0; }
@@ -317,6 +437,34 @@
 
 .animate-pulse-ring {
   animation: pulse-ring 2s ease-in-out infinite;
+}
+
+/* Testimonial Scroll Animations */
+@keyframes scroll-up-1 {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes scroll-up-2 {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes scroll-up-3 {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+.testimonial-scroll-1 {
+  animation: scroll-up-1 15s linear infinite;
+}
+
+.testimonial-scroll-2 {
+  animation: scroll-up-2 19s linear infinite;
+}
+
+.testimonial-scroll-3 {
+  animation: scroll-up-3 17s linear infinite;
 }
 
 /* Staggered animation delays */

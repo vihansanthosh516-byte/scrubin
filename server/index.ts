@@ -120,6 +120,63 @@ async function startServer() {
     }
   });
 
+  // Google OAuth Proxy Endpoint
+  app.post("/api/auth/google", async (req, res) => {
+    try {
+      const { code } = req.body;
+      const client_id = process.env.VITE_GOOGLE_CLIENT_ID;
+      const client_secret = process.env.GOOGLE_CLIENT_SECRET;
+
+      if (!client_id || !client_secret) {
+        throw new Error("Google credentials not configured in .env");
+      }
+
+      // 1. Exchange code for access_token
+      const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          code,
+          client_id,
+          client_secret,
+          redirect_uri: `${process.env.VITE_APP_URL || "http://localhost:3000"}/signin`,
+          grant_type: "authorization_code",
+        }),
+      });
+
+      const tokenData = (await tokenResponse.json()) as any;
+      const access_token = tokenData.access_token;
+
+      if (!access_token) {
+        throw new Error("Failed to obtain access token from Google");
+      }
+
+      // 2. Fetch User Profile
+      const userResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      });
+
+      const userData = (await userResponse.json()) as any;
+
+      res.json({
+        user: {
+          id: userData.id,
+          name: userData.name,
+          login: userData.email.split("@")[0],
+          avatar_url: userData.picture,
+          email: userData.email,
+        },
+      });
+    } catch (error: any) {
+      console.error("Google OAuth Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Handle client-side routing - serve index.html for all routes
   app.get("*", (_req, res) => {
     res.sendFile(path.join(staticPath, "index.html"));

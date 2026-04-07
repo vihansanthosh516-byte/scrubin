@@ -1,33 +1,46 @@
 /**
  * ScrubIn Leaderboard — Clinical Precision Design
  * Global rankings, top 3 podium, weekly reset
+ * Now connected to Supabase for real data
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import { Trophy, Medal, Star, TrendingUp, Activity } from "lucide-react";
 import { ScrubinCard, ScrubinStaticPanel } from "@/components/ui/scrubin-card";
+import { getLeaderboard, LeaderboardEntry } from "@/lib/leaderboard";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TABS = ["Global", "This Week", "By Procedure"];
 
-const TOP_SURGEONS = [
-  { rank: 1, name: "Aisha Patel", title: "Chief of Surgery", surgeries: 142, avgScore: 97.3, successRate: "99.3%", badge: "🥇" },
-  { rank: 2, name: "Marcus Chen", title: "Attending", surgeries: 118, avgScore: 95.1, successRate: "98.1%", badge: "🥈" },
-  { rank: 3, name: "Sofia Rodriguez", title: "Fellow", surgeries: 89, avgScore: 93.8, successRate: "97.4%", badge: "🥉" },
-];
-
-const LEADERBOARD = [
-  { rank: 4, name: "James Okafor", title: "Resident", surgeries: 76, avgScore: 91.2, successRate: "96.1%", isYou: false },
-  { rank: 5, name: "Priya Nair", title: "Resident", surgeries: 71, avgScore: 90.5, successRate: "95.8%", isYou: false },
-  { rank: 6, name: "Tyler Brooks", title: "Intern", surgeries: 58, avgScore: 88.9, successRate: "94.2%", isYou: false },
-  { rank: 7, name: "Mei Lin", title: "Intern", surgeries: 54, avgScore: 87.4, successRate: "93.7%", isYou: false },
-  { rank: 8, name: "Alex Kim", title: "Medical Student", surgeries: 43, avgScore: 84.1, successRate: "91.2%", isYou: false },
-  { rank: 9, name: "Jordan Walsh", title: "Medical Student", surgeries: 38, avgScore: 82.6, successRate: "90.5%", isYou: false },
-  { rank: 247, name: "You", title: "Medical Student", surgeries: 3, avgScore: 74.0, successRate: "66.7%", isYou: true },
-];
-
 export default function Leaderboard() {
   const [activeTab, setActiveTab] = useState("Global");
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    setLoading(true);
+    const filter = activeTab.toLowerCase().replace(" ", "") as 'global' | 'week' | 'procedure';
+    getLeaderboard(filter)
+      .then(data => {
+        setLeaderboardData(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch leaderboard:", err);
+        setError("Failed to load leaderboard");
+        setLoading(false);
+      });
+  }, [activeTab]);
+
+  // Get top 3 for podium
+  const topThree = leaderboardData.slice(0, 3);
+  const restOfLeaderboard = leaderboardData.slice(3);
+
+  // Find current user's rank
+  const userEntry = user ? leaderboardData.find(e => e.id === user.id) : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,96 +80,150 @@ export default function Leaderboard() {
           ))}
         </div>
 
-        {/* Top 3 Podium */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {[TOP_SURGEONS[1], TOP_SURGEONS[0], TOP_SURGEONS[2]].map((surgeon, i) => {
-            const heights = ["h-28", "h-36", "h-24"];
-            const isFirst = surgeon.rank === 1;
-            return (
-              <motion.div
-                key={surgeon.rank}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className={`glass-card-light rounded-2xl p-5 border text-center ${
-                  isFirst ? "border-primary/40 shadow-[0_0_30px_rgba(126,200,227,0.15)]" : "border-border"
-                }`}
-              >
-                <div className="text-3xl mb-2">{surgeon.badge}</div>
-                <div
-                  className="font-bold text-foreground text-sm mb-1"
-                  style={{ fontFamily: "'Syne', sans-serif" }}
-                >
-                  {surgeon.name}
-                </div>
-                <div className="label-mono text-muted-foreground mb-3">{surgeon.title}</div>
-                <div className="text-2xl font-bold text-primary" style={{ fontFamily: "'Syne', sans-serif" }}>
-                  {surgeon.avgScore}
-                </div>
-                <div className="label-mono text-muted-foreground">avg score</div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Table */}
-        <div className="rounded-2xl border border-border overflow-hidden bg-card/90 backdrop-blur-xl">
-          <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-0 text-xs font-mono-data text-muted-foreground uppercase tracking-wider px-5 py-3 border-b border-border bg-muted/30">
-            <span className="w-10">#</span>
-            <span>Surgeon</span>
-            <span className="w-20 text-right">Surgeries</span>
-            <span className="w-20 text-right">Avg Score</span>
-            <span className="w-20 text-right">Success</span>
+        {loading ? (
+          <div className="text-center py-20 text-muted-foreground">
+            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+            Loading leaderboard...
           </div>
-          {LEADERBOARD.map((entry, i) => (
-            <motion.div
-              key={entry.rank}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: i * 0.05 }}
-              className={`grid grid-cols-[auto_1fr_auto_auto_auto] gap-0 px-5 py-4 border-b border-border/50 last:border-0 transition-colors ${
-                entry.isYou
-                  ? "bg-primary/10 border-primary/20"
-                  : "hover:bg-muted/30"
-              }`}
-            >
-              <span className={`w-10 font-bold text-sm ${entry.isYou ? "text-primary" : "text-muted-foreground"} font-mono-data`}>
-                {entry.rank}
-              </span>
-              <div>
-                <div
-                  className={`font-semibold text-sm ${entry.isYou ? "text-primary" : "text-foreground"}`}
-                  style={{ fontFamily: "'Syne', sans-serif" }}
-                >
-                  {entry.name} {entry.isYou && <span className="text-xs text-primary/70 font-mono-data">(you)</span>}
-                </div>
-                <div className="label-mono text-muted-foreground">{entry.title}</div>
+        ) : error ? (
+          <div className="text-center py-20 text-red-400">
+            {error}
+          </div>
+        ) : leaderboardData.length === 0 ? (
+          <div className="text-center py-20 text-muted-foreground">
+            <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-semibold mb-2">No surgeries recorded yet</p>
+            <p className="text-sm">Complete a simulation to appear on the leaderboard!</p>
+          </div>
+        ) : (
+          <>
+            {/* Top 3 Podium */}
+            {topThree.length >= 3 && (
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                {[topThree[1], topThree[0], topThree[2]].map((surgeon, i) => {
+                  const heights = ["h-28", "h-36", "h-24"];
+                  const isFirst = surgeon.rank === 1;
+                  const badges = ["🥈", "🥇", "🥉"];
+                  return (
+                    <motion.div
+                      key={surgeon.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: i * 0.1 }}
+                      className={`glass-card-light rounded-2xl p-5 border text-center ${
+                        isFirst ? "border-primary/40 shadow-[0_0_30px_rgba(126,200,227,0.15)]" : "border-border"
+                      }`}
+                    >
+                      <div className="text-3xl mb-2">{badges[i]}</div>
+                      <div
+                        className="font-bold text-foreground text-sm mb-1"
+                        style={{ fontFamily: "'Syne', sans-serif" }}
+                      >
+                        {surgeon.name || "Anonymous"}
+                      </div>
+                      <div className="label-mono text-muted-foreground mb-3">
+                        {surgeon.total_surgeries} surgeries
+                      </div>
+                      <div className="text-2xl font-bold text-primary" style={{ fontFamily: "'Syne', sans-serif" }}>
+                        {surgeon.avg_score}
+                      </div>
+                      <div className="label-mono text-muted-foreground">avg score</div>
+                    </motion.div>
+                  );
+                })}
               </div>
-              <span className="w-20 text-right font-mono-data text-sm text-foreground">{entry.surgeries}</span>
-              <span className={`w-20 text-right font-mono-data text-sm font-semibold ${entry.isYou ? "text-primary" : "text-foreground"}`}>
-                {entry.avgScore}%
-              </span>
-              <span className="w-20 text-right font-mono-data text-sm text-emerald-400">{entry.successRate}</span>
-            </motion.div>
-          ))}
-        </div>
+            )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mt-8">
-          {[
-            { icon: <Trophy className="w-5 h-5" />, label: "Your Rank", value: "#247" },
-            { icon: <Activity className="w-5 h-5" />, label: "Surgeries Done", value: "3" },
-            { icon: <Star className="w-5 h-5" />, label: "Avg Score", value: "74%" },
-          ].map(stat => (
-            <div key={stat.label} className="rounded-xl p-4 border border-border text-center bg-card/90 backdrop-blur-xl hover:border-primary/30 hover:shadow-[0_0_20px_rgba(126,200,227,0.1)] transition-all">
-              <div className="text-primary mb-2 flex justify-center">{stat.icon}</div>
-              <div className="text-xl font-bold text-foreground mb-1" style={{ fontFamily: "'Syne', sans-serif" }}>
-                {stat.value}
+            {/* Table */}
+            <div className="rounded-2xl border border-border overflow-hidden bg-card/90 backdrop-blur-xl">
+              <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-0 text-xs font-mono-data text-muted-foreground uppercase tracking-wider px-5 py-3 border-b border-border bg-muted/30">
+                <span className="w-10">#</span>
+                <span>Surgeon</span>
+                <span className="w-20 text-right">Surgeries</span>
+                <span className="w-20 text-right">Avg Score</span>
+                <span className="w-20 text-right">Success</span>
               </div>
-              <div className="label-mono text-muted-foreground">{stat.label}</div>
+              {(topThree.length < 3 ? leaderboardData : restOfLeaderboard).map((entry, i) => {
+                const isYou = user && entry.id === user.id;
+                const displayRank = topThree.length < 3 ? i + 1 : i + 4;
+                return (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: i * 0.05 }}
+                    className={`grid grid-cols-[auto_1fr_auto_auto_auto] gap-0 px-5 py-4 border-b border-border/50 last:border-0 transition-colors ${
+                      isYou
+                        ? "bg-primary/10 border-primary/20"
+                        : "hover:bg-muted/30"
+                    }`}
+                  >
+                    <span className={`w-10 font-bold text-sm ${isYou ? "text-primary" : "text-muted-foreground"} font-mono-data`}>
+                      {displayRank}
+                    </span>
+                    <div>
+                      <div
+                        className={`font-semibold text-sm ${isYou ? "text-primary" : "text-foreground"}`}
+                        style={{ fontFamily: "'Syne', sans-serif" }}
+                      >
+                        {entry.name || "Anonymous"} {isYou && <span className="text-xs text-primary/70 font-mono-data">(you)</span>}
+                      </div>
+                      {entry.avatar_url && (
+                        <img src={entry.avatar_url} alt="" className="w-5 h-5 rounded-full inline mr-2" />
+                      )}
+                    </div>
+                    <span className="w-20 text-right font-mono-data text-sm text-foreground">{entry.total_surgeries}</span>
+                    <span className={`w-20 text-right font-mono-data text-sm font-semibold ${isYou ? "text-primary" : "text-foreground"}`}>
+                      {entry.avg_score}%
+                    </span>
+                    <span className="w-20 text-right font-mono-data text-sm text-emerald-400">{entry.success_rate}%</span>
+                  </motion.div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4 mt-8">
+              {userEntry ? (
+                <>
+                  <ScrubinStaticPanel glowColor="blue" className="p-5 text-center">
+                    <Trophy className="w-5 h-5 mx-auto mb-2 text-primary" />
+                    <div className="label-mono text-muted-foreground mb-1">Your Rank</div>
+                    <div className="text-2xl font-bold text-foreground font-mono-data">#{leaderboardData.findIndex(e => e.id === user?.id) + 1}</div>
+                  </ScrubinStaticPanel>
+                  <ScrubinStaticPanel glowColor="blue" className="p-5 text-center">
+                    <Activity className="w-5 h-5 mx-auto mb-2 text-primary" />
+                    <div className="label-mono text-muted-foreground mb-1">Surgeries Done</div>
+                    <div className="text-2xl font-bold text-foreground font-mono-data">{userEntry.total_surgeries}</div>
+                  </ScrubinStaticPanel>
+                  <ScrubinStaticPanel glowColor="blue" className="p-5 text-center">
+                    <Star className="w-5 h-5 mx-auto mb-2 text-primary" />
+                    <div className="label-mono text-muted-foreground mb-1">Avg Score</div>
+                    <div className="text-2xl font-bold text-foreground font-mono-data">{userEntry.avg_score}%</div>
+                  </ScrubinStaticPanel>
+                </>
+              ) : (
+                <>
+                  <ScrubinStaticPanel glowColor="blue" className="p-5 text-center">
+                    <Trophy className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
+                    <div className="label-mono text-muted-foreground mb-1">Your Rank</div>
+                    <div className="text-2xl font-bold text-muted-foreground font-mono-data">--</div>
+                  </ScrubinStaticPanel>
+                  <ScrubinStaticPanel glowColor="blue" className="p-5 text-center">
+                    <Activity className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
+                    <div className="label-mono text-muted-foreground mb-1">Surgeries Done</div>
+                    <div className="text-2xl font-bold text-muted-foreground font-mono-data">0</div>
+                  </ScrubinStaticPanel>
+                  <ScrubinStaticPanel glowColor="blue" className="p-5 text-center">
+                    <Star className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
+                    <div className="label-mono text-muted-foreground mb-1">Avg Score</div>
+                    <div className="text-2xl font-bold text-muted-foreground font-mono-data">--%</div>
+                  </ScrubinStaticPanel>
+                </>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

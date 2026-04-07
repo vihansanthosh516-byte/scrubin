@@ -23,6 +23,7 @@ import { spinalFusionData } from "../data/spinal_fusion";
 import { totalKneeReplacementData } from "../data/total_knee_replacement";
 import { exploratoryLaparotomyData } from "../data/exploratory_laparotomy";
 import { calculateProcedureOutcome, ScoreData } from "../lib/score";
+import { saveSession } from "../lib/leaderboard";
 
 const REGISTRY: Record<string, any> = {
   appendectomy: appendectomyData,
@@ -148,10 +149,28 @@ export default function Simulation() {
         };
 
         localStorage.setItem(historyKey, JSON.stringify([newEntry, ...historyData].slice(0, 50)));
-      }
-  };
 
-  useEffect(() => {
+			// Save to Supabase for leaderboard
+			try {
+				await saveSession({
+					userId: user.id,
+					procedureId: procId,
+					procedureName: procData.PATIENT.procedureCategory === "emergency" ? "Exploratory Laparotomy" : (procId.charAt(0).toUpperCase() + procId.slice(1).replace('-', ' ')),
+					score: Math.round((data.totalXP / 500) * 100),
+					outcome: data.badge === "FAILED" ? "Critical" : data.badge === "COMPLICATED" ? "Complicated" : "Successful",
+					timeSeconds: elapsedTime,
+					decisionsCorrect: hist.filter(h => h.isCorrect).length,
+					decisionsTotal: hist.length,
+					complicationsCount: hist.filter(h => h.complication && h.complication !== "NONE").length
+				});
+				console.log("Session saved to Supabase!");
+			} catch (e) {
+				console.error("Failed to save session to Supabase:", e);
+			}
+		}
+	};
+
+	useEffectct(() => {
     if (vitals.overallZone === "GAME_OVER" && gameState !== "gameover" && gameState !== "complete") {
       generateScoreAndFetchAI(history, failedRescues, true);
     } else if (vitals.overallZone === "CRITICAL" && gameState === "playing") {

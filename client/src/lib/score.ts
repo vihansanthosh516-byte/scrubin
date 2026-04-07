@@ -43,7 +43,15 @@ function getVitalStateZone(val: number, vital: keyof DecisionHistoryItem["vitals
    return "NORMAL";
 }
 
-export function calculateProcedureOutcome(history: DecisionHistoryItem[], failedRescues: number, isGameOver: boolean, baseXP: number, hintsUsed: number, totalTimeSeconds: number): ScoreData {
+export function calculateProcedureOutcome(
+  history: DecisionHistoryItem[],
+  failedRescues: number,
+  isGameOver: boolean,
+  baseXP: number,
+  hintsUsed: number,
+  totalTimeSeconds: number,
+  failedConsequenceEscalations = 0
+): ScoreData {
   
   let hasWarning = false;
   let hasCritical = false;
@@ -72,6 +80,7 @@ export function calculateProcedureOutcome(history: DecisionHistoryItem[], failed
   if (failedRescues >= 2) hasGameOver = true; // Hard lock requirement
 
   let badge: OutcomeBadgeType = "PERFECT";
+  let failedRescueEscalationNote = "";
   let colorClass = "bg-emerald-500 text-white";
   let xpMultiplier = 1.0;
   let summary = "";
@@ -104,6 +113,17 @@ export function calculateProcedureOutcome(history: DecisionHistoryItem[], failed
       colorClass = "bg-emerald-500 text-white";
       xpMultiplier = 1.0;
       summary = `PERFECT: Flawless execution with zero surgical complications or vital abnormalities.`;
+  }
+
+  if (failedConsequenceEscalations > 0 && !hasGameOver) {
+    const factor = Math.pow(0.35, failedConsequenceEscalations);
+    xpMultiplier *= factor;
+    failedRescueEscalationNote = ` Failed rescue: missed critical management after ${failedConsequenceEscalations} consequence attempt(s) — severe outcome penalty applied.`;
+    if (badge === "PERFECT" || badge === "SUCCESSFUL") {
+      badge = "CRITICAL CONDITION";
+      colorClass = "bg-red-600 text-white";
+    }
+    summary += failedRescueEscalationNote;
   }
 
   // Calculate bonuses

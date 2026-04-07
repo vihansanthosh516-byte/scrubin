@@ -1,7 +1,7 @@
 /**
  * ScrubIn Home Page — Clinical Precision Design
  * Hero with OR lamp effect, ECG flatline→heartbeat, stats, procedures preview
- * Baby blue accents, Space Grotesk display, glassmorphism cards
+ * Baby blue accents, Syne display, glassmorphism cards
  */
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
@@ -15,8 +15,6 @@ import {
   Brain,
   Scissors,
   Shield,
-  Star,
-  Users,
   TrendingUp,
   BookOpen,
   Activity,
@@ -39,27 +37,6 @@ const STATS = [
   { value: 200, label: "Decision Points", suffix: "+" },
   { value: 14000, label: "Students Trained", suffix: "+" },
   { value: 0, label: "Real Patients Harmed", suffix: "" },
-];
-
-const TESTIMONIALS = [
-  {
-    name: "Maya Chen",
-    role: "Pre-Med Junior, UCLA",
-    quote: "ScrubIn made anatomy click in a way no textbook ever could. I ran the appendectomy 4 times before I got it right — and I learned something new every single time.",
-    badge: "🎓 Pre-Med Student",
-  },
-  {
-    name: "Dr. James Okafor",
-    role: "AP Biology Teacher",
-    quote: "I use ScrubIn as a capstone project for my anatomy unit. Students are more engaged than I've ever seen. The 'What Went Wrong' system is pedagogically brilliant.",
-    badge: "🏫 Educator",
-  },
-  {
-    name: "Priya Nair",
-    role: "MS-2, Johns Hopkins",
-    quote: "As a medical student, I was skeptical. But the decision trees are genuinely realistic. The Attending's Notes after each case feel like real feedback from a senior surgeon.",
-    badge: "🩺 Medical Student",
-  },
 ];
 
 // Animated counter hook
@@ -94,7 +71,7 @@ function StatCard({ value, label, suffix, index }: { value: number; label: strin
     >
       <div
         className="text-4xl md:text-5xl font-bold text-baby-blue mb-1"
-        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+        style={{ fontFamily: "'Syne', sans-serif" }}
       >
         {value === 0 ? "0" : count.toLocaleString()}{suffix}
       </div>
@@ -121,6 +98,41 @@ function EcgLine({ className = "" }: { className?: string }) {
         style={{ animation: "ecg-scroll 4s linear infinite" }}
       />
     </svg>
+  );
+}
+
+// Testimonial Card Component
+function TestimonialCard({
+  name,
+  role,
+  avatar,
+  quote,
+}: {
+  name: string;
+  role: string;
+  avatar: string;
+  quote: string;
+}) {
+  return (
+    <div className="flex-shrink-0 glass-card-light rounded-2xl p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <img
+          src={avatar}
+          alt={name}
+          className="w-10 h-10 rounded-full object-cover border border-primary/30"
+        />
+        <div>
+          <div
+            className="font-semibold text-sm text-foreground"
+            style={{ fontFamily: "'Syne', sans-serif" }}
+          >
+            {name}
+          </div>
+          <div className="text-xs text-muted-foreground">{role}</div>
+        </div>
+      </div>
+      <p className="text-sm text-muted-foreground leading-relaxed">"{quote}"</p>
+    </div>
   );
 }
 
@@ -181,7 +193,7 @@ export default function Home() {
             animate={heroLoaded ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-5xl md:text-7xl lg:text-8xl font-bold leading-none tracking-tight text-foreground mb-6"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            style={{ fontFamily: "'Syne', sans-serif" }}
           >
             Your First Surgery
             <br />
@@ -209,7 +221,7 @@ export default function Home() {
               <Button
                 size="lg"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-3 rounded-xl baby-blue-glow-strong text-base"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ fontFamily: "'Syne', sans-serif" }}
               >
                 <Activity className="w-4 h-4 mr-2" />
                 Enter the OR
@@ -220,7 +232,7 @@ export default function Home() {
                 size="lg"
                 variant="outline"
                 className="border-border hover:border-primary/50 hover:bg-primary/5 font-semibold px-8 py-3 rounded-xl text-base"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ fontFamily: "'Syne', sans-serif" }}
               >
                 <Play className="w-4 h-4 mr-2" />
                 View Procedures
@@ -258,7 +270,7 @@ export default function Home() {
             <span className="label-mono block mb-3">How It Works</span>
             <h2
               className="text-3xl md:text-5xl font-bold text-foreground"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ fontFamily: "'Syne', sans-serif" }}
             >
               Three Steps to the OR
             </h2>
@@ -298,7 +310,7 @@ export default function Home() {
                 <div className="flex items-start gap-4 mb-4">
                   <span
                     className="text-5xl font-bold text-primary/20 leading-none"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                    style={{ fontFamily: "'Syne', sans-serif" }}
                   >
                     {step.num}
                   </span>
@@ -308,7 +320,7 @@ export default function Home() {
                 </div>
                 <h3
                   className="text-xl font-semibold text-foreground mb-2"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  style={{ fontFamily: "'Syne', sans-serif" }}
                 >
                   {step.title}
                 </h3>
@@ -327,7 +339,7 @@ export default function Home() {
               <span className="label-mono block mb-4">Live Simulation</span>
               <h2
                 className="text-3xl md:text-5xl font-bold text-foreground mb-6 leading-tight"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ fontFamily: "'Syne', sans-serif" }}
               >
                 The OR Is
                 <br />
@@ -354,7 +366,7 @@ export default function Home() {
               <Link href="/procedures">
                 <Button
                   className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6 font-semibold"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  style={{ fontFamily: "'Syne', sans-serif" }}
                 >
                   Try Appendectomy Free
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -392,7 +404,7 @@ export default function Home() {
               <span className="label-mono block mb-3">Procedure Library</span>
               <h2
                 className="text-3xl md:text-5xl font-bold text-foreground"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ fontFamily: "'Syne', sans-serif" }}
               >
                 The OR Is Ready
               </h2>
@@ -425,7 +437,7 @@ export default function Home() {
                 </div>
                 <h3
                   className="text-lg font-bold text-foreground mb-1"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  style={{ fontFamily: "'Syne', sans-serif" }}
                 >
                   {proc.name}
                 </h3>
@@ -465,49 +477,170 @@ export default function Home() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="py-24 bg-background">
+      <section className="py-24 bg-background overflow-hidden">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-14">
-            <span className="label-mono block mb-3">Who It's For</span>
+          {/* Badge Pill */}
+          <div className="text-center mb-6">
+            <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-baby-blue/20 text-primary dark:bg-primary/20 dark:text-baby-blue border border-primary/20">
+              From the OR Community
+            </span>
+          </div>
+          {/* Heading */}
+          <div className="text-center mb-4">
             <h2
               className="text-3xl md:text-5xl font-bold text-foreground"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ fontFamily: "'Syne', sans-serif" }}
             >
-              Built for Future Doctors
+              Trusted by Future Doctors
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.12 }}
-                className="glass-card-light rounded-2xl p-7 border border-border hover:border-primary/30 transition-all"
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
-                    <Users className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                      {t.name}
-                    </div>
-                    <div className="text-xs text-muted-foreground">{t.role}</div>
-                  </div>
-                </div>
-                <div className="flex gap-0.5 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-3.5 h-3.5 fill-primary text-primary" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed italic">"{t.quote}"</p>
-                <div className="mt-5 pt-4 border-t border-border/50">
-                  <span className="label-mono text-muted-foreground">{t.badge}</span>
-                </div>
-              </motion.div>
-            ))}
+          {/* Subheading */}
+          <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-12">
+            Pre-med students, biology teachers, and medical students use ScrubIn to build real surgical intuition before ever stepping into a hospital.
+          </p>
+          {/* Scrolling Columns Container */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Column 1 - 15s per loop */}
+            <div className="relative h-[480px] overflow-hidden group">
+              <div className="testimonial-scroll-1 flex flex-col gap-4 group-hover:[animation-play-state:paused]">
+                <TestimonialCard
+                  name="Sarah Chen"
+                  role="Pre-Med Sophomore, UC Berkeley"
+                  avatar="https://randomuser.me/api/portraits/women/44.jpg"
+                  quote="I ran the appendectomy simulation 8 times before I finally nailed the McBurney's point incision. The attending notes actually explained WHY my original placement caused delayed wound healing."
+                />
+                <TestimonialCard
+                  name="Marcus Thompson"
+                  role="AP Biology Teacher, Lincoln High"
+                  avatar="https://randomuser.me/api/portraits/men/32.jpg"
+                  quote="My students thought they knew anatomy until they hit a simulated bleed during the cholecystectomy. The vitals engine doesn't lie — they actually paid attention to the Calot's triangle for once."
+                />
+                <TestimonialCard
+                  name="Priya Sharma"
+                  role="MS-1, University of Michigan"
+                  avatar="https://randomuser.me/api/portraits/women/68.jpg"
+                  quote="During my first real OR observation, I recognized the instrument handoff sequence from ScrubIn. It was wild — I actually knew what was happening before the surgeon asked for the Bovie."
+                />
+                <TestimonialCard
+                  name="David Kim"
+                  role="High School Junior, Pre-Med Track"
+                  avatar="https://randomuser.me/api/portraits/men/75.jpg"
+                  quote="The craniotomy procedure scared me at first, but the way ScrubIn breaks down each decision made it feel manageable. Now I understand why neurosurgeons obsess over that first burr hole placement."
+                />
+                <TestimonialCard
+                  name="Jessica Miller"
+                  role="Anatomy TA, Penn State"
+                  avatar="https://randomuser.me/api/portraits/women/22.jpg"
+                  quote="I use ScrubIn as a supplement to our cadaver lab. Students who practiced the ACL reconstruction here asked better questions during dissection — they could visualize the graft tunnel."
+                />
+                <TestimonialCard
+                  name="Ryan Patel"
+                  role="Pre-Med Junior, UCLA"
+                  avatar="https://randomuser.me/api/portraits/men/52.jpg"
+                  quote="The XP system is lowkey addictive. I kept replaying the C-section just to hit the 'Perfect Placement' bonus on the uterine incision. Learned way more than I expected."
+                />
+                <TestimonialCard
+                  name="Sarah Chen"
+                  role="Pre-Med Sophomore, UC Berkeley"
+                  avatar="https://randomuser.me/api/portraits/women/44.jpg"
+                  quote="I ran the appendectomy simulation 8 times before I finally nailed the McBurney's point incision. The attending notes actually explained WHY my original placement caused delayed wound healing."
+                />
+              </div>
+            </div>
+            {/* Column 2 - 19s per loop */}
+            <div className="relative h-[480px] overflow-hidden group hidden md:block">
+              <div className="testimonial-scroll-2 flex flex-col gap-4 group-hover:[animation-play-state:paused]">
+                <TestimonialCard
+                  name="Emily Watson"
+                  role="College Freshman, Pre-Med"
+                  avatar="https://randomuser.me/api/portraits/women/65.jpg"
+                  quote="The consequence system is brutal but fair. I nicked the cystic artery during cholecystectomy and watched the vitals tank in real-time. That visual stuck with me more than any textbook diagram."
+                />
+                <TestimonialCard
+                  name="Dr. Amanda Torres"
+                  role="AP Biology Teacher, Westfield High"
+                  avatar="https://randomuser.me/api/portraits/women/28.jpg"
+                  quote="I've tried other surgical sims, but ScrubIn's decision branching actually reflects real surgical judgment. My AP students argue about the 'right' call — exactly what I want them doing."
+                />
+                <TestimonialCard
+                  name="Kevin O'Brien"
+                  role="MS-2, Duke University"
+                  avatar="https://randomuser.me/api/portraits/men/15.jpg"
+                  quote="Before anatomy lab started, I practiced laparoscopic views on ScrubIn. When we got to the abdomen block, I could actually orient myself faster than most of my classmates."
+                />
+                <TestimonialCard
+                  name="Nina Patel"
+                  role="High School Senior, Pre-Med"
+                  avatar="https://randomuser.me/api/portraits/women/17.jpg"
+                  quote="The heart bypass procedure made me realize I want to be a cardiothoracic surgeon. The way you have to time the cross-clamp with the anesthesiologist's cues — that synergy is beautiful."
+                />
+                <TestimonialCard
+                  name="Tyler Jackson"
+                  role="Pre-Med Junior, Howard University"
+                  avatar="https://randomuser.me/api/portraits/men/86.jpg"
+                  quote="I failed the appendectomy three times in a row because I kept rushing the dissection. The attending notes called me out: 'Surgery rewards patience, not speed.' Needed to hear that."
+                />
+                <TestimonialCard
+                  name="Dr. Lisa Chang"
+                  role="Anatomy Instructor, Community College"
+                  avatar="https://randomuser.me/api/portraits/women/35.jpg"
+                  quote="For students who can't afford cadaver lab access, ScrubIn is invaluable. The procedural view lets them see relationships you just can't get from a diagram."
+                />
+                <TestimonialCard
+                  name="Emily Watson"
+                  role="College Freshman, Pre-Med"
+                  avatar="https://randomuser.me/api/portraits/women/65.jpg"
+                  quote="The consequence system is brutal but fair. I nicked the cystic artery during cholecystectomy and watched the vitals tank in real-time. That visual stuck with me more than any textbook diagram."
+                />
+              </div>
+            </div>
+            {/* Column 3 - 17s per loop */}
+            <div className="relative h-[480px] overflow-hidden group hidden lg:block">
+              <div className="testimonial-scroll-3 flex flex-col gap-4 group-hover:[animation-play-state:paused]">
+                <TestimonialCard
+                  name="Brandon Lee"
+                  role="College Sophomore, Bio Major"
+                  avatar="https://randomuser.me/api/portraits/men/45.jpg"
+                  quote="The vitals monitor during the craniotomy had me sweating. When BP spiked after I touched the posterior cerebral artery, I finally got why neuro is so high-stakes."
+                />
+                <TestimonialCard
+                  name="Madison Scott"
+                  role="Pre-Med Senior, Johns Hopkins"
+                  avatar="https://randomuser.me/api/portraits/women/55.jpg"
+                  quote="I used ScrubIn the summer before med school. By the time I started, I could explain the Rogoff's triangle approach to appendectomy — my anatomy professor was impressed."
+                />
+                <TestimonialCard
+                  name="Mr. James Wilson"
+                  role="Health Sciences Teacher, Central High"
+                  avatar="https://randomuser.me/api/portraits/men/62.jpg"
+                  quote="My intro to surgery unit used to be just videos. Now students run the simulation first, then we debrief. Their questions are way more sophisticated than before."
+                />
+                <TestimonialCard
+                  name="Aisha Johnson"
+                  role="High School Junior, Future Surgeon"
+                  avatar="https://randomuser.me/api/portraits/women/48.jpg"
+                  quote="I didn't know what a 'surgical airway' was until the cricothyrotomy scenario in ScrubIn. The decision tree showed me exactly when and why you'd make that call."
+                />
+                <TestimonialCard
+                  name="Andrew Park"
+                  role="MS-1, Stanford Medicine"
+                  avatar="https://randomuser.me/api/portraits/men/24.jpg"
+                  quote="The attending notes are surprisingly detailed — like having a real surgeon debrief you. I learned I was clamping too aggressively in the cholecystectomy and causing unnecessary ischemia."
+                />
+                <TestimonialCard
+                  name="Rachel Green"
+                  role="Pre-Med Junior, UNC Chapel Hill"
+                  avatar="https://randomuser.me/api/portraits/women/33.jpg"
+                  quote="I've tried every procedure at least twice. The ACL reconstruction hit different — seeing the graft tension affect knee stability in the outcome screen made biomechanics click."
+                />
+                <TestimonialCard
+                  name="Brandon Lee"
+                  role="College Sophomore, Bio Major"
+                  avatar="https://randomuser.me/api/portraits/men/45.jpg"
+                  quote="The vitals monitor during the craniotomy had me sweating. When BP spiked after I touched the posterior cerebral artery, I finally got why neuro is so high-stakes."
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -524,7 +657,7 @@ export default function Home() {
           <span className="label-mono block mb-4">Ready?</span>
           <h2
             className="text-4xl md:text-6xl font-bold text-foreground mb-6"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            style={{ fontFamily: "'Syne', sans-serif" }}
           >
             The Patient Is
             <br />
@@ -537,7 +670,7 @@ export default function Home() {
             <Button
               size="lg"
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-10 py-4 rounded-xl baby-blue-glow-strong text-lg"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ fontFamily: "'Syne', sans-serif" }}
             >
               <Activity className="w-5 h-5 mr-2" />
               Start Your First Surgery
@@ -555,7 +688,7 @@ export default function Home() {
               <Activity className="w-4 h-4 text-primary" />
               <span
                 className="text-lg font-bold text-foreground"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ fontFamily: "'Syne', sans-serif" }}
               >
                 Scrub<span className="text-baby-blue">In</span>
               </span>

@@ -11,7 +11,15 @@ export interface PatientProfile {
   bloodType?: string;
   admission: string;
   comorbidities: string[]; // "hypertension", "diabetes", "copd", "obese"
-  procedureCategory: "emergency" | "elective" | "elective-low" | "obgyn" | "orthopedic" | "neurosurgery";
+  procedureCategory:
+    | "emergency"
+    | "elective"
+    | "elective-low"
+    | "obgyn"
+    | "orthopedic"
+    | "neurosurgery"
+    | "cardiovascular"
+    | "neurological";
 }
 
 export interface VitalsSnapshot {
@@ -78,8 +86,31 @@ export function calculateBaselines(patient: PatientProfile): VitalsSnapshot {
   if (patient.procedureCategory === "elective-low") {
     hr -= 4;
   }
+  if (patient.procedureCategory === "cardiovascular") {
+    hr += 4;
+    bpSys += 8;
+  }
+  if (patient.procedureCategory === "neurological") {
+    hr += 6;
+    bpSys += 5;
+  }
 
   return { hr, bpSys, bpDia, spo2, rr, temp };
+}
+
+function initialVitalsState(b: VitalsSnapshot, patient: PatientProfile): VitalsState {
+  return {
+    hr: { value: b.hr, zone: "NORMAL" },
+    bp: { value: `${b.bpSys}/${b.bpDia}`, sys: b.bpSys, dia: b.bpDia, zone: "NORMAL" },
+    spo2: { value: b.spo2, zone: "NORMAL" },
+    rr: { value: b.rr, zone: "NORMAL" },
+    temp: { value: b.temp, zone: "NORMAL" },
+    fetalHr:
+      patient.admission?.toLowerCase().includes("fetal") || patient.procedureCategory === "obgyn"
+        ? { value: 140, zone: "NORMAL" }
+        : undefined,
+    overallZone: "NORMAL"
+  };
 }
 
 function getZoneHR(hr: number): VitalZone {
@@ -120,21 +151,24 @@ function getZoneTemp(temp: number): VitalZone {
 // Global persistent simulation timer
 export function useVitalsEngine({ patient, isActive, complications, decisionsSinceComplication, isInductionComplete }: VitalsEngineProps) {
   const baselines = useRef(calculateBaselines(patient));
-  const [vitals, setVitals] = useState<VitalsState>({
-    hr: { value: baselines.current.hr, zone: "NORMAL" },
-    bp: { value: `${baselines.current.bpSys}/${baselines.current.bpDia}`, sys: baselines.current.bpSys, dia: baselines.current.bpDia, zone: "NORMAL" },
-    spo2: { value: baselines.current.spo2, zone: "NORMAL" },
-    rr: { value: baselines.current.rr, zone: "NORMAL" },
-    temp: { value: baselines.current.temp, zone: "NORMAL" },
-    fetalHr: patient.admission?.toLowerCase().includes("fetal") ? { value: 140, zone: "NORMAL" } : undefined,
-    overallZone: "NORMAL"
-  });
+  const [vitals, setVitals] = useState<VitalsState>(() => initialVitalsState(baselines.current, patient));
 
   const timeRef = useRef(0);
   
   // Historical interdependency trackers
   const hrCriticalTicks = useRef(0);
   const spo2CriticalTicks = useRef(0);
+
+  const patientKey = `${patient.name}|${patient.age}|${patient.admission}|${patient.procedureCategory}|${patient.weight}|${patient.comorbidities.join(",")}`;
+
+  useEffect(() => {
+    const b = calculateBaselines(patient);
+    baselines.current = b;
+    timeRef.current = 0;
+    hrCriticalTicks.current = 0;
+    spo2CriticalTicks.current = 0;
+    setVitals(initialVitalsState(b, patient));
+  }, [patientKey]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -211,6 +245,15 @@ export function useVitalsEngine({ patient, isActive, complications, decisionsSin
           } else {
              compSys -= 40;
           }
+        }
+        else if (comp === "NERVE_DAMAGE") {
+          compHR += 18 * compensationMult;
+          compRR += 6 * compensationMult;
+          compSys += 12 * compensationMult;
+        }
+        else if (comp === "WRONG_DIAGNOSIS") {
+          compHR += 22 * compensationMult;
+          compSys += 8 * compensationMult;
         }
       }
 
@@ -307,10 +350,13 @@ export function useVitalsEngine({ patient, isActive, complications, decisionsSin
         spo2: { value: curSpO2, zone: finalZSpO2 },
         rr: { value: curRR, zone: zRR },
         temp: { value: curTemp, zone: zTemp },
-        fetalHr: patient.admission?.toLowerCase().includes("fetal") ? { 
-          value: Math.round(140 + Math.sin(t * 0.4) * 5 + (Math.random() - 0.5)), 
-          zone: "NORMAL" 
-        } : undefined,
+        fetalHr:
+          patient.admission?.toLowerCase().includes("fetal") || patient.procedureCategory === "obgyn"
+            ? {
+                value: Math.round(140 + Math.sin(t * 0.4) * 5 + (Math.random() - 0.5)),
+                zone: "NORMAL"
+              }
+            : undefined,
         overallZone
       });
 
@@ -330,7 +376,7 @@ export function useVitalsEngine({ patient, isActive, complications, decisionsSin
     }, 800);
 
     return () => clearInterval(intervalId);
-  }, [isActive, complications, decisionsSinceComplication, isInductionComplete]);
+  }, [isActive, patientKey, complications, decisionsSinceComplication, isInductionComplete]);
 
   return vitals;
 }
