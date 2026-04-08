@@ -116,6 +116,9 @@ export default function Simulation() {
 
   const [isAudioMuted, setIsAudioMuted] = useState(audioEngine.getMuted());
   const [scoreData, setScoreData] = useState<ScoreData | null>(null);
+const [showComplicationOverlay, setShowComplicationOverlay] = useState<string | null>(null);
+const [complicationExplanation, setComplicationExplanation] = useState<string>("");
+const [isFlatlining, setIsFlatlining] = useState(false);
   
   const currentDecision = DECISIONS[Math.min(currentDecisionIdx, DECISIONS.length - 1)];
 
@@ -127,7 +130,22 @@ export default function Simulation() {
     isInductionComplete: gameState !== "induction" && gameState !== "intro"
   });
 
-  const generateScoreAndFetchAI = async (hist: DecisionHistoryItem[], failures: number, gameOverState: boolean) => {
+  
+// Complication explanations for user feedback
+const COMPLICATION_EXPLANATIONS: Record<string, { title: string; explanation: string }> = {
+  HEMORRHAGE: { title: "Hemorrhage", explanation: "You've caused significant bleeding. Blood loss is occurring rapidly." },
+  ANESTHESIA_OVERDOSE: { title: "Anesthesia Overdose", explanation: "Too much anesthetic. Breathing and heart rate are slowing dangerously." },
+  ANESTHESIA_UNDERDOSE: { title: "Anesthesia Underdose", explanation: "Patient is waking up. They can feel pain and may move." },
+  BOWEL_PERFORATION: { title: "Bowel Perforation", explanation: "You've punctured the intestine. Bacteria are spilling into the abdomen." },
+  NERVE_DAMAGE: { title: "Nerve Damage", explanation: "A critical nerve has been injured causing potential permanent damage." },
+  PNEUMOTHORAX: { title: "Pneumothorax", explanation: "Air entered the chest cavity, collapsing the lung." },
+  CARDIAC_INJURY: { title: "Cardiac Injury", explanation: "You've injured the heart. Circulation is failing catastrophically." },
+  WRONG_INCISION_SITE: { title: "Wrong Incision Site", explanation: "Incision in wrong location, risking damage to unexpected structures." },
+  MALIGNANT_HYPERTHERMIA: { title: "Malignant Hyperthermia", explanation: "Muscles releasing heat uncontrollably. Temperature rising rapidly." },
+  WRONG_DIAGNOSIS: { title: "Wrong Diagnosis", explanation: "Misdiagnosed. Surgery may not address the actual problem." }
+};
+
+const generateScoreAndFetchAI = async (hist: DecisionHistoryItem[], failures: number, gameOverState: boolean) => {
       const data = calculateProcedureOutcome(hist, failures, gameOverState, 200, true, elapsedTime);
       setScoreData(data);
       setGameState(data.badge === "FAILED" ? "gameover" : "complete");
@@ -252,6 +270,19 @@ export default function Simulation() {
       setTimeout(() => advancePhase(newHist), 800);
     }
   }, [selectedOption, currentDecision, currentDecisionIdx, activeComplications, vitals, history]);
+
+const dismissComplicationOverlay = () => {
+  setShowComplicationOverlay(null);
+  setComplicationExplanation("");
+  setSelectedOption(null);
+  if (currentDecisionIdx < DECISIONS.length - 1) {
+    const nextDecision = DECISIONS[currentDecisionIdx + 1];
+    setCurrentPhase(nextDecision.phase);
+    setCurrentDecisionIdx(i => i + 1);
+  } else {
+    generateScoreAndFetchAI(history, failedRescues, false);
+  }
+};
 
   const handleRescue = (isCorrect: boolean) => {
      if (isCorrect) {
