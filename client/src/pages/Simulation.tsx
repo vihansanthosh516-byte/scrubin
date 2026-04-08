@@ -1,7 +1,7 @@
 /**
- * ScrubIn Simulation Page — Interactive Surgery Simulator
- * Fully integrated Real-time dynamic vitals engine & 42-Decision Logic.
- */
+* ScrubIn Simulation Page — Interactive Surgery Simulator
+* Fully integrated Real-time dynamic vitals engine & 42-Decision Logic.
+*/
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -91,6 +91,7 @@ function EcgCanvas({ hr, zone }: { hr: number, zone: VitalZone }) {
 }
 
 type GameState = "intro" | "induction" | "playing" | "rescue" | "complete" | "gameover";
+type RescuePhase = 'initial' | 'stabilizing' | 'recovering';
 
 export default function Simulation() {
   const [procId] = useState(() => new URLSearchParams(window.location.search).get("proc") || "appendectomy");
@@ -104,10 +105,10 @@ export default function Simulation() {
   const [currentDecisionIdx, setCurrentDecisionIdx] = useState(0);
   const [currentPhase, setCurrentPhase] = useState(1);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  
+
   const [answers, setAnswers] = useState<{ decisionId: number; correct: boolean; optionId: string }[]>([]);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [hintsUsed, setHintsUsed] = useState(0); // Add hint button later if needed
+  const [hintsUsed, setHintsUsed] = useState(0);
 
   const [activeComplications, setActiveComplications] = useState<ComplicationType[]>([]);
   const [decisionsSinceComplication, setDecisionsSinceComplication] = useState(0);
@@ -116,16 +117,22 @@ export default function Simulation() {
 
   const [isAudioMuted, setIsAudioMuted] = useState(audioEngine.getMuted());
   const [scoreData, setScoreData] = useState<ScoreData | null>(null);
-const [showComplicationOverlay, setShowComplicationOverlay] = useState<string | null>(null);
-const [complicationExplanation, setComplicationExplanation] = useState<string>("");
-const [isFlatlining, setIsFlatlining] = useState(false);
-const [rescueLoading, setRescueLoading] = useState(false);
-  
+  const [showComplicationOverlay, setShowComplicationOverlay] = useState<string | null>(null);
+  const [complicationExplanation, setComplicationExplanation] = useState<string>("");
+  const [isFlatlining, setIsFlatlining] = useState(false);
+  const [rescueLoading, setRescueLoading] = useState(false);
+
+  // Multi-step rescue system
+  const [rescueStep, setRescueStep] = useState(0);
+  const [rescueTotalSteps, setRescueTotalSteps] = useState(3);
+  const [rescuePhase, setRescuePhase] = useState<RescuePhase>('initial');
+  const [vitalsBlocked, setVitalsBlocked] = useState(false);
+
   const currentDecision = DECISIONS[Math.min(currentDecisionIdx, DECISIONS.length - 1)];
-  
+
   // Shuffle decision options so correct answer isn't always first
   const [shuffledOptions, setShuffledOptions] = useState<any[]>([]);
-  
+
   useEffect(() => {
     if (currentDecision) {
       const options = [...currentDecision.options];
@@ -146,74 +153,98 @@ const [rescueLoading, setRescueLoading] = useState(false);
     isInductionComplete: gameState !== "induction" && gameState !== "intro"
   });
 
-  
-// Complication explanations for user feedback
-const COMPLICATION_EXPLANATIONS: Record<string, { title: string; explanation: string }> = {
-  HEMORRHAGE: { title: "Hemorrhage", explanation: "You've caused significant bleeding. Blood loss is occurring rapidly." },
-  ANESTHESIA_OVERDOSE: { title: "Anesthesia Overdose", explanation: "Too much anesthetic. Breathing and heart rate are slowing dangerously." },
-  ANESTHESIA_UNDERDOSE: { title: "Anesthesia Underdose", explanation: "Patient is waking up. They can feel pain and may move." },
-  BOWEL_PERFORATION: { title: "Bowel Perforation", explanation: "You've punctured the intestine. Bacteria are spilling into the abdomen." },
-  NERVE_DAMAGE: { title: "Nerve Damage", explanation: "A critical nerve has been injured causing potential permanent damage." },
-  PNEUMOTHORAX: { title: "Pneumothorax", explanation: "Air entered the chest cavity, collapsing the lung." },
-  CARDIAC_INJURY: { title: "Cardiac Injury", explanation: "You've injured the heart. Circulation is failing catastrophically." },
-  WRONG_INCISION_SITE: { title: "Wrong Incision Site", explanation: "Incision in wrong location, risking damage to unexpected structures." },
-  MALIGNANT_HYPERTHERMIA: { title: "Malignant Hyperthermia", explanation: "Muscles releasing heat uncontrollably. Temperature rising rapidly." },
-  WRONG_DIAGNOSIS: { title: "Wrong Diagnosis", explanation: "Misdiagnosed. Surgery may not address the actual problem." }
-};
+  // Complication explanations for user feedback
+  const COMPLICATION_EXPLANATIONS: Record<string, { title: string; explanation: string }> = {
+    HEMORRHAGE: { title: "Hemorrhage", explanation: "You've caused significant bleeding. Blood loss is occurring rapidly." },
+    ANESTHESIA_OVERDOSE: { title: "Anesthesia Overdose", explanation: "Too much anesthetic. Breathing and heart rate are slowing dangerously." },
+    ANESTHESIA_UNDERDOSE: { title: "Anesthesia Underdose", explanation: "Patient is waking up. They can feel pain and may move." },
+    BOWEL_PERFORATION: { title: "Bowel Perforation", explanation: "You've punctured the intestine. Bacteria are spilling into the abdomen." },
+    NERVE_DAMAGE: { title: "Nerve Damage", explanation: "A critical nerve has been injured causing potential permanent damage." },
+    PNEUMOTHORAX: { title: "Pneumothorax", explanation: "Air entered the chest cavity, collapsing the lung." },
+    CARDIAC_INJURY: { title: "Cardiac Injury", explanation: "You've injured the heart. Circulation is failing catastrophically." },
+    WRONG_INCISION_SITE: { title: "Wrong Incision Site", explanation: "Incision in wrong location, risking damage to unexpected structures." },
+    MALIGNANT_HYPERTHERMIA: { title: "Malignant Hyperthermia", explanation: "Muscles releasing heat uncontrollably. Temperature rising rapidly." },
+    WRONG_DIAGNOSIS: { title: "Wrong Diagnosis", explanation: "Misdiagnosed. Surgery may not address the actual problem." }
+  };
 
-const generateScoreAndFetchAI = async (hist: DecisionHistoryItem[], failures: number, gameOverState: boolean) => {
-      const data = calculateProcedureOutcome(hist, failures, gameOverState, 200, true, elapsedTime);
-      setScoreData(data);
-      setGameState(data.badge === "FAILED" ? "gameover" : "complete");
-      audioEngine.stopAll();
+  // Determine rescue steps based on complication severity
+  const getRescueSeverity = (complication: ComplicationType): number => {
+    switch (complication) {
+      case 'CARDIAC_INJURY':
+      case 'PNEUMOTHORAX':
+      case 'MALIGNANT_HYPERTHERMIA':
+        return 4; // Catastrophic - most steps
+      case 'HEMORRHAGE':
+      case 'BOWEL_PERFORATION':
+        return 3; // Severe
+      case 'ANESTHESIA_OVERDOSE':
+      case 'ANESTHESIA_UNDERDOSE':
+        return 2; // Moderate
+      default:
+        return 2; // Default
+    }
+  };
 
-      // Save to localStorage if logged in
-      if (user) {
-        const historyKey = `scrubin_history_${user.id}`;
-        const existing = localStorage.getItem(historyKey);
-        const historyData = existing ? JSON.parse(existing) : [];
-        
-        const newEntry = {
-          id: `#${Math.floor(Math.random() * 90000) + 10000}`,
-          procedure: procData.PATIENT.procedureCategory === "emergency" ? "Exploratory Laparotomy" : (procId.charAt(0).toUpperCase() + procId.slice(1).replace('-', ' ')),
+  const generateScoreAndFetchAI = async (hist: DecisionHistoryItem[], failures: number, gameOverState: boolean) => {
+    const data = calculateProcedureOutcome(hist, failures, gameOverState, 200, true, elapsedTime);
+    setScoreData(data);
+    setGameState(data.badge === "FAILED" ? "gameover" : "complete");
+    audioEngine.stopAll();
+
+    if (user) {
+      const historyKey = `scrubin_history_${user.id}`;
+      const existing = localStorage.getItem(historyKey);
+      const historyData = existing ? JSON.parse(existing) : [];
+
+      const newEntry = {
+        id: `#${Math.floor(Math.random() * 90000) + 10000}`,
+        procedure: procData.PATIENT.procedureCategory === "emergency" ? "Exploratory Laparotomy" : (procId.charAt(0).toUpperCase() + procId.slice(1).replace('-', ' ')),
+        outcome: data.badge === "FAILED" ? "Critical" : data.badge === "COMPLICATED" ? "Complicated" : "Successful",
+        score: Math.round((data.totalXP / 200) * 100).toString() + "%",
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        time: formatTime(elapsedTime)
+      };
+
+      localStorage.setItem(historyKey, JSON.stringify([newEntry, ...historyData].slice(0, 50)));
+
+      try {
+        await saveSession({
+          userId: user.id,
+          procedureId: procId,
+          procedureName: procData.PATIENT.procedureCategory === "emergency" ? "Exploratory Laparotomy" : (procId.charAt(0).toUpperCase() + procId.slice(1).replace('-', ' ')),
+          score: Math.round((data.totalXP / 500) * 100),
           outcome: data.badge === "FAILED" ? "Critical" : data.badge === "COMPLICATED" ? "Complicated" : "Successful",
-          score: Math.round((data.totalXP / 200) * 100).toString() + "%",
-          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-          time: formatTime(elapsedTime)
-        };
+          timeSeconds: elapsedTime,
+          decisionsCorrect: hist.filter(h => h.isCorrect).length,
+          decisionsTotal: hist.length,
+          complicationsCount: hist.filter(h => h.complication && h.complication !== "NONE").length
+        });
+        console.log("Session saved to Supabase!");
+      } catch (e) {
+        console.error("Failed to save session to Supabase:", e);
+      }
+    }
+  };
 
-        localStorage.setItem(historyKey, JSON.stringify([newEntry, ...historyData].slice(0, 50)));
-
-			// Save to Supabase for leaderboard
-			try {
-				await saveSession({
-					userId: user.id,
-					procedureId: procId,
-					procedureName: procData.PATIENT.procedureCategory === "emergency" ? "Exploratory Laparotomy" : (procId.charAt(0).toUpperCase() + procId.slice(1).replace('-', ' ')),
-					score: Math.round((data.totalXP / 500) * 100),
-					outcome: data.badge === "FAILED" ? "Critical" : data.badge === "COMPLICATED" ? "Complicated" : "Successful",
-					timeSeconds: elapsedTime,
-					decisionsCorrect: hist.filter(h => h.isCorrect).length,
-					decisionsTotal: hist.length,
-					complicationsCount: hist.filter(h => h.complication && h.complication !== "NONE").length
-				});
-				console.log("Session saved to Supabase!");
-			} catch (e) {
-				console.error("Failed to save session to Supabase:", e);
-			}
-		}
-	};
-
-	useEffect(() => {
+  // CRITICAL ZONE HANDLER - Block decisions and trigger rescue
+  useEffect(() => {
     if (vitals.overallZone === "GAME_OVER" && gameState !== "gameover" && gameState !== "complete") {
       generateScoreAndFetchAI(history, failedRescues, true);
     } else if (vitals.overallZone === "CRITICAL" && gameState === "playing") {
+      // BLOCK further decisions until stabilized
+      setVitalsBlocked(true);
       const currC = activeComplications[activeComplications.length - 1] || "NONE";
       if (currC !== "NONE" && currentDecision.options.some(o => o.complicationType === currC && o.rescueOptions)) {
-         setGameState("rescue");
+        const severity = getRescueSeverity(currC as ComplicationType);
+        setRescueTotalSteps(severity);
+        setRescueStep(1);
+        setRescuePhase('initial');
+        setGameState("rescue");
       }
+    } else if (vitals.overallZone === "NORMAL") {
+      setVitalsBlocked(false);
     }
-  }, [vitals.overallZone, gameState, activeComplications, currentDecision]);
+  }, [vitals.overallZone, gameState, activeComplications, currentDecision, vitalsBlocked]);
 
   useEffect(() => {
     if (vitals.overallZone === "CRITICAL") audioEngine.startCriticalAlarm();
@@ -258,17 +289,25 @@ const generateScoreAndFetchAI = async (hist: DecisionHistoryItem[], failures: nu
     }
   };
 
+  // GATEKEEPER: Block decisions when vitals are CRITICAL
   const handleChoice = useCallback((optionId: string) => {
     if (selectedOption) return;
+
+    // BLOCK if vitals are CRITICAL or GAME_OVER - must stabilize first
+    if (vitals.overallZone === "CRITICAL" || vitals.overallZone === "GAME_OVER" || vitalsBlocked) {
+      setVitalsBlocked(true);
+      return;
+    }
+
     setSelectedOption(optionId);
-    
+
     const option = shuffledOptions.find(o => o.id === optionId) || currentDecision.options.find(o => o.id === optionId);
     if (!option) return;
 
     const isCorrect = option.correct;
     setAnswers(prev => [...prev, { decisionId: currentDecision.id, correct: isCorrect, optionId }]);
     if (activeComplications.length > 0) setDecisionsSinceComplication(d => d + 1);
-    
+
     const newHist = snapHistory(isCorrect, option.complicationType);
 
     if (isCorrect) {
@@ -280,7 +319,6 @@ const generateScoreAndFetchAI = async (hist: DecisionHistoryItem[], failures: nu
           title: option.complicationType,
           explanation: "A complication has occurred. Monitor the patient's vitals carefully."
         };
-        // SHOW THE OVERLAY - KEY FIX
         setShowComplicationOverlay(option.complicationType);
         setComplicationExplanation(compInfo.explanation);
         setActiveComplications(prev => {
@@ -291,33 +329,53 @@ const generateScoreAndFetchAI = async (hist: DecisionHistoryItem[], failures: nu
           return prev;
         });
         setDecisionsSinceComplication(0);
-        // DON'T auto-advance - user must dismiss overlay
       } else {
         setTimeout(() => advancePhase(newHist), 800);
       }
     }
-  }, [selectedOption, currentDecision, currentDecisionIdx, activeComplications, vitals, history]);
+  }, [selectedOption, currentDecision, currentDecisionIdx, activeComplications, vitals, history, vitalsBlocked]);
 
-const dismissComplicationOverlay = () => {
-  setShowComplicationOverlay(null);
-  setComplicationExplanation("");
-  setSelectedOption(null);
-  if (currentDecisionIdx < DECISIONS.length - 1) {
-    const nextDecision = DECISIONS[currentDecisionIdx + 1];
-    setCurrentPhase(nextDecision.phase);
-    setCurrentDecisionIdx(i => i + 1);
-  } else {
-    generateScoreAndFetchAI(history, failedRescues, false);
-  }
-};
+  const dismissComplicationOverlay = () => {
+    setShowComplicationOverlay(null);
+    setComplicationExplanation("");
+    setSelectedOption(null);
+    if (currentDecisionIdx < DECISIONS.length - 1) {
+      const nextDecision = DECISIONS[currentDecisionIdx + 1];
+      setCurrentPhase(nextDecision.phase);
+      setCurrentDecisionIdx(i => i + 1);
+    } else {
+      generateScoreAndFetchAI(history, failedRescues, false);
+    }
+  };
 
+  // MULTI-STEP RESCUE HANDLER
   const handleRescue = (isCorrect: boolean) => {
     setRescueLoading(true);
     setTimeout(() => {
       if (isCorrect) {
-        setGameState("playing");
-        setFailedRescues(0);
+        // Progress to next rescue step
+        if (rescueStep < rescueTotalSteps) {
+          setRescueStep(prev => prev + 1);
+          setRescuePhase(prev => {
+            if (rescueStep === 1) return 'stabilizing';
+            if (rescueStep === rescueTotalSteps - 1) return 'recovering';
+            return prev;
+          });
+          // Clear some complications to show improvement on later steps
+          if (rescueStep >= rescueTotalSteps - 1) {
+            setActiveComplications(prev => prev.slice(0, -1));
+            setDecisionsSinceComplication(3); // Boost recovery
+          }
+        } else {
+          // All rescue steps complete - return to surgery
+          setGameState("playing");
+          setFailedRescues(0);
+          setVitalsBlocked(false);
+          setActiveComplications([]);
+          setRescueStep(0);
+        }
       } else {
+        // Wrong rescue choice
         const fails = failedRescues + 1;
         setFailedRescues(fails);
         if (fails >= 2) {
@@ -333,8 +391,8 @@ const dismissComplicationOverlay = () => {
 
   let pageBgClass = "bg-background";
   if (gameState !== "intro" && gameState !== "complete" && gameState !== "gameover") {
-     if (vitals.overallZone === "CRITICAL") pageBgClass = "bg-red-950/20";
-     else if (vitals.overallZone === "WARNING") pageBgClass = "bg-amber-950/10";
+    if (vitals.overallZone === "CRITICAL") pageBgClass = "bg-red-950/20";
+    else if (vitals.overallZone === "WARNING") pageBgClass = "bg-amber-950/10";
   }
 
   if (gameState === "intro") {
@@ -342,13 +400,13 @@ const dismissComplicationOverlay = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="pt-24 pb-16 max-w-2xl mx-auto px-4 text-center">
-            <h1 className="text-4xl font-bold mb-4 font-mono-data">Patient: {PATIENT.name}</h1>
-            <p className="text-muted-foreground mb-8 text-lg">{procId === 'cabg' ? 'Heart Bypass' : procId === 'craniotomy' ? 'Craniotomy' : 'Appendectomy'} - Case Simulation ({DECISIONS.length} Decisions)</p>
-            <Button size="lg" onClick={() => setGameState("induction")} className="w-full">Begin Anesthesia Induction</Button>
-            <Button variant="ghost" onClick={() => setIsAudioMuted(audioEngine.toggleMute())} className="mt-8">
-              {isAudioMuted ? <VolumeX className="w-4 h-4 mr-2" /> : <Volume2 className="w-4 h-4 mr-2" />}
-              {isAudioMuted ? "Sound is Muted" : "Sound is Enabled"}
-            </Button>
+          <h1 className="text-4xl font-bold mb-4 font-mono-data">Patient: {PATIENT.name}</h1>
+          <p className="text-muted-foreground mb-8 text-lg">{procId === 'cabg' ? 'Heart Bypass' : procId === 'craniotomy' ? 'Craniotomy' : 'Appendectomy'} - Case Simulation ({DECISIONS.length} Decisions)</p>
+          <Button size="lg" onClick={() => setGameState("induction")} className="w-full">Begin Anesthesia Induction</Button>
+          <Button variant="ghost" onClick={() => setIsAudioMuted(audioEngine.toggleMute())} className="mt-8">
+            {isAudioMuted ? <VolumeX className="w-4 h-4 mr-2" /> : <Volume2 className="w-4 h-4 mr-2" />}
+            {isAudioMuted ? "Sound is Muted" : "Sound is Enabled"}
+          </Button>
         </div>
       </div>
     );
@@ -359,60 +417,57 @@ const dismissComplicationOverlay = () => {
       <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
         <Navbar />
         <div className="pt-24 pb-16 max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8">
-          
+
           <div className="flex flex-col gap-6">
-             {/* Outcome Badge Card */}
-             <div className={`rounded-xl p-8 border text-center shadow-xl ${scoreData?.colorClass}`}>
-                <h1 className="text-4xl font-black tracking-widest mb-2 font-mono-data opacity-90">{scoreData?.badge}</h1>
-                <p className="text-lg opacity-90 font-medium">{scoreData?.summary}</p>
-             </div>
+            <div className={`rounded-xl p-8 border text-center shadow-xl ${scoreData?.colorClass}`}>
+              <h1 className="text-4xl font-black tracking-widest mb-2 font-mono-data opacity-90">{scoreData?.badge}</h1>
+              <p className="text-lg opacity-90 font-medium">{scoreData?.summary}</p>
+            </div>
 
-             {/* XP Breakdown Card */}
-             <div className="bg-card border border-border rounded-xl p-6">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><ActivitySquare /> Simulation Grading</h2>
-                <div className="space-y-3 font-mono-data text-sm">
-                   <div className="flex justify-between text-muted-foreground"><span>Base Difficulty XP</span> <span>{scoreData?.baseXP}</span></div>
-                   <div className="flex justify-between text-muted-foreground"><span>Outcome Multiplier</span> <span>x{scoreData?.xpMultiplier}</span></div>
-                   <div className="flex justify-between text-muted-foreground"><span>Speed Bonus (&lt; 10m)</span> <span>+{scoreData?.bonuses.speed}</span></div>
-                   <div className="flex justify-between text-muted-foreground"><span>No Complications Bonus</span> <span>+{scoreData?.bonuses.noComplications}</span></div>
-                   <div className="flex justify-between font-bold text-lg pt-4 border-t"><span>Total XP Earned</span> <span>{scoreData?.totalXP}</span></div>
-                </div>
-             </div>
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><ActivitySquare /> Simulation Grading</h2>
+              <div className="space-y-3 font-mono-data text-sm">
+                <div className="flex justify-between text-muted-foreground"><span>Base Difficulty XP</span> <span>{scoreData?.baseXP}</span></div>
+                <div className="flex justify-between text-muted-foreground"><span>Outcome Multiplier</span> <span>x{scoreData?.xpMultiplier}</span></div>
+                <div className="flex justify-between text-muted-foreground"><span>Speed Bonus</span> <span>+{scoreData?.bonuses.speed}</span></div>
+                <div className="flex justify-between text-muted-foreground"><span>No Complications Bonus</span> <span>+{scoreData?.bonuses.noComplications}</span></div>
+                <div className="flex justify-between font-bold text-lg pt-4 border-t"><span>Total XP Earned</span> <span>{scoreData?.totalXP}</span></div>
+              </div>
+            </div>
 
-             <div className="flex gap-4">
-                <Button onClick={() => window.location.reload()} className="flex-1" size="lg">Restart Simulation</Button>
-             </div>
+            <div className="flex gap-4">
+              <Button onClick={() => window.location.reload()} className="flex-1" size="lg">Restart Simulation</Button>
+            </div>
           </div>
 
           <div className="flex flex-col gap-6">
-             {/* History Log Card */}
-             <div className="bg-card border border-border rounded-xl p-6 h-full flex flex-col">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><BookOpen /> Session History</h2>
-                <div className="flex-1 overflow-y-auto space-y-4 max-h-[400px] pr-2 custom-scrollbar">
-                   {history.map((h, i) => (
-                      <div key={i} className="border-l-2 border-primary pl-4 py-1">
-                         <div className="flex justify-between items-start mb-1">
-                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Decision {h.decisionNumber}</span>
-                            {h.isCorrect ? (
-                               <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px]">Correct</Badge>
-                            ) : (
-                               <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 text-[10px]">Incorrect</Badge>
-                            )}
-                         </div>
-                         <p className="text-sm font-medium leading-tight mb-2">{h.decisionTitle}</p>
-                         {h.complication && h.complication !== "NONE" && (
-                            <div className="text-[10px] bg-red-950/30 text-red-400 p-2 rounded border border-red-900/30">
-                               <span className="font-bold">Complication:</span> {h.complication.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')}
-                            </div>
-                         )}
+            <div className="bg-card border border-border rounded-xl p-6 h-full flex flex-col">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><BookOpen /> Session History</h2>
+              <div className="flex-1 overflow-y-auto space-y-4 max-h-[400px] pr-2 custom-scrollbar">
+                {history.map((h, i) => (
+                  <div key={i} className="border-l-2 border-primary pl-4 py-1">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Decision {h.decisionNumber}</span>
+                      {h.isCorrect ? (
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px]">Correct</Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 text-[10px]">Incorrect</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium leading-tight mb-2">{h.decisionTitle}</p>
+                    {h.complication && h.complication !== "NONE" && (
+                      <div className="text-[10px] bg-red-950/30 text-red-400 p-2 rounded border border-red-900/30">
+                        <span className="font-bold">Complication:</span> {h.complication.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')}
                       </div>
-                   ))}
-                </div>
-             </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          
+
           <div className="md:col-span-2">
-             <VitalsGraph data={history} />
+            <VitalsGraph data={history} />
           </div>
 
         </div>
@@ -426,40 +481,40 @@ const dismissComplicationOverlay = () => {
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-700 ${pageBgClass}`}>
       <Navbar />
-      <div className={`fixed top-[88px] left-0 right-0 z-30 border-b transition-colors duration-500 backdrop-blur-md 
-        ${vitals.overallZone === "CRITICAL" ? "bg-red-950/80 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]" : 
+      <div className={`fixed top-[88px] left-0 right-0 z-30 border-b transition-colors duration-500 backdrop-blur-md
+        ${vitals.overallZone === "CRITICAL" ? "bg-red-950/80 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]" :
           vitals.overallZone === "WARNING" ? "bg-amber-950/80 border-amber-500/50" : "bg-card/95 border-border"}`}>
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-4 overflow-x-auto">
           <div className="flex-1 min-w-[150px] max-w-[280px]">
             <EcgCanvas hr={vitals.hr.value} zone={vitals.overallZone} />
           </div>
           <div className="flex items-center gap-3 md:gap-6 text-sm font-mono-data flex-shrink-0">
-             
-             {Object.entries({ HR: vitals.hr, BP: vitals.bp, SpO2: vitals.spo2, RR: vitals.rr, TEMP: vitals.temp }).map(([key, vital]) => (
-                <div key={key} className={`flex flex-col items-center px-2 py-1 rounded-md border transition-colors ${
-                  vital.zone === 'CRITICAL' ? 'border-red-500 bg-red-500/20 text-red-500 animate-pulse' :
-                  vital.zone === 'WARNING' ? 'border-amber-500 bg-amber-500/20 text-amber-500' : 'border-transparent text-foreground'
-                }`}>
-                   <div className="text-[10px] opacity-70 flex gap-1 items-center">
-                     {key === 'SpO2' && <Wind className="w-2.5 h-2.5" />} {key}
-                   </div>
-                   <div className="text-lg md:text-xl font-bold">{vital.value}</div>
-                </div>
-             ))}
 
-             {vitals.fetalHr && (
-                <div className={`flex flex-col items-center px-3 py-1 rounded-md border border-pink-500/50 bg-pink-500/10 text-pink-500 animate-pulse transition-colors`}>
-                   <div className="text-[10px] opacity-70 flex gap-1 items-center">
-                     <Heart className="w-2.5 h-2.5" /> FETAL HR
-                   </div>
-                   <div className="text-lg md:text-xl font-bold">{vitals.fetalHr.value} <span className="text-[10px]">bpm</span></div>
+            {Object.entries({ HR: vitals.hr, BP: vitals.bp, SpO2: vitals.spo2, RR: vitals.rr, TEMP: vitals.temp }).map(([key, vital]) => (
+              <div key={key} className={`flex flex-col items-center px-2 py-1 rounded-md border transition-colors ${
+                vital.zone === 'CRITICAL' ? 'border-red-500 bg-red-500/20 text-red-500 animate-pulse' :
+                vital.zone === 'WARNING' ? 'border-amber-500 bg-amber-500/20 text-amber-500' : 'border-transparent text-foreground'
+              }`}>
+                <div className="text-[10px] opacity-70 flex gap-1 items-center">
+                  {key === 'SpO2' && <Wind className="w-2.5 h-2.5" />} {key}
                 </div>
-             )}
+                <div className="text-lg md:text-xl font-bold">{vital.value}</div>
+              </div>
+            ))}
+
+            {vitals.fetalHr && (
+              <div className={`flex flex-col items-center px-3 py-1 rounded-md border border-pink-500/50 bg-pink-500/10 text-pink-500 animate-pulse transition-colors`}>
+                <div className="text-[10px] opacity-70 flex gap-1 items-center">
+                  <Heart className="w-2.5 h-2.5" /> FETAL HR
+                </div>
+                <div className="text-lg md:text-xl font-bold">{vitals.fetalHr.value} <span className="text-[10px]">bpm</span></div>
+              </div>
+            )}
 
           </div>
           <div className="ml-auto flex items-center gap-3 flex-shrink-0">
             <Button variant="ghost" size="icon" onClick={() => setIsAudioMuted(audioEngine.toggleMute())}>
-               {isAudioMuted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-foreground" />}
+              {isAudioMuted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-foreground" />}
             </Button>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono-data">
               <Clock className="w-3.5 h-3.5" />
@@ -471,7 +526,7 @@ const dismissComplicationOverlay = () => {
 
       {vitals.overallZone === "CRITICAL" && (
         <div className="fixed top-[140px] left-0 right-0 bg-red-600 text-white text-center font-bold font-mono tracking-widest py-1 z-50 animate-pulse">
-           CRITICAL EVENT — PATIENT DETERIORATING
+          CRITICAL EVENT — PATIENT DETERIORATING
         </div>
       )}
 
@@ -507,83 +562,121 @@ const dismissComplicationOverlay = () => {
 
 
       <div className="flex flex-1 pt-44 max-w-7xl mx-auto w-full px-4 pb-8 gap-6 relative">
-          
+
         {gameState === "induction" ? (
-           <div className="flex-1 flex flex-col items-center justify-center">
-              <h2 className="text-4xl font-mono tracking-widest animate-pulse opacity-80 mb-8">ADMINISTERING ANESTHESIA</h2>
-              <div className="w-64 h-2 bg-muted rounded-full overflow-hidden mb-4"><motion.div className="h-full bg-primary" initial={{width:0}} animate={{width:"100%"}} transition={{duration:10, ease:"linear"}}/></div>
-              <Button onClick={() => setGameState("playing")} variant="outline" size="sm">SKIP INDUCTION</Button>
-           </div>
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <h2 className="text-4xl font-mono tracking-widest animate-pulse opacity-80 mb-8">ADMINISTERING ANESTHESIA</h2>
+            <div className="w-64 h-2 bg-muted rounded-full overflow-hidden mb-4"><motion.div className="h-full bg-primary" initial={{width:0}} animate={{width:"100%"}} transition={{duration:10, ease:"linear"}}/></div>
+            <Button onClick={() => setGameState("playing")} variant="outline" size="sm">SKIP INDUCTION</Button>
+          </div>
         ) : gameState === "rescue" ? (
-           <div className="flex-1 glass-card-light rounded-2xl p-8 border-2 border-red-500/80 bg-red-950/40">
-              <h2 className="text-3xl font-bold text-red-500 mb-4">EMERGENCY RESCUE NEEDED</h2>
-              <p className="text-xl mb-6">Complication: <span className="font-mono text-red-400">{currentComplication}</span></p>
-              <div className="space-y-4">
-          {rescueLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
-            </div>
-          ) : (
-            <>
-              {rescueOptions.map(opt => (
-                    <Button key={opt.id} onClick={() => handleRescue(opt.correct)} disabled={rescueLoading} variant={"destructive"} className="w-full text-left justify-start h-auto py-4">
-                       <div className="flex flex-col items-start gap-1">
-                         <span className="font-bold text-lg">{opt.label}</span>
-                         <span className="text-sm opacity-80">{opt.desc}</span>
-                       </div>
-                    </Button>
-          ))}
-          {rescueOptions.length === 0 && <Button onClick={() => handleRescue(true)} disabled={rescueLoading} variant="outline">Proceed to stabilize blindly (No rescue mapped)</Button>}
-          </>
-          )}
-        </div>
-      </div>
-        ) : (
-           <>
-              <div className="hidden lg:flex flex-col w-48 flex-shrink-0 gap-2">
-                <div className="label-mono text-muted-foreground mb-3 flex justify-between">Procedure Map <span>{currentDecisionIdx + 1}/{DECISIONS.length}</span></div>
-                {PHASES.map((phase) => (
-                  <div key={phase.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-all ${
-                        phase.id === currentPhase ? "bg-primary/15 border border-primary/40 text-primary" : completedPhases.includes(phase.id) ? "text-emerald-400 opacity-80" : "text-muted-foreground opacity-50"
-                  }`}>
-                      <Circle className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-xs font-medium">{phase.name}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex-1 flex flex-col gap-5">
-                <motion.div className="glass-card-light rounded-2xl p-7 border border-border flex-1">
-                  <span className="text-xs font-mono-data text-primary mb-2 block">DECISION {currentDecision.id}</span>
-                  <h2 className="text-2xl font-bold text-foreground mb-4">{currentDecision.question}</h2>
-                  <div className="bg-muted/40 rounded-xl p-5 border border-border/50">
-                    <p className="text-sm text-muted-foreground leading-relaxed">{currentDecision.context}</p>
-                  </div>
-                </motion.div>
-              </div>
-
-              <div className="w-full lg:w-[380px] flex-shrink-0 flex flex-col gap-4">
-                <div className="glass-card-light rounded-2xl p-5 border border-border h-full flex flex-col">
-                  <div className="label-mono text-primary mb-4">Select Your Approach</div>
-                  <div className="space-y-2.5 overflow-y-auto flex-1 pr-2">
-                    {shuffledOptions.map((option) => (
-                      <button
-                        key={option.id}
-                        onClick={() => handleChoice(option.id)}
-                        disabled={selectedOption !== null}
-                        className={`w-full text-left p-4 rounded-xl border transition-all duration-300 ${
-                            selectedOption === option.id ? (option.correct ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-500" : "bg-red-500/15 border-red-500/40 text-red-500") 
-                            : selectedOption ? "opacity-40 border-border bg-muted/20" : "border-border bg-muted/30 hover:border-primary/40 hover:bg-primary/5"
-                        }`}
-                      >
-                         <div className="text-sm font-semibold mb-0.5">{option.label}</div>
-                         
-                      </button>
-                    ))}
-                  </div>
+          // MULTI-STEP RESCUE PANEL
+          <div className="flex-1 glass-card-light rounded-2xl p-8 border-2 border-red-500/80 bg-red-950/40">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-3xl font-bold text-red-500">EMERGENCY RESCUE</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-red-300 font-mono">Step {rescueStep}/{rescueTotalSteps}</span>
+                <div className="flex gap-1">
+                  {Array.from({length: rescueTotalSteps}, (_, i) => (
+                    <div key={i} className={"w-3 h-3 rounded-full " + (i < rescueStep ? "bg-emerald-500" : "bg-red-900/50 border border-red-500/50")}></div>
+                  ))}
                 </div>
               </div>
-           </>
+            </div>
+
+            {/* RESCUE PROGRESS BAR */}
+            {rescueStep > 0 && (
+              <div className="w-full bg-gray-700 h-2 rounded-full mb-4">
+                <div
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${(rescueStep / rescueTotalSteps) * 100}%` }}
+                ></div>
+              </div>
+            )}
+
+            <div className="mb-4 px-4 py-3 bg-red-900/30 rounded-lg border border-red-500/30">
+              <p className="text-sm text-red-300 font-mono mb-1">Phase: {rescuePhase.toUpperCase()}</p>
+              <p className="text-xs text-red-400">
+                {rescuePhase === 'initial' ? 'Assess and diagnose the emergency' :
+                 rescuePhase === 'stabilizing' ? 'Apply critical interventions' :
+                 'Monitor recovery and prevent recurrence'}
+              </p>
+            </div>
+
+            <p className="text-xl mb-4">Complication: <span className="font-mono text-red-400">{currentComplication}</span></p>
+
+            <div className="space-y-3">
+              {rescueLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
+                </div>
+              ) : (
+                <>
+                  {rescueOptions.map(opt => (
+                    <Button key={opt.id} onClick={() => handleRescue(opt.correct)} disabled={rescueLoading} variant={"destructive"} className="w-full text-left justify-start h-auto py-4">
+                      <div className="flex flex-col items-start gap-1">
+                        <span className="font-bold text-lg">{opt.label}</span>
+                        <span className="text-sm opacity-80">{opt.desc}</span>
+                      </div>
+                    </Button>
+                  ))}
+                  {rescueOptions.length === 0 && <Button onClick={() => handleRescue(true)} disabled={rescueLoading} variant="outline">Proceed to stabilize blindly (No rescue mapped)</Button>}
+                </>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="hidden lg:flex flex-col w-48 flex-shrink-0 gap-2">
+              <div className="label-mono text-muted-foreground mb-3 flex justify-between">Procedure Map <span>{currentDecisionIdx + 1}/{DECISIONS.length}</span></div>
+              {PHASES.map((phase) => (
+                <div key={phase.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-all ${
+                  phase.id === currentPhase ? "bg-primary/15 border border-primary/40 text-primary" : completedPhases.includes(phase.id) ? "text-emerald-400 opacity-80" : "text-muted-foreground opacity-50"
+                }`}>
+                  <Circle className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-xs font-medium">{phase.name}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex-1 flex flex-col gap-5">
+              <motion.div className="glass-card-light rounded-2xl p-7 border border-border flex-1">
+                {/* VITALS BLOCKED WARNING */}
+                {vitalsBlocked && (
+                  <div className="mb-4 px-4 py-3 bg-red-900/30 rounded-lg border border-red-500/50 animate-pulse">
+                    <p className="text-red-400 font-bold font-mono text-sm">⚠️ VITALS CRITICAL - DECISIONS BLOCKED</p>
+                    <p className="text-xs text-red-300 mt-1">Stabilize patient before continuing</p>
+                  </div>
+                )}
+                <span className="text-xs font-mono-data text-primary mb-2 block">DECISION {currentDecision.id}</span>
+                <h2 className="text-2xl font-bold text-foreground mb-4">{currentDecision.question}</h2>
+                <div className="bg-muted/40 rounded-xl p-5 border border-border/50">
+                  <p className="text-sm text-muted-foreground leading-relaxed">{currentDecision.context}</p>
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="w-full lg:w-[380px] flex-shrink-0 flex flex-col gap-4">
+              <div className="glass-card-light rounded-2xl p-5 border border-border h-full flex flex-col">
+                <div className="label-mono text-primary mb-4">Select Your Approach</div>
+                <div className="space-y-2.5 overflow-y-auto flex-1 pr-2">
+                  {shuffledOptions.map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => handleChoice(option.id)}
+                      disabled={selectedOption !== null || vitalsBlocked}
+                      className={`w-full text-left p-4 rounded-xl border transition-all duration-300 ${
+                        selectedOption === option.id ? (option.correct ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-500" : "bg-red-500/15 border-red-500/40 text-red-500")
+                        : selectedOption || vitalsBlocked ? "opacity-40 border-border bg-muted/20" : "border-border bg-muted/30 hover:border-primary/40 hover:bg-primary/5"
+                      }`}
+                    >
+                      <div className="text-sm font-semibold mb-0.5">{option.label}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
