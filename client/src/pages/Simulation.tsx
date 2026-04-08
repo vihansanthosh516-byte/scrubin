@@ -258,16 +258,27 @@ const generateScoreAndFetchAI = async (hist: DecisionHistoryItem[], failures: nu
     if (isCorrect) {
       setTimeout(() => advancePhase(newHist), 800);
     } else {
+      // WRONG ANSWER - SHOW COMPLICATION OVERLAY AND PAUSE
       if (option.complicationType && option.complicationType !== "NONE") {
+        const compInfo = COMPLICATION_EXPLANATIONS[option.complicationType] || {
+          title: option.complicationType,
+          explanation: "A complication has occurred. Monitor the patient's vitals carefully."
+        };
+        // SHOW THE OVERLAY - KEY FIX
+        setShowComplicationOverlay(option.complicationType);
+        setComplicationExplanation(compInfo.explanation);
         setActiveComplications(prev => {
-           if (["CARDIAC_INJURY", "PNEUMOTHORAX", "MALIGNANT_HYPERTHERMIA"].includes(option.complicationType!)) {
-              return [option.complicationType!]; 
-           }
-           return [...prev, option.complicationType!];
+          if (["CARDIAC_INJURY", "PNEUMOTHORAX", "MALIGNANT_HYPERTHERMIA"].includes(option.complicationType!)) {
+            return [option.complicationType!];
+          }
+          if (!prev.includes(option.complicationType!)) return [...prev, option.complicationType!];
+          return prev;
         });
         setDecisionsSinceComplication(0);
+        // DON'T auto-advance - user must dismiss overlay
+      } else {
+        setTimeout(() => advancePhase(newHist), 800);
       }
-      setTimeout(() => advancePhase(newHist), 800);
     }
   }, [selectedOption, currentDecision, currentDecisionIdx, activeComplications, vitals, history]);
 
