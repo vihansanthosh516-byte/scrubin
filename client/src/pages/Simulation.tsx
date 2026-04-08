@@ -312,16 +312,20 @@ const dismissComplicationOverlay = () => {
 };
 
   const handleRescue = (isCorrect: boolean) => {
-     if (isCorrect) {
-         setGameState("playing");
-         setFailedRescues(0);
-     } else {
-         const fails = failedRescues + 1;
-         setFailedRescues(fails);
-         if (fails >= 2) {
-             generateScoreAndFetchAI(history, fails, true);
-         }
-     }
+    setRescueLoading(true);
+    setTimeout(() => {
+      if (isCorrect) {
+        setGameState("playing");
+        setFailedRescues(0);
+      } else {
+        const fails = failedRescues + 1;
+        setFailedRescues(fails);
+        if (fails >= 2) {
+          generateScoreAndFetchAI(history, fails, true);
+        }
+      }
+      setRescueLoading(false);
+    }, 300);
   };
 
   const completedPhases = Array.from(new Set(answers.map(a => DECISIONS.find(d => d.id === a.decisionId)?.phase || 0)));
@@ -515,17 +519,25 @@ const dismissComplicationOverlay = () => {
               <h2 className="text-3xl font-bold text-red-500 mb-4">EMERGENCY RESCUE NEEDED</h2>
               <p className="text-xl mb-6">Complication: <span className="font-mono text-red-400">{currentComplication}</span></p>
               <div className="space-y-4">
-                 {rescueOptions.map(opt => (
-                    <Button key={opt.id} onClick={() => handleRescue(opt.correct)} variant={"destructive"} className="w-full text-left justify-start h-auto py-4">
+          {rescueLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
+            </div>
+          ) : (
+            <>
+              {rescueOptions.map(opt => (
+                    <Button key={opt.id} onClick={() => handleRescue(opt.correct)} disabled={rescueLoading} variant={"destructive"} className="w-full text-left justify-start h-auto py-4">
                        <div className="flex flex-col items-start gap-1">
                          <span className="font-bold text-lg">{opt.label}</span>
                          <span className="text-sm opacity-80">{opt.desc}</span>
                        </div>
                     </Button>
-                 ))}
-                 {rescueOptions.length === 0 && <Button onClick={() => handleRescue(true)} variant="outline">Proceed to stabilize blindly (No rescue mapped)</Button>}
-              </div>
-           </div>
+          ))}
+          {rescueOptions.length === 0 && <Button onClick={() => handleRescue(true)} disabled={rescueLoading} variant="outline">Proceed to stabilize blindly (No rescue mapped)</Button>}
+          </>
+          )}
+        </div>
+      </div>
         ) : (
            <>
               <div className="hidden lg:flex flex-col w-48 flex-shrink-0 gap-2">
