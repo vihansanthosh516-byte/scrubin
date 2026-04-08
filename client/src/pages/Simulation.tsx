@@ -455,6 +455,37 @@ const dismissComplicationOverlay = () => {
         </div>
       )}
 
+      {/* COMPLICATION OVERLAY */}
+      <AnimatePresence>
+        {showComplicationOverlay && (
+          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center">
+            <motion.div initial={{scale:0.8,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:0.8,opacity:0}} className="bg-gradient-to-b from-red-950 to-red-900 border-2 border-red-500 rounded-2xl p-8 max-w-lg mx-4 text-center shadow-[0_0_50px_rgba(239,68,68,0.5)]">
+              <div className="text-6xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-bold text-red-400 mb-2 tracking-widest">COMPLICATION DETECTED</h2>
+              <h3 className="text-xl font-bold text-white mb-4 font-mono">{showComplicationOverlay.split("_").map((w:string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")}</h3>
+              <p className="text-red-200 mb-6 leading-relaxed">{complicationExplanation}</p>
+              <Button onClick={dismissComplicationOverlay} className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg w-full text-lg">Continue Surgery →</Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* FLATLINE OVERLAY */}
+      <AnimatePresence>
+        {isFlatlining && (
+          <motion.div initial={{opacity:0}} animate={{opacity:1}} className="fixed inset-0 bg-black z-[100] flex items-center justify-center">
+            <div className="text-center">
+              <motion.div initial={{scale:0.5}} animate={{scale:1}} transition={{duration:0.5,repeat:Infinity,repeatType:"reverse"}}>
+                <div className="text-8xl mb-6">💔</div>
+              </motion.div>
+              <h2 className="text-5xl font-bold text-red-500 font-mono">FLATLINE</h2>
+              <p className="text-xl text-red-400 mt-4 animate-pulse">No cardiac activity detected...</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
       <div className="flex flex-1 pt-44 max-w-7xl mx-auto w-full px-4 pb-8 gap-6 relative">
           
         {gameState === "induction" ? (
