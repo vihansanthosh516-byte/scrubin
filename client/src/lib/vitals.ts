@@ -344,21 +344,29 @@ export function useVitalsEngine({ patient, isActive, complications, decisionsSin
           overallZone = "GAME_OVER";
       }
 
-      setVitals({
-        hr: { value: curHR, zone: finalZHR },
-        bp: { value: `${curSys}/${curDia}`, sys: curSys, dia: curDia, zone: zBP },
-        spo2: { value: curSpO2, zone: finalZSpO2 },
-        rr: { value: curRR, zone: zRR },
-        temp: { value: curTemp, zone: zTemp },
-        fetalHr:
-          patient.admission?.toLowerCase().includes("fetal") || patient.procedureCategory === "obgyn"
-            ? {
-                value: Math.round(140 + Math.sin(t * 0.4) * 5 + (Math.random() - 0.5)),
-                zone: "NORMAL"
-              }
-            : undefined,
-        overallZone
-      });
+    // If GAME_OVER, display 0 values (flatline)
+    const displayHR = overallZone === "GAME_OVER" ? 0 : curHR;
+    const displaySys = overallZone === "GAME_OVER" ? 0 : curSys;
+    const displayDia = overallZone === "GAME_OVER" ? 0 : curDia;
+    const displaySpO2 = overallZone === "GAME_OVER" ? 0 : curSpO2;
+    const displayRR = overallZone === "GAME_OVER" ? 0 : curRR;
+    const displayTemp = overallZone === "GAME_OVER" ? 0 : curTemp;
+
+    setVitals({
+      hr: { value: displayHR, zone: overallZone === "GAME_OVER" ? "GAME_OVER" : finalZHR },
+      bp: { value: displaySys + "/" + displayDia, sys: displaySys, dia: displayDia, zone: overallZone === "GAME_OVER" ? "GAME_OVER" : zBP },
+      spo2: { value: displaySpO2, zone: overallZone === "GAME_OVER" ? "GAME_OVER" : finalZSpO2 },
+      rr: { value: displayRR, zone: overallZone === "GAME_OVER" ? "GAME_OVER" : zRR },
+      temp: { value: displayTemp, zone: overallZone === "GAME_OVER" ? "GAME_OVER" : zTemp },
+      fetalHr:
+        patient.admission?.toLowerCase().includes("fetal") || patient.procedureCategory === "obgyn"
+          ? {
+              value: overallZone === "GAME_OVER" ? 0 : Math.round(140 + Math.sin(t * 0.4) * 5 + (Math.random() - 0.5)),
+              zone: overallZone === "GAME_OVER" ? "GAME_OVER" : "NORMAL"
+            }
+          : undefined,
+      overallZone
+    });
 
       // Handle Audio! 
       if (overallZone === "GAME_OVER") {
