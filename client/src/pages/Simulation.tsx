@@ -119,8 +119,24 @@ export default function Simulation() {
 const [showComplicationOverlay, setShowComplicationOverlay] = useState<string | null>(null);
 const [complicationExplanation, setComplicationExplanation] = useState<string>("");
 const [isFlatlining, setIsFlatlining] = useState(false);
+const [rescueLoading, setRescueLoading] = useState(false);
   
   const currentDecision = DECISIONS[Math.min(currentDecisionIdx, DECISIONS.length - 1)];
+  
+  // Shuffle decision options so correct answer isn't always first
+  const [shuffledOptions, setShuffledOptions] = useState<any[]>([]);
+  
+  useEffect(() => {
+    if (currentDecision) {
+      const options = [...currentDecision.options];
+      // Fisher-Yates shuffle
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+      setShuffledOptions(options);
+    }
+  }, [currentDecisionIdx]);
 
   const vitals = useVitalsEngine({
     patient: PATIENT,
@@ -246,7 +262,7 @@ const generateScoreAndFetchAI = async (hist: DecisionHistoryItem[], failures: nu
     if (selectedOption) return;
     setSelectedOption(optionId);
     
-    const option = currentDecision.options.find(o => o.id === optionId);
+    const option = shuffledOptions.find(o => o.id === optionId) || currentDecision.options.find(o => o.id === optionId);
     if (!option) return;
 
     const isCorrect = option.correct;
@@ -538,7 +554,7 @@ const dismissComplicationOverlay = () => {
                 <div className="glass-card-light rounded-2xl p-5 border border-border h-full flex flex-col">
                   <div className="label-mono text-primary mb-4">Select Your Approach</div>
                   <div className="space-y-2.5 overflow-y-auto flex-1 pr-2">
-                    {currentDecision.options.map((option) => (
+                    {shuffledOptions.map((option) => (
                       <button
                         key={option.id}
                         onClick={() => handleChoice(option.id)}
