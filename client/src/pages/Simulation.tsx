@@ -476,7 +476,80 @@ export default function Simulation() {
   }
 
   const currentComplication = activeComplications[activeComplications.length - 1];
-  const rescueOptions = currentDecision.options.flatMap(o => o.rescueOptions || []).filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+
+  type RescueOption = { id: string; label: string; desc: string; correct: boolean };
+
+  // Get rescue options based on the COMPLICATION TYPE
+  const getRescueOptionsForComplication = (comp: ComplicationType): RescueOption[] => {
+    switch (comp) {
+      case "HEMORRHAGE":
+        return [
+          { id: "h1", label: "Apply direct pressure & call for transfusion", desc: "Standard bleeding protocol", correct: true },
+          { id: "h2", label: "Attempt to clamp vessel blindly", desc: "Risks collateral damage", correct: false },
+          { id: "h3", label: "Pack the abdomen and reassess", desc: "Damage control", correct: true }
+        ];
+      case "ANESTHESIA_OVERDOSE":
+        return [
+          { id: "ao1", label: "Reduce anesthetic agent and increase ventilation", desc: "Flush lungs", correct: true },
+          { id: "ao2", label: "Administer reversal agent", desc: "Flumazenil or Naloxone", correct: true },
+          { id: "ao3", label: "Increase IV fluids only", desc: "Doesn't fix respiratory depression", correct: false }
+        ];
+      case "ANESTHESIA_UNDERDOSE":
+        return [
+          { id: "au1", label: "Increase anesthetic depth", desc: "More agent/propofol", correct: true },
+          { id: "au2", label: "Administer paralytic", desc: "Rocuronium", correct: true },
+          { id: "au3", label: "Ignore agitation", desc: "Patient fights ventilator", correct: false }
+        ];
+      case "BOWEL_PERFORATION":
+        return [
+          { id: "bp1", label: "Over-sew the perforation", desc: "Primary repair", correct: true },
+          { id: "bp2", label: "Copious irrigation and broad antibiotics", desc: "Control contamination", correct: true },
+          { id: "bp3", label: "Close with a drain only", desc: "Sepsis risk remains", correct: false }
+        ];
+      case "PNEUMOTHORAX":
+        return [
+          { id: "pn1", label: "Needle decompression", desc: "Evacuate air immediately", correct: true },
+          { id: "pn2", label: "High flow oxygen only", desc: "Not definitive treatment", correct: false },
+          { id: "pn3", label: "Chest tube placement", desc: "Definitive airway control", correct: true }
+        ];
+      case "CARDIAC_INJURY":
+        return [
+          { id: "ci1", label: "ACLS Protocol - CPR & Defibrillate", desc: "Restore rhythm", correct: true },
+          { id: "ci2", label: "Epinephrine 1mg push", desc: "Restart cardiac output", correct: true },
+          { id: "ci3", label: "Wait to see if it recovers naturally", desc: "Brain death impending", correct: false }
+        ];
+      case "MALIGNANT_HYPERTHERMIA":
+        return [
+          { id: "mh1", label: "Administer Dantrolene rapidly", desc: "Only specific antidote", correct: true },
+          { id: "mh2", label: "Stop volatile anesthetics & hyperventilate with 100% O2", desc: "Remove trigger", correct: true },
+          { id: "mh3", label: "Give Tylenol and cool with ice", desc: "Insufficient alone", correct: false }
+        ];
+      case "NERVE_DAMAGE":
+        return [
+          { id: "nd1", label: "Assess nerve function & document deficit", desc: "Evaluate extent", correct: true },
+          { id: "nd2", label: "Consult neurosurgery immediately", desc: "Specialist intervention", correct: true },
+          { id: "nd3", label: "Continue surgery without addressing", desc: "Permanent damage risk", correct: false }
+        ];
+      case "WRONG_INCISION_SITE":
+        return [
+          { id: "wi1", label: "Abort primary incision, assess anatomy", desc: "Re-orient", correct: true },
+          { id: "wi2", label: "Continue deeper", desc: "Will hit wrong organs", correct: false },
+          { id: "wi3", label: "Call for help/supervising attending", desc: "Safe bet", correct: true }
+        ];
+      case "WRONG_DIAGNOSIS":
+        return [
+          { id: "wd1", label: "Halt procedure and consult imagery/labs", desc: "Re-evaluate", correct: true },
+          { id: "wd2", label: "Proceed blindly", desc: "Exacerbates error", correct: false }
+        ];
+      default:
+        return [
+          { id: "def1", label: "Assess patient and vitals", desc: "Evaluate situation", correct: true },
+          { id: "def2", label: "Call for help", desc: "Get senior surgeon", correct: true }
+        ];
+    }
+  };
+
+  const rescueOptions: RescueOption[] = currentComplication ? getRescueOptionsForComplication(currentComplication) : [];
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-700 ${pageBgClass}`}>
