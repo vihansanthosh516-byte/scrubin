@@ -4,7 +4,7 @@
  * Left: anatomical body with organs | Right: procedure panel
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -30,8 +30,8 @@ export interface Procedure {
   duration: string;
   decisions: number;
   animationFile: string;
-  steps: ProcedureStep[];
   organId: string;
+  steps: ProcedureStep[];
 }
 
 const PROCEDURES: Procedure[] = [
@@ -283,7 +283,7 @@ export default function AnatomyExplorer() {
   useEffect(() => {
     const interval = setInterval(() => {
       setBreathPhase((prev) => (prev + 1) % 100);
-    }, 40); // 100 steps over 4 seconds
+    }, 40);
     return () => clearInterval(interval);
   }, []);
 
@@ -291,7 +291,7 @@ export default function AnatomyExplorer() {
   useEffect(() => {
     const interval = setInterval(() => {
       setHeartBeat((prev) => (prev + 1) % 100);
-    }, 8.5); // 100 steps over 0.85 seconds
+    }, 8.5);
     return () => clearInterval(interval);
   }, []);
 
@@ -406,11 +406,13 @@ function BodyDiagram({
   breathScale,
   heartScale,
 }: BodyDiagramProps) {
-  const organOpacity = 0.2;
   const glowColor = "#7EC8E3";
   const selectedColor = "#5DCAA5";
+  const organOpacity = 0.2;
 
-  // Check if organ is active (hovered or selected)
+  // List of organs that have procedures
+  const clickableOrgans = ["brain", "heart", "gallbladder", "appendix", "uterus", "knee", "spine"];
+
   const isOrganActive = (organId: string) => {
     return hoveredOrgan === organId || selectedOrgan === organId;
   };
@@ -422,7 +424,6 @@ function BodyDiagram({
       style={{ filter: "drop-shadow(0 0 40px rgba(126, 200, 227, 0.05))" }}
     >
       <defs>
-        {/* Gradients */}
         <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#1a1915" />
           <stop offset="100%" stopColor="#0d0c0a" />
@@ -453,10 +454,11 @@ function BodyDiagram({
             onOrganHover={onOrganHover}
             breathScale={breathScale}
             heartScale={heartScale}
-            organOpacity={organOpacity}
             glowColor={glowColor}
             selectedColor={selectedColor}
+            organOpacity={organOpacity}
             isOrganActive={isOrganActive}
+            clickableOrgans={clickableOrgans}
           />
         ) : (
           <BackView
@@ -464,10 +466,11 @@ function BodyDiagram({
             hoveredOrgan={hoveredOrgan}
             onOrganClick={onOrganClick}
             onOrganHover={onOrganHover}
-            organOpacity={organOpacity}
             glowColor={glowColor}
             selectedColor={selectedColor}
+            organOpacity={organOpacity}
             isOrganActive={isOrganActive}
+            clickableOrgans={clickableOrgans}
           />
         )}
       </g>
@@ -487,7 +490,7 @@ function BodyDiagram({
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// FRONT VIEW - Detailed anatomical organs
+// FRONT VIEW
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function FrontView({
@@ -497,10 +500,11 @@ function FrontView({
   onOrganHover,
   breathScale,
   heartScale,
-  organOpacity,
   glowColor,
   selectedColor,
+  organOpacity,
   isOrganActive,
+  clickableOrgans,
 }: {
   selectedOrgan: string | null;
   hoveredOrgan: string | null;
@@ -508,10 +512,11 @@ function FrontView({
   onOrganHover: (organId: string | null) => void;
   breathScale: number;
   heartScale: number;
-  organOpacity: number;
   glowColor: string;
   selectedColor: string;
+  organOpacity: number;
   isOrganActive: (organId: string) => boolean;
+  clickableOrgans: string[];
 }) {
   return (
     <>
@@ -526,34 +531,42 @@ function FrontView({
         strokeWidth="1"
       />
 
-      {/* Brain */}
+      {/* Brain - CLICKABLE */}
       <motion.g
         initial={{ opacity: organOpacity }}
-        animate={{
-          opacity: isOrganActive("brain") ? 1 : organOpacity,
-        }}
+        animate={{ opacity: isOrganActive("brain") ? 1 : organOpacity }}
         transition={{ duration: 0.2 }}
-        style={{
-          filter: isOrganActive("brain") ? "url(#strongGlow)" : "none",
-        }}
+        style={{ filter: isOrganActive("brain") ? "url(#strongGlow)" : "none" }}
       >
-        <motion.path
-          d="M-35,-310 Q-40,-340 -20,-350 Q0,-360 20,-350 Q40,-340 35,-310 Q30,-280 0,-275 Q-30,-280 -35,-310"
-          fill="none"
-          stroke={selectedOrgan === "brain" ? selectedColor : glowColor}
-          strokeWidth="1.5"
+        {/* Invisible fill for easier clicking */}
+        <ellipse
+          cx="0"
+          cy="-305"
+          rx="40"
+          ry="35"
+          fill="transparent"
           className="cursor-pointer"
           onMouseEnter={() => onOrganHover("brain")}
           onMouseLeave={() => onOrganHover(null)}
           onClick={() => onOrganClick("brain")}
         />
-        {/* Brain sulci details */}
+        <motion.path
+          d="M-35,-310 Q-40,-340 -20,-350 Q0,-360 20,-350 Q40,-340 35,-310 Q30,-280 0,-275 Q-30,-280 -35,-310"
+          fill={isOrganActive("brain") ? "rgba(126,200,227,0.15)" : "transparent"}
+          stroke={selectedOrgan === "brain" ? selectedColor : glowColor}
+          strokeWidth={isOrganActive("brain") ? 2 : 1.5}
+          className="cursor-pointer"
+          onMouseEnter={() => onOrganHover("brain")}
+          onMouseLeave={() => onOrganHover(null)}
+          onClick={() => onOrganClick("brain")}
+        />
         <path
           d="M-20,-330 Q-10,-320 0,-330 Q10,-340 20,-330"
           fill="none"
           stroke={selectedOrgan === "brain" ? selectedColor : glowColor}
           strokeWidth="0.8"
           opacity="0.6"
+          pointerEvents="none"
         />
       </motion.g>
 
@@ -576,72 +589,39 @@ function FrontView({
           strokeWidth="1"
         />
 
-        {/* Left Lung */}
+        {/* Left Lung - non-clickable */}
         <motion.g
-          initial={{ opacity: organOpacity }}
-          animate={{
-            opacity: isOrganActive("lung") ? 1 : organOpacity,
-            scale: breathScale,
-          }}
+          initial={{ opacity: organOpacity * 0.5 }}
+          animate={{ opacity: organOpacity * 0.5, scale: breathScale }}
           transition={{ duration: 0.2 }}
-          style={{
-            filter: isOrganActive("lung") ? "url(#strongGlow)" : "none",
-            transformOrigin: "-35px -140px",
-          }}
+          style={{ transformOrigin: "-35px -140px" }}
         >
           <path
             d="M-65,-180 Q-75,-160 -70,-130 Q-65,-100 -50,-90 L-35,-90 Q-30,-110 -30,-140 Q-30,-170 -45,-180 Q-55,-190 -65,-180"
-            fill="none"
+            fill="rgba(126,200,227,0.05)"
             stroke={glowColor}
-            strokeWidth="1.2"
-            className="cursor-pointer"
-            onMouseEnter={() => onOrganHover("lung")}
-            onMouseLeave={() => onOrganHover(null)}
-            onClick={() => onOrganClick("lung")}
-          />
-          {/* Lung fissure */}
-          <path
-            d="M-55,-140 Q-45,-145 -40,-135"
-            fill="none"
-            stroke={glowColor}
-            strokeWidth="0.6"
-            opacity="0.5"
+            strokeWidth="1"
+            opacity="0.4"
           />
         </motion.g>
 
-        {/* Right Lung */}
+        {/* Right Lung - non-clickable */}
         <motion.g
-          initial={{ opacity: organOpacity }}
-          animate={{
-            opacity: isOrganActive("lung") ? 1 : organOpacity,
-            scale: breathScale,
-          }}
+          initial={{ opacity: organOpacity * 0.5 }}
+          animate={{ opacity: organOpacity * 0.5, scale: breathScale }}
           transition={{ duration: 0.2 }}
-          style={{
-            filter: isOrganActive("lung") ? "url(#strongGlow)" : "none",
-            transformOrigin: "35px -140px",
-          }}
+          style={{ transformOrigin: "35px -140px" }}
         >
           <path
             d="M65,-180 Q75,-160 70,-130 Q65,-100 50,-90 L35,-90 Q30,-110 30,-140 Q30,-170 45,-180 Q55,-190 65,-180"
-            fill="none"
+            fill="rgba(126,200,227,0.05)"
             stroke={glowColor}
-            strokeWidth="1.2"
-            className="cursor-pointer"
-            onMouseEnter={() => onOrganHover("lung")}
-            onMouseLeave={() => onOrganHover(null)}
-            onClick={() => onOrganClick("lung")}
-          />
-          <path
-            d="M55,-140 Q45,-145 40,-135"
-            fill="none"
-            stroke={glowColor}
-            strokeWidth="0.6"
-            opacity="0.5"
+            strokeWidth="1"
+            opacity="0.4"
           />
         </motion.g>
 
-        {/* Heart - with heartbeat animation */}
+        {/* Heart - CLICKABLE */}
         <motion.g
           animate={{
             scale: heartScale,
@@ -653,59 +633,77 @@ function FrontView({
             transformOrigin: "0px -130px",
           }}
         >
-          <path
-            d="M0,-160 Q-30,-175 -35,-145 Q-38,-125 -20,-110 L0,-90 L20,-110 Q38,-125 35,-145 Q30,-175 0,-160"
-            fill="none"
-            stroke={selectedOrgan === "heart" ? selectedColor : glowColor}
-            strokeWidth="1.5"
+          {/* Invisible hitbox */}
+          <ellipse
+            cx="0"
+            cy="-125"
+            rx="35"
+            ry="40"
+            fill="transparent"
             className="cursor-pointer"
             onMouseEnter={() => onOrganHover("heart")}
             onMouseLeave={() => onOrganHover(null)}
             onClick={() => onOrganClick("heart")}
           />
-          {/* Coronary arteries */}
+          <motion.path
+            d="M0,-160 Q-30,-175 -35,-145 Q-38,-125 -20,-110 L0,-90 L20,-110 Q38,-125 35,-145 Q30,-175 0,-160"
+            fill={isOrganActive("heart") ? "rgba(126,200,227,0.2)" : "transparent"}
+            stroke={selectedOrgan === "heart" ? selectedColor : glowColor}
+            strokeWidth={isOrganActive("heart") ? 2.5 : 1.5}
+            className="cursor-pointer"
+            onMouseEnter={() => onOrganHover("heart")}
+            onMouseLeave={() => onOrganHover(null)}
+            onClick={() => onOrganClick("heart")}
+          />
           <path
             d="M-15,-130 Q-5,-125 0,-115 Q5,-125 15,-130"
             fill="none"
             stroke={selectedOrgan === "heart" ? selectedColor : glowColor}
             strokeWidth="0.6"
             opacity="0.6"
+            pointerEvents="none"
           />
         </motion.g>
 
-        {/* Liver */}
+        {/* Liver - non-clickable */}
         <motion.g
-          initial={{ opacity: organOpacity }}
-          animate={{ opacity: isOrganActive("liver") ? 1 : organOpacity }}
+          initial={{ opacity: organOpacity * 0.4 }}
+          animate={{ opacity: organOpacity * 0.4 }}
           transition={{ duration: 0.2 }}
-          style={{ filter: isOrganActive("liver") ? "url(#strongGlow)" : "none" }}
         >
           <path
             d="M50,-80 Q60,-70 55,-40 Q45,-20 25,-15 L-20,-20 Q-30,-40 -25,-60 Q-15,-80 10,-85 Q30,-90 50,-80"
-            fill="none"
+            fill="rgba(126,200,227,0.03)"
             stroke={glowColor}
-            strokeWidth="1.2"
-            className="cursor-pointer"
-            onMouseEnter={() => onOrganHover("liver")}
-            onMouseLeave={() => onOrganHover(null)}
-            onClick={() => onOrganClick("liver")}
+            strokeWidth="1"
+            opacity="0.4"
           />
-          {/* Liver lobes */}
-          <path d="M10,-60 Q20,-55 25,-45" fill="none" stroke={glowColor} strokeWidth="0.5" opacity="0.4" />
         </motion.g>
 
-        {/* Gallbladder */}
+        {/* Gallbladder - CLICKABLE */}
         <motion.g
           initial={{ opacity: organOpacity }}
           animate={{ opacity: isOrganActive("gallbladder") ? 1 : organOpacity }}
           transition={{ duration: 0.2 }}
           style={{ filter: isOrganActive("gallbladder") ? "url(#strongGlow)" : "none" }}
         >
-          <path
+          {/* Invisible hitbox */}
+          <ellipse
+            cx="35"
+            cy="-50"
+            rx="20"
+            ry="25"
+            fill="transparent"
+            className="cursor-pointer"
+            onMouseEnter={() => onOrganHover("gallbladder")}
+            onMouseLeave={() => onOrganHover(null)}
+            onClick={() => onOrganClick("gallbladder")}
+          />
+          <motion.path
             d="M35,-55 Q40,-50 38,-40 Q35,-35 30,-38 Q28,-48 30,-55 Q32,-60 35,-55"
-            fill="none"
+            fill={isOrganActive("gallbladder") ? "rgba(126,200,227,0.2)" : "transparent"}
             stroke={selectedOrgan === "gallbladder" ? selectedColor : glowColor}
-            strokeWidth="1"
+            strokeWidth={isOrganActive("gallbladder") ? 2 : 1.2}
             className="cursor-pointer"
             onMouseEnter={() => onOrganHover("gallbladder")}
             onMouseLeave={() => onOrganHover(null)}
@@ -713,93 +711,96 @@ function FrontView({
           />
         </motion.g>
 
-        {/* Stomach */}
-        <motion.g
-          initial={{ opacity: organOpacity }}
-          animate={{ opacity: isOrganActive("stomach") ? 1 : organOpacity }}
-          transition={{ duration: 0.2 }}
-          style={{ filter: isOrganActive("stomach") ? "url(#strongGlow)" : "none" }}
-        >
+        {/* Stomach - non-clickable */}
+        <motion.g initial={{ opacity: organOpacity * 0.4 }}>
           <path
             d="M-15,-60 Q-35,-55 -45,-35 Q-50,-15 -40,5 Q-25,15 -10,10 Q5,0 10,-20 Q12,-45 -5,-55 Q-10,-60 -15,-60"
-            fill="none"
+            fill="rgba(126,200,227,0.03)"
             stroke={glowColor}
-            strokeWidth="1"
-            className="cursor-pointer"
-            onMouseEnter={() => onOrganHover("stomach")}
-            onMouseLeave={() => onOrganHover(null)}
-            onClick={() => onOrganClick("stomach")}
+            strokeWidth="0.8"
+            opacity="0.4"
           />
         </motion.g>
 
-        {/* Small intestine outline */}
-        <motion.g
-          initial={{ opacity: organOpacity * 0.5 }}
-          animate={{ opacity: isOrganActive("intestine") ? 1 : organOpacity * 0.5 }}
-          transition={{ duration: 0.2 }}
-          style={{ filter: isOrganActive("intestine") ? "url(#glow)" : "none" }}
-        >
+        {/* Intestines - non-clickable */}
+        <motion.g initial={{ opacity: organOpacity * 0.3 }}>
           <ellipse
             cx="0"
             cy="30"
             rx="45"
             ry="35"
-            fill="none"
+            fill="rgba(126,200,227,0.02)"
             stroke={glowColor}
-            strokeWidth="0.8"
-            opacity="0.5"
-            className="cursor-pointer"
-            onMouseEnter={() => onOrganHover("intestine")}
-            onMouseLeave={() => onOrganHover(null)}
-            onClick={() => onOrganClick("intestine")}
+            strokeWidth="0.6"
+            opacity="0.3"
           />
         </motion.g>
 
-        {/* Appendix - Right Lower Quadrant */}
+        {/* Appendix - CLICKABLE (RLQ) */}
         <motion.g
           initial={{ opacity: organOpacity }}
           animate={{ opacity: isOrganActive("appendix") ? 1 : organOpacity }}
           transition={{ duration: 0.2 }}
           style={{ filter: isOrganActive("appendix") ? "url(#strongGlow)" : "none" }}
         >
-          <path
-            d="M40,45 Q50,50 52,60 Q50,70 42,68 Q38,60 40,45"
-            fill="none"
-            stroke={selectedOrgan === "appendix" ? selectedColor : glowColor}
-            strokeWidth="1.2"
+          {/* Invisible hitbox */}
+          <ellipse
+            cx="42"
+            cy="55"
+            rx="20"
+            ry="25"
+            fill="transparent"
             className="cursor-pointer"
             onMouseEnter={() => onOrganHover("appendix")}
             onMouseLeave={() => onOrganHover(null)}
             onClick={() => onOrganClick("appendix")}
           />
-          {/* Appendix connection to cecum */}
-          <circle cx="42" cy="45" r="3" fill="none" stroke={glowColor} strokeWidth="0.8" />
+          <motion.path
+            d="M40,45 Q50,50 52,60 Q50,70 42,68 Q38,60 40,45"
+            fill={isOrganActive("appendix") ? "rgba(126,200,227,0.2)" : "transparent"}
+            stroke={selectedOrgan === "appendix" ? selectedColor : glowColor}
+            strokeWidth={isOrganActive("appendix") ? 2 : 1.2}
+            className="cursor-pointer"
+            onMouseEnter={() => onOrganHover("appendix")}
+            onMouseLeave={() => onOrganHover(null)}
+            onClick={() => onOrganClick("appendix")}
+          />
+          <circle cx="42" cy="45" r="4" fill={isOrganActive("appendix") ? "rgba(126,200,227,0.3)" : "transparent"} stroke={glowColor} strokeWidth="0.8" pointerEvents="none" />
         </motion.g>
 
-        {/* Uterus (centered lower abdomen) */}
+        {/* Uterus - CLICKABLE */}
         <motion.g
           initial={{ opacity: organOpacity }}
           animate={{ opacity: isOrganActive("uterus") ? 1 : organOpacity }}
           transition={{ duration: 0.2 }}
           style={{ filter: isOrganActive("uterus") ? "url(#strongGlow)" : "none" }}
         >
-          <path
-            d="M-20,80 Q-25,90 -20,100 Q-10,110 0,105 Q10,110 20,100 Q25,90 20,80 Q10,75 0,78 Q-10,75 -20,80"
-            fill="none"
-            stroke={selectedOrgan === "uterus" ? selectedColor : glowColor}
-            strokeWidth="1.2"
+          {/* Invisible hitbox */}
+          <ellipse
+            cx="0"
+            cy="90"
+            rx="30"
+            ry="25"
+            fill="transparent"
             className="cursor-pointer"
             onMouseEnter={() => onOrganHover("uterus")}
             onMouseLeave={() => onOrganHover(null)}
             onClick={() => onOrganClick("uterus")}
           />
-          {/* Fallopian tubes */}
-          <path d="M-20,85 Q-35,80 -45,75" fill="none" stroke={glowColor} strokeWidth="0.6" opacity="0.5" />
-          <path d="M20,85 Q35,80 45,75" fill="none" stroke={glowColor} strokeWidth="0.6" opacity="0.5" />
+          <motion.path
+            d="M-20,80 Q-25,90 -20,100 Q-10,110 0,105 Q10,110 20,100 Q25,90 20,80 Q10,75 0,78 Q-10,75 -20,80"
+            fill={isOrganActive("uterus") ? "rgba(126,200,227,0.2)" : "transparent"}
+            stroke={selectedOrgan === "uterus" ? selectedColor : glowColor}
+            strokeWidth={isOrganActive("uterus") ? 2 : 1.2}
+            className="cursor-pointer"
+            onMouseEnter={() => onOrganHover("uterus")}
+            onMouseLeave={() => onOrganHover(null)}
+            onClick={() => onOrganClick("uterus")}
+          />
         </motion.g>
       </motion.g>
 
-      {/* Left Knee */}
+      {/* Left Knee - CLICKABLE */}
       <motion.g
         initial={{ opacity: organOpacity }}
         animate={{ opacity: isOrganActive("knee") ? 1 : organOpacity }}
@@ -807,26 +808,37 @@ function FrontView({
         style={{ filter: isOrganActive("knee") ? "url(#strongGlow)" : "none" }}
       >
         <g transform="translate(-50, 220)">
+          {/* Invisible hitbox */}
           <ellipse
             cx="0"
             cy="0"
-            rx="25"
-            ry="35"
-            fill="none"
-            stroke={selectedOrgan === "knee" ? selectedColor : glowColor}
-            strokeWidth="1.2"
+            rx="35"
+            ry="45"
+            fill="transparent"
             className="cursor-pointer"
             onMouseEnter={() => onOrganHover("knee")}
             onMouseLeave={() => onOrganHover(null)}
             onClick={() => onOrganClick("knee")}
           />
-          {/* ACL representation */}
-          <path d="M-8,-10 L8,15" fill="none" stroke={glowColor} strokeWidth="0.8" opacity="0.6" />
-          <path d="M8,-10 L-8,15" fill="none" stroke={glowColor} strokeWidth="0.8" opacity="0.4" />
+          <motion.ellipse
+            cx="0"
+            cy="0"
+            rx="25"
+            ry="35"
+            fill={isOrganActive("knee") ? "rgba(126,200,227,0.15)" : "transparent"}
+            stroke={selectedOrgan === "knee" ? selectedColor : glowColor}
+            strokeWidth={isOrganActive("knee") ? 2 : 1.2}
+            className="cursor-pointer"
+            onMouseEnter={() => onOrganHover("knee")}
+            onMouseLeave={() => onOrganHover(null)}
+            onClick={() => onOrganClick("knee")}
+          />
+          <path d="M-8,-10 L8,15" fill="none" stroke={glowColor} strokeWidth="0.8" opacity="0.6" pointerEvents="none" />
+          <path d="M8,-10 L-8,15" fill="none" stroke={glowColor} strokeWidth="0.8" opacity="0.4" pointerEvents="none" />
         </g>
       </motion.g>
 
-      {/* Right Knee */}
+      {/* Right Knee - CLICKABLE (same procedure) */}
       <motion.g
         initial={{ opacity: organOpacity }}
         animate={{ opacity: isOrganActive("knee") ? 1 : organOpacity }}
@@ -834,21 +846,33 @@ function FrontView({
         style={{ filter: isOrganActive("knee") ? "url(#strongGlow)" : "none" }}
       >
         <g transform="translate(50, 220)">
+          {/* Invisible hitbox */}
           <ellipse
             cx="0"
             cy="0"
-            rx="25"
-            ry="35"
-            fill="none"
-            stroke={selectedOrgan === "knee" ? selectedColor : glowColor}
-            strokeWidth="1.2"
+            rx="35"
+            ry="45"
+            fill="transparent"
             className="cursor-pointer"
             onMouseEnter={() => onOrganHover("knee")}
             onMouseLeave={() => onOrganHover(null)}
             onClick={() => onOrganClick("knee")}
           />
-          <path d="M-8,-10 L8,15" fill="none" stroke={glowColor} strokeWidth="0.8" opacity="0.6" />
-          <path d="M8,-10 L-8,15" fill="none" stroke={glowColor} strokeWidth="0.8" opacity="0.4" />
+          <motion.ellipse
+            cx="0"
+            cy="0"
+            rx="25"
+            ry="35"
+            fill={isOrganActive("knee") ? "rgba(126,200,227,0.15)" : "transparent"}
+            stroke={selectedOrgan === "knee" ? selectedColor : glowColor}
+            strokeWidth={isOrganActive("knee") ? 2 : 1.2}
+            className="cursor-pointer"
+            onMouseEnter={() => onOrganHover("knee")}
+            onMouseLeave={() => onOrganHover(null)}
+            onClick={() => onOrganClick("knee")}
+          />
+          <path d="M-8,-10 L8,15" fill="none" stroke={glowColor} strokeWidth="0.8" opacity="0.6" pointerEvents="none" />
+          <path d="M8,-10 L-8,15" fill="none" stroke={glowColor} strokeWidth="0.8" opacity="0.4" pointerEvents="none" />
         </g>
       </motion.g>
 
@@ -856,13 +880,13 @@ function FrontView({
       <path d="M-30,130 Q-35,180 -50,250" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
       <path d="M-50,280 Q-55,350 -50,320" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
       <path d="M30,130 Q35,180 50,250" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-      <path d="M50,280 Q55,350 50,320" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+      <path d="M55,280 Q60,350 50,320" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
     </>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// BACK VIEW - Spine, Kidneys, Shoulder blades
+// BACK VIEW
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function BackView({
@@ -870,19 +894,21 @@ function BackView({
   hoveredOrgan,
   onOrganClick,
   onOrganHover,
-  organOpacity,
   glowColor,
   selectedColor,
+  organOpacity,
   isOrganActive,
+  clickableOrgans,
 }: {
   selectedOrgan: string | null;
   hoveredOrgan: string | null;
   onOrganClick: (organId: string) => void;
   onOrganHover: (organId: string | null) => void;
-  organOpacity: number;
   glowColor: string;
   selectedColor: string;
+  organOpacity: number;
   isOrganActive: (organId: string) => boolean;
+  clickableOrgans: string[];
 }) {
   return (
     <>
@@ -892,13 +918,25 @@ function BackView({
       {/* Neck */}
       <rect x="-18" y="-220" width="36" height="30" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
 
-      {/* Spine - with faint glow */}
+      {/* Spine - CLICKABLE */}
       <motion.g
         initial={{ opacity: 0.25 }}
         animate={{ opacity: isOrganActive("spine") ? 1 : 0.25 }}
         transition={{ duration: 0.2 }}
         style={{ filter: isOrganActive("spine") ? "url(#strongGlow)" : "url(#glow)" }}
       >
+        {/* Invisible hitbox for spine */}
+        <rect
+          x="-20"
+          y="-200"
+          width="40"
+          height="220"
+          fill="transparent"
+          className="cursor-pointer"
+          onMouseEnter={() => onOrganHover("spine")}
+          onMouseLeave={() => onOrganHover(null)}
+          onClick={() => onOrganClick("spine")}
+        />
         {/* Cervical vertebrae */}
         {[0, 1, 2, 3, 4, 5, 6].map((i) => (
           <rect
@@ -907,9 +945,9 @@ function BackView({
             y={-210 + i * 12}
             width="16"
             height="10"
-            fill="none"
+            fill={isOrganActive("spine") ? "rgba(126,200,227,0.1)" : "transparent"}
             stroke={selectedOrgan === "spine" ? selectedColor : glowColor}
-            strokeWidth="0.8"
+            strokeWidth={isOrganActive("spine") ? 1.5 : 0.8}
             rx="2"
             className="cursor-pointer"
             onMouseEnter={() => onOrganHover("spine")}
@@ -925,9 +963,9 @@ function BackView({
             y={-126 + i * 12}
             width="20"
             height="10"
-            fill="none"
+            fill={isOrganActive("spine") ? "rgba(126,200,227,0.1)" : "transparent"}
             stroke={selectedOrgan === "spine" ? selectedColor : glowColor}
-            strokeWidth="0.8"
+            strokeWidth={isOrganActive("spine") ? 1.5 : 0.8}
             rx="2"
             className="cursor-pointer"
             onMouseEnter={() => onOrganHover("spine")}
@@ -943,9 +981,9 @@ function BackView({
             y={10 + i * 14}
             width="24"
             height="12"
-            fill="none"
+            fill={isOrganActive("spine") ? "rgba(126,200,227,0.1)" : "transparent"}
             stroke={selectedOrgan === "spine" ? selectedColor : glowColor}
-            strokeWidth="1"
+            strokeWidth={isOrganActive("spine") ? 1.5 : 1}
             rx="2"
             className="cursor-pointer"
             onMouseEnter={() => onOrganHover("spine")}
@@ -955,79 +993,43 @@ function BackView({
         ))}
       </motion.g>
 
-      {/* Left Shoulder Blade (Scapula) */}
-      <motion.g
-        initial={{ opacity: organOpacity * 0.6 }}
-        animate={{ opacity: isOrganActive("scapula") ? 1 : organOpacity * 0.6 }}
-        transition={{ duration: 0.2 }}
-        style={{ filter: isOrganActive("scapula") ? "url(#glow)" : "none" }}
-      >
+      {/* Shoulder Blades - non-clickable */}
+      <motion.g initial={{ opacity: organOpacity * 0.4 }}>
         <path
           d="M-70,-160 Q-85,-140 -80,-100 Q-75,-70 -55,-60 L-45,-80 Q-55,-110 -55,-140 Q-60,-160 -70,-160"
-          fill="none"
+          fill="rgba(126,200,227,0.02)"
           stroke={glowColor}
-          strokeWidth="1"
-          className="cursor-pointer"
-          onMouseEnter={() => onOrganHover("scapula")}
-          onMouseLeave={() => onOrganHover(null)}
-          onClick={() => onOrganClick("scapula")}
+          strokeWidth="0.8"
+          opacity="0.4"
         />
       </motion.g>
-
-      {/* Right Shoulder Blade */}
-      <motion.g
-        initial={{ opacity: organOpacity * 0.6 }}
-        animate={{ opacity: isOrganActive("scapula") ? 1 : organOpacity * 0.6 }}
-        transition={{ duration: 0.2 }}
-        style={{ filter: isOrganActive("scapula") ? "url(#glow)" : "none" }}
-      >
+      <motion.g initial={{ opacity: organOpacity * 0.4 }}>
         <path
           d="M70,-160 Q85,-140 80,-100 Q75,-70 55,-60 L45,-80 Q55,-110 55,-140 Q60,-160 70,-160"
-          fill="none"
+          fill="rgba(126,200,227,0.02)"
           stroke={glowColor}
-          strokeWidth="1"
-          className="cursor-pointer"
-          onMouseEnter={() => onOrganHover("scapula")}
-          onMouseLeave={() => onOrganHover(null)}
-          onClick={() => onOrganClick("scapula")}
+          strokeWidth="0.8"
+          opacity="0.4"
         />
       </motion.g>
 
-      {/* Left Kidney */}
-      <motion.g
-        initial={{ opacity: organOpacity }}
-        animate={{ opacity: isOrganActive("kidney") ? 1 : organOpacity }}
-        transition={{ duration: 0.2 }}
-        style={{ filter: isOrganActive("kidney") ? "url(#strongGlow)" : "none" }}
-      >
+      {/* Kidneys - non-clickable */}
+      <motion.g initial={{ opacity: organOpacity * 0.4 }}>
         <path
           d="M-50,0 Q-60,10 -55,30 Q-45,45 -35,40 Q-25,30 -30,10 Q-35,-5 -50,0"
-          fill="none"
+          fill="rgba(126,200,227,0.02)"
           stroke={glowColor}
-          strokeWidth="1.2"
-          className="cursor-pointer"
-          onMouseEnter={() => onOrganHover("kidney")}
-          onMouseLeave={() => onOrganHover(null)}
-          onClick={() => onOrganClick("kidney")}
+          strokeWidth="0.8"
+          opacity="0.4"
         />
       </motion.g>
-
-      {/* Right Kidney */}
-      <motion.g
-        initial={{ opacity: organOpacity }}
-        animate={{ opacity: isOrganActive("kidney") ? 1 : organOpacity }}
-        transition={{ duration: 0.2 }}
-        style={{ filter: isOrganActive("kidney") ? "url(#strongGlow)" : "none" }}
-      >
+      <motion.g initial={{ opacity: organOpacity * 0.4 }}>
         <path
           d="M50,0 Q60,10 55,30 Q45,45 35,40 Q25,30 30,10 Q35,-5 50,0"
-          fill="none"
+          fill="rgba(126,200,227,0.02)"
           stroke={glowColor}
-          strokeWidth="1.2"
-          className="cursor-pointer"
-          onMouseEnter={() => onOrganHover("kidney")}
-          onMouseLeave={() => onOrganHover(null)}
-          onClick={() => onOrganClick("kidney")}
+          strokeWidth="0.8"
+          opacity="0.4"
         />
       </motion.g>
 
@@ -1196,14 +1198,8 @@ function ProcedurePanel({ procedure }: { procedure: Procedure | null }) {
                 className="mt-4 flex gap-1"
               >
                 <div className="w-1 h-1 bg-[#7EC8E3]/40 rounded-full" />
-                <div
-                  className="w-1 h-1 bg-[#7EC8E3]/40 rounded-full"
-                  style={{ animationDelay: "0.2s" }}
-                />
-                <div
-                  className="w-1 h-1 bg-[#7EC8E3]/40 rounded-full"
-                  style={{ animationDelay: "0.4s" }}
-                />
+                <div className="w-1 h-1 bg-[#7EC8E3]/40 rounded-full" />
+                <div className="w-1 h-1 bg-[#7EC8E3]/40 rounded-full" />
               </motion.div>
               <p className="text-white/30 text-sm font-mono mt-2">Animation loading</p>
             </div>
