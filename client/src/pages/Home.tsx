@@ -21,6 +21,7 @@ import {
   Zap,
   Award,
   ArrowRight,
+  User,
 } from "lucide-react";
 
 const PROCEDURES = [
@@ -332,6 +333,54 @@ export default function Home() {
       </section>
 
       {/* ── STATS BANNER ── */}
+
+        {/* -- ANATOMY EXPLORER -- */}
+        <section className='py-20 bg-background relative overflow-hidden'>
+          <div className='max-w-5xl mx-auto px-4'>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={featuresInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5 }}
+              className='text-center mb-8'
+            >
+              <span className='label-mono block mb-3'>New Feature</span>
+              <h2 className='text-3xl md:text-4xl font-bold text-foreground' style={{ fontFamily: "'Syne', sans-serif" }}>
+                Explore Anatomy
+              </h2>
+            </motion.div>
+            <div className='grid md:grid-cols-2 gap-8 items-center'>
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={featuresInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.5, delay: 0.1 }}>
+                <p className='text-muted-foreground mb-6 leading-relaxed'>
+                  Tap on body regions to discover surgical procedures. Learn where each organ sits and which surgeries target specific anatomical zones.
+                </p>
+                <div className='flex flex-wrap gap-3 mb-6'>
+                  {["?? Craniotomy", "?? Heart Bypass", "?? Appendectomy", "?? ACL Surgery"].map((proc) => (
+                    <span key={proc} className='px-3 py-1.5 rounded-full text-sm bg-primary/10 border border-primary/20 text-foreground'>{proc}</span>
+                  ))}
+                </div>
+                <Link href='/anatomy'>
+                  <Button size='lg' className='bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl baby-blue-glow' style={{ fontFamily: "'Syne', sans-serif" }}>
+                    <User className='w-5 h-5 mr-2' />Explore the Body
+                  </Button>
+                </Link>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={featuresInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.5, delay: 0.2 }} className='relative'>
+                <div className='glass-card-light rounded-2xl p-6 border border-primary/20 hover:baby-blue-glow transition-all duration-300'>
+                  <div className='text-center'>
+                    <div className='text-6xl mb-4'>??</div>
+                    <p className='text-muted-foreground text-sm mb-4'>Interactive body diagram with clickable hotspots</p>
+                    <div className='flex justify-center gap-2'>
+                      <div className='w-3 h-3 rounded-full bg-primary animate-pulse' />
+                      <div className='w-3 h-3 rounded-full bg-teal-400 animate-pulse' style={{ animationDelay: '0.3s' }} />
+                      <div className='w-3 h-3 rounded-full bg-amber-400 animate-pulse' style={{ animationDelay: '0.6s' }} />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
       <section className="py-20 bg-primary/5 border-y border-primary/10 relative overflow-hidden">
         <div className="absolute inset-0 opacity-5"
           style={{

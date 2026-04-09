@@ -41,7 +41,7 @@ const XP = 340;
 const XP_NEXT = 500;
 
 export default function Profile() {
-  const { user, login, loading: authLoading } = useAuth();
+  const { user, loginWithGitHub, loading: authLoading } = useAuth();
   const [history, setHistory] = useState<any[]>([]);
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function Profile() {
               Track your rank, XP, and detailed surgery performance across every session.
             </p>
             <Button
-              onClick={login}
+              onClick={loginWithGitHub}
               className="w-full h-12 bg-white hover:bg-gray-100 text-black font-semibold rounded-lg flex items-center justify-center gap-3 transition-all"
             >
               <Github className="w-5 h-5" /> Continue with GitHub

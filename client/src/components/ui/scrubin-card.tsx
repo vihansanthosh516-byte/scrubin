@@ -9,6 +9,7 @@ interface ScrubinCardProps {
   glowColor?: "blue" | "teal";
   variant?: "interactive" | "static";
   as?: "div" | "article" | "section";
+  onClick?: () => void;
 }
 
 /**
@@ -25,6 +26,7 @@ const ScrubinCard: React.FC<ScrubinCardProps> = ({
   glowColor = "blue",
   variant = "interactive",
   as: Component = "div",
+  onClick,
 }) => {
   const colorStyles = {
     blue: {
@@ -68,6 +70,7 @@ const ScrubinCard: React.FC<ScrubinCardProps> = ({
 
   return (
     <Component
+    onClick={onClick}
       className={cn(baseStyles, interactiveStyles, className)}
     >
       <div className={innerGlow} />
@@ -115,7 +118,7 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({
       glowColor="blue"
       variant="interactive"
       className={unlocked ? "" : "opacity-60"}
-      onClick={unlocked ? onClick : undefined}
+      onClick={onClick}
     >
       {/* Header with icon */}
       <div className="relative h-32 bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center overflow-hidden">

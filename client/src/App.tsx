@@ -11,6 +11,7 @@ import Leaderboard from "./pages/Leaderboard";
 import LearnHub from "./pages/LearnHub";
 import Profile from "./pages/Profile";
 import Signin from "./pages/Signin";
+import AnatomyExplorer from "./pages/AnatomyExplorer";
 import { AuthProvider } from "./contexts/AuthContext";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/simulation" component={Simulation} />
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/learn" component={LearnHub} />
+      <Route path="/anatomy" component={AnatomyExplorer} />
       <Route path="/profile" component={Profile} />
       <Route path="/signin" component={Signin} />
       <Route path="/404" component={NotFound} />

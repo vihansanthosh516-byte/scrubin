@@ -186,7 +186,7 @@ export default function Simulation() {
   };
 
   const generateScoreAndFetchAI = async (hist: DecisionHistoryItem[], failures: number, gameOverState: boolean) => {
-    const data = calculateProcedureOutcome(hist, failures, gameOverState, 200, true, elapsedTime);
+    const data = calculateProcedureOutcome(hist);
     setScoreData(data);
     setGameState(data.badge === "FAILED" ? "gameover" : "complete");
     audioEngine.stopAll();

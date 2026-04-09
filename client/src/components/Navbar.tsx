@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { href: "/procedures", label: "Procedures" },
+  { href: "/anatomy", label: "Anatomy" },
   { href: "/learn", label: "Learn Hub" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/profile", label: "Profile" },
