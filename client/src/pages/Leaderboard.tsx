@@ -5,7 +5,6 @@
  */
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Navbar from "@/components/Navbar";
 import { Trophy, Medal, Star, TrendingUp, Activity } from "lucide-react";
 import { ScrubinCard, ScrubinStaticPanel } from "@/components/ui/scrubin-card";
 import { getLeaderboard, LeaderboardEntry } from "@/lib/leaderboard";
@@ -44,8 +43,6 @@ export default function Leaderboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-
       <div className="pt-24 pb-16 max-w-4xl mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

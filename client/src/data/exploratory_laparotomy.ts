@@ -1,4 +1,4 @@
-import { ComplicationType } from "../lib/vitals";
+import type { ComplicationType } from "../lib/vitals";
 
 export type RescueOption = { id: string; label: string; desc: string; correct: boolean };
 

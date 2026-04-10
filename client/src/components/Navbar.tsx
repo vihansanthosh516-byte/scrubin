@@ -1,5 +1,4 @@
 "use client";
-
 /**
  * ScrubIn Navbar — Clinical Precision Design
  * - Pill-shaped nav with cursor following hover
@@ -8,7 +7,6 @@
  * - Light/dark theme toggle dropdown
  * - Mobile: hamburger menu (collapse-to-left is desktop only)
  */
-
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence, type Variants } from "framer-motion";
@@ -25,7 +23,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-
 const NAV_LINKS = [
   { href: "/procedures", label: "Procedures" },
   { href: "/anatomy", label: "Anatomy" },
@@ -33,104 +30,102 @@ const NAV_LINKS = [
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/profile", label: "Profile" },
 ];
-
 // Scroll thresholds
 const EXPAND_SCROLL_THRESHOLD = 80;
 const COLLAPSE_SCROLL_THRESHOLD = 150;
-
-// Animation variants - slower, cinematic
+// Animation variants - using CSS-like transitions for smoother transforms
 const navWrapperVariants: Variants = {
   expanded: {
     left: "50%",
-    x: "-50%",
+    translateX: "-50%",
     transition: {
-      type: "tween",
-      duration: 0.6,
-      ease: [0.4, 0, 0.2, 1], // ease-out
+      type: "spring",
+      stiffness: 400,
+      damping: 30,
+      mass: 1,
     },
   },
   collapsed: {
     left: "1.5rem",
-    x: "0%",
+    translateX: "0%",
     transition: {
-      type: "tween",
-      duration: 0.8,
-      ease: [0.4, 0, 0.2, 1], // ease-out
+      type: "spring",
+      stiffness: 400,
+      damping: 30,
+      mass: 1,
     },
   },
 };
-
 const logoTextVariants: Variants = {
   expanded: {
-    fontSize: "1.25rem", // text-xl
+    fontSize: "1.25rem",
+    opacity: 1,
     transition: {
-      type: "tween",
-      duration: 0.5,
-      ease: "easeInOut",
+      type: "spring",
+      stiffness: 300,
+      damping: 25,
     },
   },
   collapsed: {
-    fontSize: "1rem", // smaller
+    fontSize: "1rem",
+    opacity: 1,
     transition: {
-      type: "tween",
-      duration: 0.5,
-      ease: "easeInOut",
+      type: "spring",
+      stiffness: 300,
+      damping: 25,
     },
   },
 };
-
 const logoBoxVariants: Variants = {
   expanded: {
     width: "2rem",
     height: "2rem",
     transition: {
-      type: "tween",
-      duration: 0.5,
-      ease: "easeInOut",
+      type: "spring",
+      stiffness: 300,
+      damping: 25,
     },
   },
   collapsed: {
     width: "1.5rem",
     height: "1.5rem",
     transition: {
-      type: "tween",
-      duration: 0.5,
-      ease: "easeInOut",
+      type: "spring",
+      stiffness: 300,
+      damping: 25,
     },
   },
 };
-
 const navItemsVariants: Variants = {
   expanded: {
     opacity: 1,
     width: "auto",
     transition: {
-      type: "tween",
-      duration: 0.4,
-      ease: "easeInOut",
+      type: "spring",
+      stiffness: 300,
+      damping: 25,
     },
   },
   collapsed: {
     opacity: 0,
     width: 0,
     transition: {
-      type: "tween",
-      duration: 0.3,
-      ease: "easeInOut",
+      type: "spring",
+      stiffness: 300,
+      damping: 25,
     },
   },
 };
-
 // Cursor position state type
 interface CursorPosition {
   left: number;
   width: number;
   opacity: number;
 }
-
 export default function Navbar() {
   const [isExpanded, setIsExpanded] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isManuallyExpanded, setIsManuallyExpanded] = useState(false);
   const [cursorPosition, setCursorPosition] = useState<CursorPosition>({
     left: 0,
     width: 0,
@@ -139,15 +134,22 @@ export default function Navbar() {
   const [location] = useLocation();
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
-
   // Scroll detection for collapse/expand
   const { scrollY } = useScroll();
   const lastScrollY = useRef(0);
   const scrollPositionOnCollapse = useRef(0);
-
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = lastScrollY.current;
-
+    // Skip auto-collapse if manually expanded (user clicked to expand)
+    // But clear the lock if user scrolls UP
+    if (isManuallyExpanded) {
+      if (latest < previous) {
+        // User is scrolling up, clear the manual lock
+        setIsManuallyExpanded(false);
+      }
+      lastScrollY.current = latest;
+      return;
+    }
     // Collapse when scrolling down past threshold
     if (isExpanded && latest > previous && latest > COLLAPSE_SCROLL_THRESHOLD) {
       setIsExpanded(false);
@@ -165,91 +167,85 @@ export default function Navbar() {
     else if (!isExpanded && latest < 50) {
       setIsExpanded(true);
     }
-
     lastScrollY.current = latest;
   });
-
   // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [location]);
-
   // Scroll to top on route change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [location]);
-
   // Check if link is active
   const isActive = (href: string) => location === href;
-
   // Check if we're on home page
   const isHomePage = location === "/" || location === "";
-
   // Handle clicking logo
   const handleLogoClick = (e: React.MouseEvent) => {
-    // If collapsed, just expand (don't navigate)
+    // If collapsed, expand the navbar
     if (!isExpanded) {
       e.preventDefault();
       e.stopPropagation();
       setIsExpanded(true);
-    }
-    // If expanded and not on home page, scroll to top
-    if (isExpanded && !isHomePage) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setIsManuallyExpanded(true);
+      // Auto-clear manual expand after 3 seconds of inactivity
+      setTimeout(() => {
+        setIsManuallyExpanded(false);
+      }, 3000);
+      return;
     }
   };
-
   // Handle hover for cursor effect
   const handleMouseLeave = () => {
     setCursorPosition((pv) => ({ ...pv, opacity: 0 }));
   };
-
   // Determine displayed theme for icon
   const systemPreference = "light";
   const displayTheme = theme === "system" ? systemPreference : theme;
-
   return (
     <>
       {/* === DESKTOP NAVBAR === */}
       <motion.div
         className="fixed top-6 z-50 hidden md:block"
-        initial="expanded"
+        initial={false}
         animate={isExpanded ? "expanded" : "collapsed"}
         variants={navWrapperVariants}
+        style={{ originX: 0.5, originY: 0.5 }}
       >
         <motion.nav
           className={cn(
             "relative flex items-center overflow-hidden rounded-full border shadow-lg backdrop-blur-md",
-            "bg-[#0A1628]/95 border-primary/20",
-            isExpanded ? "px-2 py-1.5 gap-2" : "px-3 py-2 gap-2 cursor-pointer"
+            "bg-background/95 border-border dark:bg-[#0A1628]/95 dark:border-primary/20",
+        
+            isExpanded ? "px-2 py-1.5 gap-2" : "px-3 py-2 gap-2"
           )}
           onMouseLeave={handleMouseLeave}
+          
         >
           {/* === LOGO (ECG icon + ScrubIn text) === */}
-          <Link
+          <Link onClick={handleLogoClick}
             href={isExpanded && !isHomePage ? "/" : "#"}
-            onClick={handleLogoClick}
-            className="flex items-center gap-2 group"
+            
+            className="flex items-center gap-2 group cursor-pointer"
           >
             {/* ECG Icon Box */}
             <motion.div
               variants={logoBoxVariants}
               className="relative rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center group-hover:bg-primary/30 transition-colors flex-shrink-0"
             >
-              <Activity className="w-4 h-4 text-baby-blue" />
+              <Activity className="w-4 h-4 text-[#7EC8E3] dark:text-baby-blue" />
               <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary animate-pulse" />
             </motion.div>
-
             {/* ScrubIn Text */}
             <motion.span
               variants={logoTextVariants}
-              className="font-bold tracking-tight text-white"
+              className="font-bold tracking-tight text-[#0A1628] dark:text-white"
               style={{ fontFamily: "'Syne', sans-serif" }}
             >
               Scrub<span className="text-baby-blue">In</span>
             </motion.span>
           </Link>
-
           {/* === NAVIGATION LINKS with cursor effect === */}
           <AnimatePresence>
             {isExpanded && (
@@ -280,7 +276,6 @@ export default function Navbar() {
               </motion.div>
             )}
           </AnimatePresence>
-
           {/* === RIGHT SIDE: Theme + Auth === */}
           <AnimatePresence>
             {isExpanded && (
@@ -302,31 +297,30 @@ export default function Navbar() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       {displayTheme === "light" ? (
-                        <Sun className="w-4 h-4 text-baby-blue" />
+                        <Sun className="w-4 h-4 text-[#7EC8E3] dark:text-baby-blue" />
                       ) : (
-                        <Moon className="w-4 h-4 text-baby-blue" />
+                        <Moon className="w-4 h-4 text-[#7EC8E3] dark:text-baby-blue" />
                       )}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="min-w-32 bg-[#0A1628]/95 backdrop-blur-md border-primary/20"
+                    className="min-w-32 bg-white/95 dark:bg-[#0A1628]/95 backdrop-blur-md border-gray-200 dark:border-primary/20"
                   >
-                    <DropdownMenuItem onClick={() => setTheme("light")} className="gap-2 cursor-pointer text-white focus:text-white focus:bg-primary/20">
-                      <Sun className="w-4 h-4 text-baby-blue" />
+                    <DropdownMenuItem onClick={() => setTheme("light")} className="gap-2 cursor-pointer text-foreground dark:text-white focus:text-foreground dark:focus:text-white focus:bg-primary/20">
+                      <Sun className="w-4 h-4 text-[#7EC8E3] dark:text-baby-blue" />
                       <span>Light</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2 cursor-pointer text-white focus:text-white focus:bg-primary/20">
-                      <Moon className="w-4 h-4 text-baby-blue" />
+                    <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2 cursor-pointer text-foreground dark:text-white focus:text-foreground dark:focus:text-white focus:bg-primary/20">
+                      <Moon className="w-4 h-4 text-[#7EC8E3] dark:text-baby-blue" />
                       <span>Dark</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setTheme("system")} className="gap-2 cursor-pointer text-white focus:text-white focus:bg-primary/20">
-                      <Monitor className="w-4 h-4 text-baby-blue" />
+                    <DropdownMenuItem onClick={() => setTheme("system")} className="gap-2 cursor-pointer text-foreground dark:text-white focus:text-foreground dark:focus:text-white focus:bg-primary/20">
+                      <Monitor className="w-4 h-4 text-[#7EC8E3] dark:text-baby-blue" />
                       <span>System</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-
                 {/* Auth: Profile Dropdown or Sign In */}
                 {user ? (
                   <DropdownMenu>
@@ -341,26 +335,26 @@ export default function Navbar() {
                           alt={user.name}
                           className="w-6 h-6 rounded-full border border-primary/20"
                         />
-                        <span className="text-xs font-semibold font-mono-data pr-1 text-white">
-                          {user.name.split(" ")[0]}
+                        <span className="text-xs font-semibold font-mono-data pr-1 text-foreground dark:text-white max-w-[80px] truncate">
+                          {user.customUsername || user.name?.split(" ")[0] || user.login}
                         </span>
-                        <ChevronDown className="w-3 h-3 text-white/50" />
+                        <ChevronDown className="w-3 h-3 text-[#0A1628]/50 dark:text-white/50" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
-                      className="w-56 bg-[#0A1628]/95 backdrop-blur-md border-primary/20"
+                      className="w-56 bg-white/95 dark:bg-[#0A1628]/95 backdrop-blur-md border-gray-200 dark:border-primary/20"
                     >
-                      <DropdownMenuLabel className="font-bold flex flex-col text-white">
+                      <DropdownMenuLabel className="font-bold flex flex-col text-foreground dark:text-white">
                         <span className="text-sm">{user.name}</span>
-                        <span className="text-[10px] text-white/60 font-mono-data font-normal">
+                        <span className="text-[10px] text-[#0A1628]/60 dark:text-white/60 font-mono-data font-normal">
                           @{user.login}
                         </span>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator className="bg-white/10" />
                       <Link href="/profile">
                         <DropdownMenuItem className="cursor-pointer gap-2 text-white focus:text-white focus:bg-primary/20">
-                          <User className="w-4 h-4 text-baby-blue" /> Profile
+                          <User className="w-4 h-4 text-[#7EC8E3] dark:text-baby-blue" /> Profile
                         </DropdownMenuItem>
                       </Link>
                       <DropdownMenuSeparator className="bg-white/10" />
@@ -388,42 +382,39 @@ export default function Navbar() {
           </AnimatePresence>
         </motion.nav>
       </motion.div>
-
       {/* === MOBILE NAVBAR (separate, always visible on mobile) === */}
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 md:hidden">
-        <nav className="relative flex items-center overflow-hidden rounded-full border shadow-lg backdrop-blur-md px-2 py-1.5 gap-2 bg-[#0A1628]/95 border-primary/20">
+        <nav className="relative flex items-center overflow-hidden rounded-full border shadow-lg backdrop-blur-md px-2 py-1.5 gap-2 bg-background/95 border-border dark:bg-[#0A1628]/95 dark:border-primary/20">
           {/* Logo */}
           <Link href="/">
             <div className="flex items-center gap-2 group">
               <div className="relative w-8 h-8 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
-                <Activity className="w-4 h-4 text-baby-blue" />
+                <Activity className="w-4 h-4 text-[#7EC8E3] dark:text-baby-blue" />
                 <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary animate-pulse" />
               </div>
               <span
-                className="text-xl font-bold tracking-tight text-white"
+                className="text-xl font-bold tracking-tight text-[#0A1628] dark:text-white"
                 style={{ fontFamily: "'Syne', sans-serif" }}
               >
                 Scrub<span className="text-baby-blue">In</span>
               </span>
             </div>
           </Link>
-
           {/* Mobile Menu Toggle */}
           <Button
             variant="ghost"
             size="icon"
-            className="w-9 h-9 rounded-full border border-white/20"
+            className="w-9 h-9 rounded-full border border-border dark:border-white/20"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
             {mobileOpen ? (
-              <X className="w-4 h-4 text-baby-blue" />
+              <X className="w-4 h-4 text-[#7EC8E3] dark:text-baby-blue" />
             ) : (
-              <Menu className="w-4 h-4 text-baby-blue" />
+              <Menu className="w-4 h-4 text-[#7EC8E3] dark:text-baby-blue" />
             )}
           </Button>
         </nav>
-
         {/* Mobile Menu Dropdown */}
         <AnimatePresence>
           {mobileOpen && (
@@ -431,7 +422,7 @@ export default function Navbar() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute top-14 left-0 right-0 bg-[#0A1628]/95 backdrop-blur-md border border-primary/20 rounded-2xl p-4 shadow-xl"
+              className="absolute top-14 left-0 right-0 bg-white/95 dark:bg-[#0A1628]/95 backdrop-blur-md border border-gray-200 dark:border-primary/20 rounded-2xl p-4 shadow-xl"
             >
               <div className="space-y-1">
                 {NAV_LINKS.map((link) => (
@@ -441,21 +432,20 @@ export default function Navbar() {
                         "block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
                         isActive(link.href)
                           ? "text-primary bg-primary/10"
-                          : "text-white/80 hover:text-white hover:bg-white/10"
+                          : "text-[#0A1628]/80 hover:text-[#0A1628] hover:bg-[#0A1628]/10 dark:text-white/80 dark:hover:text-white dark:hover:bg-white/10"
                       )}
                     >
                       {link.label}
                     </div>
                   </Link>
                 ))}
-
                 {/* Theme Toggle for Mobile */}
-                <div className="pt-4 mt-4 border-t border-white/10">
+                <div className="pt-4 mt-4 border-t border-[#0A1628]/10 dark:border-white/10">
                   <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant={theme === "light" ? "default" : "outline"}
-                      className="flex-1 gap-2 text-white"
+                      className="flex-1 gap-2 text-[#0A1628] dark:text-white"
                       onClick={() => setTheme("light")}
                     >
                       <Sun className="w-4 h-4" /> Light
@@ -463,14 +453,13 @@ export default function Navbar() {
                     <Button
                       size="sm"
                       variant={theme === "dark" ? "default" : "outline"}
-                      className="flex-1 gap-2 text-white"
+                      className="flex-1 gap-2 text-[#0A1628] dark:text-white"
                       onClick={() => setTheme("dark")}
                     >
                       <Moon className="w-4 h-4" /> Dark
                     </Button>
                   </div>
                 </div>
-
                 {/* Auth for Mobile */}
                 {user ? (
                   <div className="pt-4 mt-4 border-t border-white/10 space-y-1">
@@ -481,8 +470,8 @@ export default function Navbar() {
                         alt=""
                       />
                       <div>
-                        <div className="text-sm font-bold text-white">{user.name}</div>
-                        <div className="text-xs text-white/60">@{user.login}</div>
+                        <div className="text-sm font-bold text-[#0A1628] dark:text-white">{user.customUsername || user.name}</div>
+                        <div className="text-xs text-[#0A1628]/60 dark:text-white/60">@{user.customUsername || user.login}</div>
                       </div>
                     </div>
                     <Button
@@ -508,7 +497,6 @@ export default function Navbar() {
     </>
   );
 }
-
 // === TAB COMPONENT (with cursor tracking) ===
 function Tab({
   children,
@@ -522,7 +510,6 @@ function Tab({
   setPosition: React.Dispatch<React.SetStateAction<CursorPosition>>;
 }) {
   const ref = useRef<HTMLLIElement>(null);
-
   return (
     <li
       ref={ref}
@@ -537,7 +524,9 @@ function Tab({
       }}
       className={cn(
         "relative z-10 block cursor-pointer px-3 py-1.5 text-xs uppercase font-semibold transition-colors md:px-4 md:text-sm",
-        isActive ? "text-baby-blue" : "text-white/80 hover:text-white"
+        isActive
+          ? "text-[#7EC8E3] dark:text-baby-blue"
+          : "text-[#0A1628]/80 hover:text-[#0A1628] dark:text-white/80 dark:hover:text-white"
       )}
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
@@ -547,7 +536,6 @@ function Tab({
     </li>
   );
 }
-
 // === CURSOR COMPONENT (animated pill following hover) ===
 function Cursor({ position }: { position: CursorPosition }) {
   return (

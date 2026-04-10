@@ -5,7 +5,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import Navbar from "@/components/Navbar";
 import { Activity, Star, Trophy, Shield, BookOpen, Zap, Target, Award, TrendingUp, Github } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -27,18 +26,17 @@ const HISTORY = [
 ];
 
 const BADGES = [
-  { icon: "🔪", name: "First Cut", desc: "Complete your first procedure", unlocked: true },
-  { icon: "🩺", name: "Clean Hands", desc: "Complete a surgery with zero mistakes", unlocked: false },
-  { icon: "🧠", name: "Neuro Curious", desc: "Complete the Craniotomy", unlocked: false },
-  { icon: "⚡", name: "Code Blue", desc: "Successfully manage a cardiac complication", unlocked: false },
-  { icon: "📚", name: "Scholar", desc: "Read 10 Learn Hub articles", unlocked: false },
-  { icon: "🏆", name: "Top Surgeon", desc: "Reach #1 on the global leaderboard", unlocked: false },
+  { icon: <Activity className="w-5 h-5" />, name: "First Cut", desc: "Complete your first procedure", unlocked: true },
+  { icon: <Shield className="w-5 h-5" />, name: "Clean Hands", desc: "Complete a surgery with zero mistakes", unlocked: false },
+  { icon: <Trophy className="w-5 h-5" />, name: "Neuro Curious", desc: "Complete the Craniotomy", unlocked: false },
+  { icon: <Zap className="w-5 h-5" />, name: "Code Blue", desc: "Successfully manage a cardiac complication", unlocked: false },
+  { icon: <BookOpen className="w-5 h-5" />, name: "Scholar", desc: "Read 10 Learn Hub articles", unlocked: false },
+  { icon: <Award className="w-5 h-5" />, name: "Top Surgeon", desc: "Reach #1 on the global leaderboard", unlocked: false },
 ];
 
 const RANKS = ["Medical Student", "Intern", "Resident", "Fellow", "Attending", "Chief of Surgery"];
-const CURRENT_RANK = 0;
-const XP = 340;
-const XP_NEXT = 500;
+// XP thresholds for each rank
+const XP_THRESHOLDS = [0, 1000, 5000, 10000, 15000, 20000];
 
 export default function Profile() {
   const { user, loginWithGitHub, loading: authLoading } = useAuth();
@@ -68,7 +66,6 @@ export default function Profile() {
   if (!user) {
     return (
       <div className="min-h-screen bg-[#0a0f1e] flex flex-col">
-        <Navbar />
         <div className="flex-1 flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -110,14 +107,18 @@ export default function Profile() {
     { label: "Certifications", value: totalSurgeries > 5 ? "1" : "0", icon: <Award className="w-4 h-4" /> },
   ];
 
-  const currentRankIndex = Math.min(Math.floor(totalSurgeries / 2), RANKS.length - 1);
-  const currentXP = totalSurgeries * 120;
-  const nextRankXP = (currentRankIndex + 1) * 250;
+  // Calculate rank based on XP thresholds
+
+const currentXP = totalSurgeries * 120;
+const currentRankIndex = XP_THRESHOLDS.findIndex((threshold, i) => {
+  if (i === XP_THRESHOLDS.length - 1) return currentXP >= threshold;
+  return currentXP >= threshold && currentXP < XP_THRESHOLDS[i + 1];
+});
+  
+  const nextRankXP = currentRankIndex < XP_THRESHOLDS.length - 1 ? XP_THRESHOLDS[currentRankIndex + 1] : XP_THRESHOLDS[XP_THRESHOLDS.length - 1];
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-
       <div className="pt-24 pb-16 max-w-5xl mx-auto px-4">
         {/* Header */}
         <motion.div

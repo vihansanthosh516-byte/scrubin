@@ -83,7 +83,7 @@ const ScrubinCard: React.FC<ScrubinCardProps> = ({
  * ScrubIn Procedure Card - for procedure library
  */
 interface ProcedureCardProps {
-  icon: string;
+  icon: string | React.ReactNode;
   name: string;
   tag: string;
   difficulty: string;
@@ -123,7 +123,13 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({
       {/* Header with icon */}
       <div className="relative h-32 bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-primary/5" />
-        <span className="relative text-4xl">{icon}</span>
+        <div className="relative">
+          {typeof icon === 'string' ? (
+            <span className="text-4xl">{icon}</span>
+          ) : (
+            icon
+          )}
+        </div>
 
         {/* Difficulty badge */}
         <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold border ${diffBg} ${diffColor} font-mono-data`}>

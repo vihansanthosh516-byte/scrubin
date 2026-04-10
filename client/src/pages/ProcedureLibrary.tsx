@@ -1,18 +1,39 @@
 /**
  * ScrubIn Procedure Library — Clinical Precision Design
- * Filter bar, procedure cards with difficulty badges, anatomical illustrations
+ * All procedures ordered by difficulty (Beginner → Intermediate → Advanced)
+ * NO EMOJIS - clean text-only interface
  */
+
 import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/Navbar";
-import { Lock, Clock, Shuffle, Star, ArrowRight, Search } from "lucide-react";
+import { Lock, Clock, Shuffle, Star, ArrowRight, Search, Activity, Heart, Brain, Bone, Baby, Scissors, Stethoscope, Shield, Zap } from "lucide-react";
 import { ProcedureCard } from "@/components/ui/scrubin-card";
 
-const FILTERS = ["All", "Beginner", "Intermediate", "Advanced", "Emergency", "Cardiovascular", "Neurological"];
+const FILTERS = ["All", "Beginner", "Intermediate", "Advanced", "Emergency", "Cardiovascular", "Neurological", "Orthopedic", "General", "OB/GYN", "Thoracic", "Urologic", "Plastic", "ENT"];
+
+// Icon component to replace emojis
+const ProcedureIcon = ({ category }: { category: string }) => {
+  const iconClass = "w-8 h-8";
+  const iconMap: Record<string, React.ReactNode> = {
+    "Emergency": <Activity className={`${iconClass} text-red-400`} />,
+    "Cardiovascular": <Heart className={`${iconClass} text-red-400`} />,
+    "Neurological": <Brain className={`${iconClass} text-pink-400`} />,
+    "Orthopedic": <Bone className={`${iconClass} text-amber-400`} />,
+    "OB/GYN": <Baby className={`${iconClass} text-purple-400`} />,
+    "General": <Scissors className={`${iconClass} text-blue-400`} />,
+    "Thoracic": <Activity className={`${iconClass} text-cyan-400`} />,
+    "Urologic": <Shield className={`${iconClass} text-green-400`} />,
+    "Plastic": <Star className={`${iconClass} text-rose-400`} />,
+    "ENT": <Stethoscope className={`${iconClass} text-teal-400`} />,
+    "Laparoscopic": <Zap className={`${iconClass} text-yellow-400`} />,
+  };
+  return iconMap[category] || <Activity className={`${iconClass} text-primary`} />;
+};
 
 const PROCEDURES = [
+  // ═══ BEGINNER ═══
   {
     id: "appendectomy",
     name: "Appendectomy",
@@ -20,41 +41,57 @@ const PROCEDURES = [
     difficulty: "Beginner",
     diffColor: "text-emerald-400",
     diffBg: "bg-emerald-400/10 border-emerald-400/20",
-    icon: "🫀",
+    category: "General",
     time: "25 min",
     decisions: 42,
     description: "The most common emergency surgery. Navigate acute appendicitis from diagnosis to wound closure.",
     unlocked: true,
-    bestScore: 94,
+    bestScore: null,
   },
   {
-    id: "cabg",
-    name: "Heart Bypass (CABG)",
-    tag: "Cardiovascular",
-    difficulty: "Advanced",
-    diffColor: "text-red-400",
-    diffBg: "bg-red-400/10 border-red-400/20",
-    icon: "❤️",
-    time: "55 min",
-    decisions: 78,
-    description: "High-stakes coronary artery bypass grafting. Complex decision tree with cardiopulmonary bypass.",
+    id: "inguinal-hernia",
+    name: "Inguinal Hernia Repair",
+    tag: "General",
+    difficulty: "Beginner",
+    diffColor: "text-emerald-400",
+    diffBg: "bg-emerald-400/10 border-emerald-400/20",
+    category: "General",
+    time: "30 min",
+    decisions: 38,
+    description: "Mesh repair of inguinal hernia. Identify anatomy, avoid nerve injury, secure mesh placement.",
     unlocked: true,
     bestScore: null,
   },
   {
-    id: "craniotomy",
-    name: "Craniotomy",
-    tag: "Neurological",
-    difficulty: "Advanced",
-    diffColor: "text-red-400",
-    diffBg: "bg-red-400/10 border-red-400/20",
-    icon: "🧠",
-    time: "60 min",
-    decisions: 85,
-    description: "Brain surgery basics with neuroscience focus. Navigate anatomy, ICP management, and closure.",
+    id: "thyroidectomy",
+    name: "Thyroidectomy",
+    tag: "ENT",
+    difficulty: "Beginner",
+    diffColor: "text-emerald-400",
+    diffBg: "bg-emerald-400/10 border-emerald-400/20",
+    category: "ENT",
+    time: "45 min",
+    decisions: 40,
+    description: "Partial or total thyroid removal. Identify recurrent laryngeal nerve, preserve parathyroids.",
     unlocked: true,
     bestScore: null,
   },
+  {
+    id: "carpal-tunnel",
+    name: "Carpal Tunnel Release",
+    tag: "Orthopedic",
+    difficulty: "Beginner",
+    diffColor: "text-emerald-400",
+    diffBg: "bg-emerald-400/10 border-emerald-400/20",
+    category: "Orthopedic",
+    time: "20 min",
+    decisions: 32,
+    description: "Release of transverse carpal ligament. Identify median nerve, prevent injury, ensure complete release.",
+    unlocked: false,
+    bestScore: null,
+  },
+
+  // ═══ INTERMEDIATE ═══
   {
     id: "cholecystectomy",
     name: "Cholecystectomy",
@@ -62,7 +99,7 @@ const PROCEDURES = [
     difficulty: "Intermediate",
     diffColor: "text-amber-400",
     diffBg: "bg-amber-400/10 border-amber-400/20",
-    icon: "🫁",
+    category: "General",
     time: "30 min",
     decisions: 51,
     description: "Laparoscopic gallbladder removal. Critical anatomy identification and bile duct safety.",
@@ -76,7 +113,7 @@ const PROCEDURES = [
     difficulty: "Intermediate",
     diffColor: "text-amber-400",
     diffBg: "bg-amber-400/10 border-amber-400/20",
-    icon: "🦴",
+    category: "Orthopedic",
     time: "35 min",
     decisions: 48,
     description: "Sports medicine-focused knee reconstruction. Graft selection, tunnel placement, fixation.",
@@ -85,15 +122,171 @@ const PROCEDURES = [
   },
   {
     id: "c-section",
-    name: "C-Section",
+    name: "Cesarean Section",
     tag: "OB/GYN",
     difficulty: "Intermediate",
     diffColor: "text-amber-400",
     diffBg: "bg-amber-400/10 border-amber-400/20",
-    icon: "👶",
+    category: "OB/GYN",
     time: "28 min",
     decisions: 50,
     description: "Cesarean delivery with maternal and fetal safety focus. Uterine incision and repair.",
+    unlocked: true,
+    bestScore: null,
+  },
+  {
+    id: "total-knee-replacement",
+    name: "Total Knee Replacement",
+    tag: "Orthopedic",
+    difficulty: "Intermediate",
+    diffColor: "text-amber-400",
+    diffBg: "bg-amber-400/10 border-amber-400/20",
+    category: "Orthopedic",
+    time: "40 min",
+    decisions: 55,
+    description: "Degenerative osteoarthritis treatment. Critical alignment, bone cuts, and component sizing.",
+    unlocked: true,
+    bestScore: null,
+  },
+  {
+    id: "hysterectomy",
+    name: "Total Hysterectomy",
+    tag: "OB/GYN",
+    difficulty: "Intermediate",
+    diffColor: "text-amber-400",
+    diffBg: "bg-amber-400/10 border-amber-400/20",
+    category: "OB/GYN",
+    time: "45 min",
+    decisions: 52,
+    description: "Removal of uterus and cervix. Identify ureters, ligate uterine vessels, vaginal cuff closure.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "sigmoid-colectomy",
+    name: "Sigmoid Colectomy",
+    tag: "General",
+    difficulty: "Intermediate",
+    diffColor: "text-amber-400",
+    diffBg: "bg-amber-400/10 border-amber-400/20",
+    category: "General",
+    time: "50 min",
+    decisions: 35,
+    description: "Resection for diverticulitis. Mobilize colon, identify ureter, perform anastomosis safely.",
+    unlocked: true,
+    bestScore: null,
+  },
+  {
+    id: "lap-cholecystectomy",
+    name: "Laparoscopic Cholecystectomy",
+    tag: "Laparoscopic",
+    difficulty: "Intermediate",
+    diffColor: "text-amber-400",
+    diffBg: "bg-amber-400/10 border-amber-400/20",
+    category: "General",
+    time: "35 min",
+    decisions: 48,
+    description: "Minimally invasive gallbladder removal. Critical view of safety, manage Calot's triangle.",
+    unlocked: true,
+    bestScore: null,
+  },
+  {
+    id: "nephrectomy",
+    name: "Radical Nephrectomy",
+    tag: "Urologic",
+    difficulty: "Intermediate",
+    diffColor: "text-amber-400",
+    diffBg: "bg-amber-400/10 border-amber-400/20",
+    category: "Urologic",
+    time: "55 min",
+    decisions: 50,
+    description: "Removal of kidney for tumor. Mobilize kidney, control renal hilum, avoid adrenal injury.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "hip-replacement",
+    name: "Total Hip Replacement",
+    tag: "Orthopedic",
+    difficulty: "Intermediate",
+    diffColor: "text-amber-400",
+    diffBg: "bg-amber-400/10 border-amber-400/20",
+    category: "Orthopedic",
+    time: "50 min",
+    decisions: 54,
+    description: "Hip arthroplasty for arthritis. Approach, femoral preparation, acetabular placement, reduce hip.",
+    unlocked: true,
+    bestScore: null,
+  },
+  {
+    id: "breast-lumpectomy",
+    name: "Breast Lumpectomy",
+    tag: "General",
+    difficulty: "Intermediate",
+    diffColor: "text-amber-400",
+    diffBg: "bg-amber-400/10 border-amber-400/20",
+    category: "General",
+    time: "40 min",
+    decisions: 38,
+    description: "Breast-conserving surgery for cancer. Achieve negative margins, sentinel node biopsy, cosmesis.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "tympanoplasty",
+    name: "Tympanoplasty",
+    tag: "ENT",
+    difficulty: "Intermediate",
+    diffColor: "text-amber-400",
+    diffBg: "bg-amber-400/10 border-amber-400/20",
+    category: "ENT",
+    time: "60 min",
+    decisions: 42,
+    description: "Eardrum repair surgery. Graft placement, ossicular reconstruction, canalplasty.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "femoral-nailing",
+    name: "Femoral Nail Fixation",
+    tag: "Orthopedic",
+    difficulty: "Intermediate",
+    diffColor: "text-amber-400",
+    diffBg: "bg-amber-400/10 border-amber-400/20",
+    category: "Orthopedic",
+    time: "45 min",
+    decisions: 46,
+    description: "Intramedullary nailing for femur fracture. Entry point, reaming, nail placement, locking screws.",
+    unlocked: false,
+    bestScore: null,
+  },
+
+  // ═══ ADVANCED ═══
+  {
+    id: "cabg",
+    name: "Heart Bypass (CABG)",
+    tag: "Cardiovascular",
+    difficulty: "Advanced",
+    diffColor: "text-red-400",
+    diffBg: "bg-red-400/10 border-red-400/20",
+    category: "Cardiovascular",
+    time: "55 min",
+    decisions: 78,
+    description: "High-stakes coronary artery bypass grafting. Complex decision tree with cardiopulmonary bypass.",
+    unlocked: true,
+    bestScore: null,
+  },
+  {
+    id: "craniotomy",
+    name: "Craniotomy for Tumor",
+    tag: "Neurological",
+    difficulty: "Advanced",
+    diffColor: "text-red-400",
+    diffBg: "bg-red-400/10 border-red-400/20",
+    category: "Neurological",
+    time: "60 min",
+    decisions: 85,
+    description: "Brain surgery basics with neuroscience focus. Navigate anatomy, ICP management, and closure.",
     unlocked: true,
     bestScore: null,
   },
@@ -104,27 +297,11 @@ const PROCEDURES = [
     difficulty: "Advanced",
     diffColor: "text-red-400",
     diffBg: "bg-red-400/10 border-red-400/20",
-    icon: "🦴",
+    category: "Neurological",
     time: "45 min",
     decisions: 65,
     description: "Multi-level spinal stabilization. Navigate pedicle screw placement and dural protection.",
     unlocked: true,
-    requiredRank: "Fellow",
-    bestScore: null,
-  },
-  {
-    id: "total-knee-replacement",
-    name: "Total Knee Replacement",
-    tag: "Orthopedic",
-    difficulty: "Intermediate",
-    diffColor: "text-amber-400",
-    diffBg: "bg-amber-400/10 border-amber-400/20",
-    icon: "🔩",
-    time: "40 min",
-    decisions: 55,
-    description: "Degenerative osteoarthritis treatment. Critical alignment, bone cuts, and component sizing.",
-    unlocked: true,
-    requiredRank: "Resident",
     bestScore: null,
   },
   {
@@ -134,12 +311,165 @@ const PROCEDURES = [
     difficulty: "Advanced",
     diffColor: "text-red-400",
     diffBg: "bg-red-400/10 border-red-400/20",
-    icon: "🚨",
+    category: "General",
     time: "50 min",
     decisions: 60,
     description: "High-acuity trauma control. Rapidly identify and ligate hemorrhage in an unstable patient.",
     unlocked: true,
-    requiredRank: "Resident",
+    bestScore: null,
+  },
+  {
+    id: "lobectomy",
+    name: "Pulmonary Lobectomy",
+    tag: "Thoracic",
+    difficulty: "Advanced",
+    diffColor: "text-red-400",
+    diffBg: "bg-red-400/10 border-red-400/20",
+    category: "Thoracic",
+    time: "65 min",
+    decisions: 72,
+    description: "Removal of lung lobe for cancer. Isolate pulmonary vessels, divide bronchus, manage air leak.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "whipple",
+    name: "Whipple Procedure",
+    tag: "General",
+    difficulty: "Advanced",
+    diffColor: "text-red-400",
+    diffBg: "bg-red-400/10 border-red-400/20",
+    category: "General",
+    time: "90 min",
+    decisions: 88,
+    description: "Pancreaticoduodenectomy for cancer. Complex reconstruction, manage pancreatic leak risk.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "aortic-aneurysm",
+    name: "AAA Repair",
+    tag: "Cardiovascular",
+    difficulty: "Advanced",
+    diffColor: "text-red-400",
+    diffBg: "bg-red-400/10 border-red-400/20",
+    category: "Cardiovascular",
+    time: "70 min",
+    decisions: 75,
+    description: "Abdominal aortic aneurysm repair. Cross-clamp, graft placement, manage ischemia.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "prostatectomy",
+    name: "Radical Prostatectomy",
+    tag: "Urologic",
+    difficulty: "Advanced",
+    diffColor: "text-red-400",
+    diffBg: "bg-red-400/10 border-red-400/20",
+    category: "Urologic",
+    time: "60 min",
+    decisions: 68,
+    description: "Removal of prostate for cancer. Preserve neurovascular bundles, vesicourethral anastomosis.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "esophagectomy",
+    name: "Esophagectomy",
+    tag: "Thoracic",
+    difficulty: "Advanced",
+    diffColor: "text-red-400",
+    diffBg: "bg-red-400/10 border-red-400/20",
+    category: "Thoracic",
+    time: "80 min",
+    decisions: 82,
+    description: "Removal of esophagus for cancer. Gastric pull-up, cervical anastomosis, manage leak risk.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "liver-resection",
+    name: "Hepatic Lobectomy",
+    tag: "General",
+    difficulty: "Advanced",
+    diffColor: "text-red-400",
+    diffBg: "bg-red-400/10 border-red-400/20",
+    category: "General",
+    time: "75 min",
+    decisions: 70,
+    description: "Liver resection for tumor. Vascular control, parenchymal transection, manage bleeding.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "microdiscectomy",
+    name: "Lumbar Microdiscectomy",
+    tag: "Neurological",
+    difficulty: "Advanced",
+    diffColor: "text-red-400",
+    diffBg: "bg-red-400/10 border-red-400/20",
+    category: "Neurological",
+    time: "40 min",
+    decisions: 55,
+    description: "Disc herniation surgery. Identify nerve root, remove disc fragment, protect dura.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "cabg-opcab",
+    name: "Off-Pump CABG",
+    tag: "Cardiovascular",
+    difficulty: "Advanced",
+    diffColor: "text-red-400",
+    diffBg: "bg-red-400/10 border-red-400/20",
+    category: "Cardiovascular",
+    time: "60 min",
+    decisions: 80,
+    description: "Beating heart bypass surgery. Stabilize heart, perform anastomosis without cardiopulmonary bypass.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "rotator-cuff",
+    name: "Rotator Cuff Repair",
+    tag: "Orthopedic",
+    difficulty: "Intermediate",
+    diffColor: "text-amber-400",
+    diffBg: "bg-amber-400/10 border-amber-400/20",
+    category: "Orthopedic",
+    time: "45 min",
+    decisions: 44,
+    description: "Arthroscopic repair of rotator cuff. Anchor placement, tendon mobilization, knot tying.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "rhinoplasty",
+    name: "Rhinoplasty",
+    tag: "Plastic",
+    difficulty: "Intermediate",
+    diffColor: "text-amber-400",
+    diffBg: "bg-amber-400/10 border-amber-400/20",
+    category: "Plastic",
+    time: "90 min",
+    decisions: 58,
+    description: "Nose reshaping surgery. Osteotomies, cartilage grafting, achieve aesthetic goals.",
+    unlocked: false,
+    bestScore: null,
+  },
+  {
+    id: "parathyroidectomy",
+    name: "Parathyroidectomy",
+    tag: "ENT",
+    difficulty: "Intermediate",
+    diffColor: "text-amber-400",
+    diffBg: "bg-amber-400/10 border-amber-400/20",
+    category: "ENT",
+    time: "35 min",
+    decisions: 40,
+    description: "Remove parathyroid adenoma. Identify all glands, preserve recurrent laryngeal nerve.",
+    unlocked: false,
     bestScore: null,
   },
 ];
@@ -152,7 +482,8 @@ export default function ProcedureLibrary() {
     const matchesFilter =
       activeFilter === "All" ||
       p.difficulty === activeFilter ||
-      p.tag === activeFilter;
+      p.tag === activeFilter ||
+      p.category === activeFilter;
     const matchesSearch =
       search === "" ||
       p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -162,8 +493,6 @@ export default function ProcedureLibrary() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-
       {/* Header */}
       <div className="pt-24 pb-8 border-b border-border bg-muted/20">
         <div className="max-w-6xl mx-auto px-4">
@@ -180,7 +509,7 @@ export default function ProcedureLibrary() {
               Choose Your Procedure
             </h1>
             <p className="text-muted-foreground text-lg mb-8">
-              Every case is different. Every decision matters.
+              {PROCEDURES.length} procedures available — from beginner to advanced
             </p>
 
             {/* Search + Filters */}
@@ -196,7 +525,7 @@ export default function ProcedureLibrary() {
                 />
               </div>
               <div className="flex gap-2 flex-wrap">
-                {FILTERS.map(f => (
+                {FILTERS.slice(0, 8).map(f => (
                   <button
                     key={f}
                     onClick={() => setActiveFilter(f)}
@@ -223,10 +552,11 @@ export default function ProcedureLibrary() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: i * 0.07 }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
               >
                 <ProcedureCard
                   {...proc}
+                  icon={<ProcedureIcon category={proc.category} />}
                   onClick={proc.unlocked ? () => {} : undefined}
                 />
               </motion.div>
@@ -236,8 +566,8 @@ export default function ProcedureLibrary() {
 
         {filtered.length === 0 && (
           <div className="text-center py-20 text-muted-foreground">
-            <div className="text-4xl mb-4">🔍</div>
-            <p className="font-mono-data">No procedures match your filter.</p>
+            <Search className="w-12 h-12 mx-auto mb-4 opacity-30" />
+            <p className="font-mono-data">No procedures match your search.</p>
           </div>
         )}
       </div>

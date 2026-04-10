@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axios from "axios";
 import { upsertUser } from "@/lib/leaderboard";
 
@@ -8,6 +8,8 @@ interface User {
   login: string;
   avatar_url: string;
   email: string | null;
+  customUsername?: string;
+  hasCompletedOnboarding?: boolean;
 }
 
 interface AuthContextType {
@@ -17,6 +19,9 @@ interface AuthContextType {
   loginWithGoogle: () => void;
   logout: () => void;
   error: string | null;
+  isAuthenticated: boolean;
+  hasCompletedOnboarding: boolean;
+  completeOnboarding: (data: { displayName: string; username: string }) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
   const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -35,7 +41,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedUser = localStorage.getItem("scrubin_user");
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setHasCompletedOnboarding(!!parsedUser.hasCompletedOnboarding);
       } catch (e) {
         console.error("Failed to parse stored user", e);
         localStorage.removeItem("scrubin_user");
@@ -48,9 +56,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const code = urlParams.get("code");
 
     if (code) {
-      // Check sessionStorage for provider, fallback to detecting from URL pattern
       const storedProvider = sessionStorage.getItem("oauth_provider");
-      const provider = storedProvider || "github"; // default to github
+      const provider = storedProvider || "github";
       sessionStorage.removeItem("oauth_provider");
       handleCallback(code, provider);
     }
@@ -60,33 +67,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     setError(null);
     try {
-      // Exchange code for user data via backend proxy
       const endpoint = provider === "google" ? "/api/auth/google" : "/api/auth/github";
       const response = await axios.post(endpoint, { code });
       const userData = response.data.user;
 
-      setUser(userData);
-      localStorage.setItem("scrubin_user", JSON.stringify(userData));
+      // Check if this user has already completed onboarding
+      const existingUserData = localStorage.getItem(`scrubin_user_profile_${userData.id}`);
 
-      // Save user to Supabase for leaderboard
+      if (existingUserData) {
+        const existingProfile = JSON.parse(existingUserData);
+        const completeUser = {
+          ...userData,
+          ...existingProfile,
+          hasCompletedOnboarding: true,
+        };
+        setUser(completeUser);
+        setHasCompletedOnboarding(true);
+        localStorage.setItem("scrubin_user", JSON.stringify(completeUser));
+      } else {
+        setUser(userData);
+        setHasCompletedOnboarding(false);
+        localStorage.setItem("scrubin_user", JSON.stringify(userData));
+      }
 
       await upsertUser({
-
         id: userData.id,
-
         name: userData.name,
-
         login: userData.login,
-
-        avatar_url: userData.avatar_url
-
+        avatar_url: userData.avatar_url,
       });
 
-      // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
-
-      // Redirect to profile
-      window.location.href = "/profile";
     } catch (err: any) {
       console.error(`${provider} Login Error:`, err);
       setError("Authentication failed. Please try again.");
@@ -97,26 +108,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGitHub = () => {
     const scope = "read:user user:email";
-    // Store provider in sessionStorage to detect on callback
     sessionStorage.setItem("oauth_provider", "github");
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${scope}`;
   };
 
   const loginWithGoogle = () => {
     const scope = "openid email profile";
-    // Store provider in sessionStorage to detect on callback
     sessionStorage.setItem("oauth_provider", "google");
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`;
   };
 
+  const completeOnboarding = (data: { displayName: string; username: string }) => {
+    if (!user) return;
+
+    const updatedUser = {
+      ...user,
+      name: data.displayName,
+      customUsername: data.username,
+      hasCompletedOnboarding: true,
+    };
+
+    setUser(updatedUser);
+    setHasCompletedOnboarding(true);
+    localStorage.setItem("scrubin_user", JSON.stringify(updatedUser));
+    localStorage.setItem(`scrubin_user_profile_${user.id}`, JSON.stringify({
+      name: data.displayName,
+      customUsername: data.username,
+    }));
+
+    // Redirect to profile using window.location to avoid wouter issues
+    window.location.href = "/profile";
+  };
+
   const logout = () => {
     setUser(null);
+    setHasCompletedOnboarding(false);
     localStorage.removeItem("scrubin_user");
-    window.location.href = "/";
+    window.location.href = "/signin";
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginWithGitHub, loginWithGoogle, logout, error }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        loginWithGitHub,
+        loginWithGoogle,
+        logout,
+        error,
+        isAuthenticated: !!user,
+        hasCompletedOnboarding,
+        completeOnboarding,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

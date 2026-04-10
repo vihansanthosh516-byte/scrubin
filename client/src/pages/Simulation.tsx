@@ -3,10 +3,9 @@
 * Fully integrated Real-time dynamic vitals engine & 42-Decision Logic.
 */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/Navbar";
 import { Activity, Heart, Wind, Thermometer, Circle, Clock, Volume2, VolumeX, ActivitySquare, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useVitalsEngine, ComplicationType, PatientProfile, VitalZone } from "../lib/vitals";
@@ -22,6 +21,11 @@ import { cSectionData } from "../data/c_section";
 import { spinalFusionData } from "../data/spinal_fusion";
 import { totalKneeReplacementData } from "../data/total_knee_replacement";
 import { exploratoryLaparotomyData } from "../data/exploratory_laparotomy";
+import { inguinalHerniaData } from "../data/inguinal_hernia";
+import { sigmoidColectomyData } from "../data/sigmoid_colectomy";
+import { thyroidectomyData } from "../data/thyroidectomy";
+import { hipReplacementData } from "../data/hip_replacement";
+import { lapCholecystectomyData } from "../data/lap_cholecystectomy";
 import { calculateProcedureOutcome, ScoreData } from "../lib/score";
 import { saveSession } from "../lib/leaderboard";
 
@@ -34,7 +38,12 @@ const REGISTRY: Record<string, any> = {
   "c-section": cSectionData,
   "spinal-fusion": spinalFusionData,
   "total-knee-replacement": totalKneeReplacementData,
-  "exploratory-laparotomy": exploratoryLaparotomyData
+  "exploratory-laparotomy": exploratoryLaparotomyData,
+  "inguinal-hernia": inguinalHerniaData,
+  "sigmoid-colectomy": sigmoidColectomyData,
+  thyroidectomy: thyroidectomyData,
+  "hip-replacement": hipReplacementData,
+  "lap-cholecystectomy": lapCholecystectomyData
 };
 
 function EcgCanvas({ hr, zone }: { hr: number, zone: VitalZone }) {
@@ -94,12 +103,35 @@ type GameState = "intro" | "induction" | "playing" | "rescue" | "complete" | "ga
 type RescuePhase = 'initial' | 'stabilizing' | 'recovering';
 
 export default function Simulation() {
-  const [procId] = useState(() => new URLSearchParams(window.location.search).get("proc") || "appendectomy");
+  // Use useLocation to trigger re-renders on navigation
+  const [location] = useLocation();
+
+  // Use window.location.search for actual query params (wouter's location may not include them)
+  const [currentProcId, setCurrentProcId] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("proc") || "appendectomy";
+  });
+
+  // Update procId when location changes
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const newProcId = params.get("proc") || "appendectomy";
+    if (newProcId !== currentProcId) {
+      setCurrentProcId(newProcId);
+    }
+  }, [location]);
+
+  const procId = currentProcId;
+
+  // Validate procId exists in REGISTRY - throw clear error in dev
+  if (!REGISTRY[procId]) {
+    console.error(`Procedure "${procId}" not found in REGISTRY. Available: ${Object.keys(REGISTRY).join(", ")}`);
+  }
   const procData = REGISTRY[procId] || REGISTRY["appendectomy"];
   const { user } = useAuth();
-  const PATIENT = procData.PATIENT;
-  const PHASES: any[] = procData.PHASES;
-  const DECISIONS: import("../data/appendectomy").Decision[] = procData.DECISIONS;
+
+  // Track previous procId to detect navigation changes
+  const prevProcIdRef = useRef(procId);
 
   const [gameState, setGameState] = useState<GameState>("intro");
   const [currentDecisionIdx, setCurrentDecisionIdx] = useState(0);
@@ -128,6 +160,44 @@ export default function Simulation() {
   const [rescuePhase, setRescuePhase] = useState<RescuePhase>('initial');
   const [vitalsBlocked, setVitalsBlocked] = useState(false);
 
+  // RESET ALL STATE when procId changes (navigating to different procedure)
+  useEffect(() => {
+    if (prevProcIdRef.current !== procId) {
+      console.log(`Procedure changed from "${prevProcIdRef.current}" to "${procId}" - resetting state`);
+      prevProcIdRef.current = procId;
+
+      // Reset all game state
+      setGameState("intro");
+      setCurrentDecisionIdx(0);
+      setCurrentPhase(1);
+      setSelectedOption(null);
+      setAnswers([]);
+      setElapsedTime(0);
+      setHintsUsed(0);
+      setActiveComplications([]);
+      setDecisionsSinceComplication(0);
+      setHistory([]);
+      setFailedRescues(0);
+      setScoreData(null);
+      setShowComplicationOverlay(null);
+      setComplicationExplanation("");
+      setIsFlatlining(false);
+      setRescueLoading(false);
+      setRescueStep(0);
+      setRescueTotalSteps(3);
+      setRescuePhase('initial');
+      setVitalsBlocked(false);
+
+      // Stop any playing audio
+      audioEngine.stopAll();
+    }
+  }, [procId]);
+
+  // Derive procedure data reactively
+  const PATIENT = procData.PATIENT;
+  const PHASES: any[] = procData.PHASES;
+  const DECISIONS = procData.DECISIONS;
+
   const currentDecision = DECISIONS[Math.min(currentDecisionIdx, DECISIONS.length - 1)];
 
   // Shuffle decision options so correct answer isn't always first
@@ -143,7 +213,7 @@ export default function Simulation() {
       }
       setShuffledOptions(options);
     }
-  }, [currentDecisionIdx]);
+  }, [currentDecisionIdx, currentDecision]);
 
   const vitals = useVitalsEngine({
     patient: PATIENT,
@@ -395,13 +465,33 @@ export default function Simulation() {
     else if (vitals.overallZone === "WARNING") pageBgClass = "bg-amber-950/10";
   }
 
+  // Helper to format procedure name for display
+  const getProcedureDisplayName = (id: string): string => {
+    const names: Record<string, string> = {
+      appendectomy: "Appendectomy",
+      cabg: "Heart Bypass (CABG)",
+      craniotomy: "Craniotomy",
+      cholecystectomy: "Cholecystectomy",
+      "acl-reconstruction": "ACL Reconstruction",
+      "c-section": "Cesarean Section",
+      "spinal-fusion": "Spinal Fusion",
+      "total-knee-replacement": "Total Knee Replacement",
+      "exploratory-laparotomy": "Exploratory Laparotomy",
+      "inguinal-hernia": "Inguinal Hernia Repair",
+      "sigmoid-colectomy": "Sigmoid Colectomy",
+      thyroidectomy: "Thyroidectomy",
+      "hip-replacement": "Total Hip Replacement",
+      "lap-cholecystectomy": "Laparoscopic Cholecystectomy"
+    };
+    return names[id] || id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, " ");
+  };
+
   if (gameState === "intro") {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
         <div className="pt-24 pb-16 max-w-2xl mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold mb-4 font-mono-data">Patient: {PATIENT.name}</h1>
-          <p className="text-muted-foreground mb-8 text-lg">{procId === 'cabg' ? 'Heart Bypass' : procId === 'craniotomy' ? 'Craniotomy' : 'Appendectomy'} - Case Simulation ({DECISIONS.length} Decisions)</p>
+          <p className="text-muted-foreground mb-8 text-lg">{getProcedureDisplayName(procId)} - Case Simulation ({DECISIONS.length} Decisions)</p>
           <Button size="lg" onClick={() => setGameState("induction")} className="w-full">Begin Anesthesia Induction</Button>
           <Button variant="ghost" onClick={() => setIsAudioMuted(audioEngine.toggleMute())} className="mt-8">
             {isAudioMuted ? <VolumeX className="w-4 h-4 mr-2" /> : <Volume2 className="w-4 h-4 mr-2" />}
@@ -415,7 +505,6 @@ export default function Simulation() {
   if (gameState === "complete" || gameState === "gameover") {
     return (
       <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-        <Navbar />
         <div className="pt-24 pb-16 max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8">
 
           <div className="flex flex-col gap-6">
@@ -553,7 +642,6 @@ export default function Simulation() {
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-700 ${pageBgClass}`}>
-      <Navbar />
       <div className={`fixed top-[88px] left-0 right-0 z-30 border-b transition-colors duration-500 backdrop-blur-md
         ${vitals.overallZone === "CRITICAL" ? "bg-red-950/80 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]" :
           vitals.overallZone === "WARNING" ? "bg-amber-950/80 border-amber-500/50" : "bg-card/95 border-border"}`}>

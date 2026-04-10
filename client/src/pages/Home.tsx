@@ -7,7 +7,6 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { motion, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/Navbar";
 import {
   ChevronRight,
   Play,
@@ -25,12 +24,12 @@ import {
 } from "lucide-react";
 
 const PROCEDURES = [
-  { name: "Appendectomy", tag: "Emergency", difficulty: "Beginner", color: "text-emerald-400", bg: "bg-emerald-400/10", icon: "🫀", time: "25 min", decisions: 42 },
-  { name: "Heart Bypass", tag: "Cardiovascular", difficulty: "Advanced", color: "text-red-400", bg: "bg-red-400/10", icon: "❤️", time: "55 min", decisions: 78 },
-  { name: "Craniotomy", tag: "Neurological", difficulty: "Advanced", color: "text-red-400", bg: "bg-red-400/10", icon: "🧠", time: "60 min", decisions: 85 },
-  { name: "Cholecystectomy", tag: "Laparoscopic", difficulty: "Intermediate", color: "text-amber-400", bg: "bg-amber-400/10", icon: "🫁", time: "30 min", decisions: 51 },
-  { name: "ACL Reconstruction", tag: "Orthopedic", difficulty: "Intermediate", color: "text-amber-400", bg: "bg-amber-400/10", icon: "🦴", time: "35 min", decisions: 48 },
-  { name: "C-Section", tag: "OB/GYN", difficulty: "Intermediate", color: "text-amber-400", bg: "bg-amber-400/10", icon: "👶", time: "28 min", decisions: 44 },
+  { name: "Appendectomy", tag: "Emergency", difficulty: "Beginner", color: "text-emerald-400", bg: "bg-emerald-400/10", icon: "AP", time: "25 min", decisions: 42 },
+  { name: "Heart Bypass", tag: "Cardiovascular", difficulty: "Advanced", color: "text-red-400", bg: "bg-red-400/10", icon: "HB", time: "55 min", decisions: 78 },
+  { name: "Craniotomy", tag: "Neurological", difficulty: "Advanced", color: "text-red-400", bg: "bg-red-400/10", icon: "CR", time: "60 min", decisions: 85 },
+  { name: "Cholecystectomy", tag: "Laparoscopic", difficulty: "Intermediate", color: "text-amber-400", bg: "bg-amber-400/10", icon: "CH", time: "30 min", decisions: 51 },
+  { name: "ACL Reconstruction", tag: "Orthopedic", difficulty: "Intermediate", color: "text-amber-400", bg: "bg-amber-400/10", icon: "AC", time: "35 min", decisions: 48 },
+  { name: "C-Section", tag: "OB/GYN", difficulty: "Intermediate", color: "text-amber-400", bg: "bg-amber-400/10", icon: "CS", time: "28 min", decisions: 44 },
 ];
 
 const STATS = [
@@ -149,8 +148,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <Navbar />
-
       {/* ── HERO ── */}
       <section
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
