@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 const NAV_LINKS = [
   { href: "/procedures", label: "Procedures" },
   { href: "/anatomy", label: "Anatomy" },
-  { href: "/learn", label: "Learn Hub" },
+  { href: "/learn", label: "Learn" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/profile", label: "Profile" },
 ];
@@ -39,20 +39,18 @@ const navWrapperVariants: Variants = {
     left: "50%",
     translateX: "-50%",
     transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 30,
-      mass: 1,
+      type: "tween",
+      duration: 0.3,
+      ease: "easeOut",
     },
   },
   collapsed: {
     left: "1.5rem",
     translateX: "0%",
     transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 30,
-      mass: 1,
+      type: "tween",
+      duration: 0.3,
+      ease: "easeOut",
     },
   },
 };
@@ -218,7 +216,7 @@ export default function Navbar() {
             "relative flex items-center overflow-hidden rounded-full border shadow-lg backdrop-blur-md",
             "bg-background/95 border-border dark:bg-[#0A1628]/95 dark:border-primary/20",
         
-            isExpanded ? "px-2 py-1.5 gap-2" : "px-3 py-2 gap-2"
+            isExpanded ? "px-3 py-1.5 gap-3" : "px-3 py-2 gap-2"
           )}
           onMouseLeave={handleMouseLeave}
           
@@ -284,7 +282,7 @@ export default function Navbar() {
                 initial="collapsed"
                 animate="expanded"
                 exit="collapsed"
-                className="flex items-center gap-1"
+                className="flex items-center gap-2 pr-1"
               >
                 {/* Theme Toggle Dropdown */}
                 <DropdownMenu>
@@ -335,7 +333,7 @@ export default function Navbar() {
                           alt={user.name}
                           className="w-6 h-6 rounded-full border border-primary/20"
                         />
-                        <span className="text-xs font-semibold font-mono-data pr-1 text-foreground dark:text-white max-w-[80px] truncate">
+                        <span className="text-xs font-semibold font-mono-data pr-1 text-foreground dark:text-white max-w-[120px] truncate">
                           {user.customUsername || user.name?.split(" ")[0] || user.login}
                         </span>
                         <ChevronDown className="w-3 h-3 text-[#0A1628]/50 dark:text-white/50" />
@@ -351,13 +349,13 @@ export default function Navbar() {
                           @{user.login}
                         </span>
                       </DropdownMenuLabel>
-                      <DropdownMenuSeparator className="bg-white/10" />
+                      <DropdownMenuSeparator className="bg-[#0A1628]/10 dark:bg-white/10" />
                       <Link href="/profile">
-                        <DropdownMenuItem className="cursor-pointer gap-2 text-white focus:text-white focus:bg-primary/20">
+                        <DropdownMenuItem className="cursor-pointer gap-2 text-[#0A1628] dark:text-white focus:text-[#0A1628] dark:focus:text-white focus:bg-primary/20">
                           <User className="w-4 h-4 text-[#7EC8E3] dark:text-baby-blue" /> Profile
                         </DropdownMenuItem>
                       </Link>
-                      <DropdownMenuSeparator className="bg-white/10" />
+                      <DropdownMenuSeparator className="bg-[#0A1628]/10 dark:bg-white/10" />
                       <DropdownMenuItem
                         onClick={logout}
                         className="cursor-pointer gap-2 text-red-400 focus:text-red-400 focus:bg-red-500/10"

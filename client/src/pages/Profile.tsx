@@ -9,6 +9,7 @@ import { Activity, Star, Trophy, Shield, BookOpen, Zap, Target, Award, TrendingU
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ScrubinCard, ScrubinStaticPanel } from "@/components/ui/scrubin-card";
+import { supabase } from "@/lib/supabase";
 
 const STATS = [
   { label: "Total Surgeries", value: "3", icon: <Activity className="w-4 h-4" /> },
@@ -41,19 +42,59 @@ const XP_THRESHOLDS = [0, 1000, 5000, 10000, 15000, 20000];
 export default function Profile() {
   const { user, loginWithGitHub, loading: authLoading } = useAuth();
   const [history, setHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [totalXP, setTotalXP] = useState(0);
 
   useEffect(() => {
     if (user) {
-      const stored = localStorage.getItem(`scrubin_history_${user.id}`);
-      if (stored) {
-        try {
-          setHistory(JSON.parse(stored));
-        } catch (e) {
-          console.error("Failed to parse history", e);
-        }
-      }
+      loadHistoryFromSupabase();
     }
   }, [user]);
+
+  const loadHistoryFromSupabase = async () => {
+    if (!user) return;
+    setLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error('Failed to load history:', error);
+        // Fallback to localStorage
+        const stored = localStorage.getItem(`scrubin_history_${user.id}`);
+        if (stored) {
+          setHistory(JSON.parse(stored));
+        }
+      } else {
+        // Calculate XP: 50 for failed (Critical), 100 + bonus for others
+        const xp = (data || []).reduce((acc: number, session: any) => {
+          if (session.outcome === "Critical") {
+            return acc + 50; // 50 XP for failed surgeries
+          }
+          return acc + 100 + Math.floor(session.score / 10);
+        }, 0);
+        setTotalXP(xp);
+
+        const formattedHistory = (data || []).map((session: any) => ({
+          id: '#' + (session.id || '').toString().slice(0, 6).toUpperCase(),
+          procedure: session.procedure_name,
+          outcome: session.outcome,
+          score: Math.max(0, session.score) + '%',
+          date: new Date(session.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          time: Math.floor(session.time_seconds / 60) + ':' + String(session.time_seconds % 60).padStart(2, '0')
+        }));
+        setHistory(formattedHistory);
+      }
+    } catch (e) {
+      console.error('Failed to load history:', e);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   if (authLoading) {
     return (
@@ -103,13 +144,13 @@ export default function Profile() {
     { label: "Best Score", value: totalSurgeries > 0 ? Math.max(...history.map(h => parseInt(h.score))) + "%" : "N/A", icon: <Star className="w-4 h-4" /> },
     { label: "Avg Safety Score", value: avgScore + "%", icon: <Shield className="w-4 h-4" /> },
     { label: "Complications", value: complications.toString(), icon: <Zap className="w-4 h-4" /> },
-    { label: "Experience Points", value: (totalSurgeries * 120).toString(), icon: <TrendingUp className="w-4 h-4" /> },
+    { label: "Experience Points", value: totalXP.toString(), icon: <TrendingUp className="w-4 h-4" /> },
     { label: "Certifications", value: totalSurgeries > 5 ? "1" : "0", icon: <Award className="w-4 h-4" /> },
   ];
 
   // Calculate rank based on XP thresholds
 
-const currentXP = totalSurgeries * 120;
+const currentXP = totalXP;
 const currentRankIndex = XP_THRESHOLDS.findIndex((threshold, i) => {
   if (i === XP_THRESHOLDS.length - 1) return currentXP >= threshold;
   return currentXP >= threshold && currentXP < XP_THRESHOLDS[i + 1];

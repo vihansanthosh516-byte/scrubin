@@ -94,7 +94,7 @@ interface ProcedureCardProps {
   description: string;
   unlocked?: boolean;
   bestScore?: number | null;
-  requiredRank?: string;
+  requiredXP?: number;
   onClick?: () => void;
 }
 
@@ -110,15 +110,15 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({
   description,
   unlocked = true,
   bestScore,
-  requiredRank,
+  requiredXP,
   onClick,
 }) => {
   return (
     <ScrubinCard
       glowColor="blue"
-      variant="interactive"
-      className={unlocked ? "" : "opacity-60"}
-      onClick={onClick}
+      variant={unlocked ? "interactive" : "static"}
+      className={unlocked ? "" : "opacity-50 cursor-not-allowed"}
+      onClick={unlocked ? onClick : undefined}
     >
       {/* Header with icon */}
       <div className="relative h-32 bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center overflow-hidden">
@@ -137,10 +137,11 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({
         </div>
 
         {/* Lock overlay */}
-        {!unlocked && requiredRank && (
+        {!unlocked && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
+            <span className="text-2xl">🔒</span>
             <span className="text-xs text-muted-foreground font-mono-data">
-              Reach {requiredRank}
+              {requiredXP} XP required
             </span>
           </div>
         )}

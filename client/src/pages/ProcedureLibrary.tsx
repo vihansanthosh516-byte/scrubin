@@ -4,12 +4,14 @@
  * NO EMOJIS - clean text-only interface
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Lock, Clock, Shuffle, Star, ArrowRight, Search, Activity, Heart, Brain, Bone, Baby, Scissors, Stethoscope, Shield, Zap } from "lucide-react";
 import { ProcedureCard } from "@/components/ui/scrubin-card";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 const FILTERS = ["All", "Beginner", "Intermediate", "Advanced", "Emergency", "Cardiovascular", "Neurological", "Orthopedic", "General", "OB/GYN", "Thoracic", "Urologic", "Plastic", "ENT"];
 
@@ -475,8 +477,70 @@ const PROCEDURES = [
 ];
 
 export default function ProcedureLibrary() {
+  const { user } = useAuth();
   const [activeFilter, setActiveFilter] = useState("All");
   const [search, setSearch] = useState("");
+  const [userXP, setUserXP] = useState(0);
+  const [completedProcedures, setCompletedProcedures] = useState<string[]>([]);
+
+  // XP thresholds to unlock procedures
+  // Beginner: 0 XP (always unlocked)
+  // Intermediate: 500 XP (complete ~4 beginner surgeries)
+  // Advanced: 2000 XP (complete ~16 surgeries or several intermediate)
+
+  useEffect(() => {
+    if (user) {
+      loadUserProgress();
+    }
+  }, [user]);
+
+  const loadUserProgress = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('procedure_id, score')
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Failed to load progress:', error);
+        return;
+      }
+
+      // Calculate total XP: 50 for failed (Critical), 100 + bonus for others
+      const totalXP = (data || []).reduce((acc: number, session: any) => {
+        if (session.outcome === "Critical") {
+          return acc + 50; // 50 XP for failed surgeries
+        }
+        return acc + 100 + Math.floor(session.score / 10);
+      }, 0);
+      setUserXP(totalXP);
+
+      // Track completed procedures
+      const completed = (data || []).map((s: any) => s.procedure_id);
+      setCompletedProcedures(completed);
+    } catch (e) {
+      console.error('Failed to load progress:', e);
+    }
+  };
+
+  // Check if procedure is unlocked based on XP
+  const isProcedureUnlocked = (proc: typeof PROCEDURES[0]) => {
+    // Beginner procedures always unlocked
+    if (proc.difficulty === "Beginner") return true;
+
+    // Intermediate requires 500 XP
+    if (proc.difficulty === "Intermediate") {
+      return userXP >= 500;
+    }
+
+    // Advanced requires 2000 XP
+    if (proc.difficulty === "Advanced") {
+      return userXP >= 2000;
+    }
+
+    return true;
+  };
 
   const filtered = PROCEDURES.filter(p => {
     const matchesFilter =
@@ -546,22 +610,52 @@ export default function ProcedureLibrary() {
 
       {/* Grid */}
       <div className="max-w-6xl mx-auto px-4 py-12">
+        {/* XP Progress Banner */}
+        {user && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-4 rounded-xl bg-card/50 border border-border"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm text-muted-foreground font-mono-data">Your XP</span>
+                <p className="text-2xl font-bold text-primary" style={{ fontFamily: "'Syne', sans-serif" }}>{userXP} XP</p>
+              </div>
+              <div className="text-right text-sm">
+                {userXP < 500 ? (
+                  <span className="text-amber-400">🔒 Intermediate unlocks at 500 XP</span>
+                ) : userXP < 2000 ? (
+                  <span className="text-red-400">🔒 Advanced unlocks at 2000 XP</span>
+                ) : (
+                  <span className="text-emerald-400">✓ All procedures unlocked!</span>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((proc, i) => (
-            <Link key={proc.id} href={proc.unlocked ? `/simulation?proc=${proc.id}` : "#"}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: i * 0.05 }}
-              >
-                <ProcedureCard
-                  {...proc}
-                  icon={<ProcedureIcon category={proc.category} />}
-                  onClick={proc.unlocked ? () => {} : undefined}
-                />
-              </motion.div>
-            </Link>
-          ))}
+          {filtered.map((proc, i) => {
+            const unlocked = isProcedureUnlocked(proc);
+            const requiredXP = proc.difficulty === "Beginner" ? 0 : proc.difficulty === "Intermediate" ? 500 : 2000;
+            return (
+              <Link key={proc.id} href={unlocked ? `/simulation?proc=${proc.id}` : "#"}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: i * 0.05 }}
+                >
+                  <ProcedureCard
+                    {...proc}
+                    unlocked={unlocked}
+                    requiredXP={requiredXP}
+                    icon={<ProcedureIcon category={proc.category} />}
+                  />
+                </motion.div>
+              </Link>
+            );
+          })}
         </div>
 
         {filtered.length === 0 && (

@@ -21,6 +21,9 @@ interface AuthContextType {
   error: string | null;
   isAuthenticated: boolean;
   hasCompletedOnboarding: boolean;
+  isReturningUser: boolean;
+  confirmReturningUser: () => void;
+  restartOnboarding: () => void;
   completeOnboarding: (data: { displayName: string; username: string }) => void;
 }
 
@@ -31,6 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [isReturningUser, setIsReturningUser] = useState(false);
 
   const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -42,8 +46,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setHasCompletedOnboarding(!!parsedUser.hasCompletedOnboarding);
+        // Also check for existing profile data
+        const existingProfile = localStorage.getItem(`scrubin_user_profile_${parsedUser.id}`);
+        if (existingProfile) {
+          const profileData = JSON.parse(existingProfile);
+          const completeUser = {
+            ...parsedUser,
+            ...profileData,
+            hasCompletedOnboarding: true,
+          };
+          setUser(completeUser);
+          setHasCompletedOnboarding(true);
+        } else {
+          setUser(parsedUser);
+          setHasCompletedOnboarding(!!parsedUser.hasCompletedOnboarding);
+        }
       } catch (e) {
         console.error("Failed to parse stored user", e);
         localStorage.removeItem("scrubin_user");
@@ -83,10 +100,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         setUser(completeUser);
         setHasCompletedOnboarding(true);
+        setIsReturningUser(true); // Show welcome back screen
         localStorage.setItem("scrubin_user", JSON.stringify(completeUser));
       } else {
         setUser(userData);
         setHasCompletedOnboarding(false);
+        setIsReturningUser(false);
         localStorage.setItem("scrubin_user", JSON.stringify(userData));
       }
 
@@ -130,6 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setUser(updatedUser);
     setHasCompletedOnboarding(true);
+    setIsReturningUser(false);
     localStorage.setItem("scrubin_user", JSON.stringify(updatedUser));
     localStorage.setItem(`scrubin_user_profile_${user.id}`, JSON.stringify({
       name: data.displayName,
@@ -138,6 +158,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Redirect to profile using window.location to avoid wouter issues
     window.location.href = "/profile";
+  };
+
+  const confirmReturningUser = () => {
+    setIsReturningUser(false);
+    window.location.href = "/profile";
+  };
+
+  const restartOnboarding = () => {
+    setIsReturningUser(false);
+    setHasCompletedOnboarding(false);
+    // Keep user data but allow them to re-enter name/username
+    window.location.href = "/onboarding";
   };
 
   const logout = () => {
@@ -158,6 +190,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         error,
         isAuthenticated: !!user,
         hasCompletedOnboarding,
+        isReturningUser,
+        confirmReturningUser,
+        restartOnboarding,
         completeOnboarding,
       }}
     >

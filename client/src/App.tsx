@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import Signin from "./pages/Signin";
 import AnatomyExplorer from "./pages/AnatomyExplorer";
 import Onboarding from "./pages/Onboarding";
+import WelcomeBack from "./pages/WelcomeBack";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
 
@@ -27,7 +28,7 @@ function LoadingScreen() {
 
 // Auth redirect handler - handles all redirect logic in one place
 function AuthRedirect({ children }: { children: React.ReactNode }) {
-  const { user, loading, hasCompletedOnboarding } = useAuth();
+  const { user, loading, hasCompletedOnboarding, isReturningUser, confirmReturningUser, restartOnboarding } = useAuth();
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
@@ -68,6 +69,16 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return <LoadingScreen />;
+  }
+
+  // Show WelcomeBack screen for returning users
+  if (isReturningUser && user) {
+    return (
+      <WelcomeBack
+        onConfirm={confirmReturningUser}
+        onNotYou={restartOnboarding}
+      />
+    );
   }
 
   return <>{children}</>;
