@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect } from "react";
 import { Route, Switch, useLocation } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -58,77 +59,39 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// Layout wrapper with Navbar
-function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <Navbar />
-      {children}
-    </>
-  );
-}
-
 function Router() {
   const { user, hasCompletedOnboarding } = useAuth();
   const [location] = useLocation();
 
-  // Navbar is rendered inside AuthenticatedLayout, not here
+  // If we are not on signin or onboarding, we show the Navbar
+  const showNavbar = location !== "/signin" && location !== "/onboarding";
+
   return (
     <>
-      <Switch>
-        <Route path="/signin" component={Signin} />
-
-        {/* Protected routes - these will be guarded by AuthRedirect */}
-        <Route path="/">
-          <AuthenticatedLayout>
-            <Home />
-          </AuthenticatedLayout>
-        </Route>
-
-        <Route path="/procedures">
-          <AuthenticatedLayout>
-            <ProcedureLibrary />
-          </AuthenticatedLayout>
-        </Route>
-
-        <Route path="/simulation/:id">
-          <AuthenticatedLayout>
-            <Simulation />
-          </AuthenticatedLayout>
-        </Route>
-
-        <Route path="/simulation">
-          <AuthenticatedLayout>
-            <Simulation />
-          </AuthenticatedLayout>
-        </Route>
-
-        <Route path="/leaderboard">
-          <AuthenticatedLayout>
-            <Leaderboard />
-          </AuthenticatedLayout>
-        </Route>
-
-        <Route path="/learn">
-          <AuthenticatedLayout>
-            <LearnHub />
-          </AuthenticatedLayout>
-        </Route>
-
-        <Route path="/anatomy">
-          <AuthenticatedLayout>
-            <AnatomyExplorer />
-          </AuthenticatedLayout>
-        </Route>
-
-        <Route path="/profile">
-          <AuthenticatedLayout>
-            <Profile />
-          </AuthenticatedLayout>
-        </Route>
-
-        <Route component={Signin} />
-      </Switch>
+      {showNavbar && <Navbar />}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location}
+          initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -15, filter: "blur(8px)" }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="w-full min-h-screen"
+        >
+          <Switch location={location}>
+            <Route path="/signin" component={Signin} />
+            <Route path="/" component={Home} />
+            <Route path="/procedures" component={ProcedureLibrary} />
+            <Route path="/simulation/:id" component={Simulation} />
+            <Route path="/simulation" component={Simulation} />
+            <Route path="/leaderboard" component={Leaderboard} />
+            <Route path="/learn" component={LearnHub} />
+            <Route path="/anatomy" component={AnatomyExplorer} />
+            <Route path="/profile" component={Profile} />
+            <Route component={Signin} />
+          </Switch>
+        </motion.div>
+      </AnimatePresence>
     </>
   );
 }

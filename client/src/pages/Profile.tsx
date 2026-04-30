@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Activity, Star, Trophy, Shield, BookOpen, Zap, Target, Award, TrendingUp, Github } from "lucide-react";
+import { Activity, Star, Trophy, Shield, BookOpen, Zap, Target, Award, TrendingUp, Github, Flame } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ScrubinCard, ScrubinStaticPanel } from "@/components/ui/scrubin-card";
@@ -44,6 +44,7 @@ export default function Profile() {
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [totalXP, setTotalXP] = useState(0);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -78,6 +79,46 @@ export default function Profile() {
           return acc + 100 + Math.floor(session.score / 10);
         }, 0);
         setTotalXP(xp);
+
+        // Calculate Streak (consecutive days of successful surgeries)
+        const successfulDates = (data || [])
+          .filter((s: any) => s.outcome === "Successful")
+          .map((s: any) => {
+            const d = new Date(s.created_at);
+            return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+          })
+          .sort((a: number, b: number) => b - a); // descending
+
+        const uniqueSuccessfulDates = [...new Set(successfulDates)];
+
+        let currentStreak = 0;
+        const today = new Date();
+        const todayTime = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+        const yesterdayTime = todayTime - 86400000;
+
+        if (uniqueSuccessfulDates.length > 0) {
+          let expectedDate = todayTime;
+          
+          if (uniqueSuccessfulDates[0] === todayTime) {
+            currentStreak = 1;
+            expectedDate = yesterdayTime;
+          } else if (uniqueSuccessfulDates[0] === yesterdayTime) {
+            currentStreak = 1;
+            expectedDate = yesterdayTime - 86400000;
+          }
+          
+          if (currentStreak > 0) {
+            for (let i = 1; i < uniqueSuccessfulDates.length; i++) {
+              if (uniqueSuccessfulDates[i] === expectedDate) {
+                currentStreak++;
+                expectedDate -= 86400000;
+              } else {
+                break;
+              }
+            }
+          }
+        }
+        setStreak(currentStreak);
 
         const formattedHistory = (data || []).map((session: any) => ({
           id: '#' + (session.id || '').toString().slice(0, 6).toUpperCase(),
@@ -145,7 +186,7 @@ export default function Profile() {
     { label: "Avg Safety Score", value: avgScore + "%", icon: <Shield className="w-4 h-4" /> },
     { label: "Complications", value: complications.toString(), icon: <Zap className="w-4 h-4" /> },
     { label: "Experience Points", value: totalXP.toString(), icon: <TrendingUp className="w-4 h-4" /> },
-    { label: "Certifications", value: totalSurgeries > 5 ? "1" : "0", icon: <Award className="w-4 h-4" /> },
+    { label: "Active Streak", value: `${streak} Days`, icon: <Flame className={`w-4 h-4 ${streak > 0 ? 'text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]' : ''}`} /> },
   ];
 
   // Calculate rank based on XP thresholds
@@ -159,181 +200,209 @@ const currentRankIndex = XP_THRESHOLDS.findIndex((threshold, i) => {
   const nextRankXP = currentRankIndex < XP_THRESHOLDS.length - 1 ? XP_THRESHOLDS[currentRankIndex + 1] : XP_THRESHOLDS[XP_THRESHOLDS.length - 1];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="pt-24 pb-16 max-w-5xl mx-auto px-4">
-        {/* Header */}
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Deep medical gradient background */}
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[40%] bg-baby-blue/10 blur-[100px] rounded-full pointer-events-none" />
+
+      <div className="pt-28 pb-16 max-w-5xl mx-auto px-4 relative z-10">
+        {/* Header Profile Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="rounded-2xl p-8 mb-8 bg-card/90 backdrop-blur-xl border border-border shadow-[0_0_30px_rgba(126,200,227,0.1)]"
+          className="rounded-[2rem] p-8 mb-10 glass-card-pro relative overflow-hidden"
         >
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+          {/* Subtle noise texture */}
+          <div className="absolute inset-0 grain-overlay rounded-[2rem]" />
+          
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-8 relative z-10">
             {/* Avatar */}
-            <div className="relative">
-              <div className="w-20 h-20 rounded-2xl border-2 border-primary/40 overflow-hidden bg-muted">
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-2xl border border-primary/30 overflow-hidden bg-card shadow-lg relative z-10 transition-transform group-hover:scale-105">
                 <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-400 border-2 border-background flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-white" />
+              <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-emerald-400 border-[3px] border-background flex items-center justify-center z-20 shadow-md">
+                <div className="w-2.5 h-2.5 rounded-full bg-white" />
               </div>
             </div>
 
-            {/* Info */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-1">
+            {/* Info & Horizontal Progress Bar */}
+            <div className="flex-1 w-full">
+              <div className="flex items-center gap-3 mb-2">
                 <h1
-                  className="text-2xl font-bold text-foreground"
+                  className="text-3xl font-bold text-foreground tracking-tight"
                   style={{ fontFamily: "'Syne', sans-serif" }}
                 >
                   {user.name}
                 </h1>
-                <span className="px-2.5 py-1 rounded-full bg-primary/15 border border-primary/30 text-xs font-semibold text-primary font-mono-data">
+                <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary font-mono-data uppercase tracking-widest baby-blue-glow">
                   {RANKS[currentRankIndex]}
                 </span>
               </div>
-              <p className="text-muted-foreground text-sm mb-4 font-mono-data">{user.email || `@${user.login}`} · {totalSurgeries} surgeries · {avgScore}% avg score</p>
+              <p className="text-muted-foreground text-sm mb-6 font-mono-data tracking-wide">{user.email || `@${user.login}`} &nbsp;&middot;&nbsp; {totalSurgeries} Procedures &nbsp;&middot;&nbsp; {avgScore}% Precision</p>
 
-              {/* XP Bar */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="label-mono text-muted-foreground">
-                    Level Up Progress
-                  </span>
-                  <span className="label-mono text-primary">{currentXP} / {nextRankXP} XP</span>
+              {/* Next Rank Goal (Horizontal Bar) */}
+              <div className="w-full max-w-xl">
+                <div className="flex justify-between mb-2">
+                  <span className="label-mono text-muted-foreground text-[10px] uppercase">Rank Progress</span>
+                  <span className="label-mono text-primary text-[10px] uppercase font-bold">{currentXP} / {nextRankXP} XP</span>
                 </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <motion.div
+                <div className="h-2 bg-muted/30 rounded-full overflow-hidden border border-border/50">
+                  <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min((currentXP / nextRankXP) * 100, 100)}%` }}
-                    transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-                    className="h-full bg-primary rounded-full"
+                    transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                    className="h-full bg-primary shadow-[0_0_10px_rgba(126,200,227,0.5)] rounded-full"
                   />
                 </div>
               </div>
             </div>
-
-            {/* Rank progression */}
-            <div className="hidden lg:flex flex-col gap-1">
-              {RANKS.map((rank, i) => (
-                <div key={rank} className={`flex items-center gap-2 text-xs ${i === currentRankIndex ? "text-primary font-semibold" : i < currentRankIndex ? "text-emerald-400" : "text-muted-foreground opacity-50"}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${i === currentRankIndex ? "bg-primary" : i < currentRankIndex ? "bg-emerald-400" : "bg-muted"}`} />
-                  <span className="font-mono-data">{rank}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        {/* OR Monitor Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: i * 0.07 }}
-              className="rounded-xl p-5 bg-card/90 backdrop-blur-xl border border-border hover:border-primary/30 hover:shadow-[0_0_20px_rgba(126,200,227,0.1)] transition-all"
+              transition={{ duration: 0.4, delay: i * 0.08 }}
+              className="rounded-2xl p-6 stats-card flex flex-col justify-between min-h-[120px] group"
             >
-              <div className="flex items-center gap-2 mb-3 text-primary">{stat.icon}</div>
-              <div
-                className="text-2xl font-bold text-foreground mb-1"
-                style={{ fontFamily: "'Syne', sans-serif" }}
-              >
-                {stat.value}
+              <div className="flex justify-between items-start mb-4">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  {stat.icon}
+                </div>
+                {i === 2 && (
+                  <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-emerald-400 font-mono-data tracking-wider animate-vitals-blink">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Live
+                  </div>
+                )}
               </div>
-              <div className="label-mono text-muted-foreground">{stat.label}</div>
+              <div>
+                <div
+                  className="text-3xl font-bold text-foreground mb-1 group-hover:text-primary transition-colors"
+                  style={{ fontFamily: "'Syne', sans-serif" }}
+                >
+                  {stat.value}
+                </div>
+                <div className="label-mono text-muted-foreground text-[10px] tracking-widest">{stat.label}</div>
+              </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Surgery History */}
-        <div className="rounded-2xl overflow-hidden mb-8 bg-card/90 backdrop-blur-xl border border-border">
-          <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+        {/* Clinical Log (History) */}
+        <div className="rounded-3xl overflow-hidden mb-10 glass-card">
+          <div className="px-8 py-6 border-b border-border/50 flex items-center justify-between bg-card/30">
             <h2
-              className="font-bold text-foreground"
+              className="text-xl font-bold text-foreground tracking-tight"
               style={{ fontFamily: "'Syne', sans-serif" }}
             >
-              Surgery History
+              Clinical Log
             </h2>
-            <span className="label-mono text-muted-foreground">{history.length} procedures</span>
+            <span className="px-3 py-1 rounded-full bg-muted/50 label-mono text-xs text-muted-foreground">{history.length} records</span>
           </div>
-          <div className="divide-y divide-border/50">
+          
+          <div className="divide-y divide-border/30">
             {history.length > 0 ? history.map((entry, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: i * 0.1 }}
-                className="px-6 py-4 hover:bg-muted/30 transition-colors"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.05 }}
+                className="px-8 py-5 history-row"
               >
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex-1">
                     <div
-                      className="font-semibold text-sm text-foreground mb-0.5"
+                      className="font-bold text-base text-foreground mb-1 tracking-tight"
                       style={{ fontFamily: "'Syne', sans-serif" }}
                     >
                       {entry.procedure}
                     </div>
-                    <div className="text-xs text-muted-foreground font-mono-data">{entry.date} · {entry.time} · {entry.id}</div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono-data">
+                      <span>{entry.date}</span>
+                      <span className="w-1 h-1 rounded-full bg-muted-foreground/30"></span>
+                      <span>{entry.time}</span>
+                      <span className="w-1 h-1 rounded-full bg-muted-foreground/30"></span>
+                      <span className="text-primary/70">{entry.id}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, j) => (
-                      <Star key={j} className={`w-3 h-3 ${j < (parseInt(entry.score) / 20) ? "fill-primary text-primary" : "text-muted"}`} />
-                    ))}
+                  
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-1 bg-card/50 px-3 py-1.5 rounded-full border border-border/50">
+                      {[...Array(5)].map((_, j) => (
+                        <Star key={j} className={`w-3.5 h-3.5 ${j < (parseInt(entry.score) / 20) ? "fill-primary text-primary drop-shadow-[0_0_4px_rgba(126,200,227,0.5)]" : "text-muted"}`} />
+                      ))}
+                    </div>
+                    
+                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold font-mono-data uppercase tracking-wider min-w-[120px] text-center ${
+                      entry.outcome === "Successful"
+                        ? "bg-emerald-400/10 text-emerald-400 border border-emerald-400/20"
+                        : entry.outcome === "Complicated"
+                        ? "bg-amber-400/10 text-amber-400 border border-amber-400/20"
+                        : "bg-red-400/10 text-red-400 border border-red-400/20"
+                    }`}>
+                      {entry.outcome}
+                    </span>
+                    
+                    <span className="text-2xl font-bold text-primary font-mono-data w-16 text-right">
+                      {entry.score}
+                    </span>
                   </div>
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold font-mono-data ${
-                    entry.outcome === "Successful"
-                      ? "bg-emerald-400/10 text-emerald-400"
-                      : entry.outcome === "Complicated"
-                      ? "bg-amber-400/10 text-amber-400"
-                      : "bg-red-400/10 text-red-400"
-                  }`}>
-                    {entry.outcome}
-                  </span>
-                  <span className="text-sm font-bold text-primary font-mono-data w-12 text-right">{entry.score}</span>
                 </div>
               </motion.div>
             )) : (
-              <div className="px-6 py-12 text-center">
-                <div className="text-muted-foreground text-sm font-mono-data">No surgery records found for this account.</div>
+              <div className="px-8 py-16 text-center">
+                <div className="w-16 h-16 rounded-full bg-muted/20 flex items-center justify-center mx-auto mb-4">
+                  <Activity className="w-8 h-8 text-muted-foreground/50" />
+                </div>
+                <div className="text-muted-foreground text-sm font-mono-data mb-4 tracking-wide">No clinical records found.</div>
                 <Link href="/procedures">
-                  <Button variant="link" className="text-primary mt-2">Enter the OR to start your career</Button>
+                  <Button className="bg-white text-black hover:bg-gray-200 rounded-full px-6 py-2 font-semibold font-display shadow-lg transition-transform hover:scale-105">
+                    Enter the OR
+                  </Button>
                 </Link>
               </div>
             )}
           </div>
         </div>
 
-        {/* Achievements */}
+        {/* Clinical Achievements */}
         <div>
           <h2
-            className="font-bold text-foreground mb-5"
+            className="text-xl font-bold text-foreground mb-6 px-2 tracking-tight"
             style={{ fontFamily: "'Syne', sans-serif" }}
           >
-            Achievements
+            Clinical Achievements
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
             {BADGES.map((badge, i) => (
               <motion.div
                 key={badge.name}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: i * 0.07 }}
-                className={`rounded-xl p-4 bg-card/90 backdrop-blur-xl border ${badge.unlocked ? "border-primary/30 shadow-[0_0_20px_rgba(126,200,227,0.1)]" : "border-border opacity-60"} transition-all hover:border-primary/40`}
+                transition={{ duration: 0.3, delay: i * 0.05 }}
+                className={`p-5 rounded-2xl achievement-card ${badge.unlocked ? "unlocked" : "locked"}`}
               >
-                <div className="text-3xl mb-3">{badge.icon}</div>
+                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-4 drop-shadow-[0_0_8px_rgba(126,200,227,0.3)]">
+                  {badge.icon}
+                </div>
                 <div
-                  className="font-semibold text-sm text-foreground mb-1"
+                  className="font-bold text-base text-foreground mb-1 tracking-tight"
                   style={{ fontFamily: "'Syne', sans-serif" }}
                 >
                   {badge.name}
                 </div>
-                <div className="text-xs text-muted-foreground">{badge.desc}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed font-mono-data tracking-wide">{badge.desc}</div>
+                
                 {badge.unlocked && (
-                  <div className="mt-2 flex items-center gap-1">
+                  <div className="mt-4 flex items-center gap-1.5 bg-primary/10 w-fit px-2.5 py-1 rounded-full border border-primary/20">
                     <Award className="w-3 h-3 text-primary" />
-                    <span className="label-mono text-primary">Unlocked</span>
+                    <span className="text-[10px] uppercase font-bold text-primary font-mono-data tracking-widest">Unlocked</span>
                   </div>
                 )}
               </motion.div>
