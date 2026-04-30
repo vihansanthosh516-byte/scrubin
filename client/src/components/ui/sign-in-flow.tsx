@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -274,9 +275,63 @@ export const SignInPage = ({
   className,
   onGoogleSignIn,
   onGitHubSignIn,
+  onSignIn,
+  onSignUp,
   loading,
-}: SignInPageProps) => {
+}: SignInPageProps & { 
+  onSignIn?: (email: string, password: string) => void;
+  onSignUp?: (email: string, password: string, name: string, profession: string) => void;
+  loading?: boolean;
+}) => {
+  const { error: globalAuthError } = useAuth();
   const [initialCanvasVisible, setInitialCanvasVisible] = useState(true);
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [profession, setProfession] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+  const [lastUser, setLastUser] = useState<{name: string, login: string} | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("scrubin_last_user");
+    if (stored) {
+      try {
+        setLastUser(JSON.parse(stored));
+      } catch (e) {
+        console.error("Failed to parse last user", e);
+      }
+    }
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    
+    if (mode === "signin") {
+      if (!email || !password) {
+        setFormError("Please fill in all fields");
+        return;
+      }
+      if (onSignIn) {
+        const result = await (onSignIn(email, password) as any);
+        if (result?.error) {
+          setFormError(result.error.message || "Invalid credentials");
+        }
+      }
+    } else {
+      if (!email || !password || !name || !profession) {
+        setFormError("Please fill in all fields");
+        return;
+      }
+      if (onSignUp) {
+        const result = await (onSignUp(email, password, name, profession) as any);
+        if (result?.error) {
+          setFormError(result.error.message || "Could not create account");
+        }
+      }
+    }
+  };
 
   return (
     <div className={cn("flex w-[100%] flex-col min-h-screen bg-black relative", className)}>
@@ -298,27 +353,27 @@ export const SignInPage = ({
       </div>
 
       {/* Content Layer */}
-      <div className="relative z-10 flex flex-col flex-1 items-center justify-center px-4">
+      <div className="relative z-10 flex flex-col flex-1 items-center justify-center px-4 py-12">
         <AnimatePresence mode="wait">
           <motion.div
-            key="signin-step"
-            initial={{ opacity: 0, x: -100 }}
+            key={mode}
+            initial={{ opacity: 0, x: mode === "signin" ? -20 : 20 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            exit={{ opacity: 0, x: mode === "signin" ? 20 : -20 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             className="w-full max-w-sm space-y-6 text-center"
           >
             {/* Logo */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex flex-col items-center mb-8"
+              transition={{ delay: 0.1 }}
+              className="flex flex-col items-center mb-4"
             >
-              <div className="w-16 h-16 rounded-2xl bg-primary/20 border border-primary/40 flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
+              <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center mb-3 shadow-lg shadow-primary/20">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="w-8 h-8 text-baby-blue"
+                  className="w-6 h-6 text-baby-blue"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -330,83 +385,141 @@ export const SignInPage = ({
                 </svg>
               </div>
               <h1
-                className="text-4xl font-bold tracking-tight text-white"
+                className="text-3xl font-bold tracking-tight text-white"
                 style={{ fontFamily: "'Syne', sans-serif" }}
               >
                 Scrub<span className="text-baby-blue">In</span>
               </h1>
-              <p className="text-sm text-white/50 mt-1 font-mono-data">
-                Advanced Surgical Simulator
-              </p>
             </motion.div>
 
             {/* Welcome Text */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="space-y-2"
-            >
-              <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
-                Welcome Developer
+            <div className="space-y-1">
+              <h2 className="text-xl font-bold text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+                {mode === "signin" ? (lastUser ? `Welcome back, ${lastUser.name}` : "Welcome Back") : "Create Account"}
               </h2>
-              <p className="text-white/60">
-                Sign in to save your progress and track your surgical skills
+              <p className="text-white/60 text-sm">
+                {mode === "signin" 
+                  ? (lastUser ? `Continue as @${lastUser.login}` : "Sign in to continue your surgical training")
+                  : "Join the next generation of surgeons"}
               </p>
-            </motion.div>
+            </div>
 
-            {/* Sign In Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="space-y-4 pt-4"
-            >
-              {/* Google Sign In */}
+            {/* Email Form */}
+            <form onSubmit={handleSubmit} className="space-y-3 pt-2">
+              {mode === "signup" && (
+                <>
+                  <div className="space-y-1 text-left">
+                    <input
+                      type="text"
+                      placeholder="Full Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1 text-left">
+                    <select
+                      value={profession}
+                      onChange={(e) => setProfession(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-primary/50 transition-colors text-sm appearance-none"
+                      required
+                    >
+                      <option value="" disabled className="bg-black text-white/30">Select Profession</option>
+                      <option value="Medical Student" className="bg-black">Medical Student</option>
+                      <option value="Resident" className="bg-black">Resident</option>
+                      <option value="Attending Surgeon" className="bg-black">Attending Surgeon</option>
+                      <option value="Nurse" className="bg-black">Nurse</option>
+                      <option value="Other" className="bg-black">Other</option>
+                    </select>
+                  </div>
+                </>
+              )}
+              
+              <div className="space-y-1 text-left">
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                  required
+                />
+              </div>
+              <div className="space-y-1 text-left">
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                  required
+                />
+              </div>
+              
+              {formError && (
+                <p className="text-red-400 text-xs text-left px-1">{formError}</p>
+              )}
+              {globalAuthError && !formError && (
+                <p className="text-red-400 text-xs text-left px-1">{globalAuthError}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-baby-blue hover:bg-baby-blue/90 text-black font-bold py-3 rounded-xl transition-all duration-200 mt-2 disabled:opacity-50 text-sm"
+              >
+                {loading ? "Processing..." : mode === "signin" ? "Sign In" : "Sign Up"}
+              </button>
+            </form>
+
+            {/* Divider */}
+            <div className="flex items-center gap-4 py-1">
+              <div className="h-px bg-white/10 flex-1" />
+              <span className="text-white/40 text-xs uppercase tracking-widest font-mono-data">or</span>
+              <div className="h-px bg-white/10 flex-1" />
+            </div>
+
+            {/* Social Buttons */}
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={onGoogleSignIn}
                 disabled={loading}
-                className="backdrop-blur-[2px] w-full flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full py-3.5 px-4 transition-all duration-200 hover:border-white/20"
+                className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl py-2.5 px-2 transition-all duration-200 text-xs"
               >
-                <GoogleIcon className="w-5 h-5" />
-                <span className="font-medium">Continue with Google</span>
+                <GoogleIcon className="w-4 h-4" />
+                <span>Google</span>
               </button>
-
-              {/* Divider */}
-              <div className="flex items-center gap-4 py-2">
-                <div className="h-px bg-white/10 flex-1" />
-                <span className="text-white/40 text-sm">or</span>
-                <div className="h-px bg-white/10 flex-1" />
-              </div>
-
-              {/* GitHub Sign In */}
               <button
                 onClick={onGitHubSignIn}
                 disabled={loading}
-                className="backdrop-blur-[2px] w-full flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full py-3.5 px-4 transition-all duration-200 hover:border-white/20"
+                className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl py-2.5 px-2 transition-all duration-200 text-xs"
               >
-                <GitHubIcon className="w-5 h-5" />
-                <span className="font-medium">Continue with GitHub</span>
+                <GitHubIcon className="w-4 h-4" />
+                <span>GitHub</span>
               </button>
-            </motion.div>
+            </div>
+
+            {/* Toggle Mode */}
+            <p className="text-sm text-white/40 pt-2">
+              {mode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
+              <button 
+                onClick={() => {
+                  setMode(mode === "signin" ? "signup" : "signin");
+                  setFormError(null);
+                }}
+                className="text-baby-blue hover:underline focus:outline-none"
+              >
+                {mode === "signin" ? "Sign Up" : "Sign In"}
+              </button>
+            </p>
 
             {/* Footer Text */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="text-xs text-white/40 pt-6 leading-relaxed"
-            >
-              By signing in, you agree to our{" "}
-              <a href="#" className="underline text-white/40 hover:text-white/60 transition-colors">
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a href="#" className="underline text-white/40 hover:text-white/60 transition-colors">
-                Privacy Policy
-              </a>
-              . We only use your name and profile picture.
-            </motion.p>
+            <p className="text-[10px] text-white/30 pt-4 leading-relaxed max-w-[280px] mx-auto">
+              By continuing, you agree to ScrubIn's{" "}
+              <a href="#" className="underline hover:text-white/50">Terms</a> and{" "}
+              <a href="#" className="underline hover:text-white/50">Privacy Policy</a>.
+            </p>
           </motion.div>
         </AnimatePresence>
       </div>

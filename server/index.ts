@@ -123,7 +123,7 @@ async function startServer() {
   // Google OAuth Proxy Endpoint
   app.post("/api/auth/google", async (req, res) => {
     try {
-      const { code } = req.body;
+      const { code, redirect_uri } = req.body;
       const client_id = process.env.VITE_GOOGLE_CLIENT_ID;
       const client_secret = process.env.GOOGLE_CLIENT_SECRET;
 
@@ -141,7 +141,7 @@ async function startServer() {
           code,
           client_id,
           client_secret,
-          redirect_uri: `${process.env.VITE_APP_URL || "http://localhost:3000"}/signin`,
+          redirect_uri: redirect_uri || `${process.env.VITE_APP_URL || "http://localhost:3000"}/signin`,
           grant_type: "authorization_code",
         }),
       });

@@ -13,7 +13,6 @@ import Profile from "./pages/Profile";
 import Signin from "./pages/Signin";
 import AnatomyExplorer from "./pages/AnatomyExplorer";
 import Onboarding from "./pages/Onboarding";
-import WelcomeBack from "./pages/WelcomeBack";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
 
@@ -28,7 +27,7 @@ function LoadingScreen() {
 
 // Auth redirect handler - handles all redirect logic in one place
 function AuthRedirect({ children }: { children: React.ReactNode }) {
-  const { user, loading, hasCompletedOnboarding, isReturningUser, confirmReturningUser, restartOnboarding } = useAuth();
+  const { user, loading, hasCompletedOnboarding } = useAuth();
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
@@ -44,41 +43,16 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Authenticated but on signin page -> redirect appropriately
+    // Authenticated but on signin page -> redirect to profile
     if (user && location === "/signin") {
-      if (!hasCompletedOnboarding) {
-        setLocation("/onboarding");
-      } else {
-        setLocation("/profile");
-      }
-      return;
-    }
-
-    // Authenticated, not onboarded, and not on onboarding page -> redirect to onboarding
-    if (user && !hasCompletedOnboarding && location !== "/onboarding") {
-      setLocation("/onboarding");
-      return;
-    }
-
-    // Authenticated, onboarded, and on onboarding page -> redirect to profile
-    if (user && hasCompletedOnboarding && location === "/onboarding") {
       setLocation("/profile");
       return;
     }
+
   }, [user, loading, hasCompletedOnboarding, location, setLocation]);
 
   if (loading) {
     return <LoadingScreen />;
-  }
-
-  // Show WelcomeBack screen for returning users
-  if (isReturningUser && user) {
-    return (
-      <WelcomeBack
-        onConfirm={confirmReturningUser}
-        onNotYou={restartOnboarding}
-      />
-    );
   }
 
   return <>{children}</>;
@@ -102,9 +76,7 @@ function Router() {
   return (
     <>
       <Switch>
-        {/* Public routes */}
         <Route path="/signin" component={Signin} />
-        <Route path="/onboarding" component={Onboarding} />
 
         {/* Protected routes - these will be guarded by AuthRedirect */}
         <Route path="/">
