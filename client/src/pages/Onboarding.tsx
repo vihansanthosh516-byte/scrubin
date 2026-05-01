@@ -40,21 +40,47 @@ export default function Onboarding() {
 
   return (
     <div className="fixed inset-0 bg-[#0a0f1e] z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
+      {/* Animated background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 animate-gradient-shift" />
+      
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-primary/20 rounded-full"
+            initial={{ 
+              x: Math.random() * window.innerWidth, 
+              y: Math.random() * window.innerHeight,
+              scale: 0
+            }}
+            animate={{ 
+              y: [null, Math.random() * -100],
+              scale: [0, 1, 0],
+              opacity: [0, 1, 0]
+            }}
+            transition={{ 
+              duration: 3 + Math.random() * 2, 
+              repeat: Infinity, 
+              delay: Math.random() * 2 
+            }}
+          />
+        ))}
+      </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
+        initial={{ opacity: 0, scale: 0.95, rotate: -2 }}
+        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+        transition={{ duration: 0.5, type: "spring" }}
         className="relative w-full max-w-md"
       >
-        <div className="rounded-2xl p-8 bg-card/95 backdrop-blur-xl border border-border shadow-[0_0_40px_rgba(126,200,227,0.15)]">
+        <div className="rounded-2xl p-8 bg-card/95 backdrop-blur-xl border border-border shadow-[0_0_60px_rgba(126,200,227,0.2)]">
           <div className="text-center mb-8">
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: 0.1 }}
-              className="w-20 h-20 rounded-2xl border-2 border-primary/40 overflow-hidden mx-auto mb-4 bg-muted"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", delay: 0.2, stiffness: 200 }}
+              className="w-20 h-20 rounded-2xl border-2 border-primary/40 overflow-hidden mx-auto mb-4 bg-muted shadow-[0_0_20px_rgba(126,200,227,0.3)]"
             >
               <img
                 src={user?.avatar_url}
@@ -64,9 +90,9 @@ export default function Onboarding() {
             </motion.div>
 
             <motion.h1
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.3 }}
               className="text-2xl font-bold text-white mb-2"
               style={{ fontFamily: "'Syne', sans-serif" }}
             >
@@ -76,7 +102,7 @@ export default function Onboarding() {
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.4 }}
               className="text-muted-foreground text-sm"
             >
               Let's set up your surgeon identity

@@ -482,6 +482,8 @@ export default function ProcedureLibrary() {
   const [search, setSearch] = useState("");
   const [userXP, setUserXP] = useState(0);
   const [completedProcedures, setCompletedProcedures] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState("difficulty"); // difficulty, duration, popularity
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   // XP thresholds to unlock procedures
   // Beginner: 0 XP (always unlocked)
@@ -576,60 +578,96 @@ export default function ProcedureLibrary() {
               {PROCEDURES.length} procedures available — from beginner to advanced
             </p>
 
-            {/* Search + Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search procedures..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all font-mono-data"
-                />
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                {FILTERS.slice(0, 8).map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setActiveFilter(f)}
-                    className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all font-mono-data uppercase tracking-wide ${
-                      activeFilter === f
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground border border-border"
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-            </div>
+        {/* Search + Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className={`relative flex-1 max-w-sm transition-all duration-300 ${isSearchFocused ? 'scale-105' : ''}`}>
+            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isSearchFocused ? 'text-primary' : 'text-muted-foreground'}`} />
+            <input
+              type="text"
+              placeholder="Search procedures..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              className="w-full pl-9 pr-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all font-mono-data"
+            />
+            {/* Search glow effect */}
+            {isSearchFocused && (
+              <div className="absolute inset-0 rounded-xl border-2 border-primary/20 pointer-events-none" />
+            )}
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {FILTERS.slice(0, 8).map(f => (
+              <motion.button
+                key={f}
+                onClick={() => setActiveFilter(f)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all font-mono-data uppercase tracking-wide ${
+                  activeFilter === f
+                    ? "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(126,200,227,0.3)]"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground border border-border"
+                }`}
+              >
+                {f}
+              </motion.button>
+            ))}
+          </div>
+        </div>
           </motion.div>
         </div>
       </div>
 
       {/* Grid */}
       <div className="max-w-6xl mx-auto px-4 py-12">
-        {/* XP Progress Banner */}
+        {/* Enhanced XP Progress Banner */}
         {user && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 p-4 rounded-xl bg-card/50 border border-border"
+            className="mb-8 p-6 rounded-2xl bg-card/50 border border-border backdrop-blur-xl relative overflow-hidden"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-sm text-muted-foreground font-mono-data">Your XP</span>
-                <p className="text-2xl font-bold text-primary" style={{ fontFamily: "'Syne', sans-serif" }}>{userXP} XP</p>
+            {/* Background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-teal-400/5 to-primary/5 animate-gradient-shift" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <span className="label-mono text-muted-foreground text-[10px] uppercase tracking-widest">Your Experience</span>
+                  <p className="text-3xl font-bold text-primary mt-1" style={{ fontFamily: "'Syne', sans-serif" }}>{userXP.toLocaleString()} XP</p>
+                </div>
+                <motion.div 
+                  className="text-right"
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {userXP < 500 ? (
+                    <div className="flex items-center gap-2 text-amber-400">
+                      <span className="text-sm font-semibold">🔒 Intermediate at 500 XP</span>
+                    </div>
+                  ) : userXP < 2000 ? (
+                    <div className="flex items-center gap-2 text-red-400">
+                      <span className="text-sm font-semibold">🔒 Advanced at 2000 XP</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-emerald-400">
+                      <span className="text-sm font-semibold">✓ All Unlocked!</span>
+                    </div>
+                  )}
+                </motion.div>
               </div>
-              <div className="text-right text-sm">
-                {userXP < 500 ? (
-                  <span className="text-amber-400">🔒 Intermediate unlocks at 500 XP</span>
-                ) : userXP < 2000 ? (
-                  <span className="text-red-400">🔒 Advanced unlocks at 2000 XP</span>
-                ) : (
-                  <span className="text-emerald-400">✓ All procedures unlocked!</span>
-                )}
+              
+              {/* Progress bar to next level */}
+              <div className="h-2 bg-muted/30 rounded-full overflow-hidden border border-border/50">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ 
+                    width: userXP < 500 ? `${(userXP / 500) * 100}%` : userXP < 2000 ? `${((userXP - 500) / 1500) * 100}%` : '100%'
+                  }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className={`h-full ${userXP >= 2000 ? 'bg-emerald-400' : 'bg-primary'} shadow-[0_0_10px_rgba(126,200,227,0.5)]`}
+                />
               </div>
             </div>
           </motion.div>

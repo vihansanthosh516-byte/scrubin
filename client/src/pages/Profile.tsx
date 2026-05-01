@@ -179,10 +179,11 @@ export default function Profile() {
     ? Math.round(history.reduce((acc, h) => acc + parseInt(h.score), 0) / totalSurgeries)
     : 0;
   const complications = history.filter(h => h.outcome === "Complicated" || h.outcome === "Critical").length;
+  const bestScore = totalSurgeries > 0 ? Math.max(...history.map(h => parseInt(h.score))) : 0;
 
   const stats = [
     { label: "Total Surgeries", value: totalSurgeries.toString(), icon: <Activity className="w-4 h-4" /> },
-    { label: "Best Score", value: totalSurgeries > 0 ? Math.max(...history.map(h => parseInt(h.score))) + "%" : "N/A", icon: <Star className="w-4 h-4" /> },
+    { label: "Best Score", value: bestScore + "%", icon: <Star className="w-4 h-4" /> },
     { label: "Avg Safety Score", value: avgScore + "%", icon: <Shield className="w-4 h-4" /> },
     { label: "Complications", value: complications.toString(), icon: <Zap className="w-4 h-4" /> },
     { label: "Experience Points", value: totalXP.toString(), icon: <TrendingUp className="w-4 h-4" /> },
@@ -207,59 +208,102 @@ const currentRankIndex = XP_THRESHOLDS.findIndex((threshold, i) => {
 
       <div className="pt-28 pb-16 max-w-5xl mx-auto px-4 relative z-10">
         {/* Header Profile Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="rounded-[2rem] p-8 mb-10 glass-card-pro relative overflow-hidden"
+  <motion.div
+    initial={{ opacity: 0, y: 20, scale: 0.98 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    transition={{ duration: 0.6, ease: "easeOut" }}
+    className="rounded-[2rem] p-8 mb-10 glass-card-pro relative overflow-hidden group"
+  >
+    {/* Animated gradient background */}
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-teal-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    
+    {/* Subtle noise texture */}
+    <div className="absolute inset-0 grain-overlay rounded-[2rem]" />
+
+    <div className="flex flex-col md:flex-row items-start md:items-center gap-8 relative z-10">
+      {/* Enhanced Avatar with pulse ring */}
+      <motion.div 
+        className="relative group"
+        initial={{ scale: 0.9 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", delay: 0.2 }}
+      >
+        <motion.div 
+          className="absolute inset-0 rounded-2xl border-2 border-primary/30"
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+        <div className="w-24 h-24 rounded-2xl border-2 border-primary/40 overflow-hidden bg-card shadow-[0_0_30px_rgba(126,200,227,0.2)] relative z-10 transition-transform group-hover:scale-110">
+          <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
+        </div>
+        <motion.div 
+          className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-emerald-400 border-[3px] border-background flex items-center justify-center z-20 shadow-[0_0_15px_rgba(16,185,129,0.5)]"
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
         >
-          {/* Subtle noise texture */}
-          <div className="absolute inset-0 grain-overlay rounded-[2rem]" />
-          
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-8 relative z-10">
-            {/* Avatar */}
-            <div className="relative group">
-              <div className="w-24 h-24 rounded-2xl border border-primary/30 overflow-hidden bg-card shadow-lg relative z-10 transition-transform group-hover:scale-105">
-                <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
-              </div>
-              <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-emerald-400 border-[3px] border-background flex items-center justify-center z-20 shadow-md">
-                <div className="w-2.5 h-2.5 rounded-full bg-white" />
-              </div>
-            </div>
+          <div className="w-2.5 h-2.5 rounded-full bg-white" />
+        </motion.div>
+      </motion.div>
 
-            {/* Info & Horizontal Progress Bar */}
-            <div className="flex-1 w-full">
-              <div className="flex items-center gap-3 mb-2">
-                <h1
-                  className="text-3xl font-bold text-foreground tracking-tight"
-                  style={{ fontFamily: "'Syne', sans-serif" }}
-                >
-                  {user.name}
-                </h1>
-                <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary font-mono-data uppercase tracking-widest baby-blue-glow">
-                  {RANKS[currentRankIndex]}
-                </span>
-              </div>
-              <p className="text-muted-foreground text-sm mb-6 font-mono-data tracking-wide">{user.email || `@${user.login}`} &nbsp;&middot;&nbsp; {totalSurgeries} Procedures &nbsp;&middot;&nbsp; {avgScore}% Precision</p>
+      {/* Info & Horizontal Progress Bar */}
+      <div className="flex-1 w-full">
+        <motion.div 
+          className="flex items-center gap-3 mb-2"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <h1
+            className="text-3xl font-bold text-foreground tracking-tight"
+            style={{ fontFamily: "'Syne', sans-serif" }}
+          >
+            {user.name}
+          </h1>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.4, type: "spring" }}
+          >
+            <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary font-mono-data uppercase tracking-widest shadow-[0_0_15px_rgba(126,200,227,0.2)]">
+              {RANKS[currentRankIndex]}
+            </span>
+          </motion.div>
+        </motion.div>
+        <motion.p 
+          className="text-muted-foreground text-sm mb-6 font-mono-data tracking-wide"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          {user.email || `@${user.login}`} &nbsp;&middot;&nbsp; {totalSurgeries} Procedures &nbsp;&middot;&nbsp; {avgScore}% Precision
+        </motion.p>
 
-              {/* Next Rank Goal (Horizontal Bar) */}
-              <div className="w-full max-w-xl">
-                <div className="flex justify-between mb-2">
-                  <span className="label-mono text-muted-foreground text-[10px] uppercase">Rank Progress</span>
-                  <span className="label-mono text-primary text-[10px] uppercase font-bold">{currentXP} / {nextRankXP} XP</span>
-                </div>
-                <div className="h-2 bg-muted/30 rounded-full overflow-hidden border border-border/50">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min((currentXP / nextRankXP) * 100, 100)}%` }}
-                    transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-                    className="h-full bg-primary shadow-[0_0_10px_rgba(126,200,227,0.5)] rounded-full"
-                  />
-                </div>
-              </div>
-            </div>
+        {/* Enhanced Rank Progress Bar */}
+        <motion.div 
+          className="w-full max-w-xl"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="flex justify-between mb-2">
+            <span className="label-mono text-muted-foreground text-[10px] uppercase">Rank Progress</span>
+            <span className="label-mono text-primary text-[10px] uppercase font-bold">{currentXP.toLocaleString()} / {nextRankXP.toLocaleString()} XP</span>
+          </div>
+          <div className="h-2.5 bg-muted/30 rounded-full overflow-hidden border border-border/50 relative">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min((currentXP / nextRankXP) * 100, 100)}%` }}
+              transition={{ duration: 1.5, ease: "easeOut", delay: 0.6 }}
+              className="h-full bg-gradient-to-r from-primary to-teal-400 shadow-[0_0_15px_rgba(126,200,227,0.6)] rounded-full relative overflow-hidden"
+            >
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+            </motion.div>
           </div>
         </motion.div>
+      </div>
+    </div>
+  </motion.div>
 
         {/* OR Monitor Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 mb-10">

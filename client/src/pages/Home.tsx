@@ -222,23 +222,51 @@ export default function Home() {
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <AnimatedBackground />
 
-        {/* Floating medical icons */}
-        <FloatingIcon icon={<Activity className="w-8 h-8" />} delay={0.5} x="10%" y="20%" />
-        <FloatingIcon icon={<Heart className="w-6 h-6" />} delay={0.8} x="85%" y="25%" />
-        <FloatingIcon icon={<Brain className="w-7 h-7" />} delay={1.1} x="15%" y="70%" />
-        <FloatingIcon icon={<Scissors className="w-6 h-6" />} delay={1.4} x="80%" y="75%" />
+        {/* Floating medical icons - enhanced with interactivity */}
+        <motion.div 
+          className="absolute z-20 tooltip-base"
+          style={{ left: "10%", top: "20%" }}
+          animate={{ y: [0, -15, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        >
+          <Activity className="w-8 h-8 text-primary/30 hover:text-primary/60 transition-colors cursor-pointer" />
+        </motion.div>
+        <motion.div 
+          className="absolute z-20"
+          style={{ left: "85%", top: "25%" }}
+          animate={{ y: [0, -15, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
+        >
+          <Heart className="w-6 h-6 text-primary/30 hover:text-primary/60 transition-colors cursor-pointer" />
+        </motion.div>
+        <motion.div 
+          className="absolute z-20"
+          style={{ left: "15%", top: "70%" }}
+          animate={{ y: [0, -15, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.1 }}
+        >
+          <Brain className="w-7 h-7 text-primary/30 hover:text-primary/60 transition-colors cursor-pointer" />
+        </motion.div>
+        <motion.div 
+          className="absolute z-20"
+          style={{ left: "80%", top: "75%" }}
+          animate={{ y: [0, -15, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.4 }}
+        >
+          <Scissors className="w-6 h-6 text-primary/30 hover:text-primary/60 transition-colors cursor-pointer" />
+        </motion.div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
-          {/* Headline */}
+          {/* Enhanced Headline with gradient text */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={mounted ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-5xl md:text-7xl lg:text-8xl font-bold leading-none tracking-tight
-                     text-foreground mb-6"
+            text-foreground mb-6"
             style={{ fontFamily: "'Syne', sans-serif" }}
           >
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400">
+            <span className="text-gradient bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
               ScrubIn
             </span>
             <br />
@@ -257,7 +285,7 @@ export default function Home() {
             Put ScrubIn on top of your first surgery.
           </motion.p>
 
-          {/* CTAs */}
+          {/* Enhanced CTAs with glow */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={mounted ? { opacity: 1, y: 0 } : {}}
@@ -265,42 +293,52 @@ export default function Home() {
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Link href="/procedures">
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground
-                         font-semibold px-8 py-6 rounded-xl text-lg
-                         shadow-[0_0_30px_rgba(126,200,227,0.3)] hover:shadow-[0_0_50px_rgba(126,200,227,0.4)]
-                         transition-all duration-300"
-                style={{ fontFamily: "'Syne', sans-serif" }}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Activity className="w-5 h-5 mr-2" />
-                Enter the OR
-              </Button>
+                <Button
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground
+                  font-semibold px-8 py-6 rounded-xl text-lg
+                  shadow-[0_0_30px_rgba(126,200,227,0.3)] hover:shadow-[0_0_50px_rgba(126,200,227,0.4)]
+                  transition-all duration-300"
+                  style={{ fontFamily: "'Syne', sans-serif" }}
+                >
+                  <Activity className="w-5 h-5 mr-2" />
+                  Enter the OR
+                </Button>
+              </motion.div>
             </Link>
             <Link href="/procedures">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-border hover:border-primary/50 hover:bg-primary/5
-                         font-semibold px-8 py-6 rounded-xl text-lg transition-all duration-300"
-                style={{ fontFamily: "'Syne', sans-serif" }}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Play className="w-5 h-5 mr-2" />
-                View Procedures
-              </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-border hover:border-primary/50 hover:bg-primary/5
+                  font-semibold px-8 py-6 rounded-xl text-lg transition-all duration-300"
+                  style={{ fontFamily: "'Syne', sans-serif" }}
+                >
+                  <Play className="w-5 h-5 mr-2" />
+                  View Procedures
+                </Button>
+              </motion.div>
             </Link>
           </motion.div>
         </div>
 
-        {/* Scroll indicator */}
+        {/* Enhanced Scroll indicator */}
         <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30"
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          <div className="w-6 h-10 rounded-full border-2 border-primary/30 flex items-start justify-center p-2">
+          <div className="w-6 h-10 rounded-full border-2 border-primary/30 flex items-start justify-center p-2 bg-card/50 backdrop-blur-sm">
             <motion.div
-              className="w-1.5 h-1.5 rounded-full bg-primary"
+              className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(126,200,227,0.8)]"
               animate={{ y: [0, 12, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             />
@@ -310,12 +348,52 @@ export default function Home() {
 
       {/* ═══ STATS SECTION ═══ */}
       <section className="py-20 relative">
-        <div className="max-w-5xl mx-auto px-4">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+        
+        <div className="max-w-6xl mx-auto px-4 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="label-mono text-center mb-12 uppercase tracking-widest"
+          >
+            Trusted by Medical Students Worldwide
+          </motion.div>
+          
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-            <StatItem value={7} label="Procedures" />
-            <StatItem value={200} label="Decision Points" suffix="+" />
-            <StatItem value={14000} label="Students Trained" suffix="+" />
-            <StatItem value={0} label="Patients Harmed" />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <StatItem value={7} label="Procedures" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <StatItem value={200} label="Decision Points" suffix="+" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <StatItem value={14000} label="Students Trained" suffix="+" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <StatItem value={0} label="Patients Harmed" />
+            </motion.div>
           </div>
         </div>
       </section>

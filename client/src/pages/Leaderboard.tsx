@@ -94,42 +94,92 @@ export default function Leaderboard() {
           </div>
         ) : (
           <>
-            {/* Top 3 Podium */}
-            {topThree.length >= 3 && (
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                {[topThree[1], topThree[0], topThree[2]].map((surgeon, i) => {
-                  const heights = ["h-28", "h-36", "h-24"];
-                  const isFirst = surgeon.rank === 1;
-                  const badges = ["🥈", "🥇", "🥉"];
-                  return (
+        {/* Enhanced Top 3 Podium with 3D effects */}
+        {topThree.length >= 3 && (
+          <div className="grid grid-cols-3 gap-4 mb-8 relative">
+            {/* Glow background for winner */}
+            <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+              <div className="w-1/3 h-full bg-primary/5 blur-3xl" />
+            </div>
+            
+            {[topThree[1], topThree[0], topThree[2]].map((surgeon, i) => {
+              const isFirst = surgeon.rank === 1;
+              const badges = ["🥈", "🥇", "🥉"];
+              const heights = ["h-32", "h-40", "h-28"]; // Different heights for podium
+              
+              return (
+                <motion.div
+                  key={surgeon.id}
+                  initial={{ opacity: 0, y: 40, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.6, delay: i * 0.15, type: "spring" }}
+                  className={`relative rounded-2xl p-5 border text-center backdrop-blur-xl transition-all duration-300 group ${
+                    isFirst 
+                      ? "border-primary/40 shadow-[0_0_40px_rgba(126,200,227,0.2)] bg-card/80" 
+                      : "border-border bg-card/50 hover:border-primary/30 hover:shadow-[0_0_20px_rgba(126,200,227,0.15)]"
+                  }`}
+                >
+                  {/* Animated crown for winner */}
+                  {isFirst && (
                     <motion.div
-                      key={surgeon.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: i * 0.1 }}
-                      className={`glass-card-light rounded-2xl p-5 border text-center ${
-                        isFirst ? "border-primary/40 shadow-[0_0_30px_rgba(126,200,227,0.15)]" : "border-border"
-                      }`}
+                      className="absolute -top-4 left-1/2 -translate-x-1/2 text-4xl"
+                      animate={{ y: [0, -5, 0], rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
                     >
-                      <div className="text-3xl mb-2">{badges[i]}</div>
-                      <div
-                        className="font-bold text-foreground text-sm mb-1"
-                        style={{ fontFamily: "'Syne', sans-serif" }}
-                      >
-                        {surgeon.name || "Anonymous"}
-                      </div>
-                      <div className="label-mono text-muted-foreground mb-3">
-                        {surgeon.total_surgeries} surgeries
-                      </div>
-                      <div className="text-2xl font-bold text-primary" style={{ fontFamily: "'Syne', sans-serif" }}>
-                        {surgeon.avg_score}
-                      </div>
-                      <div className="label-mono text-muted-foreground">avg score</div>
+                      👑
                     </motion.div>
-                  );
-                })}
-              </div>
-            )}
+                  )}
+                  
+                  {/* Badge with glow */}
+                  <motion.div 
+                    className="text-4xl mb-3"
+                    animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}
+                  >
+                    {badges[i]}
+                  </motion.div>
+                  
+                  {/* Rank number with glow */}
+                  <div className="label-mono text-muted-foreground mb-2">Rank #{surgeon.rank}</div>
+                  
+                  {/* Name with hover effect */}
+                  <div
+                    className="font-bold text-foreground text-sm mb-2 truncate"
+                    style={{ fontFamily: "'Syne', sans-serif" }}
+                  >
+                    {surgeon.name || "Anonymous"}
+                  </div>
+                  
+                  {/* Stats with icons */}
+                  <div className="flex flex-col gap-2 mb-3">
+                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <Activity className="w-3 h-3" />
+                      <span className="font-mono-data">{surgeon.total_surgeries} surgeries</span>
+                    </div>
+                  </div>
+                  
+                  {/* Score with enhanced display */}
+                  <motion.div 
+                    className="text-3xl font-bold text-primary mb-1"
+                    style={{ fontFamily: "'Syne', sans-serif" }}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.5 + (i * 0.1) }}
+                  >
+                    {surgeon.avg_score}%
+                  </motion.div>
+                  <div className="label-mono text-muted-foreground text-[10px]">avg score</div>
+                  
+                  {/* Success rate indicator */}
+                  <div className="mt-3 flex items-center justify-center gap-1 text-xs">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-emerald-400 font-mono-data">{surgeon.success_rate}% success</span>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
             {/* Table */}
             <div className="rounded-2xl border border-border overflow-hidden bg-card/90 backdrop-blur-xl">
