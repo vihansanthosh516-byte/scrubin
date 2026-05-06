@@ -3,9 +3,60 @@ import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 import "dotenv/config";
+import {
+  SessionManager,
+  DeterministicRNG,
+  getProcedure,
+  listProcedures,
+  procedureExists,
+  type TickDecision,
+  type DecisionOption,
+  type DecisionResultPublic,
+  type TickDecisionPublic,
+  type NextTickResponse,
+  type DecideResponse,
+} from "./engine/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const sessionManager = new SessionManager();
+const seedRng = new DeterministicRNG(
+  parseInt(process.env.SIM_SEED || "42", 10)
+);
+
+function sanitizeOption(o: DecisionOption) {
+  return { id: o.id, label: o.label, archetype: o.archetype };
+}
+
+function sanitizeDecision(d: TickDecision): TickDecisionPublic {
+  return {
+    id: d.id,
+    tick: d.tick,
+    phase: d.phase,
+    phaseLabel: d.phaseLabel,
+    procedurePhase: d.procedurePhase,
+    archetype: d.archetype,
+    prompt: d.prompt,
+    context: d.context,
+    options: d.options.map(sanitizeOption),
+    urgency: d.urgency,
+  };
+}
+
+function sanitizeDecisionResult(r: {
+  wasCorrect: boolean;
+  feedback: string;
+  scoreDelta: number;
+  complicationTriggered: string | null;
+}): DecisionResultPublic {
+  return {
+    wasCorrect: r.wasCorrect,
+    feedback: r.feedback,
+    scoreDelta: r.scoreDelta,
+    complicationTriggered: r.complicationTriggered,
+  };
+}
 
 async function startServer() {
   const app = express();
@@ -175,6 +226,129 @@ async function startServer() {
       console.error("Google OAuth Error:", error);
       res.status(500).json({ error: error.message });
     }
+  });
+
+  // ── Simulation API ──
+
+  app.post("/api/sim/start", (req, res) => {
+    try {
+      const { seed, procedure } = req.body || {};
+      const procedureId = procedure || "appendectomy";
+      if (!procedureExists(procedureId)) {
+        res.status(400).json({ detail: `Unknown procedure: ${procedureId}` });
+        return;
+      }
+      const simSeed = typeof seed === "number" ? seed : seedRng.nextInt(1, 999999);
+      const session = sessionManager.create(simSeed, procedureId);
+      const state = session.state;
+      res.json({
+        session_id: session.id,
+        tick: state.tick,
+        procedure_id: state.procedureId,
+        procedure_name: state.procedureName,
+        patient: state.patient,
+        total_ticks: state.totalTicks,
+      });
+    } catch (e: any) {
+      res.status(500).json({ detail: e.message });
+    }
+  });
+
+  app.post("/api/sim/next", (req, res) => {
+    try {
+      const { session_id } = req.body || {};
+      const session = sessionManager.get(session_id);
+      if (!session) {
+        res.status(404).json({ detail: "Session not found" });
+        return;
+      }
+      const result = session.next();
+      const pending = result.pendingDecision
+        ? sanitizeDecision(result.pendingDecision)
+        : null;
+      const resp: NextTickResponse = {
+        tick: result.tick,
+        vitals: result.vitalsAfter,
+        escalation_phase: result.escalationPhase,
+        procedure_phase: result.procedurePhase,
+        active_complication: result.activeComplication,
+        pending_decision: pending!,
+        events: result.events,
+        score: result.score,
+        completed: session.state.completed,
+      };
+      res.json(resp);
+    } catch (e: any) {
+      if (e.message === "Cannot advance tick without decision") {
+        res.status(409).json({ detail: e.message });
+        return;
+      }
+      res.status(500).json({ detail: e.message });
+    }
+  });
+
+  app.post("/api/sim/decide", (req, res) => {
+    try {
+      const { session_id, decision_id, option_id } = req.body || {};
+      const session = sessionManager.get(session_id);
+      if (!session) {
+        res.status(404).json({ detail: "Session not found" });
+        return;
+      }
+      const result = session.submitDecision(decision_id, option_id);
+      const dr = result.decisionResult;
+      const state = session.state;
+      const resp: DecideResponse = {
+        tick: result.tick,
+        vitals: result.vitalsAfter,
+        escalation_phase: result.escalationPhase,
+        procedure_phase: result.procedurePhase,
+        active_complication: result.activeComplication,
+        decision_result: dr
+          ? sanitizeDecisionResult({
+              wasCorrect: dr.wasCorrect,
+              feedback: dr.feedback,
+              scoreDelta: dr.scoreDelta,
+              complicationTriggered: dr.complicationTriggered,
+            })
+          : { wasCorrect: false, feedback: "", scoreDelta: 0, complicationTriggered: null },
+        next_tick_ready: result.pendingDecisionState?.resolved === true,
+        events: result.events,
+        score: result.score,
+        completed: state.completed,
+        correct_decisions: state.correctDecisions,
+        total_decisions: state.totalDecisions,
+      };
+      res.json(resp);
+    } catch (e: any) {
+      res.status(400).json({ detail: e.message });
+    }
+  });
+
+  app.post("/api/sim/reset", (req, res) => {
+    try {
+      const { session_id } = req.body || {};
+      if (session_id) sessionManager.delete(session_id);
+      res.json({ ok: true });
+    } catch (e: any) {
+      res.status(500).json({ detail: e.message });
+    }
+  });
+
+  app.get("/api/sim/procedures", (_req, res) => {
+    const procs = listProcedures();
+    res.json({
+      procedures: procs.map((p) => ({
+        id: p.id,
+        name: p.name,
+        category: p.category,
+        specialty: p.specialty,
+        description: p.description,
+        patient: p.patient,
+        totalTicks: p.totalTicks,
+        phases: p.phases,
+      })),
+    });
   });
 
   // Handle client-side routing - serve index.html for all routes

@@ -1,456 +1,272 @@
 /**
- * ScrubIn Profile/Dashboard — Clinical Precision Design
- * Rank display, stats grid, surgery history, achievements
+ * ScrubIn Profile - Real Streaks & Achievements
  */
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "wouter";
-import { Activity, Star, Trophy, Shield, BookOpen, Zap, Target, Award, TrendingUp, Github, Flame } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
+import { Activity, Star, Trophy, Shield, Zap, Target, Award, Flame, TrendingUp, Github, Heart, Clock, CheckCircle, AlertCircle, Medal, Sparkles, Brain, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScrubinCard, ScrubinStaticPanel } from "@/components/ui/scrubin-card";
+import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
-const STATS = [
-  { label: "Total Surgeries", value: "3", icon: <Activity className="w-4 h-4" /> },
-  { label: "Best Procedure", value: "Appendectomy", icon: <Star className="w-4 h-4" /> },
-  { label: "Avg Safety Score", value: "82%", icon: <Shield className="w-4 h-4" /> },
-  { label: "Complications", value: "4", icon: <Zap className="w-4 h-4" /> },
-  { label: "Hints Used", value: "2", icon: <BookOpen className="w-4 h-4" /> },
-  { label: "Perfect Runs", value: "0", icon: <Target className="w-4 h-4" /> },
+const ALL_BADGES = [
+  { id: "first_cut", name: "First Cut", desc: "Complete your first procedure", icon: Scissors, color: "text-emerald-400", requirement: (stats: any) => stats.totalSurgeries >= 1 },
+  { id: "perfectionist", name: "Perfectionist", desc: "Get 100% on any procedure", icon: Star, color: "text-yellow-400", requirement: (stats: any) => stats.bestScore === 100 },
+  { id: "survivor", name: "Survivor", desc: "Complete 10 procedures", icon: Heart, color: "text-red-400", requirement: (stats: any) => stats.totalSurgeries >= 10 },
+  { id: "scholar", name: "Scholar", desc: "Complete 25 procedures", icon: Brain, color: "text-purple-400", requirement: (stats: any) => stats.totalSurgeries >= 25 },
+  { id: "master", name: "Master Surgeon", desc: "Complete 50 procedures", icon: Trophy, color: "text-amber-400", requirement: (stats: any) => stats.totalSurgeries >= 50 },
+  { id: "legend", name: "Legend", desc: "Complete 100 procedures", icon: Award, color: "text-cyan-400", requirement: (stats: any) => stats.totalSurgeries >= 100 },
+  { id: "streak_3", name: "On Fire", desc: "Maintain a 3-day streak", icon: Flame, color: "text-orange-400", requirement: (stats: any) => stats.streak >= 3 },
+  { id: "streak_7", name: "Dedicated", desc: "Maintain a 7-day streak", icon: Flame, color: "text-red-500", requirement: (stats: any) => stats.streak >= 7 },
+  { id: "streak_30", name: "Obsessed", desc: "Maintain a 30-day streak", icon: Flame, color: "text-rose-500", requirement: (stats: any) => stats.streak >= 30 },
+  { id: "perfection_run", name: "Flawless", desc: "Complete 5 perfect surgeries in a row", icon: CheckCircle, color: "text-green-400", requirement: (stats: any) => stats.perfectRun >= 5 },
+  { id: "comeback", name: "Comeback Kid", desc: "Return after a break", icon: TrendingUp, color: "text-blue-400", requirement: (stats: any) => stats.hasReturned === true },
+  { id: "speedster", name: "Speedster", desc: "Complete a procedure in under 10 minutes", icon: Zap, color: "text-yellow-300", requirement: (stats: any) => stats.fastestTime <= 600 },
 ];
-
-const HISTORY = [
-  { procedure: "Appendectomy", patient: "Marcus T., 28M", date: "Mar 29, 2026", score: "94%", outcome: "Successful", time: "22:14", stars: 5 },
-  { procedure: "Appendectomy", patient: "Elena K., 34F", date: "Mar 28, 2026", score: "71%", outcome: "Complicated", time: "31:08", stars: 3 },
-  { procedure: "Heart Bypass", patient: "Robert C., 62M", date: "Mar 27, 2026", score: "58%", outcome: "Critical", time: "48:22", stars: 2 },
-];
-
-const BADGES = [
-  { icon: <Activity className="w-5 h-5" />, name: "First Cut", desc: "Complete your first procedure", unlocked: true },
-  { icon: <Shield className="w-5 h-5" />, name: "Clean Hands", desc: "Complete a surgery with zero mistakes", unlocked: false },
-  { icon: <Trophy className="w-5 h-5" />, name: "Neuro Curious", desc: "Complete the Craniotomy", unlocked: false },
-  { icon: <Zap className="w-5 h-5" />, name: "Code Blue", desc: "Successfully manage a cardiac complication", unlocked: false },
-  { icon: <BookOpen className="w-5 h-5" />, name: "Scholar", desc: "Read 10 Learn Hub articles", unlocked: false },
-  { icon: <Award className="w-5 h-5" />, name: "Top Surgeon", desc: "Reach #1 on the global leaderboard", unlocked: false },
-];
-
-const RANKS = ["Medical Student", "Intern", "Resident", "Fellow", "Attending", "Chief of Surgery"];
-// XP thresholds for each rank
-const XP_THRESHOLDS = [0, 1000, 5000, 10000, 15000, 20000];
 
 export default function Profile() {
-  const { user, loginWithGitHub, loading: authLoading } = useAuth();
-  const [history, setHistory] = useState<any[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(true);
-  const [totalXP, setTotalXP] = useState(0);
-  const [streak, setStreak] = useState(0);
+  const { user, loginWithGitHub } = useAuth();
+  const [stats, setStats] = useState({
+    totalSurgeries: 0,
+    bestScore: 0,
+    avgScore: 0,
+    complications: 0,
+    streak: 0,
+    longestStreak: 0,
+    perfectRun: 0,
+    hasReturned: false,
+    fastestTime: 9999,
+    lastSurgeryDate: null,
+    surgeriesByDate: {} as Record<string, number>
+  });
+  const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      loadHistoryFromSupabase();
+      loadUserProgress();
     }
   }, [user]);
 
-  const loadHistoryFromSupabase = async () => {
+  const loadUserProgress = async () => {
     if (!user) return;
-    setLoadingHistory(true);
+    setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: sessions, error } = await supabase
         .from('sessions')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error('Failed to load history:', error);
-        // Fallback to localStorage
-        const stored = localStorage.getItem(`scrubin_history_${user.id}`);
-        if (stored) {
-          setHistory(JSON.parse(stored));
-        }
-      } else {
-        // Calculate XP: 50 for failed (Critical), 100 + bonus for others
-        const xp = (data || []).reduce((acc: number, session: any) => {
-          if (session.outcome === "Critical") {
-            return acc + 50; // 50 XP for failed surgeries
-          }
-          return acc + 100 + Math.floor(session.score / 10);
-        }, 0);
-        setTotalXP(xp);
-
-        // Calculate Streak (consecutive days of successful surgeries)
-        const successfulDates = (data || [])
-          .filter((s: any) => s.outcome === "Successful")
-          .map((s: any) => {
-            const d = new Date(s.created_at);
-            return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-          })
-          .sort((a: number, b: number) => b - a); // descending
-
-        const uniqueSuccessfulDates = [...new Set(successfulDates)];
-
-        let currentStreak = 0;
-        const today = new Date();
-        const todayTime = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-        const yesterdayTime = todayTime - 86400000;
-
-        if (uniqueSuccessfulDates.length > 0) {
-          let expectedDate = todayTime;
-          
-          if (uniqueSuccessfulDates[0] === todayTime) {
-            currentStreak = 1;
-            expectedDate = yesterdayTime;
-          } else if (uniqueSuccessfulDates[0] === yesterdayTime) {
-            currentStreak = 1;
-            expectedDate = yesterdayTime - 86400000;
-          }
-          
-          if (currentStreak > 0) {
-            for (let i = 1; i < uniqueSuccessfulDates.length; i++) {
-              if (uniqueSuccessfulDates[i] === expectedDate) {
-                currentStreak++;
-                expectedDate -= 86400000;
-              } else {
-                break;
-              }
-            }
-          }
-        }
-        setStreak(currentStreak);
-
-        const formattedHistory = (data || []).map((session: any) => ({
-          id: '#' + (session.id || '').toString().slice(0, 6).toUpperCase(),
-          procedure: session.procedure_name,
-          outcome: session.outcome,
-          score: Math.max(0, session.score) + '%',
-          date: new Date(session.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-          time: Math.floor(session.time_seconds / 60) + ':' + String(session.time_seconds % 60).padStart(2, '0')
-        }));
-        setHistory(formattedHistory);
+      if (error || !sessions || sessions.length === 0) {
+        setLoading(false);
+        return;
       }
+
+      // Calculate real streak
+      const dates = sessions.map(s => new Date(s.created_at).toISOString().split('T')[0]);
+      const uniqueDates = [...new Set(dates)].sort();
+      
+      let currentStreak = 0;
+      let longestStreak = 0;
+      let tempStreak = 0;
+      let lastDate: Date | null = null;
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      // Check if user did surgery today
+      const didToday = uniqueDates.includes(today.toISOString().split('T')[0]);
+      const didYesterday = uniqueDates.includes(yesterday.toISOString().split('T')[0]);
+
+      // Calculate current streak (must be consecutive days ending today or yesterday)
+      if (didToday || didYesterday) {
+        // Count backwards from today/yesterday
+        let checkDate = didToday ? today : yesterday;
+        for (let i = 0; i < 365; i++) {
+          const dateStr = checkDate.toISOString().split('T')[0];
+          if (uniqueDates.includes(dateStr)) {
+            tempStreak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+        currentStreak = tempStreak;
+      }
+
+      // Calculate longest streak
+      tempStreak = 0;
+      let prevDate: Date | null = null;
+      for (const dateStr of uniqueDates) {
+        const currentDate = new Date(dateStr);
+        if (prevDate) {
+          const diffDays = Math.floor((currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (diffDays === 1) {
+            tempStreak++;
+          } else {
+            if (tempStreak > longestStreak) longestStreak = tempStreak;
+            tempStreak = 1;
+          }
+        } else {
+          tempStreak = 1;
+        }
+        prevDate = currentDate;
+      }
+      if (tempStreak > longestStreak) longestStreak = tempStreak;
+
+      // Calculate stats
+      const totalSurgeries = sessions.length;
+      const scores = sessions.map(s => s.score || 0);
+      const bestScore = Math.max(...scores, 0);
+      const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+      const complications = sessions.filter(s => s.outcome === "Complicated" || s.outcome === "Critical").length;
+      const perfectScores = sessions.filter(s => s.score === 100);
+      const times = sessions.map(s => s.time_seconds || 9999);
+      const fastestTime = Math.min(...times);
+
+      // Check perfect run (consecutive 100s)
+      let perfectRun = 0;
+      let currentRun = 0;
+      for (let i = sessions.length - 1; i >= 0; i--) {
+        if (sessions[i].score === 100) {
+          currentRun++;
+        } else {
+          if (currentRun > perfectRun) perfectRun = currentRun;
+          currentRun = 0;
+        }
+      }
+      if (currentRun > perfectRun) perfectRun = currentRun;
+
+      // Check if returned after break (7+ days)
+      const hasReturned = sessions.length >= 2 && 
+        ((new Date(sessions[sessions.length - 1].created_at).getTime() - 
+          new Date(sessions[sessions.length - 2].created_at).getTime()) > 7 * 24 * 60 * 60 * 1000);
+
+      setStats({
+        totalSurgeries,
+        bestScore,
+        avgScore,
+        complications,
+        streak: currentStreak,
+        longestStreak,
+        perfectRun,
+        hasReturned,
+        fastestTime,
+        lastSurgeryDate: uniqueDates[uniqueDates.length - 1] || null,
+        surgeriesByDate: uniqueDates.reduce((acc, date) => {
+          acc[date] = sessions.filter(s => s.created_at.startsWith(date)).length;
+          return acc;
+        }, {} as Record<string, number>)
+      });
+
+      // Check badge unlocks
+      const newStats = { totalSurgeries, bestScore, avgScore, streak: currentStreak, perfectRun, hasReturned, fastestTime };
+      const newlyUnlocked = ALL_BADGES.filter(badge => badge.requirement(newStats)).map(b => b.id);
+      setUnlockedBadges(newlyUnlocked);
+
     } catch (e) {
-      console.error('Failed to load history:', e);
+      console.error('Failed to load progress:', e);
     } finally {
-      setLoadingHistory(false);
+      setLoading(false);
     }
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0a0f1e] flex flex-col">
-        <div className="flex-1 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md rounded-2xl p-8 text-center bg-card/90 backdrop-blur-xl border border-border shadow-[0_0_30px_rgba(126,200,227,0.1)]"
-          >
-            <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center mb-6 mx-auto">
-              <Activity className="w-6 h-6 text-baby-blue" />
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Sign in to view Profile</h1>
-            <p className="text-gray-400 mb-8 text-sm">
-              Track your rank, XP, and detailed surgery performance across every session.
-            </p>
-            <Button
-              onClick={loginWithGitHub}
-              className="w-full h-12 bg-white hover:bg-gray-100 text-black font-semibold rounded-lg flex items-center justify-center gap-3 transition-all"
-            >
-              <Github className="w-5 h-5" /> Continue with GitHub
-            </Button>
-          </motion.div>
-        </div>
+      <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md rounded-2xl p-8 text-center bg-card/90 backdrop-blur-xl border border-border shadow-[0_0_30px_rgba(126,200,227,0.1)]">
+          <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center mb-6 mx-auto">
+            <Activity className="w-6 h-6 text-baby-blue" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">Sign in to view Profile</h1>
+          <p className="text-gray-400 mb-8 text-sm">Track your rank, XP, and detailed surgery performance across every session.</p>
+          <Button onClick={() => {}} className="w-full h-12 bg-white hover:bg-gray-100 text-black font-semibold rounded-lg flex items-center justify-center gap-3 transition-all">
+            <Github className="w-5 h-5" /> Continue with GitHub
+          </Button>
+        </motion.div>
       </div>
     );
   }
 
-  // Calculate stats from dynamic history
-  const totalSurgeries = history.length;
-  const avgScore = totalSurgeries > 0
-    ? Math.round(history.reduce((acc, h) => acc + parseInt(h.score), 0) / totalSurgeries)
-    : 0;
-  const complications = history.filter(h => h.outcome === "Complicated" || h.outcome === "Critical").length;
-  const bestScore = totalSurgeries > 0 ? Math.max(...history.map(h => parseInt(h.score))) : 0;
-
-  const stats = [
-    { label: "Total Surgeries", value: totalSurgeries.toString(), icon: <Activity className="w-4 h-4" /> },
-    { label: "Best Score", value: bestScore + "%", icon: <Star className="w-4 h-4" /> },
-    { label: "Avg Safety Score", value: avgScore + "%", icon: <Shield className="w-4 h-4" /> },
-    { label: "Complications", value: complications.toString(), icon: <Zap className="w-4 h-4" /> },
-    { label: "Experience Points", value: totalXP.toString(), icon: <TrendingUp className="w-4 h-4" /> },
-    { label: "Active Streak", value: `${streak} Days`, icon: <Flame className={`w-4 h-4 ${streak > 0 ? 'text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]' : ''}`} /> },
-  ];
-
-  // Calculate rank based on XP thresholds
-
-const currentXP = totalXP;
-const currentRankIndex = XP_THRESHOLDS.findIndex((threshold, i) => {
-  if (i === XP_THRESHOLDS.length - 1) return currentXP >= threshold;
-  return currentXP >= threshold && currentXP < XP_THRESHOLDS[i + 1];
-});
-  
-  const nextRankXP = currentRankIndex < XP_THRESHOLDS.length - 1 ? XP_THRESHOLDS[currentRankIndex + 1] : XP_THRESHOLDS[XP_THRESHOLDS.length - 1];
-
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Deep medical gradient background */}
+    <div className="min-h-screen bg-background relative overflow-hidden pt-28 pb-16">
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[40%] bg-baby-blue/10 blur-[100px] rounded-full pointer-events-none" />
 
-      <div className="pt-28 pb-16 max-w-5xl mx-auto px-4 relative z-10">
-        {/* Header Profile Card */}
-  <motion.div
-    initial={{ opacity: 0, y: 20, scale: 0.98 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={{ duration: 0.6, ease: "easeOut" }}
-    className="rounded-[2rem] p-8 mb-10 glass-card-pro relative overflow-hidden group"
-  >
-    {/* Animated gradient background */}
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-teal-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-    
-    {/* Subtle noise texture */}
-    <div className="absolute inset-0 grain-overlay rounded-[2rem]" />
-
-    <div className="flex flex-col md:flex-row items-start md:items-center gap-8 relative z-10">
-      {/* Enhanced Avatar with pulse ring */}
-      <motion.div 
-        className="relative group"
-        initial={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", delay: 0.2 }}
-      >
-        <motion.div 
-          className="absolute inset-0 rounded-2xl border-2 border-primary/30"
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-        <div className="w-24 h-24 rounded-2xl border-2 border-primary/40 overflow-hidden bg-card shadow-[0_0_30px_rgba(126,200,227,0.2)] relative z-10 transition-transform group-hover:scale-110">
-          <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
-        </div>
-        <motion.div 
-          className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-emerald-400 border-[3px] border-background flex items-center justify-center z-20 shadow-[0_0_15px_rgba(16,185,129,0.5)]"
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <div className="w-2.5 h-2.5 rounded-full bg-white" />
-        </motion.div>
-      </motion.div>
-
-      {/* Info & Horizontal Progress Bar */}
-      <div className="flex-1 w-full">
-        <motion.div 
-          className="flex items-center gap-3 mb-2"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h1
-            className="text-3xl font-bold text-foreground tracking-tight"
-            style={{ fontFamily: "'Syne', sans-serif" }}
-          >
-            {user.name}
-          </h1>
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.4, type: "spring" }}
-          >
-            <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary font-mono-data uppercase tracking-widest shadow-[0_0_15px_rgba(126,200,227,0.2)]">
-              {RANKS[currentRankIndex]}
-            </span>
-          </motion.div>
-        </motion.div>
-        <motion.p 
-          className="text-muted-foreground text-sm mb-6 font-mono-data tracking-wide"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          {user.email || `@${user.login}`} &nbsp;&middot;&nbsp; {totalSurgeries} Procedures &nbsp;&middot;&nbsp; {avgScore}% Precision
-        </motion.p>
-
-        {/* Enhanced Rank Progress Bar */}
-        <motion.div 
-          className="w-full max-w-xl"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="flex justify-between mb-2">
-            <span className="label-mono text-muted-foreground text-[10px] uppercase">Rank Progress</span>
-            <span className="label-mono text-primary text-[10px] uppercase font-bold">{currentXP.toLocaleString()} / {nextRankXP.toLocaleString()} XP</span>
-          </div>
-          <div className="h-2.5 bg-muted/30 rounded-full overflow-hidden border border-border/50 relative">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min((currentXP / nextRankXP) * 100, 100)}%` }}
-              transition={{ duration: 1.5, ease: "easeOut", delay: 0.6 }}
-              className="h-full bg-gradient-to-r from-primary to-teal-400 shadow-[0_0_15px_rgba(126,200,227,0.6)] rounded-full relative overflow-hidden"
-            >
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+      <div className="pt-8 pb-16 max-w-5xl mx-auto px-4 relative z-10">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.6, ease: "easeOut" }} className="rounded-[2rem] p-8 mb-10 glass-card-pro relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-teal-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-8 relative z-10">
+            <motion.div className="relative group" initial={{ scale: 0.9 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
+              <div className="w-24 h-24 rounded-2xl border-2 border-primary/40 overflow-hidden bg-card shadow-[0_0_30px_rgba(126,200,227,0.2)] relative z-10 transition-transform group-hover:scale-110">
+                <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
+              </div>
+              <motion.div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-emerald-400 border-[3px] border-background flex items-center justify-center z-20 shadow-[0_0_15px_rgba(16,185,129,0.5)]" animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                <div className="w-2.5 h-2.5 rounded-full bg-white" />
+              </motion.div>
             </motion.div>
+            <div className="flex-1">
+              <motion.div className="flex items-center gap-3 mb-2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+                <h1 className="text-3xl font-bold text-foreground tracking-tight" style={{ fontFamily: "'Syne', sans-serif" }}>{user.name}</h1>
+                <motion.span initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4, type: "spring" }}>
+                  <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary font-mono-data uppercase tracking-widest shadow-[0_0_15px_rgba(126,200,227,0.2)]">Resident</span>
+                </motion.span>
+              </motion.div>
+              <motion.p className="text-muted-foreground text-sm mb-6 font-mono-data tracking-wide">@{user.login} · {stats.totalSurgeries} Procedures · {stats.avgScore}% Avg</motion.p>
+            </div>
           </div>
         </motion.div>
-      </div>
-    </div>
-  </motion.div>
 
-        {/* OR Monitor Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
-          {stats.map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="rounded-2xl p-6 stats-card flex flex-col justify-between min-h-[120px] group"
-            >
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+          {[
+            { label: "Total Surgeries", value: stats.totalSurgeries, icon: Activity, color: "text-primary" },
+            { label: "Best Score", value: `${stats.bestScore}%`, icon: Star, color: "text-yellow-400" },
+            { label: "Avg Score", value: `${stats.avgScore}%`, icon: Target, color: "text-emerald-400" },
+            { label: "Complications", value: stats.complications, icon: AlertCircle, color: "text-red-400" },
+            { label: "Current Streak", value: `${stats.streak} days`, icon: Flame, color: stats.streak > 0 ? "text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]" : "text-muted-foreground" },
+            { label: "Longest Streak", value: `${stats.longestStreak} days`, icon: Trophy, color: "text-amber-400" },
+            { label: "Perfect Run", value: stats.perfectRun, icon: CheckCircle, color: "text-green-400" },
+            { label: "Fastest Time", value: stats.fastestTime < 9999 ? `${Math.floor(stats.fastestTime / 60)}:${String(stats.fastestTime % 60).padStart(2, '0')}` : "N/A", icon: Clock, color: "text-cyan-400" },
+          ].map((stat, i) => (
+            <motion.div key={stat.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.08 }} className="rounded-2xl p-6 glass-card flex flex-col justify-between min-h-[120px] group">
               <div className="flex justify-between items-start mb-4">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                  {stat.icon}
+                <div className={`w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform ${stat.color}`}>
+                  <stat.icon className="w-5 h-5" />
                 </div>
-                {i === 2 && (
-                  <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-emerald-400 font-mono-data tracking-wider animate-vitals-blink">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Live
-                  </div>
-                )}
               </div>
               <div>
-                <div
-                  className="text-3xl font-bold text-foreground mb-1 group-hover:text-primary transition-colors"
-                  style={{ fontFamily: "'Syne', sans-serif" }}
-                >
-                  {stat.value}
-                </div>
+                <div className="text-3xl font-bold text-foreground mb-1 group-hover:text-primary transition-colors" style={{ fontFamily: "'Syne', sans-serif" }}>{stat.value}</div>
                 <div className="label-mono text-muted-foreground text-[10px] tracking-widest">{stat.label}</div>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Clinical Log (History) */}
-        <div className="rounded-3xl overflow-hidden mb-10 glass-card">
-          <div className="px-8 py-6 border-b border-border/50 flex items-center justify-between bg-card/30">
-            <h2
-              className="text-xl font-bold text-foreground tracking-tight"
-              style={{ fontFamily: "'Syne', sans-serif" }}
-            >
-              Clinical Log
-            </h2>
-            <span className="px-3 py-1 rounded-full bg-muted/50 label-mono text-xs text-muted-foreground">{history.length} records</span>
-          </div>
-          
-          <div className="divide-y divide-border/30">
-            {history.length > 0 ? history.map((entry, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: i * 0.05 }}
-                className="px-8 py-5 history-row"
-              >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <div
-                      className="font-bold text-base text-foreground mb-1 tracking-tight"
-                      style={{ fontFamily: "'Syne', sans-serif" }}
-                    >
-                      {entry.procedure}
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono-data">
-                      <span>{entry.date}</span>
-                      <span className="w-1 h-1 rounded-full bg-muted-foreground/30"></span>
-                      <span>{entry.time}</span>
-                      <span className="w-1 h-1 rounded-full bg-muted-foreground/30"></span>
-                      <span className="text-primary/70">{entry.id}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-1 bg-card/50 px-3 py-1.5 rounded-full border border-border/50">
-                      {[...Array(5)].map((_, j) => (
-                        <Star key={j} className={`w-3.5 h-3.5 ${j < (parseInt(entry.score) / 20) ? "fill-primary text-primary drop-shadow-[0_0_4px_rgba(126,200,227,0.5)]" : "text-muted"}`} />
-                      ))}
-                    </div>
-                    
-                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold font-mono-data uppercase tracking-wider min-w-[120px] text-center ${
-                      entry.outcome === "Successful"
-                        ? "bg-emerald-400/10 text-emerald-400 border border-emerald-400/20"
-                        : entry.outcome === "Complicated"
-                        ? "bg-amber-400/10 text-amber-400 border border-amber-400/20"
-                        : "bg-red-400/10 text-red-400 border border-red-400/20"
-                    }`}>
-                      {entry.outcome}
-                    </span>
-                    
-                    <span className="text-2xl font-bold text-primary font-mono-data w-16 text-right">
-                      {entry.score}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            )) : (
-              <div className="px-8 py-16 text-center">
-                <div className="w-16 h-16 rounded-full bg-muted/20 flex items-center justify-center mx-auto mb-4">
-                  <Activity className="w-8 h-8 text-muted-foreground/50" />
-                </div>
-                <div className="text-muted-foreground text-sm font-mono-data mb-4 tracking-wide">No clinical records found.</div>
-                <Link href="/procedures">
-                  <Button className="bg-white text-black hover:bg-gray-200 rounded-full px-6 py-2 font-semibold font-display shadow-lg transition-transform hover:scale-105">
-                    Enter the OR
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Clinical Achievements */}
+        {/* Badges */}
         <div>
-          <h2
-            className="text-xl font-bold text-foreground mb-6 px-2 tracking-tight"
-            style={{ fontFamily: "'Syne', sans-serif" }}
-          >
-            Clinical Achievements
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-            {BADGES.map((badge, i) => (
-              <motion.div
-                key={badge.name}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: i * 0.05 }}
-                className={`p-5 rounded-2xl achievement-card ${badge.unlocked ? "unlocked" : "locked"}`}
-              >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-4 drop-shadow-[0_0_8px_rgba(126,200,227,0.3)]">
-                  {badge.icon}
-                </div>
-                <div
-                  className="font-bold text-base text-foreground mb-1 tracking-tight"
-                  style={{ fontFamily: "'Syne', sans-serif" }}
-                >
-                  {badge.name}
-                </div>
-                <div className="text-xs text-muted-foreground leading-relaxed font-mono-data tracking-wide">{badge.desc}</div>
-                
-                {badge.unlocked && (
-                  <div className="mt-4 flex items-center gap-1.5 bg-primary/10 w-fit px-2.5 py-1 rounded-full border border-primary/20">
-                    <Award className="w-3 h-3 text-primary" />
-                    <span className="text-[10px] uppercase font-bold text-primary font-mono-data tracking-widest">Unlocked</span>
+          <h2 className="text-2xl font-bold text-foreground mb-6 px-2 tracking-tight" style={{ fontFamily: "'Syne', sans-serif" }}>Achievements</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+            {ALL_BADGES.map((badge, i) => {
+              const isUnlocked = unlockedBadges.includes(badge.id);
+              return (
+                <motion.div key={badge.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3, delay: i * 0.05 }} className={`p-5 rounded-2xl achievement-card ${isUnlocked ? "unlocked" : "locked"}`}>
+                  <div className={`w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-4 drop-shadow-[0_0_8px_rgba(126,200,227,0.3)] ${badge.color}`}>
+                    <badge.icon className="w-6 h-6" />
                   </div>
-                )}
-              </motion.div>
-            ))}
+                  <div className="font-bold text-base text-foreground mb-1 tracking-tight" style={{ fontFamily: "'Syne', sans-serif" }}>{badge.name}</div>
+                  <div className="text-xs text-muted-foreground leading-relaxed font-mono-data tracking-wide">{badge.desc}</div>
+                  {isUnlocked && (
+                    <div className="mt-4 flex items-center gap-1.5 bg-primary/10 w-fit px-2.5 py-1 rounded-full border border-primary/20">
+                      <Award className="w-3 h-3 text-primary" />
+                      <span className="text-[10px] uppercase font-bold text-primary font-mono-data tracking-widest">Unlocked</span>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>

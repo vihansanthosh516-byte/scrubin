@@ -205,7 +205,7 @@ export default function Navbar() {
     <>
       {/* === DESKTOP NAVBAR === */}
       <motion.div
-        className="fixed top-6 z-50 hidden md:block"
+        className="fixed top-4 z-50 hidden md:block"
         initial={false}
         animate={isExpanded ? "expanded" : "collapsed"}
         variants={navWrapperVariants}
@@ -216,7 +216,7 @@ export default function Navbar() {
             "relative flex items-center overflow-hidden rounded-full border shadow-lg backdrop-blur-md",
             "bg-background/95 border-border dark:bg-[#0A1628]/95 dark:border-primary/20",
         
-            isExpanded ? "px-3 py-1.5 gap-3" : "px-3 py-2 gap-2"
+            isExpanded ? "px-5 py-3 gap-3" : "px-5 py-2 gap-2"
           )}
           onMouseLeave={handleMouseLeave}
           
@@ -325,7 +325,7 @@ export default function Navbar() {
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
-                        className="flex items-center gap-2 px-2 h-9 border border-white/20 hover:border-primary/40 hover:bg-primary/10 transition-all rounded-full"
+                        className="flex items-center gap-2 px-5 h-9 border border-white/20 hover:border-primary/40 hover:bg-primary/10 transition-all rounded-full"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <img
@@ -381,8 +381,8 @@ export default function Navbar() {
         </motion.nav>
       </motion.div>
       {/* === MOBILE NAVBAR (separate, always visible on mobile) === */}
-      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 md:hidden">
-        <nav className="relative flex items-center overflow-hidden rounded-full border shadow-lg backdrop-blur-md px-2 py-1.5 gap-2 bg-background/95 border-border dark:bg-[#0A1628]/95 dark:border-primary/20">
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 md:hidden">
+        <nav className="relative flex items-center overflow-hidden rounded-full border shadow-lg backdrop-blur-md px-5 py-3 gap-2 bg-background/95 border-border dark:bg-[#0A1628]/95 dark:border-primary/20">
           {/* Logo */}
           <Link href="/">
             <div className="flex items-center gap-2 group">
@@ -427,7 +427,7 @@ export default function Navbar() {
                   <Link key={link.href} href={link.href}>
                     <div
                       className={cn(
-                        "block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                        "block px-4 py-4 rounded-xl text-sm font-medium transition-colors",
                         isActive(link.href)
                           ? "text-primary bg-primary/10"
                           : "text-[#0A1628]/80 hover:text-[#0A1628] hover:bg-[#0A1628]/10 dark:text-white/80 dark:hover:text-white dark:hover:bg-white/10"
@@ -482,7 +482,7 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <Link href="/signin">
-                    <div className="mt-4 px-4 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground bg-primary text-center baby-blue-glow">
+                    <div className="mt-4 px-4 py-4 rounded-xl text-sm font-semibold text-primary-foreground bg-primary text-center baby-blue-glow">
                       Sign In
                     </div>
                   </Link>
@@ -521,7 +521,7 @@ function Tab({
         });
       }}
       className={cn(
-        "relative z-10 block cursor-pointer px-3 py-1.5 text-xs uppercase font-semibold transition-colors md:px-4 md:text-sm",
+        "relative z-10 block cursor-pointer px-5 py-3 text-xs uppercase font-semibold transition-colors md:px-4 md:text-sm",
         isActive
           ? "text-[#7EC8E3] dark:text-baby-blue"
           : "text-[#0A1628]/80 hover:text-[#0A1628] dark:text-white/80 dark:hover:text-white"
