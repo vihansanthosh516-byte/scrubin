@@ -8,6 +8,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import ProcedureLibrary from "./pages/ProcedureLibrary";
 import Simulation from "./pages/Simulation";
+// import SimulationDashboard from "./pages/SimulationDashboard"; // Deprecated
 import Leaderboard from "./pages/Leaderboard";
 import LearnHub from "./pages/LearnHub";
 import Profile from "./pages/Profile";
@@ -84,6 +85,7 @@ function Router() {
             <Route path="/procedures" component={ProcedureLibrary} />
             <Route path="/simulation/:id" component={Simulation} />
             <Route path="/simulation" component={Simulation} />
+
             <Route path="/leaderboard" component={Leaderboard} />
             <Route path="/learn" component={LearnHub} />
             <Route path="/anatomy" component={AnatomyExplorer} />

@@ -3,7 +3,7 @@
  */
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { motion, useScroll, useSpring, useInView } from "framer-motion";
+import { motion, useScroll, useSpring, useInView, useMotionValue } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Activity, Heart, Brain, Scissors, BookOpen, Trophy, Play, ArrowRight, Zap, Target, Award, Sparkles, Users, Star } from "lucide-react";
 
@@ -36,34 +36,103 @@ function AnimatedBackground() {
   );
 }
 
-function StatItem({ value, label, suffix = "", icon: Icon, delay = 0 }: any) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, amount: 0.3 });
-  useEffect(() => {
-    if (inView) {
-      let start = 0;
-      const increment = value / 100;
-      const timer = setInterval(() => {
-        start += increment;
-        if (start >= value) { setCount(value); clearInterval(timer); }
-        else { setCount(Math.floor(start)); }
-      }, 16);
-      return () => clearInterval(timer);
-    }
-  }, [inView, value]);
+function Digit({ value, delay }: { value: number; delay: number }) {
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, scale: 0.8, y: 30 }} animate={inView ? { opacity: 1, scale: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, type: "spring", stiffness: 100 }} className="group relative">
-      <div className="relative p-8 rounded-3xl glass-card hover:glass-card-pro transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2">
-        {Icon && (
-          <motion.div className="absolute top-4 right-4 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all" whileHover={{ scale: 1.2, rotate: 15 }}>
-            <Icon className="w-6 h-6 text-primary" />
-          </motion.div>
-        )}
-        <div className="text-5xl md:text-6xl font-bold mb-3" style={{ fontFamily: "'Syne', sans-serif" }}>
-          <span className="text-gradient">{count.toLocaleString()}{suffix}</span>
+    <div className="relative h-[44px] md:h-[60px] lg:h-[72px] w-[0.6em] overflow-hidden tabular-nums leading-none">
+      <motion.div
+        initial={{ y: 0 }}
+        animate={{ y: `-${value * 10}%` }}
+        transition={{
+          duration: 2.5,
+          delay: delay,
+          type: "spring",
+          stiffness: 40,
+          damping: 20,
+        }}
+        className="absolute inset-0 flex flex-col"
+      >
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+          <div key={n} className="flex h-full items-center justify-center shrink-0">
+            {n}
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+function StatItem({ value, label, suffix = "", icon: Icon, delay = 0 }: any) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.3 });
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const x = useSpring(mouseX, { damping: 25, stiffness: 150 });
+  const y = useSpring(mouseY, { damping: 25, stiffness: 150 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    mouseX.set((e.clientX - (rect.left + rect.width / 2)) * 0.1);
+    mouseY.set((e.clientY - (rect.top + rect.height / 2)) * 0.1);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  const digits = value.toString().split("").map(Number);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, delay, type: "spring" }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ x, y }}
+      className="group relative"
+    >
+      <div className="relative p-6 md:p-8 rounded-[2rem] glass-card-pro border border-white/5 hover:border-primary/30 transition-colors duration-500 overflow-hidden bg-[#0D1628]/40 backdrop-blur-xl">
+        {/* Animated background glow */}
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all duration-700" />
+        
+        <div className="flex flex-col h-full justify-between gap-4">
+          <div className="flex items-start justify-between">
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 group-hover:bg-primary/20 group-hover:border-primary/40 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
+              <Icon className="w-5 h-5 text-primary" />
+            </div>
+            {suffix && (
+              <span className="text-primary/40 font-mono-data text-xs uppercase tracking-widest mt-1">
+                Verified Data
+              </span>
+            )}
+          </div>
+
+          <div>
+            <div 
+              className="flex items-baseline text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-white mb-1" 
+              style={{ fontFamily: "'Syne', sans-serif" }}
+            >
+              <div className="flex">
+                {inView && digits.map((digit, i) => (
+                  <Digit key={i} value={digit} delay={delay + i * 0.1} />
+                ))}
+              </div>
+              <span className="text-primary ml-1">{suffix}</span>
+            </div>
+            <div className="text-[10px] md:text-xs text-muted-foreground font-mono-data uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">
+              {label}
+            </div>
+          </div>
         </div>
-        <div className="text-sm text-muted-foreground font-mono-data uppercase tracking-wider">{label}</div>
+
+        {/* Shine effect */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-700">
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+        </div>
       </div>
     </motion.div>
   );
@@ -88,19 +157,52 @@ function FeatureCard({ icon: Icon, title, description, index, color }: any) {
   );
 }
 
-function ProcedurePreview({ name, tag, difficulty, color, index }: any) {
+function ProcedurePreview({ id, name, tag, difficulty, color, index }: any) {
+  const ref = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const x = useSpring(mouseX, { damping: 25, stiffness: 150 });
+  const y = useSpring(mouseY, { damping: 25, stiffness: 150 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    mouseX.set((e.clientX - (rect.left + rect.width / 2)) * 0.1);
+    mouseY.set((e.clientY - (rect.top + rect.height / 2)) * 0.1);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
   return (
-    <motion.div initial={{ opacity: 0, y: 30, scale: 0.9, rotateY: 10 }} whileInView={{ opacity: 1, y: 0, scale: 1, rotateY: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: index * 0.1, type: "spring" }} whileHover={{ scale: 1.08, y: -12, rotateY: -5 }} className="group p-6 rounded-2xl glass-card cursor-pointer relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${color} backdrop-blur-sm`}>{difficulty}</span>
-          <span className="text-xs text-muted-foreground font-mono-data">{tag}</span>
+    <Link href={`/simulation?proc=${id}`}>
+      <motion.div 
+        ref={ref}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{ x, y }}
+        initial={{ opacity: 0, y: 30, scale: 0.9 }} 
+        whileInView={{ opacity: 1, y: 0, scale: 1 }} 
+        viewport={{ once: true }} 
+        transition={{ duration: 0.5, delay: index * 0.1, type: "spring" }} 
+        className="group p-6 rounded-2xl glass-card-pro cursor-pointer relative overflow-hidden bg-[#0D1628]/40 border border-white/5 hover:border-primary/30 transition-all duration-300"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full ${color} backdrop-blur-sm uppercase tracking-widest`}>{difficulty}</span>
+            <span className="text-[10px] text-muted-foreground font-mono-data uppercase tracking-widest">{tag}</span>
+          </div>
+          <h4 className="text-xl font-bold text-white group-hover:text-primary transition-colors mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>{name}</h4>
+          <div className="flex items-center text-[10px] text-primary/60 font-mono-data uppercase tracking-widest gap-2">
+            <span>Start Training</span>
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+          </div>
         </div>
-        <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors" style={{ fontFamily: "'Syne', sans-serif" }}>{name}</h4>
-        <motion.div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity" initial={{ x: 10 }} whileHover={{ x: 0 }}><ArrowRight className="w-5 h-5 text-primary" /></motion.div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </Link>
   );
 }
 
@@ -109,7 +211,36 @@ export default function Home() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
   useEffect(() => { setMounted(true); }, []);
-  const procedures = [{ name: "Appendectomy", tag: "Emergency", difficulty: "Beginner", color: "text-emerald-400 bg-emerald-400/10 border border-emerald-400/20" }, { name: "Heart Bypass", tag: "Cardiovascular", difficulty: "Advanced", color: "text-red-400 bg-red-400/10 border border-red-400/20" }, { name: "Craniotomy", tag: "Neurological", difficulty: "Advanced", color: "text-red-400 bg-red-400/10 border border-red-400/20" }, { name: "Cholecystectomy", tag: "Laparoscopic", difficulty: "Intermediate", color: "text-amber-400 bg-amber-400/10 border border-amber-400/20" }];
+  const procedures = [
+    { 
+      id: "appendectomy",
+      name: "Appendectomy", 
+      tag: "General Surgery", 
+      difficulty: "Beginner", 
+      color: "text-emerald-400 bg-emerald-400/10 border border-emerald-400/20" 
+    }, 
+    { 
+      id: "hernia-repair",
+      name: "Hernia Repair", 
+      tag: "General Surgery", 
+      difficulty: "Beginner", 
+      color: "text-emerald-400 bg-emerald-400/10 border border-emerald-400/20" 
+    }, 
+    { 
+      id: "cholecystectomy",
+      name: "Cholecystectomy", 
+      tag: "Laparoscopic", 
+      difficulty: "Beginner", 
+      color: "text-emerald-400 bg-emerald-400/10 border border-emerald-400/20" 
+    }, 
+    { 
+      id: "wound-debridement",
+      name: "Wound Debridement", 
+      tag: "Trauma", 
+      difficulty: "Beginner", 
+      color: "text-emerald-400 bg-emerald-400/10 border border-emerald-400/20" 
+    }
+  ];
   const features = [{ icon: Scissors, title: "Choose Your Procedure", description: "Browse real surgical cases from appendectomy to craniotomy.", color: "from-primary/20 to-teal-400/20" }, { icon: Target, title: "Make Every Decision", description: "From diagnosis to closing, every step is yours.", color: "from-teal-400/20 to-primary/20" }, { icon: BookOpen, title: "Learn From Everything", description: "Right or wrong, you'll know exactly why.", color: "from-primary/20 to-purple-400/20" }];
   return (
     <div className="min-h-screen bg-background overflow-x-hidden relative">

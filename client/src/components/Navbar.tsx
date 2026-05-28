@@ -28,6 +28,7 @@ const NAV_LINKS = [
   { href: "/anatomy", label: "Anatomy" },
   { href: "/learn", label: "Learn" },
   { href: "/leaderboard", label: "Leaderboard" },
+
   { href: "/profile", label: "Profile" },
 ];
 // Scroll thresholds
@@ -213,13 +214,11 @@ export default function Navbar() {
       >
         <motion.nav
           className={cn(
-            "relative flex items-center overflow-hidden rounded-full border shadow-lg backdrop-blur-md",
-            "bg-background/95 border-border dark:bg-[#0A1628]/95 dark:border-primary/20",
-        
-            isExpanded ? "px-5 py-3 gap-3" : "px-5 py-2 gap-2"
+            "relative flex items-center overflow-hidden rounded-full border shadow-2xl backdrop-blur-3xl",
+            "bg-background/80 border-white/10 dark:bg-[#0A1628]/80 dark:border-primary/20",
+            isExpanded ? "px-6 py-2.5 gap-4" : "px-4 py-2 gap-2"
           )}
           onMouseLeave={handleMouseLeave}
-          
         >
           {/* === LOGO (ECG icon + ScrubIn text) === */}
           <Link onClick={handleLogoClick}
