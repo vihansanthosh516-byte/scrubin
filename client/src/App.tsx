@@ -10,11 +10,13 @@ import ProcedureLibrary from "./pages/ProcedureLibrary";
 import Simulation from "./pages/Simulation";
 // import SimulationDashboard from "./pages/SimulationDashboard"; // Deprecated
 import Leaderboard from "./pages/Leaderboard";
-import LearnHub from "./pages/LearnHub";
 import Profile from "./pages/Profile";
 import Signin from "./pages/Signin";
 import AnatomyExplorer from "./pages/AnatomyExplorer";
 import Onboarding from "./pages/Onboarding";
+import ResumeSimulation from "./pages/ResumeSimulation";
+import MySimulations from "./pages/MySimulations";
+import ReplayViewer from "./pages/ReplayViewer";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
 
@@ -85,6 +87,9 @@ function Router() {
             <Route path="/procedures" component={ProcedureLibrary} />
             <Route path="/simulation/:id" component={Simulation} />
             <Route path="/simulation" component={Simulation} />
+            <Route path="/resume" component={ResumeSimulation} />
+            <Route path="/my-simulations" component={MySimulations} />
+            <Route path="/replay/:sessionId" component={ReplayViewer} />
 
             <Route path="/leaderboard" component={Leaderboard} />
             <Route path="/learn" component={LearnHub} />

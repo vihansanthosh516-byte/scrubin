@@ -1,0 +1,186 @@
+openapi: 3.1.0
+info:
+  title: ScrubIn Backend API
+  version: 1.0.0
+paths:
+  /api/sim/start:
+    post:
+      summary: Start a new deterministic simulation session
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                seed:
+                  type: integer
+                procedure:
+                  type: string
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+                  tick:
+                    type: integer
+                  procedure_id:
+                    type: string
+                  procedure_name:
+                    type: string
+                  patient:
+                    type: object
+                  total_ticks:
+                    type: integer
+        '400':
+          description: Invalid procedure ID
+        '500':
+          description: Server error
+  /api/sim/next:
+    post:
+      summary: Advance simulation tick
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - session_id
+              properties:
+                session_id:
+                  type: string
+      responses:
+        '200':
+          description: Tick result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NextTickResponse'
+        '404':
+          description: Session not found
+        '409':
+          description: Cannot advance without decision
+        '500':
+          description: Server error
+  /api/sim/decide:
+    post:
+      summary: Submit a decision for the current tick
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [session_id, decision_id, option_id]
+              properties:
+                session_id:
+                  type: string
+                decision_id:
+                  type: string
+                option_id:
+                  type: string
+      responses:
+        '200':
+          description: Decision applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecideResponse'
+        '404':
+          description: Session not found
+        '400':
+          description: Invalid request
+  /api/evaluate:
+    post:
+      summary: Deterministic evaluation of a completed simulation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                procedureName:
+                  type: string
+                patient:
+                  type: object
+                outcomeBadge:
+                  type: string
+                outcomeSummary:
+                  type: string
+                history:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        '200':
+          description: Evaluation notes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notes:
+                    type: string
+        '500':
+          description: Evaluation error
+components:
+  schemas:
+    NextTickResponse:
+      type: object
+      properties:
+        tick:
+          type: integer
+        vitals:
+          type: object
+        escalation_phase:
+          type: string
+        procedure_phase:
+          type: string
+        active_complication:
+          type: string
+        pending_decision:
+          type: object
+        events:
+          type: array
+          items:
+            type: object
+        score:
+          type: number
+        completed:
+          type: boolean
+    DecideResponse:
+      type: object
+      properties:
+        tick:
+          type: integer
+        vitals:
+          type: object
+        escalation_phase:
+          type: string
+        procedure_phase:
+          type: string
+        active_complication:
+          type: string
+        decision_result:
+          type: object
+        next_tick_ready:
+          type: boolean
+        events:
+          type: array
+          items:
+            type: object
+        score:
+          type: number
+        completed:
+          type: boolean
+        correct_decisions:
+          type: integer
+        total_decisions:
+          type: integer

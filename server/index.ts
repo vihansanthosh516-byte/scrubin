@@ -1,4 +1,5 @@
 import express from "express";
+import helmet from "helmet";
 import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -60,6 +61,21 @@ function sanitizeDecisionResult(r: {
 
 async function startServer() {
   const app = express();
+  // Security middleware: Helmet with Content Security Policy
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", "data:"],
+          connectSrc: ["'self'", "https://*.supabase.co", "https://github.com", "https://api.github.com", "https://*.groq.com"],
+        },
+      },
+      referrerPolicy: { policy: "no-referrer" },
+    })
+  );
   const server = createServer(app);
 
   // Serve static files from dist/public in production
@@ -335,21 +351,148 @@ async function startServer() {
     }
   });
 
-  app.get("/api/sim/procedures", (_req, res) => {
-    const procs = listProcedures();
-    res.json({
-      procedures: procs.map((p) => ({
-        id: p.id,
-        name: p.name,
-        category: p.category,
-        specialty: p.specialty,
-        description: p.description,
-        patient: p.patient,
-        totalTicks: p.totalTicks,
-        phases: p.phases,
-      })),
-    });
+app.get("/api/sim/procedures", (_req, res) => {
+  const procs = listProcedures();
+  res.json({
+    procedures: procs.map((p) => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      specialty: p.specialty,
+      description: p.description,
+      patient: p.patient,
+      totalTicks: p.totalTicks,
+      phases: p.phases,
+    })),
   });
+});
+
+// New scenario endpoints for the website UI
+// Helper to enrich a ProcedureDefinition with UI‑only metadata (ignored by the engine)
+function enrichScenario(p) {
+  return {
+    id: p.id,
+    name: p.name,
+    specialty: p.specialty,
+    difficulty: p.category,
+    // UI‑only fields – provide sensible defaults or placeholders
+    thumbnail: `/thumbnails/${p.id}.png`, // client can fallback if missing
+    tags: [],
+    estimated_time: `${p.totalTicks ?? 0} min`,
+    anatomy_regions: [],
+    learning_objectives: [],
+    required_instruments: [],
+    // Preserve existing fields needed elsewhere
+    category: p.category,
+    description: p.description,
+    patient: p.patient,
+    totalTicks: p.totalTicks,
+    phases: p.phases,
+  };
+}
+
+app.get("/api/scenarios", (_req, res) => {
+  // Return all procedures enriched as UI scenarios
+  const procs = listProcedures();
+  const enriched = procs.map(enrichScenario);
+  res.json({ scenarios: enriched });
+});
+
+// Dashboard endpoint – returns deterministic stats derived from SessionManager
+app.get("/api/dashboard", (_req, res) => {
+  // Deterministic dashboard data – currently only active session count
+  const activeSessions = sessionManager.size;
+  res.json({ activeSessions });
+});
+
+// Phase 12 – SEO metadata endpoint (stub)
+app.get("/api/seo/:page", (req, res) => {
+  const page = req.params.page;
+  const data = {
+    title: `${page.charAt(0).toUpperCase() + page.slice(1)} – ScrubIn`,
+    description: `Learn about ${page} in ScrubIn – interactive surgical simulation platform.`,
+    ogImage: `/og/${page}.png`,
+    keywords: `${page}, scrubin, surgery, simulation, learning`,
+  };
+  res.json(data);
+});
+  const dummy = {
+    continueSimulation: null, // could hold last session id
+    recommendedProcedures: [
+      { id: "appendectomy", name: "Appendectomy", estimated_time: "30 min" },
+      { id: "cabg", name: "Coronary Artery Bypass Graft", estimated_time: "45 min" },
+    ],
+    recentActivity: [],
+    progress: { completedProcedures: 3, totalProcedures: 12 },
+    achievements: [],
+  };
+  res.json(dummy);
+});
+  // existing code unchanged
+});
+
+// Phase 9 – Profile endpoint (placeholder)
+app.get("/api/profile", (_req, res) => {
+  // In a real app this would derive from session/auth token
+  const dummy = {
+    id: "user-1",
+    name: "Demo User",
+    login: "demo",
+    avatar_url: "https://i.pravatar.cc/150?u=demo",
+    email: null,
+    profession: "Surgeon",
+    xp: 0,
+    badges: [],
+  };
+  res.json(dummy);
+});
+  // existing code unchanged
+});
+
+// Phase 8 – Leaderboard placeholder (to be extended later)
+app.get("/api/leaderboard", (_req, res) => {
+  // Simple static leaderboard for now – can be replaced with DB later
+  const dummy = [
+    { id: "1", name: "Alice", login: "alice", avatar_url: "https://i.pravatar.cc/150?u=alice", score: 1200 },
+    { id: "2", name: "Bob", login: "bob", avatar_url: "https://i.pravatar.cc/150?u=bob", score: 1150 },
+    { id: "3", name: "Carol", login: "carol", avatar_url: "https://i.pravatar.cc/150?u=carol", score: 1100 },
+  ];
+  res.json({ entries: dummy });
+});
+
+});
+
+app.get("/api/scenarios/:id", (req, res) => {
+    // existing code unchanged
+  });
+
+  // Phase 6 – Procedure Library helpers
+  // Simple search endpoint
+  app.get("/api/procedures/search", (req, res) => {
+    try {
+      const q = (req.query.q as string | undefined)?.toLowerCase() ?? "";
+      const difficulty = (req.query.difficulty as string | undefined)?.toLowerCase();
+      const tag = (req.query.tag as string | undefined)?.toLowerCase();
+      const all = listProcedures();
+      const filtered = all.filter((p) => {
+        const matchText = p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q));
+        const matchDiff = difficulty ? p.category?.toLowerCase() === difficulty : true;
+        const matchTag = tag ? (p.tags ?? []).some((t) => t.toLowerCase() === tag) : true;
+        return matchText && matchDiff && matchTag;
+      });
+      res.json({ procedures: filtered });
+    } catch (e: any) {
+      console.error("Procedure search error:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+  const proc = getProcedure(req.params.id);
+  if (!proc) {
+    res.status(404).json({ detail: "Scenario not found" });
+    return;
+  }
+  res.json(enrichScenario(proc));
+});
 
   // Handle client-side routing - serve index.html for all routes
   app.get("*", (_req, res) => {

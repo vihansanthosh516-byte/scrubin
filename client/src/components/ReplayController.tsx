@@ -1,11 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSimulationStore } from '../state/simulationStore';
 import { reconstructState } from '../lib/replayEngine';
-import { Play, Pause, RotateCcw } from 'lucide-react';
+import { Play, Pause, RotateCcw, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function ReplayController() {
   const { dvkChain, replayTick, isReplaying, setReplayTick, setIsReplaying, setState, currentTick } = useSimulationStore();
+  const [speed, setSpeed] = useState<number>(1);
+  // Speed options: 0.25x, 0.5x, 1x, 2x, 4x
+  const speedOptions = [0.25, 0.5, 1, 2, 4];
   
   const maxTick = dvkChain.length > 0 ? dvkChain[dvkChain.length - 1].tick : 0;
   
@@ -13,12 +16,13 @@ export default function ReplayController() {
   useEffect(() => {
     let interval: any;
     if (isReplaying) {
+      const ms = 1000 / speed;
       interval = setInterval(() => {
         setReplayTick(useSimulationStore.getState().replayTick + 1);
-      }, 1000); // Replay at 1x speed
+      }, ms);
     }
     return () => clearInterval(interval);
-  }, [isReplaying, setReplayTick]);
+  }, [isReplaying, speed, setReplayTick]);
   
   // Reconstruct state deterministically whenever replayTick changes
   useEffect(() => {
@@ -47,40 +51,85 @@ export default function ReplayController() {
         </span>
       </div>
       
-      <div className="flex items-center gap-4 mb-4">
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={() => setIsReplaying(!isReplaying)}
-          disabled={dvkChain.length === 0 || (replayTick >= maxTick && !isReplaying)}
-          className="bg-neutral-800 hover:bg-neutral-700 border-neutral-600 text-white"
-        >
-          {isReplaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={() => {
-            setIsReplaying(false);
-            setReplayTick(0);
-          }}
-          disabled={dvkChain.length === 0}
-          className="bg-neutral-800 hover:bg-neutral-700 border-neutral-600 text-white"
-        >
-          <RotateCcw className="w-4 h-4" />
-        </Button>
-        
-        <input 
-          type="range" 
-          min={0} 
-          max={maxTick} 
-          value={Math.min(replayTick, maxTick)} 
-          onChange={handleScrub}
-          className="flex-1 accent-blue-500"
-          disabled={dvkChain.length === 0}
-        />
-      </div>
+<div className="flex items-center gap-4 mb-4">
+          {/* Step Back */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              setIsReplaying(false);
+              setReplayTick(Math.max(0, replayTick - 1));
+            }}
+            disabled={dvkChain.length === 0 || replayTick <= 0}
+            className="bg-neutral-800 hover:bg-neutral-700 border-neutral-600 text-white"
+          >
+            <ChevronLeftIcon className="w-4 h-4" />
+          </Button>
+
+          {/* Play / Pause */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsReplaying(!isReplaying)}
+            disabled={dvkChain.length === 0 || (replayTick >= maxTick && !isReplaying)}
+            className="bg-neutral-800 hover:bg-neutral-700 border-neutral-600 text-white"
+          >
+            {isReplaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          </Button>
+
+          {/* Step Forward */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              setIsReplaying(false);
+              setReplayTick(Math.min(maxTick, replayTick + 1));
+            }}
+            disabled={dvkChain.length === 0 || replayTick >= maxTick}
+            className="bg-neutral-800 hover:bg-neutral-700 border-neutral-600 text-white"
+          >
+            <ChevronRightIcon className="w-4 h-4" />
+          </Button>
+
+          {/* Reset */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              setIsReplaying(false);
+              setReplayTick(0);
+            }}
+            disabled={dvkChain.length === 0}
+            className="bg-neutral-800 hover:bg-neutral-700 border-neutral-600 text-white"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </Button>
+
+          {/* Speed selector */}
+          <select
+            value={speed}
+            onChange={(e) => setSpeed(parseFloat(e.target.value))}
+            className="bg-neutral-800 text-white border border-neutral-600 rounded px-2 py-1"
+            disabled={dvkChain.length === 0}
+          >
+            {speedOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}x
+              </option>
+            ))}
+          </select>
+
+          {/* Scrubber */}
+          <input
+            type="range"
+            min={0}
+            max={maxTick}
+            value={Math.min(replayTick, maxTick)}
+            onChange={handleScrub}
+            className="flex-1 accent-blue-500"
+            disabled={dvkChain.length === 0}
+          />
+        </div>
       
       {dvkChain.length === 0 && (
         <div className="text-xs text-yellow-500 mt-2">

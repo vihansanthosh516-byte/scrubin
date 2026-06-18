@@ -1,0 +1,204 @@
+# SCRUBIN_TODO.md
+
+# ScrubIn Frontend Master Roadmap
+
+## Goal
+
+ScrubIn is **ONLY** the frontend.
+
+It should:
+
+* Display data
+* Authenticate users
+* Call APIs
+* Render simulations
+* Render anatomy
+* Render learning content
+* Render dashboards
+
+It should **NOT**:
+
+* Simulate physiology
+* Compute vitals
+* Compute scores
+* Compute cognition
+* Run replay logic
+* Run surgical engine logic
+
+Everything comes from ScrubIn Core.
+
+---
+
+# PHASE 1 — SECURITY
+
+* [ ] Remove committed `.env`
+* [ ] Rotate all exposed secrets
+* [ ] Move auth tokens to httpOnly cookies
+* [ ] Remove localStorage auth
+* [ ] Verify Supabase auth flow
+* [ ] Add CSP support
+* [ ] Add secure headers
+* [ ] Add better auth redirects
+
+---
+
+# PHASE 2 — API CLIENT
+
+Create a centralized API layer.
+
+* [ ] api.ts
+* [ ] auth.ts
+* [ ] procedures.ts
+* [ ] simulation.ts
+* [ ] leaderboard.ts
+* [ ] user.ts
+* [ ] replay.ts
+* [ ] learning.ts
+
+No fetch() scattered around the project.
+
+---
+
+# PHASE 3 — REMOVE DUPLICATE ENGINE CODE
+
+Delete frontend logic for:
+
+* [ ] vitals
+* [ ] physiology
+* [ ] scoring
+* [ ] replay generation
+* [ ] decision engine
+* [ ] simulation state
+* [ ] client-side surgery logic
+
+Frontend should only display backend state.
+
+---
+
+# PHASE 4 — SIMULATION UI
+
+* [ ] Start Simulation button
+* [ ] Connect to Core API
+* [ ] Decision UI
+* [ ] Receive updated state
+* [ ] Show vitals
+* [ ] Show anatomy updates
+* [ ] Show timeline
+* [ ] Show complications
+* [ ] Finish simulation
+* [ ] Debrief page
+
+---
+
+# PHASE 5 — SAVE / RESUME UI
+
+* [ ] Save Simulation button
+* [ ] Resume Simulation page
+* [ ] My Simulations page
+* [ ] Replay Viewer page
+
+---
+
+# PHASE 6 — PROCEDURE LIBRARY
+
+* [ ] Backend search
+* [ ] Categories
+* [ ] Difficulty
+* [ ] XP locks
+* [ ] Procedure detail page
+* [ ] Better filtering
+
+---
+
+# PHASE 7 — LEARN HUB
+
+* [ ] Backend articles
+* [ ] Search
+* [ ] Pagination
+* [ ] Related procedures
+* [ ] Better UI
+
+---
+
+# PHASE 8 — LEADERBOARD
+
+* [ ] Backend sorting
+* [ ] Backend filters
+* [ ] Daily
+* [ ] Weekly
+* [ ] Monthly
+* [ ] All Time
+* [ ] Detail page
+
+---
+
+# PHASE 9 — PROFILE
+
+* [ ] Better loading
+* [ ] XP
+* [ ] Badges
+* [ ] History
+* [ ] Saved cases
+* [ ] Statistics
+
+---
+
+# PHASE 10 — DASHBOARD
+
+* [ ] Continue Simulation
+* [ ] Recommended Procedures
+* [ ] Recent Activity
+* [ ] Progress
+* [ ] Achievements
+
+---
+
+# PHASE 11 — UI POLISH
+
+* [ ] Skeleton loaders
+* [ ] Error boundaries
+* [ ] Better animations
+* [ ] Empty states
+* [ ] Mobile optimization
+* [ ] Accessibility
+* [ ] Keyboard navigation
+
+---
+
+# PHASE 12 — SEO
+
+* [ ] Titles
+* [ ] Meta descriptions
+* [ ] OpenGraph
+* [ ] robots.txt
+* [ ] sitemap.xml
+* [ ] JSON-LD
+
+---
+
+# PHASE 13 — AI WORKSPACE UI
+
+* [ ] Upload UI
+* [ ] AI Results UI
+* [ ] Timeline UI
+* [ ] Differential UI
+* [ ] Risk UI
+
+---
+
+# PHASE 14 — DEPLOYMENT
+
+* [ ] Cloudflare Pages
+* [ ] Environment Variables
+* [ ] Analytics
+* [ ] Error Tracking
+* [ ] Production Build
+* [ ] CI/CD
+
+---
+
+# FINAL RULE
+
+ScrubIn NEVER computes simulation logic.
+
+It ONLY renders responses returned by ScrubIn Core.

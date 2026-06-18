@@ -5,26 +5,14 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Lock, Clock, Shuffle, Star, ArrowRight, Search, Activity, Heart, Brain, Bone, Baby, Scissors, Stethoscope, Shield, Zap, ChevronRight, Filter, Sparkles } from "lucide-react";
+import { Lock, Clock, Shuffle, Star, ArrowRight, Search, Activity, Heart, Brain, Bone, Baby, Scissors, Stethoscope, Shield, Zap, ChevronRight, Filter, Sparkles, XCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { useProcedureStore } from "@/state/procedureStore";
 
 const FILTERS = ["All", "Beginner", "Intermediate", "Advanced", "Emergency", "Cardiovascular", "Neurological", "Orthopedic", "General", "OB/GYN", "Thoracic", "Urologic", "Plastic", "ENT"];
 
-const PROCEDURES = [
-  { id: "appendectomy", name: "Appendectomy", tag: "Emergency", difficulty: "Beginner", diffColor: "text-emerald-400", diffBg: "bg-emerald-400/10 border-emerald-400/20", category: "General", time: "25 min", decisions: 42, description: "The most common emergency surgery.", unlocked: true, bestScore: null },
-  { id: "inguinal-hernia", name: "Inguinal Hernia Repair", tag: "General", difficulty: "Beginner", diffColor: "text-emerald-400", diffBg: "bg-emerald-400/10 border-emerald-400/20", category: "General", time: "30 min", decisions: 38, description: "Mesh repair of inguinal hernia.", unlocked: true, bestScore: null },
-  { id: "thyroidectomy", name: "Thyroidectomy", tag: "ENT", difficulty: "Beginner", diffColor: "text-emerald-400", diffBg: "bg-emerald-400/10 border-emerald-400/20", category: "ENT", time: "45 min", decisions: 40, description: "Partial or total thyroid removal.", unlocked: true, bestScore: null },
-  { id: "carpal-tunnel-release", name: "Carpal Tunnel Release", tag: "Orthopedic", difficulty: "Beginner", diffColor: "text-emerald-400", diffBg: "bg-emerald-400/10 border-emerald-400/20", category: "Orthopedic", time: "20 min", decisions: 32, description: "Release of transverse carpal ligament.", unlocked: false, bestScore: null },
-  { id: "cholecystectomy", name: "Cholecystectomy", tag: "Laparoscopic", difficulty: "Intermediate", diffColor: "text-amber-400", diffBg: "bg-amber-400/10 border-amber-400/20", category: "General", time: "30 min", decisions: 51, description: "Laparoscopic gallbladder removal.", unlocked: true, bestScore: null },
-  { id: "acl-reconstruction", name: "ACL Reconstruction", tag: "Orthopedic", difficulty: "Intermediate", diffColor: "text-amber-400", diffBg: "bg-amber-400/10 border-amber-400/20", category: "Orthopedic", time: "35 min", decisions: 48, description: "Sports medicine knee reconstruction.", unlocked: true, bestScore: null },
-  { id: "c-section", name: "Cesarean Section", tag: "OB/GYN", difficulty: "Intermediate", diffColor: "text-amber-400", diffBg: "bg-amber-400/10 border-amber-400/20", category: "OB/GYN", time: "28 min", decisions: 50, description: "Cesarean delivery with maternal safety.", unlocked: true, bestScore: null },
-  { id: "total-knee-replacement", name: "Total Knee Replacement", tag: "Orthopedic", difficulty: "Intermediate", diffColor: "text-amber-400", diffBg: "bg-amber-400/10 border-amber-400/20", category: "Orthopedic", time: "40 min", decisions: 55, description: "Degenerative osteoarthritis treatment.", unlocked: true, bestScore: null },
-  { id: "cabg", name: "Heart Bypass (CABG)", tag: "Cardiovascular", difficulty: "Advanced", diffColor: "text-red-400", diffBg: "bg-red-400/10 border-red-400/20", category: "Cardiovascular", time: "55 min", decisions: 78, description: "High-stakes coronary artery bypass.", unlocked: true, bestScore: null },
-  { id: "craniotomy", name: "Craniotomy for Tumor", tag: "Neurological", difficulty: "Advanced", diffColor: "text-red-400", diffBg: "bg-red-400/10 border-red-400/20", category: "Neurological", time: "60 min", decisions: 85, description: "Brain surgery basics.", unlocked: true, bestScore: null },
-  { id: "spinal-fusion", name: "Spinal Fusion (L4-L5)", tag: "Neurosurgery", difficulty: "Advanced", diffColor: "text-red-400", diffBg: "bg-red-400/10 border-red-400/20", category: "Neurological", time: "45 min", decisions: 65, description: "Multi-level spinal stabilization.", unlocked: true, bestScore: null },
-  { id: "exploratory-laparotomy", name: "Emergency Exploratory Laparotomy", tag: "Trauma", difficulty: "Advanced", diffColor: "text-red-400", diffBg: "bg-red-400/10 border-red-400/20", category: "General", time: "50 min", decisions: 60, description: "High-acuity trauma control.", unlocked: true, bestScore: null },
-];
+// PROCEDURES will be loaded dynamically from the backend registry API.
 
 const ProcedureIcon = ({ category }: { category: string }) => {
   const iconClass = "w-10 h-10";
@@ -145,18 +133,65 @@ function ProcedureCard({ proc, unlocked, requiredXP, index, userXP }: any) {
 
 export default function ProcedureLibrary() {
   const { user } = useAuth();
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [search, setSearch] = useState("");
   const [userXP, setUserXP] = useState(0);
-  const [sortBy, setSortBy] = useState("difficulty");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("All");
+
+  const {
+    procedures, loading, error, query, difficulty, tag, category,
+    setProcedures, setLoading, setError, setQuery, setDifficulty, setCategory
+  } = useProcedureStore();
+
+  const fetchProcedures = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      if (query) params.append("q", query);
+      if (difficulty && difficulty !== "All") params.append("difficulty", difficulty);
+      if (category && category !== "All") params.append("category", category);
+
+      const res = await fetch(`/api/procedures/search?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch procedures');
+      
+      const data = await res.json();
+      const list = (Array.isArray(data) ? data : data.procedures || data.scenarios || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        tag: Array.isArray(p.tags) && p.tags.length > 0 ? p.tags[0] : (p.tag || ''),
+        difficulty: p.difficulty,
+        diffColor: p.difficulty?.toLowerCase() === 'beginner' ? 'text-emerald-400' : p.difficulty?.toLowerCase() === 'intermediate' ? 'text-amber-400' : 'text-red-400',
+        diffBg: p.difficulty?.toLowerCase() === 'beginner' ? 'bg-emerald-400/10 border-emerald-400/20' : p.difficulty?.toLowerCase() === 'intermediate' ? 'bg-amber-400/10 border-amber-400/20' : 'bg-red-400/10 border-red-400/20',
+        category: p.specialty || p.category,
+        time: p.estimated_time || `${p.totalTicks ?? 0} min`,
+        decisions: p.phases?.length ?? 0,
+        description: p.description,
+        thumbnail: p.thumbnail,
+        anatomy_regions: p.anatomy_regions,
+        learning_objectives: p.learning_objectives,
+        required_instruments: p.required_instruments,
+        unlocked: true,
+      }));
+      setProcedures(list);
+    } catch (e: any) {
+      console.error(e);
+      setError(e.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      fetchProcedures();
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [query, difficulty, category]);
 
   useEffect(() => {
     setMounted(true);
-    if (user) {
-      loadUserProgress();
-    }
+    if (user) loadUserProgress();
   }, [user]);
 
   const loadUserProgress = async () => {
@@ -176,17 +211,25 @@ export default function ProcedureLibrary() {
   };
 
   const isUnlocked = (proc: any) => {
-    if (proc.difficulty === "Beginner") return true;
-    if (proc.difficulty === "Intermediate") return userXP >= 500;
-    if (proc.difficulty === "Advanced") return userXP >= 2000;
+    if (proc.difficulty?.toLowerCase() === "beginner") return true;
+    if (proc.difficulty?.toLowerCase() === "intermediate") return userXP >= 500;
+    if (proc.difficulty?.toLowerCase() === "advanced") return userXP >= 2000;
     return true;
   };
 
-  const filtered = PROCEDURES.filter(p => {
-    const matchesFilter = activeFilter === "All" || p.difficulty === activeFilter || p.tag === activeFilter || p.category === activeFilter;
-    const matchesSearch = search === "" || p.name.toLowerCase().includes(search.toLowerCase()) || p.tag.toLowerCase().includes(search.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
+  const handleFilterClick = (f: string) => {
+    setActiveFilter(f);
+    if (f === "All") {
+      setDifficulty("");
+      setCategory("");
+    } else if (["Beginner", "Intermediate", "Advanced"].includes(f)) {
+      setDifficulty(f.toLowerCase());
+      setCategory("");
+    } else {
+      setCategory(f);
+      setDifficulty("");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -225,7 +268,7 @@ export default function ProcedureLibrary() {
               Choose Your <span className="text-gradient">Procedure</span>
             </h1>
             <p className="text-muted-foreground text-xl mb-8">
-              {PROCEDURES.length} procedures across all difficulty levels
+                {procedures.length} procedures across all difficulty levels
             </p>
 
             {/* Search + Filters */}
@@ -238,8 +281,8 @@ export default function ProcedureLibrary() {
                 <input
                   type="text"
                   placeholder="Search procedures..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
                   className="w-full pl-12 pr-4 py-4 bg-background border-2 border-border rounded-2xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all font-mono-data"
@@ -249,7 +292,7 @@ export default function ProcedureLibrary() {
                 {FILTERS.slice(0, 8).map(f => (
                   <motion.button
                     key={f}
-                    onClick={() => setActiveFilter(f)}
+                    onClick={() => handleFilterClick(f)}
                     whileHover={{ scale: 1.08, y: -3 }}
                     whileTap={{ scale: 0.95 }}
                     className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-all font-mono-data uppercase tracking-wide ${
@@ -331,25 +374,41 @@ export default function ProcedureLibrary() {
           </motion.div>
         )}
 
-        {/* Procedures Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filtered.map((proc, i) => (
-            <ProcedureCard
-              key={proc.id}
-              proc={proc}
-              unlocked={isUnlocked(proc)}
-              requiredXP={proc.difficulty === "Intermediate" ? 500 : proc.difficulty === "Advanced" ? 2000 : 0}
-              index={i}
-              userXP={userXP}
-            />
-          ))}
-        </div>
+        {error && (
+          <div className="p-4 bg-red-950/50 border border-red-500/50 rounded-xl text-red-200 mb-8 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <XCircle className="w-5 h-5 text-red-500 shrink-0" />
+              {error}
+            </div>
+            <Button variant="ghost" onClick={() => fetchProcedures()} className="text-red-400 hover:text-red-300">Retry</Button>
+          </div>
+        )}
 
-        {filtered.length === 0 && (
+        {/* Procedures Grid or Skeleton Loader */}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((idx) => (
+              <div key={idx} className="h-80 bg-neutral-900 border border-neutral-800 rounded-3xl animate-pulse" />
+            ))}
+          </div>
+        ) : procedures.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {procedures.map((proc, i) => (
+              <ProcedureCard
+                key={proc.id}
+                proc={proc}
+                unlocked={isUnlocked(proc)}
+                requiredXP={proc.difficulty?.toLowerCase() === "intermediate" ? 500 : proc.difficulty?.toLowerCase() === "advanced" ? 2000 : 0}
+                index={i}
+                userXP={userXP}
+              />
+            ))}
+          </div>
+        ) : (
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-32 text-muted-foreground"
+            className="text-center py-32 text-muted-foreground flex flex-col items-center"
           >
             <motion.div
               animate={{ rotate: [0, 360] }}
@@ -357,7 +416,10 @@ export default function ProcedureLibrary() {
             >
               <Search className="w-16 h-16 mx-auto mb-6 opacity-30" />
             </motion.div>
-            <p className="text-xl font-mono-data">No procedures match your search.</p>
+            <p className="text-xl font-mono-data mb-4">No procedures found.</p>
+            <Button onClick={() => { setQuery(""); handleFilterClick("All"); }} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              Clear Filters
+            </Button>
           </motion.div>
         )}
       </div>

@@ -30,6 +30,10 @@ class SimulationSocket {
         const data = JSON.parse(event.data);
 
         console.log("WS MESSAGE:", data);
+          // Merge any cognition payload into the store (read‑only UI)
+          if (data.cognition) {
+            store.updateCognition(data.cognition);
+          }
 
         // ✅ ALWAYS extract usable state (no strict filtering)
         const state =
@@ -65,6 +69,8 @@ class SimulationSocket {
 
         // ✅ MAIN FIX: always update UI (NO mode gating)
         onTick(state, tick);
+        // Record cognition snapshot for this tick (used by replay UI)
+        store.recordCognition(tick, store.cognition);
       } catch (e) {
         console.error("WS parse error:", e);
       }
