@@ -223,7 +223,7 @@ export interface NextTickResponse {
   escalation_phase: EscalationPhase;
   procedure_phase: string;
   active_complication: ComplicationType | null;
-  pending_decision: TickDecisionPublic;
+  pending_decision: TickDecisionPublic | null;
   events: string[];
   score: number;
   completed: boolean;

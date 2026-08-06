@@ -66,11 +66,11 @@ async function startServer() {
     helmet({
       contentSecurityPolicy: {
         directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", "data:"],
-          connectSrc: ["'self'", "https://*.supabase.co", "https://github.com", "https://api.github.com", "https://*.groq.com"],
+           defaultSrc: ["'self'"],
+           scriptSrc: ["'self'"],
+           styleSrc: ["'self'"],
+           imgSrc: ["'self'", "data:"],
+           connectSrc: ["'self'", "http://localhost:8001", "https://*.supabase.co", "https://github.com", "https://api.github.com", "https://*.groq.com"],
         },
       },
       referrerPolicy: { policy: "no-referrer" },
@@ -288,7 +288,7 @@ async function startServer() {
         escalation_phase: result.escalationPhase,
         procedure_phase: result.procedurePhase,
         active_complication: result.activeComplication,
-        pending_decision: pending!,
+        pending_decision: pending,
         events: result.events,
         score: result.score,
         completed: session.state.completed,
@@ -414,8 +414,11 @@ app.get("/api/seo/:page", (req, res) => {
     ogImage: `/og/${page}.png`,
     keywords: `${page}, scrubin, surgery, simulation, learning`,
   };
-  res.json(data);
+    res.json(data);
 });
+
+/* Begin comment – disable broken routes
+
   const dummy = {
     continueSimulation: null, // could hold last session id
     recommendedProcedures: [
@@ -492,6 +495,118 @@ app.get("/api/scenarios/:id", (req, res) => {
     return;
   }
   res.json(enrichScenario(proc));
+});
+
+*/
+// New routes – save, list, resume, replay, profile, leaderboard, scenario, search
+
+const savedSimulations = new Map<string, any>();
+
+app.post("/api/sim/save", (req, res) => {
+  const { session_id } = req.body || {};
+  const session = sessionManager.get(session_id);
+  if (!session) {
+    res.status(404).json({ detail: "Session not found" });
+    return;
+  }
+  const id = `save_${Date.now()}`;
+  const savedAt = new Date().toISOString();
+  savedSimulations.set(id, {
+    id,
+    savedAt,
+    state: session.state,
+  });
+  res.json({ id, savedAt });
+});
+
+app.get("/api/sim/list", (_req, res) => {
+  const list = Array.from(savedSimulations.values()).map((s) => ({
+    id: s.id,
+    savedAt: s.savedAt,
+  }));
+  res.json({ saved: list });
+});
+
+app.post("/api/sim/resume", (req, res) => {
+  const { id } = req.body || {};
+  const saved = savedSimulations.get(id);
+  if (!saved) {
+    res.status(404).json({ detail: "Saved simulation not found" });
+    return;
+  }
+  const seed = saved.state?.seed ?? Math.floor(Math.random() * 1_000_000);
+  const procedureId = saved.state?.procedureId ?? "appendectomy";
+  const session = sessionManager.create(seed, procedureId);
+  res.json({
+    session_id: session.id,
+    ...saved.state,
+  });
+});
+
+app.get("/api/replay/:id", (req, res) => {
+  const { id } = req.params;
+  const saved = savedSimulations.get(id);
+  if (!saved) {
+    res.status(404).json({ detail: "Saved simulation not found" });
+    return;
+  }
+  res.json({ replay: saved.state });
+});
+
+app.get("/api/profile", (_req, res) => {
+  const dummy = {
+    id: "user-1",
+    name: "Demo User",
+    login: "demo",
+    avatar_url: "https://i.pravatar.cc/150?u=demo",
+    email: null,
+    profession: "Surgeon",
+    xp: 0,
+    badges: [],
+  };
+  res.json(dummy);
+});
+
+app.get("/api/leaderboard", (_req, res) => {
+  const dummy = [
+    { id: "1", name: "Alice", login: "alice", avatar_url: "https://i.pravatar.cc/150?u=alice", score: 1200 },
+    { id: "2", name: "Bob", login: "bob", avatar_url: "https://i.pravatar.cc/150?u=bob", score: 1150 },
+    { id: "3", name: "Carol", login: "carol", avatar_url: "https://i.pravatar.cc/150?u=carol", score: 1100 },
+  ];
+  res.json({ entries: dummy });
+});
+
+app.get("/api/scenarios/:id", (req, res) => {
+  const proc = getProcedure(req.params.id);
+  if (!proc) {
+    res.status(404).json({ detail: "Scenario not found" });
+    return;
+  }
+  res.json(enrichScenario(proc));
+});
+
+app.get("/api/procedures/search", (req, res) => {
+  try {
+    const q = (req.query.q as string | undefined)?.toLowerCase() ?? "";
+    const difficulty = (req.query.difficulty as string | undefined)?.toLowerCase();
+    const tag = (req.query.tag as string | undefined)?.toLowerCase();
+    const all = listProcedures();
+    const filtered = all.filter((p) => {
+      const matchText = p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q));
+      const matchDiff = difficulty ? p.category?.toLowerCase() === difficulty : true;
+      const matchTag = tag ? (p.tags ?? []).some((t) => t.toLowerCase() === tag) : true;
+      return matchText && matchDiff && matchTag;
+    });
+    res.json({ procedures: filtered });
+  } catch (e: any) {
+    console.error("Procedure search error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.use((err, req, res, next) => {
+  console.error("Error:", err);
+  res.status(err.status || 500).json({ error: "Internal server error" });
 });
 
   // Handle client-side routing - serve index.html for all routes

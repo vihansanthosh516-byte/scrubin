@@ -91,7 +91,7 @@ export class SimulationOrchestrator {
     const vitalsAfter = this.vitalsEngine.tick(this._tick);
     this.maxScore += 10;
 
-    return this.buildResult(null);
+    return this.buildResult(null, vitalsBefore, vitalsAfter);
   }
 
   submitDecision(decisionId: string, optionId: string): TickResult {
@@ -103,6 +103,7 @@ export class SimulationOrchestrator {
       throw new Error("No pending decision to resolve");
     }
 
+    // Capture the TRUE before-snapshot once; never mutate it afterwards.
     const vitalsBefore = this.vitalsEngine.snapshot();
 
     const eval_ = this.decisionEngine.evaluateDecision(
@@ -123,11 +124,9 @@ export class SimulationOrchestrator {
         this.events.push("Complication resolved");
       }
     } else {
-      for (const [key, val] of Object.entries(eval_.vitalsEffect)) {
-        if (val !== undefined) {
-          (vitalsBefore as any)[key] += val as number;
-        }
-      }
+      // Apply the wrong-branch vitals effect to the engine (NOT to the
+      // already-captured before-snapshot), then capture a fresh after-snapshot.
+      this.vitalsEngine.applyIntervention(eval_.vitalsEffect, 1, this._tick);
       if (eval_.complicationTriggered && !this.activeComplication) {
         this.activeComplication = eval_.complicationTriggered;
         this.vitalsEngine.applyComplication(eval_.complicationTriggered, 0.7);
@@ -156,17 +155,21 @@ export class SimulationOrchestrator {
       this.events.push("Simulation complete");
     }
 
-    return this.buildResult(result);
+    return this.buildResult(result, result.vitalsBefore, result.vitalsAfter);
   }
 
-  private buildResult(decisionResult: DecisionResult | null): TickResult {
+  private buildResult(
+    decisionResult: DecisionResult | null,
+    vitalsBefore: Vitals = this.vitalsEngine.snapshot(),
+    vitalsAfter: Vitals = this.vitalsEngine.snapshot(),
+  ): TickResult {
     const escalation = this.getEscalationPhase();
     const procedurePhase = this.getProcedurePhase();
 
     return {
       tick: this._tick,
-      vitalsBefore: this.vitalsEngine.snapshot(),
-      vitalsAfter: this.vitalsEngine.snapshot(),
+      vitalsBefore,
+      vitalsAfter,
       escalationPhase: escalation,
       procedurePhase,
       activeComplication: this.activeComplication,
