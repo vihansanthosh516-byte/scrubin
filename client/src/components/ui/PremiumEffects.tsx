@@ -239,7 +239,7 @@ export function TextReveal({ text, className = "", delay = 0 }: TextRevealProps)
 export function AnimatedGradientText({ 
   children, 
   className = "",
-  colors = ["#7EC8E3", "#5DCAA5", "#7EC8E3"]
+  colors = ["#CC553D", "#D99B26", "#CC553D"]
 }: { 
   children: ReactNode, 
   className?: string,

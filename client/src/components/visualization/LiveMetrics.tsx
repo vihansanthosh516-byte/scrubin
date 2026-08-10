@@ -13,7 +13,7 @@ export default function LiveMetrics({
   status: string;
 }) {
   return (
-    <div className="flex gap-4 text-sm text-neutral-300 mb-2">
+    <div className="flex gap-4 text-sm text-[#666059] dark:text-[#A89F95] mb-2">
       <span>Tick: {tick}{totalTicks ? ` / ${totalTicks}` : ""}</span>
       <span>Status: {status}</span>
     </div>

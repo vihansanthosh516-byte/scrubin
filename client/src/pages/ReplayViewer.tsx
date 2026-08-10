@@ -85,7 +85,7 @@ export default function ReplayViewer() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center space-y-4">
+      <div className="min-h-screen bg-[#161310] flex flex-col items-center justify-center space-y-4">
         <div className="w-16 h-16 rounded-full border-t-2 border-primary animate-spin" />
         <p className="text-white font-mono">Downloading Replay Telemetry...</p>
       </div>
@@ -94,16 +94,16 @@ export default function ReplayViewer() {
 
   if (error || !replayData?.snapshots || replayData.snapshots.length === 0) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-8">
-        <div className="p-12 bg-neutral-900 border border-neutral-800 rounded-3xl text-center flex flex-col items-center">
-          <Activity className="w-12 h-12 text-neutral-600 mb-4" />
+      <div className="min-h-screen bg-[#161310] flex flex-col items-center justify-center p-8">
+        <div className="p-12 bg-[#1E1A16] border border-[#3A342C] rounded-sm text-center flex flex-col items-center">
+          <Activity className="w-12 h-12 text-[#666059] mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">Replay Not Available</h2>
-          <p className="text-neutral-500 mb-6">{error || "No snapshots found for this simulation."}</p>
+          <p className="text-[#8C827A] dark:text-[#A89F95] mb-6">{error || "No snapshots found for this simulation."}</p>
           <div className="flex gap-4">
             <Button onClick={() => setLocation("/my-simulations")} className="bg-primary hover:bg-primary/90">
               Return to My Simulations
             </Button>
-            <Button onClick={() => setLocation("/")} variant="outline" className="border-neutral-700 hover:bg-neutral-800">
+            <Button onClick={() => setLocation("/")} variant="outline" className="border-[#3A342C] hover:bg-[#26211B]">
               <Home className="w-4 h-4 mr-2" /> Home
             </Button>
           </div>
@@ -158,17 +158,17 @@ export default function ReplayViewer() {
 
   const getSeverityIcon = (severity: string) => {
     switch (severity?.toLowerCase()) {
-      case "critical": return <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />;
-      case "warning": return <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />;
-      case "info": default: return <Info className="w-4 h-4 text-blue-500 shrink-0" />;
+      case "critical": return <AlertCircle className="w-4 h-4 text-[#A32A2A] shrink-0" />;
+      case "warning": return <AlertTriangle className="w-4 h-4 text-[#C27820] shrink-0" />;
+      case "info": default: return <Info className="w-4 h-4 text-[#CC553D] shrink-0" />;
     }
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity?.toLowerCase()) {
-      case "critical": return "bg-red-500/10 border-red-500/30 text-red-200";
-      case "warning": return "bg-amber-500/10 border-amber-500/30 text-amber-200";
-      case "info": default: return "bg-blue-500/10 border-blue-500/30 text-blue-200";
+      case "critical": return "bg-[#A32A2A]/10 border-[#A32A2A]/30 text-[#E08080]";
+      case "warning": return "bg-[#C27820]/10 border-[#C27820]/40/30 text-[#E0B060]";
+      case "info": default: return "bg-[#CC553D]/10 border-[#CC553D]/30 text-[#CC553D]";
     }
   };
 
@@ -177,37 +177,37 @@ export default function ReplayViewer() {
       <div className="max-w-[1600px] w-full mx-auto grid grid-cols-12 gap-6 flex-1">
         
         {/* HEADER */}
-        <div className="col-span-12 flex items-center justify-between p-4 bg-neutral-900 border border-neutral-800 rounded-2xl">
+        <div className="col-span-12 flex items-center justify-between p-4 bg-[#1E1A16] border border-[#3A342C] rounded-sm">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
-              <ShieldCheck className="text-emerald-500" />
+              <ShieldCheck className="text-[#2E6B4B]" />
               <span className="font-bold text-lg tracking-tight uppercase">ScrubIn Replay</span>
             </div>
-            <div className="h-8 w-px bg-neutral-800" />
+            <div className="h-8 w-px bg-[#26211B]" />
             <div className="flex flex-col">
-              <span className="text-[10px] text-neutral-500 uppercase">Procedure</span>
+              <span className="text-[10px] text-[#8C827A] dark:text-[#A89F95] uppercase">Procedure</span>
               <span className="text-sm font-bold">{procedureName}</span>
             </div>
             <div className="flex flex-col ml-4">
-              <span className="text-[10px] text-neutral-500 uppercase">Session ID</span>
+              <span className="text-[10px] text-[#8C827A] dark:text-[#A89F95] uppercase">Session ID</span>
               <span className="text-sm font-bold text-primary">{sessionId}</span>
             </div>
           </div>
           
           <div className="flex items-center gap-6">
-            <Button variant="ghost" className="text-neutral-400 hover:text-white" onClick={() => setLocation("/my-simulations")}>
+            <Button variant="ghost" className="text-[#666059] dark:text-[#A89F95] hover:text-white" onClick={() => setLocation("/my-simulations")}>
               <Home className="w-4 h-4 mr-2" /> Exit Replay
             </Button>
             <div className="flex flex-col items-end mr-4">
-              <span className="text-[10px] text-neutral-500 uppercase">Replay Status</span>
-              <span className="text-[10px] font-mono font-bold text-purple-400 flex items-center gap-1">
-                {isPlaying ? <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" /> : <Pause className="w-2 h-2" />} 
+              <span className="text-[10px] text-[#8C827A] dark:text-[#A89F95] uppercase">Replay Status</span>
+              <span className="text-[10px] font-mono font-bold text-[#8C5A7A] flex items-center gap-1">
+                {isPlaying ? <span className="w-1.5 h-1.5 rounded-full bg-[#8C5A7A] animate-pulse" /> : <Pause className="w-2 h-2" />} 
                 {isPlaying ? "PLAYING" : "PAUSED"}
               </span>
             </div>
             <div className="flex flex-col items-end">
-              <span className="text-[10px] text-neutral-500 uppercase">Replay Tick</span>
-              <span className="text-xl font-bold font-mono text-emerald-500">{currentTick}</span>
+              <span className="text-[10px] text-[#8C827A] dark:text-[#A89F95] uppercase">Replay Tick</span>
+              <span className="text-xl font-bold font-mono text-[#2E6B4B]">{currentTick}</span>
             </div>
           </div>
         </div>
@@ -216,59 +216,59 @@ export default function ReplayViewer() {
         <div className="col-span-12 lg:col-span-3 space-y-4 flex flex-col h-[calc(100vh-140px)] overflow-y-auto pr-2 custom-scrollbar">
           
           {/* VITALS PANEL */}
-          <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-3xl space-y-6">
-            <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Telemetry</h3>
+          <div className="p-6 bg-[#1E1A16] border border-[#3A342C] rounded-sm space-y-6">
+            <h3 className="text-xs font-bold text-[#8C827A] dark:text-[#A89F95] uppercase tracking-widest">Telemetry</h3>
             <div className="grid grid-cols-1 gap-3">
               {vitals.hr !== undefined && (
-                <VitalItem icon={<Heart className="text-red-500" />} label="Heart Rate" value={vitals.hr} unit="bpm" color="text-red-400" />
+                <VitalItem icon={<Heart className="text-[#A32A2A]" />} label="Heart Rate" value={vitals.hr} unit="bpm" color="text-[#A32A2A]" />
               )}
               {vitals.bpSys !== undefined && (
-                <VitalItem icon={<Activity className="text-blue-500" />} label="Blood Pressure" value={`${vitals.bpSys}/${vitals.bpDia !== undefined ? vitals.bpDia : '—'}`} unit="mmHg" color="text-blue-400" />
+                <VitalItem icon={<Activity className="text-[#CC553D]" />} label="Blood Pressure" value={`${vitals.bpSys}/${vitals.bpDia !== undefined ? vitals.bpDia : '—'}`} unit="mmHg" color="text-[#CC553D]" />
               )}
               {vitals.spo2 !== undefined && (
-                <VitalItem icon={<Droplets className="text-emerald-500" />} label="Oxygen Saturation" value={vitals.spo2} unit="%" color="text-emerald-400" />
+                <VitalItem icon={<Droplets className="text-[#2E6B4B]" />} label="Oxygen Saturation" value={vitals.spo2} unit="%" color="text-[#2E6B4B]" />
               )}
               {vitals.rr !== undefined && (
-                <VitalItem icon={<Wind className="text-amber-500" />} label="Respiratory Rate" value={vitals.rr} unit="/min" color="text-amber-400" />
+                <VitalItem icon={<Wind className="text-[#C27820]" />} label="Respiratory Rate" value={vitals.rr} unit="/min" color="text-[#C27820]" />
               )}
               {vitals.blood_loss !== undefined && (
-                <VitalItem icon={<Activity className="text-red-600" />} label="Blood Loss" value={vitals.blood_loss} unit="mL" color="text-red-400" />
+                <VitalItem icon={<Activity className="text-[#8B2323]" />} label="Blood Loss" value={vitals.blood_loss} unit="mL" color="text-[#A32A2A]" />
               )}
               {vitals.temp !== undefined && (
-                <VitalItem icon={<Thermometer className="text-orange-500" />} label="Temperature" value={vitals.temp} unit="°C" color="text-orange-400" />
+                <VitalItem icon={<Thermometer className="text-[#C27820]" />} label="Temperature" value={vitals.temp} unit="°C" color="text-[#C27820]" />
               )}
             </div>
           </div>
 
           {/* ANATOMY PANEL */}
-          <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-3xl space-y-5">
-            <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2">
-              <Map className="w-4 h-4 text-indigo-400" /> Anatomy Field
+          <div className="p-6 bg-[#1E1A16] border border-[#3A342C] rounded-sm space-y-5">
+            <h3 className="text-xs font-bold text-[#8C827A] dark:text-[#A89F95] uppercase tracking-widest flex items-center gap-2">
+              <Map className="w-4 h-4 text-[#8C5A7A]" /> Anatomy Field
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 bg-black/40 rounded-xl border border-neutral-800/50 flex flex-col">
-                <span className="text-[9px] text-neutral-500 uppercase mb-1">Region</span>
-                <span className="text-sm font-bold text-neutral-200 truncate" title={region}>{region}</span>
+              <div className="p-3 bg-black/40 rounded-sm border border-[#3A342C]/50 flex flex-col">
+                <span className="text-[9px] text-[#8C827A] dark:text-[#A89F95] uppercase mb-1">Region</span>
+                <span className="text-sm font-bold text-[#191919] dark:text-[#EDEAE4] truncate" title={region}>{region}</span>
               </div>
-              <div className="p-3 bg-black/40 rounded-xl border border-neutral-800/50 flex flex-col">
-                <span className="text-[9px] text-neutral-500 uppercase mb-1">Structure</span>
-                <span className="text-sm font-bold text-neutral-200 truncate" title={activeTissue}>{activeTissue}</span>
+              <div className="p-3 bg-black/40 rounded-sm border border-[#3A342C]/50 flex flex-col">
+                <span className="text-[9px] text-[#8C827A] dark:text-[#A89F95] uppercase mb-1">Structure</span>
+                <span className="text-sm font-bold text-[#191919] dark:text-[#EDEAE4] truncate" title={activeTissue}>{activeTissue}</span>
               </div>
             </div>
-            <div className="p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/30 flex flex-col">
-              <span className="text-[9px] text-indigo-400 uppercase mb-1 flex items-center gap-1">
+            <div className="p-3 bg-[#8C5A7A]/10 rounded-sm border border-[#8C5A7A]/30 flex flex-col">
+              <span className="text-[9px] text-[#8C5A7A] uppercase mb-1 flex items-center gap-1">
                 <Target className="w-3 h-3" /> Target
               </span>
-              <span className="text-sm font-bold text-indigo-300">{highlightedTarget}</span>
+              <span className="text-sm font-bold text-[#8C5A7A]">{highlightedTarget}</span>
             </div>
             {visibleStructures.length > 0 && (
               <div className="space-y-2">
-                <span className="text-[10px] text-neutral-500 uppercase flex items-center gap-1">
+                <span className="text-[10px] text-[#8C827A] dark:text-[#A89F95] uppercase flex items-center gap-1">
                   <Layers className="w-3 h-3" /> Visible Structures
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {visibleStructures.map((s: string, i: number) => (
-                    <span key={i} className="px-2 py-1 bg-neutral-800 border-neutral-700 text-neutral-300 rounded text-xs font-medium border">
+                    <span key={i} className="px-2 py-1 bg-[#26211B] border-[#3A342C] text-[#666059] dark:text-[#A89F95] rounded text-xs font-medium border">
                       {s}
                     </span>
                   ))}
@@ -277,12 +277,12 @@ export default function ReplayViewer() {
             )}
             {activeInstruments.length > 0 && (
               <div className="space-y-2">
-                <span className="text-[10px] text-neutral-500 uppercase flex items-center gap-1">
+                <span className="text-[10px] text-[#8C827A] dark:text-[#A89F95] uppercase flex items-center gap-1">
                   <Scissors className="w-3 h-3" /> Instruments
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {activeInstruments.map((inst: string, i: number) => (
-                    <span key={i} className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded text-xs font-medium">
+                    <span key={i} className="px-2 py-1 bg-[#2E6B4B]/10 border border-[#2E6B4B]/20 text-[#8FBF9A] rounded text-xs font-medium">
                       {inst}
                     </span>
                   ))}
@@ -292,20 +292,20 @@ export default function ReplayViewer() {
           </div>
 
           {/* COMPLICATIONS PANEL */}
-          <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-3xl space-y-4">
-            <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-red-500" /> Active Complications
+          <div className="p-6 bg-[#1E1A16] border border-[#3A342C] rounded-sm space-y-4">
+            <h3 className="text-xs font-bold text-[#8C827A] dark:text-[#A89F95] uppercase tracking-widest flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-[#A32A2A]" /> Active Complications
             </h3>
             {complications.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-20">
-                <p className="text-neutral-500 text-sm">No active complications.</p>
+                <p className="text-[#8C827A] dark:text-[#A89F95] text-sm">No active complications.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {complications.map((comp, idx) => {
                   const style = getSeverityColor(comp.severity || "info");
                   return (
-                    <div key={idx} className={`p-3 rounded-xl border flex flex-col gap-2 ${style}`}>
+                    <div key={idx} className={`p-3 rounded-sm border flex flex-col gap-2 ${style}`}>
                       <div className="flex items-center gap-2">
                         {getSeverityIcon(comp.severity || "info")}
                         <span className="text-xs font-bold uppercase truncate">{comp.title || comp.complication || "Unknown"}</span>
@@ -323,35 +323,35 @@ export default function ReplayViewer() {
         {/* CENTER COLUMN: Playback Interface */}
         <div className="col-span-12 lg:col-span-6 flex flex-col h-[calc(100vh-140px)]">
           
-          <div className="flex-1 flex items-center justify-center bg-neutral-900 border border-neutral-800 rounded-3xl relative overflow-hidden mb-4">
+          <div className="flex-1 flex items-center justify-center bg-[#1E1A16] border border-[#3A342C] rounded-sm relative overflow-hidden mb-4">
             {/* Ambient Replay Graphics */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black opacity-60" />
             
             <div className="z-10 text-center flex flex-col items-center p-8">
-              <Power className="w-16 h-16 text-purple-500/50 mb-6 animate-pulse" />
+              <Power className="w-16 h-16 text-[#8C5A7A]/50 mb-6 animate-pulse" />
               <h2 className="text-3xl font-bold tracking-widest uppercase text-white/90">ScrubIn Core Replay</h2>
-              <p className="text-neutral-500 mt-4 max-w-sm text-sm">
+              <p className="text-[#8C827A] dark:text-[#A89F95] mt-4 max-w-sm text-sm">
                 Immutable playback visualization. Frontend interpolation and engine derivations are disabled.
               </p>
-              <div className="mt-8 px-6 py-3 bg-black/50 border border-purple-500/30 rounded-2xl flex items-center gap-8">
+              <div className="mt-8 px-6 py-3 bg-black/50 border border-[#8C5A7A]/30 rounded-sm flex items-center gap-8">
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-neutral-500 uppercase">Total Snapshots</span>
-                  <span className="text-xl font-bold text-purple-400 font-mono">{totalFrames}</span>
+                  <span className="text-[10px] text-[#8C827A] dark:text-[#A89F95] uppercase">Total Snapshots</span>
+                  <span className="text-xl font-bold text-[#8C5A7A] font-mono">{totalFrames}</span>
                 </div>
-                <div className="h-8 w-px bg-neutral-800" />
+                <div className="h-8 w-px bg-[#26211B]" />
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-neutral-500 uppercase">Causal Integrity</span>
-                  <span className="text-xl font-bold text-emerald-500 font-mono">100%</span>
+                  <span className="text-[10px] text-[#8C827A] dark:text-[#A89F95] uppercase">Causal Integrity</span>
+                  <span className="text-xl font-bold text-[#2E6B4B] font-mono">100%</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* PLAYBACK CONTROLS */}
-          <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-3xl flex flex-col gap-6">
+          <div className="p-6 bg-[#1E1A16] border border-[#3A342C] rounded-sm flex flex-col gap-6">
             
             <div className="flex items-center gap-4">
-              <span className="text-xs font-mono text-neutral-500 min-w-[30px]">{currentTick}</span>
+              <span className="text-xs font-mono text-[#8C827A] dark:text-[#A89F95] min-w-[30px]">{currentTick}</span>
               <input 
                 type="range" 
                 min="0" 
@@ -361,19 +361,19 @@ export default function ReplayViewer() {
                   setIsPlaying(false);
                   setCurrentFrameIndex(parseInt(e.target.value, 10));
                 }}
-                className="flex-1 h-2 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                className="flex-1 h-2 bg-[#26211B] rounded-sm appearance-none cursor-pointer accent-purple-500"
               />
-              <span className="text-xs font-mono text-neutral-500 min-w-[30px]">{snapshots[totalFrames - 1]?.tick ?? totalFrames}</span>
+              <span className="text-xs font-mono text-[#8C827A] dark:text-[#A89F95] min-w-[30px]">{snapshots[totalFrames - 1]?.tick ?? totalFrames}</span>
             </div>
 
             <div className="flex items-center justify-between">
               
-              <div className="flex items-center gap-2 bg-black/50 p-1 border border-neutral-800 rounded-xl">
+              <div className="flex items-center gap-2 bg-black/50 p-1 border border-[#3A342C] rounded-sm">
                 {[0.5, 1, 2, 4].map(speed => (
                   <button 
                     key={speed}
                     onClick={() => setPlaybackSpeed(speed)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${playbackSpeed === speed ? "bg-purple-600 text-white" : "text-neutral-500 hover:text-white"}`}
+                    className={`px-3 py-1.5 rounded-sm text-xs font-bold transition-all ${playbackSpeed === speed ? "bg-[#8C5A7A] text-white" : "text-[#8C827A] dark:text-[#A89F95] hover:text-white"}`}
                   >
                     {speed}x
                   </button>
@@ -381,18 +381,18 @@ export default function ReplayViewer() {
               </div>
 
               <div className="flex items-center gap-3">
-                <Button variant="outline" size="icon" onClick={stepBack} className="rounded-full w-10 h-10 border-neutral-700 bg-neutral-800 hover:bg-neutral-700">
+                <Button variant="outline" size="icon" onClick={stepBack} className="rounded-full w-10 h-10 border-[#3A342C] bg-[#26211B] hover:bg-[#332C24]">
                   <SkipBack className="w-4 h-4" />
                 </Button>
-                <Button size="icon" onClick={togglePlay} className="rounded-full w-14 h-14 bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-900/50 text-white">
+                <Button size="icon" onClick={togglePlay} className="rounded-full w-14 h-14 bg-[#8C5A7A] hover:bg-[#8C5A7A] shadow-lg shadow-purple-900/50 text-white">
                   {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 translate-x-0.5" />}
                 </Button>
-                <Button variant="outline" size="icon" onClick={stepForward} className="rounded-full w-10 h-10 border-neutral-700 bg-neutral-800 hover:bg-neutral-700">
+                <Button variant="outline" size="icon" onClick={stepForward} className="rounded-full w-10 h-10 border-[#3A342C] bg-[#26211B] hover:bg-[#332C24]">
                   <SkipForward className="w-4 h-4" />
                 </Button>
               </div>
 
-              <Button variant="ghost" onClick={restart} className="text-neutral-500 hover:text-white">
+              <Button variant="ghost" onClick={restart} className="text-[#8C827A] dark:text-[#A89F95] hover:text-white">
                 <RotateCcw className="w-4 h-4 mr-2" /> Restart
               </Button>
               
@@ -402,19 +402,19 @@ export default function ReplayViewer() {
         </div>
 
         {/* RIGHT COLUMN: Timeline */}
-        <div className="col-span-12 lg:col-span-3 h-[calc(100vh-140px)] flex flex-col p-6 bg-neutral-900 border border-neutral-800 rounded-3xl">
-          <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Event Feed</h3>
+        <div className="col-span-12 lg:col-span-3 h-[calc(100vh-140px)] flex flex-col p-6 bg-[#1E1A16] border border-[#3A342C] rounded-sm">
+          <h3 className="text-xs font-bold text-[#8C827A] dark:text-[#A89F95] uppercase tracking-widest mb-4">Event Feed</h3>
           
           <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
             {visibleTimeline.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-neutral-500 text-sm text-center px-4">
+              <div className="h-full flex items-center justify-center text-[#8C827A] dark:text-[#A89F95] text-sm text-center px-4">
                 No events recorded up to this point.
               </div>
             ) : (
               visibleTimeline.map((ev: any, i: number) => {
                 const style = getSeverityColor(ev.severity || "info");
                 return (
-                  <div key={i} className={`p-3 rounded-xl border flex flex-col gap-1 ${style}`}>
+                  <div key={i} className={`p-3 rounded-sm border flex flex-col gap-1 ${style}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {getSeverityIcon(ev.severity || "info")}
@@ -441,11 +441,11 @@ export default function ReplayViewer() {
 
 function VitalItem({ icon, label, value, unit, color }: any) {
   return (
-    <div className="flex items-center justify-between p-3 bg-black/40 rounded-xl border border-neutral-800/50">
+    <div className="flex items-center justify-between p-3 bg-black/40 rounded-sm border border-[#3A342C]/50">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-neutral-900 rounded-lg flex items-center justify-center">{icon}</div>
+        <div className="w-8 h-8 bg-[#1E1A16] rounded-sm flex items-center justify-center">{icon}</div>
         <div className="flex flex-col">
-          <span className="text-[9px] text-neutral-500 uppercase">{label}</span>
+          <span className="text-[9px] text-[#8C827A] dark:text-[#A89F95] uppercase">{label}</span>
           <span className={`text-lg font-black leading-none ${color}`}>{value}<span className="text-[10px] font-normal opacity-50 ml-1">{unit}</span></span>
         </div>
       </div>

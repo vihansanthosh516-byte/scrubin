@@ -370,7 +370,7 @@ export const SignInPage = ({
               transition={{ delay: 0.1 }}
               className="flex flex-col items-center mb-4"
             >
-              <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center mb-3 shadow-lg shadow-primary/20">
+              <div className="w-12 h-12 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center mb-3 shadow-lg shadow-primary/20">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="w-6 h-6 text-baby-blue"
@@ -386,7 +386,7 @@ export const SignInPage = ({
               </div>
               <h1
                 className="text-3xl font-bold tracking-tight text-white"
-                style={{ fontFamily: "'Syne', sans-serif" }}
+                style={{ fontFamily: "'Inter', sans-serif" }}
               >
                 Scrub<span className="text-baby-blue">In</span>
               </h1>
@@ -394,7 +394,7 @@ export const SignInPage = ({
 
             {/* Welcome Text */}
             <div className="space-y-1">
-              <h2 className="text-xl font-bold text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+              <h2 className="text-xl font-bold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
                 {mode === "signin" ? (lastUser ? `Welcome back, ${lastUser.name}` : "Welcome Back") : "Create Account"}
               </h2>
               <p className="text-white/60 text-sm">
@@ -414,7 +414,7 @@ export const SignInPage = ({
                       placeholder="Full Name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                      className="w-full bg-white/5 border border-white/10 rounded-sm py-3 px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
                       required
                     />
                   </div>
@@ -422,7 +422,7 @@ export const SignInPage = ({
                     <select
                       value={profession}
                       onChange={(e) => setProfession(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-primary/50 transition-colors text-sm appearance-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-sm py-3 px-4 text-white focus:outline-none focus:border-primary/50 transition-colors text-sm appearance-none"
                       required
                     >
                       <option value="" disabled className="bg-black text-white/30">Select Profession</option>
@@ -442,7 +442,7 @@ export const SignInPage = ({
                   placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                  className="w-full bg-white/5 border border-white/10 rounded-sm py-3 px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
                   required
                 />
               </div>
@@ -452,22 +452,22 @@ export const SignInPage = ({
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                  className="w-full bg-white/5 border border-white/10 rounded-sm py-3 px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
                   required
                 />
               </div>
               
               {formError && (
-                <p className="text-red-400 text-xs text-left px-1">{formError}</p>
+                <p className="text-[#A32A2A] text-xs text-left px-1">{formError}</p>
               )}
               {globalAuthError && !formError && (
-                <p className="text-red-400 text-xs text-left px-1">{globalAuthError}</p>
+                <p className="text-[#A32A2A] text-xs text-left px-1">{globalAuthError}</p>
               )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-baby-blue hover:bg-baby-blue/90 text-black font-bold py-3 rounded-xl transition-all duration-200 mt-2 disabled:opacity-50 text-sm"
+                className="w-full bg-baby-blue hover:bg-baby-blue/90 text-black font-bold py-3 rounded-sm transition-all duration-200 mt-2 disabled:opacity-50 text-sm"
               >
                 {loading ? "Processing..." : mode === "signin" ? "Sign In" : "Sign Up"}
               </button>
@@ -485,7 +485,7 @@ export const SignInPage = ({
               <button
                 onClick={onGoogleSignIn}
                 disabled={loading}
-                className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl py-2.5 px-2 transition-all duration-200 text-xs"
+                className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-sm py-2.5 px-2 transition-all duration-200 text-xs"
               >
                 <GoogleIcon className="w-4 h-4" />
                 <span>Google</span>
@@ -493,7 +493,7 @@ export const SignInPage = ({
               <button
                 onClick={onGitHubSignIn}
                 disabled={loading}
-                className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl py-2.5 px-2 transition-all duration-200 text-xs"
+                className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-sm py-2.5 px-2 transition-all duration-200 text-xs"
               >
                 <GitHubIcon className="w-4 h-4" />
                 <span>GitHub</span>

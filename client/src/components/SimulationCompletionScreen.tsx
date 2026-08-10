@@ -20,27 +20,27 @@ export default function SimulationCompletionScreen({ scenarioName, onViewDebrief
   const outcome = currentState?.outcome || currentState?.completion_reason || currentState?.termination_reason;
 
   const isSuccess = ["success", "completed", "finished"].includes(status.toLowerCase());
-  const statusColor = isDeceased ? "text-red-500" : isSuccess ? "text-emerald-500" : "text-amber-500";
+  const statusColor = isDeceased ? "text-[#A32A2A]" : isSuccess ? "text-[#2E6B4B]" : "text-[#C27820]";
   const StatusIcon = isSuccess ? ShieldCheck : Activity;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-black/40 border border-neutral-800 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-sm bg-[#F4F0E8] border border-[#E2DDD1] flex items-center justify-center shrink-0 dark:bg-[#26211B] dark:border-[#3A342C]">
             <StatusIcon className={`w-5 h-5 ${statusColor}`} />
           </div>
           <div className="min-w-0">
             <h2 className="text-xl font-bold tracking-tight uppercase">Simulation {status}</h2>
             {outcome && (
-              <p className="text-neutral-400 text-xs mt-0.5 leading-relaxed">{outcome}</p>
+              <p className="text-[#8C827A] dark:text-[#C2BBB0] text-xs mt-0.5 leading-relaxed">{outcome}</p>
             )}
           </div>
         </div>
         {onViewDebrief && (
           <button
             onClick={onViewDebrief}
-            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-neutral-700 hover:bg-neutral-800 text-xs font-bold text-neutral-300 transition-all"
+            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-[#E2DDD1] hover:bg-[#FBF9F5] text-xs font-bold text-[#666059] dark:text-[#C2BBB0] transition-all dark:border-[#3A342C] dark:text-[#A89F95] dark:hover:bg-[#26211B]"
           >
             <BarChart className="w-3.5 h-3.5" /> View Full Debrief
           </button>
@@ -48,25 +48,25 @@ export default function SimulationCompletionScreen({ scenarioName, onViewDebrief
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div className="p-3 bg-black/40 border border-neutral-800/50 rounded-xl flex flex-col min-w-0">
-          <span className="text-[9px] text-neutral-500 uppercase mb-1">Procedure</span>
-          <span className="text-sm font-bold text-neutral-200 truncate">{scenarioName}</span>
+        <div className="p-3 bg-[#F4F0E8] border border-[#E2DDD1] rounded-sm flex flex-col min-w-0 dark:bg-[#26211B] dark:border-[#3A342C]">
+          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Procedure</span>
+          <span className="text-sm font-bold text-[#191919] truncate dark:text-[#EDEAE4]">{scenarioName}</span>
         </div>
-        <div className="p-3 bg-black/40 border border-neutral-800/50 rounded-xl flex flex-col min-w-0">
-          <span className="text-[9px] text-neutral-500 uppercase mb-1">Session ID</span>
-          <span className="text-sm font-bold text-neutral-200 font-mono truncate">{simId}</span>
+        <div className="p-3 bg-[#F4F0E8] border border-[#E2DDD1] rounded-sm flex flex-col min-w-0 dark:bg-[#26211B] dark:border-[#3A342C]">
+          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Session ID</span>
+          <span className="text-sm font-bold text-[#191919] font-mono truncate dark:text-[#EDEAE4]">{simId}</span>
         </div>
-        <div className="p-3 bg-black/40 border border-neutral-800/50 rounded-xl flex flex-col min-w-0">
-          <span className="text-[9px] text-neutral-500 uppercase mb-1">Total Ticks</span>
-          <span className="text-sm font-bold text-neutral-200">{currentTick}</span>
+        <div className="p-3 bg-[#F4F0E8] border border-[#E2DDD1] rounded-sm flex flex-col min-w-0 dark:bg-[#26211B] dark:border-[#3A342C]">
+          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Total Ticks</span>
+          <span className="text-sm font-bold text-[#191919] dark:text-[#EDEAE4]">{currentTick}</span>
         </div>
-        <div className="p-3 bg-black/40 border border-neutral-800/50 rounded-xl flex flex-col min-w-0">
-          <span className="text-[9px] text-neutral-500 uppercase mb-1">Final Phase</span>
-          <span className="text-sm font-bold text-neutral-200 truncate">{finalPhase}</span>
+        <div className="p-3 bg-[#F4F0E8] border border-[#E2DDD1] rounded-sm flex flex-col min-w-0 dark:bg-[#26211B] dark:border-[#3A342C]">
+          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Final Phase</span>
+          <span className="text-sm font-bold text-[#191919] truncate dark:text-[#EDEAE4]">{finalPhase}</span>
         </div>
-        <div className="p-3 bg-black/40 border border-neutral-800/50 rounded-xl flex flex-col min-w-0 col-span-2">
-          <span className="text-[9px] text-neutral-500 uppercase mb-1">Final Patient Status</span>
-          <span className="text-sm font-bold text-neutral-200 truncate">{finalPatientStatus}</span>
+        <div className="p-3 bg-[#F4F0E8] border border-[#E2DDD1] rounded-sm flex flex-col min-w-0 col-span-2 dark:bg-[#26211B] dark:border-[#3A342C]">
+          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Final Patient Status</span>
+          <span className="text-sm font-bold text-[#191919] truncate dark:text-[#EDEAE4]">{finalPatientStatus}</span>
         </div>
       </div>
     </div>

@@ -74,13 +74,13 @@ export default function Onboarding() {
         transition={{ duration: 0.5, type: "spring" }}
         className="relative w-full max-w-md"
       >
-        <div className="rounded-2xl p-8 bg-card/95 backdrop-blur-xl border border-border shadow-[0_0_60px_rgba(126,200,227,0.2)]">
+        <div className="rounded-sm p-8 bg-card/95 backdrop-blur-xl border border-border shadow-[0_0_60px_rgba(126,200,227,0.2)]">
           <div className="text-center mb-8">
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", delay: 0.2, stiffness: 200 }}
-              className="w-20 h-20 rounded-2xl border-2 border-primary/40 overflow-hidden mx-auto mb-4 bg-muted shadow-[0_0_20px_rgba(126,200,227,0.3)]"
+              className="w-20 h-20 rounded-sm border-2 border-primary/40 overflow-hidden mx-auto mb-4 bg-muted shadow-[0_0_20px_rgba(126,200,227,0.3)]"
             >
               <img
                 src={user?.avatar_url}
@@ -94,7 +94,7 @@ export default function Onboarding() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               className="text-2xl font-bold text-white mb-2"
-              style={{ fontFamily: "'Syne', sans-serif" }}
+              style={{ fontFamily: "'Inter', sans-serif" }}
             >
               Complete Your Profile
             </motion.h1>
@@ -125,7 +125,7 @@ export default function Onboarding() {
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Dr. House"
-                  className="w-full h-12 pl-11 pr-4 rounded-xl bg-muted border border-border text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                  className="w-full h-12 pl-11 pr-4 rounded-sm bg-muted border border-border text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
                   maxLength={30}
                 />
               </div>
@@ -144,7 +144,7 @@ export default function Onboarding() {
                 <select
                   value={profession}
                   onChange={(e) => setProfession(e.target.value)}
-                  className="w-full h-12 pl-11 pr-10 rounded-xl bg-muted border border-border text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all appearance-none cursor-pointer"
+                  className="w-full h-12 pl-11 pr-10 rounded-sm bg-muted border border-border text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all appearance-none cursor-pointer"
                 >
                   <option value="" disabled className="bg-muted text-muted-foreground">Select your current role</option>
                   {PROFESSIONS.map(p => (
@@ -166,7 +166,7 @@ export default function Onboarding() {
               <Button
                 onClick={handleSubmit}
                 disabled={!displayName || !profession || isSubmitting}
-                className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <div className="animate-spin w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full" />

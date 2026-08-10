@@ -99,15 +99,15 @@ export const StatCard: React.FC<StatCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
-      className={`p-6 rounded-2xl glass-card-pro border border-border/50 hover:border-primary/30 transition-all duration-300 group ${className}`}
+      className={`p-6 rounded-sm glass-card-pro border border-border/50 hover:border-primary/30 transition-all duration-300 group ${className}`}
     >
       <div className="flex justify-between items-start mb-4">
-        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(126,200,227,0.3)] transition-all duration-300">
+        <div className="w-10 h-10 rounded-sm bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(204,85,61,0.15)] transition-all duration-300">
           {icon}
         </div>
         {trend && (
           <div className={`flex items-center gap-1 text-xs font-bold uppercase tracking-wider font-mono-data ${
-            trend === 'up' ? 'text-emerald-400' : trend === 'down' ? 'text-red-400' : 'text-muted-foreground'
+            trend === 'up' ? 'text-[#2E6B4B]' : trend === 'down' ? 'text-[#A32A2A]' : 'text-muted-foreground'
           }`}>
             {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'} {trendValue}
           </div>
@@ -141,10 +141,10 @@ export const EnhancedButton: React.FC<EnhancedButtonProps> = ({
   className = "",
   ...props
 }) => {
-  const baseStyles = "relative font-semibold transition-all duration-300 rounded-xl font-display";
+  const baseStyles = "relative font-semibold transition-all duration-300 rounded-sm font-display";
   
   const variants = {
-    primary: "bg-primary text-primary-foreground shadow-[0_0_30px_rgba(126,200,227,0.3)] hover:shadow-[0_0_50px_rgba(126,200,227,0.4)] hover:-translate-y-0.5",
+    primary: "bg-primary text-primary-foreground shadow-[0_0_30px_rgba(204,85,61,0.12)] hover:shadow-[0_0_50px_rgba(204,85,61,0.18)] hover:-translate-y-0.5",
     outline: "border border-primary/30 hover:border-primary hover:bg-primary/10 text-primary hover:-translate-y-0.5",
     ghost: "text-primary hover:bg-primary/10 hover:-translate-y-0.5"
   };
@@ -190,11 +190,11 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const percentage = Math.min((value / max) * 100, 100);
   
   const colors = {
-    primary: "bg-primary shadow-[0_0_10px_rgba(126,200,227,0.5)]",
-    teal: "bg-teal-400 shadow-[0_0_10px_rgba(93,202,165,0.5)]",
-    emerald: "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]",
-    amber: "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]",
-    red: "bg-red-400 shadow-[0_0_10px_rgba(248,113,113,0.5)]"
+    primary: "bg-[#CC553D]",
+    teal: "bg-[#2E6B4B]",
+    emerald: "bg-[#2E6B4B]",
+    amber: "bg-[#C27820]",
+    red: "bg-[#A32A2A]"
   };
 
   const heights = {
@@ -240,16 +240,16 @@ export const CardGlow: React.FC<CardGlowProps> = ({
   pulse = false
 }) => {
   const colors = {
-    blue: "rgba(126,200,227,0.15)",
-    teal: "rgba(93,202,165,0.15)",
+    blue: "rgba(204,85,61,0.15)",
+    teal: "rgba(46,107,75,0.15)",
     red: "rgba(248,113,113,0.15)",
-    amber: "rgba(251,191,36,0.15)"
+    amber: "rgba(194,120,32,0.15)"
   };
 
   return (
     <div className={`relative group ${className}`}>
       <div 
-        className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${pulse ? 'animate-pulse' : ''}`}
+        className={`absolute inset-0 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${pulse ? 'animate-pulse' : ''}`}
         style={{ 
           boxShadow: `0 0 30px ${colors[color]}`,
           transform: 'scale(1.02)',

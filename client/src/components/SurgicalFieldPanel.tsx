@@ -9,9 +9,9 @@ export default function SurgicalFieldPanel() {
 
   if (!anatomy) {
     return (
-      <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-3xl flex flex-col items-center justify-center text-center h-48">
-        <Eye className="w-8 h-8 text-neutral-600 mb-3 animate-pulse" />
-        <p className="text-neutral-500 text-sm">Waiting for surgical field...</p>
+      <div className="p-6 glass-card rounded-sm flex flex-col items-center justify-center text-center h-48">
+        <Eye className="w-8 h-8 text-[#8C827A] dark:text-[#C2BBB0] mb-3 animate-pulse" />
+        <p className="text-[#8C827A] dark:text-[#C2BBB0] text-sm">Waiting for surgical field...</p>
       </div>
     );
   }
@@ -27,41 +27,41 @@ export default function SurgicalFieldPanel() {
   const proceduralFocus = anatomy.procedural_focus || anatomy.exposure_status || "Standard";
 
   return (
-    <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-3xl space-y-5 text-white">
+    <div className="p-6 glass-card rounded-sm space-y-5">
       <div className="flex items-center gap-3 mb-2">
-        <Map className="w-5 h-5 text-indigo-400" />
-        <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Surgical Field</h3>
+        <Map className="w-5 h-5 text-[#CC553D]" />
+        <h3 className="text-xs font-bold text-[#8C827A] dark:text-[#C2BBB0] uppercase tracking-widest">Surgical Field</h3>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 bg-black/40 rounded-xl border border-neutral-800/50 flex flex-col">
-          <span className="text-[9px] text-neutral-500 uppercase mb-1">Surgical Region</span>
-          <span className="text-sm font-bold text-neutral-200 truncate" title={region}>{region}</span>
+        <div className="p-3 bg-[#F4F0E8] rounded-sm border border-[#E2DDD1] flex flex-col dark:bg-[#26211B] dark:border-[#3A342C]">
+          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Surgical Region</span>
+          <span className="text-sm font-bold text-[#191919] truncate dark:text-[#EDEAE4]" title={region}>{region}</span>
         </div>
-        <div className="p-3 bg-black/40 rounded-xl border border-neutral-800/50 flex flex-col">
-          <span className="text-[9px] text-neutral-500 uppercase mb-1">Current Structure</span>
-          <span className="text-sm font-bold text-neutral-200 truncate" title={activeTissue}>{activeTissue}</span>
+        <div className="p-3 bg-[#F4F0E8] rounded-sm border border-[#E2DDD1] flex flex-col dark:bg-[#26211B] dark:border-[#3A342C]">
+          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Current Structure</span>
+          <span className="text-sm font-bold text-[#191919] truncate dark:text-[#EDEAE4]" title={activeTissue}>{activeTissue}</span>
         </div>
-        <div className="p-3 bg-black/40 rounded-xl border border-neutral-800/50 flex flex-col">
-          <span className="text-[9px] text-neutral-500 uppercase mb-1">Current Action</span>
-          <span className="text-sm font-bold text-neutral-200 truncate" title={operativeStep}>{operativeStep}</span>
+        <div className="p-3 bg-[#F4F0E8] rounded-sm border border-[#E2DDD1] flex flex-col dark:bg-[#26211B] dark:border-[#3A342C]">
+          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Current Action</span>
+          <span className="text-sm font-bold text-[#191919] truncate dark:text-[#EDEAE4]" title={operativeStep}>{operativeStep}</span>
         </div>
-        <div className="p-3 bg-black/40 rounded-xl border border-neutral-800/50 flex flex-col">
-          <span className="text-[9px] text-neutral-500 uppercase mb-1">Exposure Status</span>
-          <span className="text-sm font-bold text-neutral-200 truncate" title={proceduralFocus}>{proceduralFocus}</span>
+        <div className="p-3 bg-[#F4F0E8] rounded-sm border border-[#E2DDD1] flex flex-col dark:bg-[#26211B] dark:border-[#3A342C]">
+          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Exposure Status</span>
+          <span className="text-sm font-bold text-[#191919] truncate dark:text-[#EDEAE4]" title={proceduralFocus}>{proceduralFocus}</span>
         </div>
       </div>
 
-      <div className="p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/30 flex flex-col">
-        <span className="text-[9px] text-indigo-400 uppercase mb-1 flex items-center gap-1">
+      <div className="p-3 bg-[#CC553D]/8 rounded-sm border border-[#CC553D]/30 flex flex-col">
+        <span className="text-[9px] text-[#CC553D] uppercase mb-1 flex items-center gap-1">
           <Target className="w-3 h-3" /> Target Anatomy
         </span>
-        <span className="text-sm font-bold text-indigo-300">{highlightedTarget}</span>
+        <span className="text-sm font-bold text-[#CC553D]">{highlightedTarget}</span>
       </div>
 
       {visibleStructures.length > 0 && (
         <div className="space-y-2">
-          <span className="text-[10px] text-neutral-500 uppercase flex items-center gap-1">
+          <span className="text-[10px] text-[#8C827A] dark:text-[#C2BBB0] uppercase flex items-center gap-1">
             <Layers className="w-3 h-3" /> Visible Structures
           </span>
           <div className="flex flex-wrap gap-1.5">
@@ -69,7 +69,7 @@ export default function SurgicalFieldPanel() {
               // Highlight if structure matches target or active tissue
               const isTarget = structure.toLowerCase() === highlightedTarget.toLowerCase() || structure.toLowerCase() === activeTissue.toLowerCase();
               return (
-                <span key={i} className={`px-2 py-1 rounded text-xs font-medium border ${isTarget ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-200' : 'bg-neutral-800 border-neutral-700 text-neutral-300'}`}>
+                <span key={i} className={`px-2 py-1 rounded-sm text-xs font-medium border ${isTarget ? 'bg-[#CC553D]/10 border-[#CC553D]/40 text-[#CC553D]' : 'bg-[#F4F0E8] border-[#E2DDD1] text-[#666059] dark:text-[#C2BBB0] dark:bg-[#26211B] dark:border-[#3A342C] dark:text-[#A89F95]'}`}>
                   {structure}
                 </span>
               );
@@ -80,12 +80,12 @@ export default function SurgicalFieldPanel() {
 
       {activeInstruments.length > 0 && (
         <div className="space-y-2">
-          <span className="text-[10px] text-neutral-500 uppercase flex items-center gap-1">
+          <span className="text-[10px] text-[#8C827A] dark:text-[#C2BBB0] uppercase flex items-center gap-1">
             <Scissors className="w-3 h-3" /> Instruments In Use
           </span>
           <div className="flex flex-wrap gap-1.5">
             {activeInstruments.map((instrument: string, i: number) => (
-              <span key={i} className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded text-xs font-medium">
+              <span key={i} className="px-2 py-1 bg-[#2E6B4B]/8 border border-[#2E6B4B]/25 text-[#2E6B4B] rounded-sm text-xs font-medium dark:bg-[#2E6B4B]/15 dark:text-[#8FBF9A] dark:border-[#2E6B4B]/40">
                 {instrument}
               </span>
             ))}

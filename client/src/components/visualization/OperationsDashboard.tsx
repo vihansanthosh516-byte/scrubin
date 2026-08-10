@@ -32,8 +32,8 @@ export default function OperationsDashboard() {
       </section>
       <section className="mb-8">
         <h2 className="text-xl font-semibold mb-2">Workers</h2>
-        <table className="w-full text-sm border border-neutral-700">
-          <thead className="bg-neutral-800">
+        <table className="w-full text-sm border border-[#3A342C]">
+          <thead className="bg-[#26211B]">
             <tr>
               <th className="p-2">ID</th>
               <th className="p-2">Status</th>
@@ -43,7 +43,7 @@ export default function OperationsDashboard() {
           </thead>
           <tbody>
             {workers.map((w) => (
-              <tr key={w.worker_id} className="border-t border-neutral-600">
+              <tr key={w.worker_id} className="border-t border-[#3A342C]">
                 <td className="p-2">{w.worker_id}</td>
                 <td className="p-2">{w.status}</td>
                 <td className="p-2">{w.current_job_id || "-"}</td>
@@ -55,8 +55,8 @@ export default function OperationsDashboard() {
       </section>
       <section>
         <h2 className="text-xl font-semibold mb-2">Jobs</h2>
-        <table className="w-full text-sm border border-neutral-700">
-          <thead className="bg-neutral-800">
+        <table className="w-full text-sm border border-[#3A342C]">
+          <thead className="bg-[#26211B]">
             <tr>
               <th className="p-2">Job ID</th>
               <th className="p-2">Run ID</th>
@@ -66,7 +66,7 @@ export default function OperationsDashboard() {
           </thead>
           <tbody>
             {jobs.map((j) => (
-              <tr key={j.job_id} className="border-t border-neutral-600">
+              <tr key={j.job_id} className="border-t border-[#3A342C]">
                 <td className="p-2">{j.job_id}</td>
                 <td className="p-2">{j.run_id}</td>
                 <td className="p-2">{j.status}</td>

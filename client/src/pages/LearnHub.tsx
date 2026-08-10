@@ -26,21 +26,8 @@ export default function LearnHub() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Animated background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute w-[900px] h-[900px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #5DCAA5 0%, transparent 70%)", top: "-20%", right: "-10%" }}
-          animate={{ x: [0, 80, 0], y: [0, 60, 0], scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
-          transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute w-[800px] h-[800px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #7EC8E3 0%, transparent 70%)", bottom: "-10%", left: "-5%" }}
-          animate={{ x: [0, -60, 0], y: [0, 80, 0], scale: [1, 1.3, 1], rotate: [360, 180, 0] }}
-          transition={{ duration: 32, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
+      {/* Subtle warm editorial texture — no neon */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "radial-gradient(#8C827A 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
 
       <div className="pt-32 pb-16 relative z-10">
         {/* Header */}
@@ -63,11 +50,11 @@ export default function LearnHub() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-6"
               whileHover={{ scale: 1.05 }}
             >
-              <Sparkles className="w-4 h-4 text-teal-400" />
-              <span className="text-sm font-mono-data text-teal-400">Knowledge Base</span>
+              <Sparkles className="w-4 h-4 text-[#2E6B4B]" />
+              <span className="text-sm font-mono-data text-[#2E6B4B]">Knowledge Base</span>
             </motion.div>
-            <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-4" style={{ fontFamily: "'Syne', sans-serif" }}>
-              Learn <span className="text-gradient" style={{ backgroundImage: "linear-gradient(135deg, #5DCAA5 0%, #7EC8E3 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Hub</span>
+            <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-4" style={{ fontFamily: "'Inter', sans-serif" }}>
+              Learn <span className="text-[#CC553D] dark:text-[#D95338]">Hub</span>
             </h1>
             <p className="text-muted-foreground text-xl">Comprehensive surgical education</p>
           </motion.div>
@@ -87,10 +74,10 @@ export default function LearnHub() {
                 onClick={() => setActiveCategory(cat)}
                 whileHover={{ scale: 1.08, y: -3 }}
                 whileTap={{ scale: 0.95 }}
-                className={`px-5 py-3 rounded-2xl text-sm font-semibold transition-all font-mono-data uppercase tracking-wide ${
+                className={`px-5 py-3 rounded-sm text-sm font-semibold transition-all font-mono-data uppercase tracking-wide ${
                   activeCategory === cat
-                    ? "bg-teal-500 text-white shadow-[0_0_30px_rgba(93,202,165,0.5)]"
-                    : "bg-muted/50 text-muted-foreground hover:bg-teal-500/10 hover:border-teal-400/30 border border-border"
+                    ? "bg-[#2E6B4B] text-white shadow-[0_0_30px_rgba(93,202,165,0.5)]"
+                    : "bg-muted/50 text-muted-foreground hover:bg-[#2E6B4B]/10 hover:border-[#2E6B4B]/30 border border-border"
                 }`}
               >
                 {cat}
@@ -112,27 +99,27 @@ export default function LearnHub() {
                 whileHover={{ y: -12, scale: 1.05 }}
                 className="group"
               >
-                <div className="p-8 rounded-3xl glass-card cursor-pointer relative overflow-hidden h-full border-teal-400/20 hover:border-teal-400/40 transition-colors">
+                <div className="p-8 rounded-sm glass-card cursor-pointer relative overflow-hidden h-full border-[#2E6B4B]/20 hover:border-[#2E6B4B]/40 transition-colors">
                   {/* Hover gradient */}
                   <div className="absolute inset-0 bg-gradient-to-br from-teal-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   
                   <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-4">
                       <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
-                        article.difficulty === "Beginner" ? "bg-emerald-400/10 text-emerald-400 border border-emerald-400/20" :
-                        article.difficulty === "Intermediate" ? "bg-amber-400/10 text-amber-400 border border-amber-400/20" :
-                        "bg-red-400/10 text-red-400 border border-red-400/20"
+                        article.difficulty === "Beginner" ? "bg-[#2E6B4B]/10 text-[#2E6B4B] border border-[#2E6B4B]/20" :
+                        article.difficulty === "Intermediate" ? "bg-[#C27820]/10 text-[#C27820] border border-[#C27820]/40/20" :
+                        "bg-[#A32A2A]/10 text-[#A32A2A] border border-[#A32A2A]/20"
                       }`}>
                         {article.difficulty}
                       </span>
                       <span className="label-mono text-muted-foreground text-xs">{article.category}</span>
                     </div>
 
-                    <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-teal-400 transition-colors" style={{ fontFamily: "'Syne', sans-serif" }}>
+                    <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-[#2E6B4B] transition-colors" style={{ fontFamily: "'Inter', sans-serif" }}>
                       {article.title}
                     </h3>
 
-                    <p className="text-muted-foreground text-sm mb-6 italic border-l-2 border-teal-400/30 pl-4">
+                    <p className="text-muted-foreground text-sm mb-6 italic border-l-2 border-[#2E6B4B]/30 pl-4">
                       {article.excerpt}
                     </p>
 
@@ -144,7 +131,7 @@ export default function LearnHub() {
                         animate={{ x: [0, 5, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity }}
                       >
-                        <ChevronRight className="w-5 h-5 text-teal-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <ChevronRight className="w-5 h-5 text-[#2E6B4B] opacity-0 group-hover:opacity-100 transition-opacity" />
                       </motion.div>
                     </div>
                   </div>

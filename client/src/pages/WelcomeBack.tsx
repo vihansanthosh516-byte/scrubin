@@ -29,7 +29,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
         className="relative w-full max-w-md"
       >
         {/* Card */}
-        <div className="rounded-2xl p-8 bg-card/95 backdrop-blur-xl border border-border shadow-[0_0_40px_rgba(126,200,227,0.15)]">
+        <div className="rounded-sm p-8 bg-card/95 backdrop-blur-xl border border-border shadow-[0_0_40px_rgba(204,85,61,0.15)]">
           {/* Header */}
           <div className="text-center mb-8">
             {/* Avatar */}
@@ -37,7 +37,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", delay: 0.1 }}
-              className="w-24 h-24 rounded-2xl border-2 border-primary/40 overflow-hidden mx-auto mb-4 bg-muted"
+              className="w-24 h-24 rounded-sm border-2 border-primary/40 overflow-hidden mx-auto mb-4 bg-muted"
             >
               <img
                 src={user?.avatar_url}
@@ -52,8 +52,8 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
               transition={{ delay: 0.2 }}
               className="flex items-center justify-center gap-2 mb-2"
             >
-              <CheckCircle className="w-5 h-5 text-emerald-400" />
-              <span className="text-sm font-medium text-emerald-400">Account Found</span>
+              <CheckCircle className="w-5 h-5 text-[#2E6B4B]" />
+              <span className="text-sm font-medium text-[#2E6B4B]">Account Found</span>
             </motion.div>
 
             <motion.h1
@@ -61,7 +61,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               className="text-2xl font-bold text-white mb-1"
-              style={{ fontFamily: "'Syne', sans-serif" }}
+              style={{ fontFamily: "'Inter', sans-serif" }}
             >
               {user.name || user.login}
             </motion.h1>
@@ -81,10 +81,10 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="bg-muted/50 rounded-xl p-4 mb-6"
+            className="bg-muted/50 rounded-sm p-4 mb-6"
           >
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <div className="w-2 h-2 rounded-full bg-emerald-400" />
+              <div className="w-2 h-2 rounded-full bg-[#2E6B4B]" />
               <span>Your surgery history and XP are saved</span>
             </div>
           </motion.div>
@@ -98,7 +98,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
           >
             <Button
               onClick={onConfirm}
-              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl flex items-center justify-center gap-2 transition-all"
+              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-sm flex items-center justify-center gap-2 transition-all"
             >
               <CheckCircle className="w-4 h-4" />
               Yes, It's Me
@@ -107,7 +107,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
             <Button
               onClick={onNotYou}
               variant="outline"
-              className="w-full h-12 border-border hover:border-primary/30 hover:bg-primary/5 text-muted-foreground hover:text-foreground font-medium rounded-xl transition-all"
+              className="w-full h-12 border-border hover:border-primary/30 hover:bg-primary/5 text-muted-foreground hover:text-foreground font-medium rounded-sm transition-all"
             >
               <X className="w-4 h-4" />
               Not You? Change Name

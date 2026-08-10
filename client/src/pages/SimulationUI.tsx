@@ -37,7 +37,7 @@ export const SimulationUI: React.FC = () => {
 
   return (
     <div className="p-4 space-y-4">
-      {error && <div className="text-red-500">{error}</div>}
+      {error && <div className="text-[#A32A2A]">{error}</div>}
       {!sessionId ? (
         <Button onClick={handleStart}>Start Simulation</Button>
       ) : (
@@ -47,7 +47,7 @@ export const SimulationUI: React.FC = () => {
         </div>
       )}
       {state && (
-        <pre className="bg-gray-800 p-2 rounded text-xs overflow-auto max-h-64">
+        <pre className="bg-[#26211B] p-2 rounded text-xs overflow-auto max-h-64">
           {JSON.stringify(state, null, 2)}
         </pre>
       )}

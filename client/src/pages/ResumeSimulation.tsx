@@ -68,21 +68,8 @@ export default function ResumeSimulation() {
 
   return (
     <div className="h-dvh bg-background text-foreground relative overflow-clip">
-      {/* Ambient background */}
-      <div className="absolute inset-0 overflow-clip contain-paint pointer-events-none">
-        <motion.div
-          className="absolute w-[800px] h-[800px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #7EC8E3 0%, transparent 70%)", top: "-20%", right: "-10%" }}
-          animate={{ x: [0, 80, 0], y: [0, 60, 0], scale: [1, 1.2, 1] }}
-          transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute w-[700px] h-[700px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #5DCAA5 0%, transparent 70%)", bottom: "8%", left: "-8%" }}
-          animate={{ x: [0, -40, 0], scale: [1, 1.15, 1] }}
-          transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
+      {/* Subtle warm editorial texture — no neon */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "radial-gradient(#8C827A 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
 
       {/* Fixed-height dashboard: header pinned, list scrolls internally */}
       <div className="relative z-10 mx-auto flex h-full w-full max-w-4xl flex-col gap-3 px-4 pt-20 pb-3">
@@ -94,16 +81,16 @@ export default function ResumeSimulation() {
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm font-mono-data text-primary">Pick Up Where You Left Off</span>
           </motion.div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground" style={{ fontFamily: "'Syne', sans-serif" }}>
-            Resume <span className="text-gradient">Simulation</span>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
+            Resume <span className="text-[#CC553D] dark:text-[#D95338]">Simulation</span>
           </h1>
         </div>
 
         {/* Scrollable list area — the only part of the dashboard that scrolls */}
         <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-4">
         {error && (
-          <div className="p-3 bg-red-950/50 border border-red-500/50 rounded-xl text-red-200 flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
+          <div className="p-3 bg-[#3A0F0F]/90/50 border border-[#A32A2A]/50/50 rounded-sm text-[#E08080] flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-[#A32A2A] shrink-0" />
             {error}
           </div>
         )}
@@ -120,7 +107,7 @@ export default function ResumeSimulation() {
             >
               <Activity className="w-12 h-12 text-muted-foreground/40 mb-4" />
             </motion.div>
-            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>No Saved Simulations</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>No Saved Simulations</h2>
             <p className="text-muted-foreground mb-6">You have no saved causal states available to resume.</p>
             <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               Start New Simulation
@@ -130,7 +117,7 @@ export default function ResumeSimulation() {
           <div className="grid gap-4">
             {sessions.map((sim: any, i: number) => (
               <motion.div
-                key={sim.session_id}
+                key={sim.id || `${sim.session_id}-${i}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
@@ -138,7 +125,7 @@ export default function ResumeSimulation() {
               >
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-wrap items-center gap-3">
-                    <h3 className="font-bold text-lg text-foreground" style={{ fontFamily: "'Syne', sans-serif" }}>{sim.procedure || "Unknown Procedure"}</h3>
+                    <h3 className="font-bold text-lg text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>{sim.procedure || "Unknown Procedure"}</h3>
                     <span className="text-[10px] font-mono-data bg-background/60 px-2 py-1 rounded border border-border text-muted-foreground">
                       ID: {sim.session_id}
                     </span>

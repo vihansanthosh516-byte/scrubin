@@ -136,21 +136,8 @@ export default function MySimulations() {
 
   return (
     <div className="h-dvh bg-background text-foreground relative overflow-clip">
-      {/* Ambient background */}
-      <div className="absolute inset-0 overflow-clip contain-paint pointer-events-none">
-        <motion.div
-          className="absolute w-[800px] h-[800px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #7EC8E3 0%, transparent 70%)", top: "-20%", right: "-10%" }}
-          animate={{ x: [0, 80, 0], y: [0, 60, 0], scale: [1, 1.2, 1] }}
-          transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute w-[700px] h-[700px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #5DCAA5 0%, transparent 70%)", bottom: "8%", left: "-8%" }}
-          animate={{ x: [0, -40, 0], scale: [1, 1.15, 1] }}
-          transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
+      {/* Subtle warm editorial texture — no neon */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "radial-gradient(#8C827A 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
 
       {/* Fixed-height dashboard: header + filters pinned, list scrolls internally */}
       <div className="relative z-10 mx-auto flex h-full w-full max-w-5xl flex-col gap-3 px-4 pt-20 pb-3">
@@ -163,8 +150,8 @@ export default function MySimulations() {
               <Sparkles className="w-4 h-4 text-primary" />
               <span className="text-sm font-mono-data text-primary">Your Case Log</span>
             </motion.div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground" style={{ fontFamily: "'Syne', sans-serif" }}>
-              My <span className="text-gradient">Simulations</span>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
+              My <span className="text-[#CC553D] dark:text-[#D95338]">Simulations</span>
             </h1>
           </div>
           <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -180,14 +167,14 @@ export default function MySimulations() {
               placeholder="Search ID or procedure..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-background border border-border rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground transition-all"
+              className="w-full bg-background border border-border rounded-sm pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground transition-all"
             />
           </div>
           <div className="flex gap-2">
             <select 
               value={filter} 
               onChange={(e) => setFilter(e.target.value as any)}
-              className="bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground"
+              className="bg-background border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground"
             >
               <option value="all">All States</option>
               <option value="active">Active</option>
@@ -196,7 +183,7 @@ export default function MySimulations() {
             <select 
               value={sort} 
               onChange={(e) => setSort(e.target.value as any)}
-              className="bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground"
+              className="bg-background border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -207,12 +194,12 @@ export default function MySimulations() {
         {/* Scrollable list area — the only part of the dashboard that scrolls */}
         <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-4">
           {error && (
-            <div className="p-3 bg-red-950/50 border border-red-500/50 rounded-xl text-red-200 flex items-center justify-between">
+            <div className="p-3 bg-[#3A0F0F]/90/50 border border-[#A32A2A]/50/50 rounded-sm text-[#E08080] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
+                <AlertTriangle className="w-5 h-5 text-[#A32A2A] shrink-0" />
                 {error}
               </div>
-              <button onClick={() => setError(null)}><XCircle className="w-4 h-4 text-red-500 hover:text-red-300" /></button>
+              <button onClick={() => setError(null)}><XCircle className="w-4 h-4 text-[#A32A2A] hover:text-[#E08080]" /></button>
             </div>
           )}
 
@@ -228,7 +215,7 @@ export default function MySimulations() {
             >
               <Activity className="w-12 h-12 text-muted-foreground/40 mb-4" />
             </motion.div>
-            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>No Simulations Found</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>No Simulations Found</h2>
             <p className="text-muted-foreground mb-6">You have no simulation history available.</p>
             <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               Start New Simulation
@@ -237,34 +224,37 @@ export default function MySimulations() {
         ) : filteredAndSortedSessions.length === 0 ? (
           <div className="p-12 glass-card text-center flex flex-col items-center">
             <Search className="w-12 h-12 text-muted-foreground/40 mb-4" />
-            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>No Matches</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>No Matches</h2>
             <p className="text-muted-foreground">No simulations match your current filters.</p>
           </div>
         ) : (
           <div className="grid gap-4">
-            {filteredAndSortedSessions.map((sim: any) => {
+            {filteredAndSortedSessions.map((sim: any, i: number) => {
               const status = (sim.status || sim.patient_status || "active").toLowerCase();
               const isCompleted = ["completed", "finished", "success", "failed"].includes(status) || sim.is_completed;
               
               return (
                 <motion.div
-                  key={sim.session_id}
+                  // The backend can save the same session_id multiple times, so
+                  // session_id is NOT a unique key — colliding keys break React
+                  // reconciliation when the list switches between branches.
+                  key={sim.id || `${sim.session_id}-${i}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="p-6 glass-card flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
                 >
                   <div className="flex flex-col gap-3 flex-1">
                     <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="font-bold text-lg text-foreground" style={{ fontFamily: "'Syne', sans-serif" }}>{sim.procedure || "Unknown Procedure"}</h3>
+                      <h3 className="font-bold text-lg text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>{sim.procedure || "Unknown Procedure"}</h3>
                       <span className="text-[10px] font-mono-data bg-background/60 px-2 py-1 rounded border border-border text-muted-foreground">
                         ID: {sim.session_id}
                       </span>
                       {isCompleted ? (
-                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 flex items-center gap-1">
+                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-[#2E6B4B]/40/30 bg-[#2E6B4B]/10 text-[#2E6B4B] flex items-center gap-1">
                           <CheckCircle className="w-3 h-3" /> Completed
                         </span>
                       ) : (
-                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-blue-500/30 bg-blue-500/10 text-blue-400 flex items-center gap-1">
+                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-[#CC553D]/40/30 bg-[#CC553D]/10 text-[#CC553D] flex items-center gap-1">
                           <Activity className="w-3 h-3" /> Active
                         </span>
                       )}
@@ -313,7 +303,7 @@ export default function MySimulations() {
                         variant="outline"
                         onClick={() => handleReplay(sim.session_id)} 
                         disabled={!!actionLoadingId}
-                        className="text-purple-400 hover:text-purple-300 flex-1 md:flex-none"
+                        className="text-[#8C5A7A] hover:text-[#8C5A7A] flex-1 md:flex-none"
                       >
                         <RotateCcw className="w-4 h-4 mr-2" /> Replay
                       </Button>
@@ -323,10 +313,10 @@ export default function MySimulations() {
                       variant="outline"
                       onClick={() => handleDelete(sim.session_id)} 
                       disabled={!!actionLoadingId}
-                      className="border-red-500/40 hover:bg-red-500/10 text-red-400 hover:text-red-300 flex-1 md:flex-none"
+                      className="border-[#A32A2A]/50/40 hover:bg-[#A32A2A]/10 text-[#A32A2A] hover:text-[#E08080] flex-1 md:flex-none"
                     >
                       {actionLoadingId === `delete-${sim.session_id}` ? (
-                        <div className="w-4 h-4 border-2 border-red-500/50 border-t-red-500 rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-[#A32A2A]/50/50 border-t-red-500 rounded-full animate-spin" />
                       ) : (
                         <><Trash2 className="w-4 h-4" /> Delete</>
                       )}

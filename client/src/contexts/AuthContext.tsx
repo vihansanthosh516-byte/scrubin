@@ -83,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: u.id,
             name: nameToUse,
             login: u.user_metadata?.user_name || u.user_metadata?.preferred_username || (u.email ? u.email.split("@")[0] : "user"),
-            avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(nameToUse)}&backgroundColor=7EC8E3&textColor=000000`,
+            avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(nameToUse)}&backgroundColor=CC553D&textColor=FFFFFF`,
             email: u.email || null,
             hasCompletedOnboarding: true,
           };
@@ -231,7 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id,
           name: nameToUse,
           login: data.user.user_metadata?.user_name || email.split("@")[0],
-          avatar_url: data.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(nameToUse)}&backgroundColor=7EC8E3&textColor=000000`,
+          avatar_url: data.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(nameToUse)}&backgroundColor=CC553D&textColor=FFFFFF`,
           email: data.user.email || null,
         };
 
@@ -295,7 +295,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id,
           name: name,
           login: email.split("@")[0],
-          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=7EC8E3&textColor=000000`,
+          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=CC553D&textColor=FFFFFF`,
           email: data.user.email || null,
           profession: profession,
           hasCompletedOnboarding: true,

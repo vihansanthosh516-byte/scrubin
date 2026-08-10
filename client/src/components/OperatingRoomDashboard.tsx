@@ -41,16 +41,16 @@ export default function OperatingRoomDashboard({ scenario }: DashboardProps) {
   const stability = computeStability(vitals, baseline);
   const stabilityColor =
     stability === "stable"
-      ? "text-emerald-400"
+      ? "text-[#2E6B4B]"
       : stability === "mild"
-      ? "text-amber-400"
-      : "text-red-400";
+      ? "text-[#C27820]"
+      : "text-[#A32A2A]";
   const stabilityBorder =
     stability === "stable"
-      ? "border-emerald-500/30"
+      ? "border-[#2E6B4B]/40"
       : stability === "mild"
-      ? "border-amber-500/30"
-      : "border-red-500/40";
+      ? "border-[#C27820]/40"
+      : "border-[#A32A2A]/50";
 
   const totalTicks = scenario?.totalTicks;
   const remainingTicks = typeof totalTicks === "number" ? totalTicks - currentTick : null;
@@ -68,14 +68,14 @@ export default function OperatingRoomDashboard({ scenario }: DashboardProps) {
   const activeComplication = currentState?.active_complication ?? currentState?.activeComplication ?? null;
 
   const Card = ({ label, value, valueClass = "text-foreground", highlight = false }: { label: string; value: any; valueClass?: string; highlight?: boolean }) => (
-    <div className={`p-2.5 glass-card rounded-xl ${highlight ? "border-red-500/30" : ""}`}>
-      <div className="text-[8px] text-neutral-500 uppercase tracking-widest font-bold mb-0.5">{label}</div>
+    <div className={`p-2.5 glass-card rounded-sm ${highlight ? "border-[#A32A2A]/40" : ""}`}>
+      <div className="text-[8px] text-[#8C827A] dark:text-[#C2BBB0] uppercase tracking-widest font-bold mb-0.5">{label}</div>
       <div className={`text-sm font-bold truncate ${valueClass}`}>{value ?? "-"}</div>
     </div>
   );
 
   return (
-    <div className="p-4 glass-card rounded-2xl space-y-3">
+    <div className="p-4 glass-card rounded-sm space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Operating Room</h3>
         <div className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider ${stabilityBorder} ${stabilityColor}`}>
@@ -87,7 +87,7 @@ export default function OperatingRoomDashboard({ scenario }: DashboardProps) {
         <Card label="Current Phase" value={(scenario?.phases || scenario?.PHASES || [])?.find((p: any) => p.id === (currentState?.pending_decision?.phase || currentState?.pendingDecision?.phase))?.name ?? "-"} />
         <Card label="Tick" value={currentTick} />
         <Card label="Remaining" value={remainingTicks !== null ? `${remainingTicks} ticks` : "Unknown"} />
-        <Card label="Active Complication" value={activeComplication ?? "None"} highlight={!!activeComplication} valueClass={activeComplication ? "text-red-400" : "text-emerald-400"} />
+        <Card label="Active Complication" value={activeComplication ?? "None"} highlight={!!activeComplication} valueClass={activeComplication ? "text-[#A32A2A]" : "text-[#2E6B4B]"} />
         <Card label="Patient Stability" value={stability.charAt(0).toUpperCase() + stability.slice(1)} valueClass={stabilityColor} />
         <Card label="Executive Goal" value={executiveGoal ?? "-"} />
         <Card label="Strategy" value={strategy ?? "-"} />

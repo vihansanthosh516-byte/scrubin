@@ -30,7 +30,7 @@ export const SaveResumeUI: React.FC = () => {
         {sims.map((s) => (
           <li
             key={s.id}
-            className="p-2 border rounded cursor-pointer hover:bg-gray-800 flex justify-between items-center"
+            className="p-2 border rounded cursor-pointer hover:bg-[#26211B] flex justify-between items-center"
             onClick={() => handleResume(s.id)}
           >
             <span>{new Date(s.savedAt).toLocaleString()}</span>

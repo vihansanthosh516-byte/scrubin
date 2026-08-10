@@ -117,7 +117,7 @@ export default function CognitionGraph() {
   };
 
   return (
-    <div style={{ width: "100%", height: 400 }} className="bg-neutral-900 rounded-lg border border-neutral-700">
+    <div style={{ width: "100%", height: 400 }} className="bg-[#1E1A16] rounded-sm border border-[#3A342C]">
       <ReactFlow
         nodes={nodeState}
         edges={edgeState}

@@ -220,7 +220,7 @@ function AnatomyModel({
         {/* Heart */}
         <mesh position={[-0.02, 0.85, 0.12]} castShadow onClick={() => onOrganClick("heart")}>
           <sphereGeometry args={[0.06, 16, 16]} />
-          <meshStandardMaterial color="#c44" roughness={0.6} emissive={selectedOrgan === "heart" ? "#5DCAA5" : "#000"} emissiveIntensity={selectedOrgan === "heart" ? 0.3 : 0} transparent opacity={muscleOpacity} />
+          <meshStandardMaterial color="#c44" roughness={0.6} emissive={selectedOrgan === "heart" ? "#D99B26" : "#000"} emissiveIntensity={selectedOrgan === "heart" ? 0.3 : 0} transparent opacity={muscleOpacity} />
         </mesh>
         {/* Liver */}
         <mesh position={[0.08, 0.55, 0.05]} castShadow>
@@ -230,17 +230,17 @@ function AnatomyModel({
         {/* Gallbladder */}
         <mesh position={[0.15, 0.55, 0.08]} castShadow onClick={() => onOrganClick("gallbladder")}>
           <capsuleGeometry args={[0.015, 0.04, 8, 16]} />
-          <meshStandardMaterial color="#2d5a27" roughness={0.6} emissive={selectedOrgan === "gallbladder" ? "#5DCAA5" : "#000"} emissiveIntensity={selectedOrgan === "gallbladder" ? 0.4 : 0} transparent opacity={muscleOpacity} />
+          <meshStandardMaterial color="#2d5a27" roughness={0.6} emissive={selectedOrgan === "gallbladder" ? "#D99B26" : "#000"} emissiveIntensity={selectedOrgan === "gallbladder" ? 0.4 : 0} transparent opacity={muscleOpacity} />
         </mesh>
         {/* Appendix */}
         <mesh position={[0.12, 0.2, 0.08]} castShadow onClick={() => onOrganClick("appendix")}>
           <capsuleGeometry args={[0.01, 0.04, 8, 16]} />
-          <meshStandardMaterial color="#e57373" roughness={0.6} emissive={selectedOrgan === "appendix" ? "#5DCAA5" : "#000"} emissiveIntensity={selectedOrgan === "appendix" ? 0.5 : 0} transparent opacity={muscleOpacity} />
+          <meshStandardMaterial color="#e57373" roughness={0.6} emissive={selectedOrgan === "appendix" ? "#D99B26" : "#000"} emissiveIntensity={selectedOrgan === "appendix" ? 0.5 : 0} transparent opacity={muscleOpacity} />
         </mesh>
         {/* Uterus */}
         <mesh position={[0, 0.05, 0.08]} castShadow onClick={() => onOrganClick("uterus")}>
           <sphereGeometry args={[0.04, 16, 16]} />
-          <meshStandardMaterial color="#d4a5a5" roughness={0.7} emissive={selectedOrgan === "uterus" ? "#5DCAA5" : "#000"} emissiveIntensity={selectedOrgan === "uterus" ? 0.4 : 0} transparent opacity={muscleOpacity} />
+          <meshStandardMaterial color="#d4a5a5" roughness={0.7} emissive={selectedOrgan === "uterus" ? "#D99B26" : "#000"} emissiveIntensity={selectedOrgan === "uterus" ? 0.4 : 0} transparent opacity={muscleOpacity} />
         </mesh>
         {/* Legs */}
         <mesh position={[-0.1, -0.25, 0]} castShadow>
@@ -293,11 +293,11 @@ function AnatomyModel({
         {/* Knee */}
         <mesh position={[-0.1, -0.45, 0.03]} castShadow onClick={() => onOrganClick("knee")}>
           <sphereGeometry args={[0.035, 16, 16]} />
-          <meshStandardMaterial color="#e8dcd0" roughness={0.6} emissive={selectedOrgan === "knee" ? "#5DCAA5" : "#000"} emissiveIntensity={selectedOrgan === "knee" ? 0.4 : 0} transparent opacity={skeletonOpacity} />
+          <meshStandardMaterial color="#e8dcd0" roughness={0.6} emissive={selectedOrgan === "knee" ? "#D99B26" : "#000"} emissiveIntensity={selectedOrgan === "knee" ? 0.4 : 0} transparent opacity={skeletonOpacity} />
         </mesh>
         <mesh position={[0.1, -0.45, 0.03]} castShadow onClick={() => onOrganClick("knee")}>
           <sphereGeometry args={[0.035, 16, 16]} />
-          <meshStandardMaterial color="#e8dcd0" roughness={0.6} emissive={selectedOrgan === "knee" ? "#5DCAA5" : "#000"} emissiveIntensity={selectedOrgan === "knee" ? 0.4 : 0} transparent opacity={skeletonOpacity} />
+          <meshStandardMaterial color="#e8dcd0" roughness={0.6} emissive={selectedOrgan === "knee" ? "#D99B26" : "#000"} emissiveIntensity={selectedOrgan === "knee" ? 0.4 : 0} transparent opacity={skeletonOpacity} />
         </mesh>
       </group>
 
@@ -333,14 +333,14 @@ function Hotspot({ procedure, position, isSelected, onClick }: { procedure: Proc
     <group position={position}>
       <mesh ref={glowRef}>
         <sphereGeometry args={[0.035, 16, 16]} />
-        <meshBasicMaterial color={isSelected ? "#5DCAA5" : "#7EC8E3"} transparent opacity={0.2} />
+        <meshBasicMaterial color={isSelected ? "#D99B26" : "#CC553D"} transparent opacity={0.2} />
       </mesh>
       <mesh ref={meshRef} onClick={onClick}>
         <sphereGeometry args={[0.02, 16, 16]} />
-        <meshBasicMaterial color={isSelected ? "#5DCAA5" : "#7EC8E3"} />
+        <meshBasicMaterial color={isSelected ? "#D99B26" : "#CC553D"} />
       </mesh>
       <Html position={[0, 0.05, 0]} center style={{ transition: "all 0.2s", opacity: isSelected ? 1 : 0.8, transform: `scale(${isSelected ? 1.2 : 1})`, pointerEvents: "none", userSelect: "none" }}>
-        <div className="px-2 py-1 rounded-full bg-[#0A1628]/90 backdrop-blur-sm border border-primary/30 text-xs font-semibold text-white whitespace-nowrap" style={{ fontFamily: "'Syne', sans-serif" }}>
+        <div className="px-2 py-1 rounded-full bg-[#0A1628]/90 backdrop-blur-sm border border-primary/30 text-xs font-semibold text-white whitespace-nowrap" style={{ fontFamily: "'Inter', sans-serif" }}>
           {procedure.name}
         </div>
       </Html>
@@ -357,8 +357,8 @@ function Scene({ layerValue, selectedOrgan, onOrganClick }: { layerValue: number
     <>
       <ambientLight intensity={0.5} />
       <directionalLight position={[5, 5, 5]} intensity={0.8} castShadow />
-      <directionalLight position={[-5, 3, -5]} intensity={0.4} color="#7EC8E3" />
-      <pointLight position={[0, 2, 3]} intensity={0.6} color="#7EC8E3" />
+      <directionalLight position={[-5, 3, -5]} intensity={0.4} color="#CC553D" />
+      <pointLight position={[0, 2, 3]} intensity={0.6} color="#CC553D" />
       <Environment preset="studio" />
       <Float speed={1} rotationIntensity={0.15} floatIntensity={0.2}>
         <AnatomyModel layerValue={layerValue} selectedOrgan={selectedOrgan} onOrganClick={onOrganClick} />
@@ -400,7 +400,7 @@ export default function AnatomyExplorer() {
                 {/* Layer indicator */}
                 <div className="flex items-center gap-2 min-w-[80px]">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: layerColor }} />
-                  <span className="text-sm font-semibold text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+                  <span className="text-sm font-semibold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
                     {layerLabel}
                   </span>
                 </div>
@@ -449,9 +449,9 @@ function ProcedureInfo({ procedure }: { procedure: Procedure | null }) {
   }
 
   const diffConfig = {
-    Beginner: { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20" },
-    Intermediate: { color: "text-amber-400", bg: "bg-amber-400/10 border-amber-400/20" },
-    Advanced: { color: "text-red-400", bg: "bg-red-400/10 border-red-400/20" },
+    Beginner: { color: "text-[#2E6B4B]", bg: "bg-[#2E6B4B]/10 border-[#2E6B4B]/20" },
+    Intermediate: { color: "text-[#C27820]", bg: "bg-[#C27820]/10 border-[#C27820]/40/20" },
+    Advanced: { color: "text-[#A32A2A]", bg: "bg-[#A32A2A]/10 border-[#A32A2A]/20" },
   };
   const diff = diffConfig[procedure.difficulty];
   const step = procedure.steps[stepIndex];
@@ -461,7 +461,7 @@ function ProcedureInfo({ procedure }: { procedure: Procedure | null }) {
       {/* Header */}
       <div className="mb-4">
         <div className="flex items-start justify-between gap-3 mb-2">
-          <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
             {procedure.name}
           </h1>
           <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${diff.color} ${diff.bg} font-mono-data shrink-0`}>
@@ -481,10 +481,10 @@ function ProcedureInfo({ procedure }: { procedure: Procedure | null }) {
       <ScrubinCard glowColor="blue" variant="static" className="mb-4">
         <div className="p-4">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-2xl font-bold text-primary" style={{ fontFamily: "'Syne', sans-serif" }}>
+            <span className="text-2xl font-bold text-primary" style={{ fontFamily: "'Inter', sans-serif" }}>
               {step.number}
             </span>
-            <h3 className="text-sm font-semibold text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+            <h3 className="text-sm font-semibold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
               {step.title}
             </h3>
           </div>
@@ -499,10 +499,10 @@ function ProcedureInfo({ procedure }: { procedure: Procedure | null }) {
             </div>
 
             <div className="flex items-center gap-2">
-              <button onClick={() => setStepIndex((prev) => Math.max(0, prev - 1))} disabled={stepIndex === 0} className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+              <button onClick={() => setStepIndex((prev) => Math.max(0, prev - 1))} disabled={stepIndex === 0} className="p-1.5 rounded-sm bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                 <ArrowLeft className="w-4 h-4 text-white/70" />
               </button>
-              <button onClick={() => setStepIndex((prev) => Math.min(procedure.steps.length - 1, prev + 1))} disabled={stepIndex === procedure.steps.length - 1} className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+              <button onClick={() => setStepIndex((prev) => Math.min(procedure.steps.length - 1, prev + 1))} disabled={stepIndex === procedure.steps.length - 1} className="p-1.5 rounded-sm bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                 <ArrowRight className="w-4 h-4 text-white/70" />
               </button>
             </div>
@@ -517,8 +517,8 @@ function ProcedureInfo({ procedure }: { procedure: Procedure | null }) {
           { label: "Decisions", value: procedure.decisions },
           { label: "Duration", value: procedure.duration },
         ].map((stat) => (
-          <div key={stat.label} className="text-center py-2 rounded-lg bg-white/5 border border-white/10">
-            <div className="text-lg font-bold text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <div key={stat.label} className="text-center py-2 rounded-sm bg-white/5 border border-white/10">
+            <div className="text-lg font-bold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
               {stat.value}
             </div>
             <div className="text-xs text-white/40 font-mono-data">{stat.label}</div>
@@ -529,13 +529,13 @@ function ProcedureInfo({ procedure }: { procedure: Procedure | null }) {
       {/* Actions */}
       <div className="mt-auto pt-4 space-y-2">
         <Link href={`/simulation?proc=${procedure.id}`} className="block">
-          <Button className="w-full bg-primary hover:bg-primary/90 text-[#0A1628] font-bold py-3 rounded-xl" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <Button className="w-full bg-primary hover:bg-primary/90 text-[#0A1628] font-bold py-3 rounded-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
             <Play className="w-4 h-4 mr-2" />
             Enter Simulation
           </Button>
         </Link>
         <Link href={`/learn?procedure=${procedure.name}`} className="block">
-          <Button variant="outline" className="w-full border-white/20 hover:border-primary/50 hover:bg-primary/5 py-3 rounded-xl" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <Button variant="outline" className="w-full border-white/20 hover:border-primary/50 hover:bg-primary/5 py-3 rounded-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
             <BookOpen className="w-4 h-4 mr-2" />
             Full Surgical Guide
           </Button>

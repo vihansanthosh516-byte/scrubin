@@ -32,13 +32,13 @@ const ScrubinCard: React.FC<ScrubinCardProps> = ({
     blue: {
       border: "border-primary/20",
       borderHover: "hover:border-primary/40",
-      glow: "hover:shadow-[0_0_30px_rgba(126,200,227,0.15)]",
+      glow: "hover:shadow-[0_0_30px_rgba(204,85,61,0.15)]",
       bg: "bg-card/90 dark:bg-card/80",
     },
     teal: {
-      border: "border-teal-400/20",
-      borderHover: "hover:border-teal-400/40",
-      glow: "hover:shadow-[0_0_30px_rgba(93,202,165,0.15)]",
+      border: "border-[#2E6B4B]/40/20",
+      borderHover: "hover:border-[#2E6B4B]/40/40",
+      glow: "hover:shadow-[0_0_30px_rgba(46,107,75,0.15)]",
       bg: "bg-card/90 dark:bg-card/80",
     },
   };
@@ -46,7 +46,7 @@ const ScrubinCard: React.FC<ScrubinCardProps> = ({
   const colors = colorStyles[glowColor];
 
   const baseStyles = `
-    relative rounded-2xl overflow-hidden
+    relative rounded-sm overflow-hidden
     backdrop-blur-xl
     border ${colors.border}
     ${colors.bg}
@@ -151,7 +151,7 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({
       <div className="p-5">
         <h3
           className="text-lg font-bold text-foreground mb-1"
-          style={{ fontFamily: "'Syne', sans-serif" }}
+          style={{ fontFamily: "'Inter', sans-serif" }}
         >
           {name}
         </h3>
@@ -190,7 +190,7 @@ const ScrubinStaticPanel: React.FC<ScrubinCardProps> = ({
       bg: "bg-card/95 dark:bg-[#0a1628]/90",
     },
     teal: {
-      border: "border-teal-400/15",
+      border: "border-[#2E6B4B]/40/15",
       bg: "bg-card/95 dark:bg-[#0a1628]/90",
     },
   };
@@ -200,7 +200,7 @@ const ScrubinStaticPanel: React.FC<ScrubinCardProps> = ({
   return (
     <div
       className={cn(
-        "relative rounded-2xl overflow-hidden",
+        "relative rounded-sm overflow-hidden",
         "backdrop-blur-xl",
         "border",
         colors.border,
@@ -236,13 +236,13 @@ const LearnCard: React.FC<LearnCardProps> = ({
     <ScrubinCard glowColor="teal" variant="interactive" onClick={onClick}>
       <div className="p-6">
         {icon && (
-          <div className="mb-4 text-teal-400">
+          <div className="mb-4 text-[#2E6B4B]">
             {icon}
           </div>
         )}
         <h3
           className="text-lg font-bold text-foreground mb-2"
-          style={{ fontFamily: "'Syne', sans-serif" }}
+          style={{ fontFamily: "'Inter', sans-serif" }}
         >
           {title}
         </h3>

@@ -114,7 +114,7 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <ThemeProvider defaultTheme="dark" switchable>
+        <ThemeProvider defaultTheme="light" switchable>
           <TooltipProvider>
             <Toaster />
             <AuthRedirect>

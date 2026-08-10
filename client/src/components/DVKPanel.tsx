@@ -8,46 +8,46 @@ export default function DVKPanel() {
   const latestProof = dvkChain.length > 0 ? dvkChain[dvkChain.length - 1] : null;
 
   return (
-    <div className="p-4 bg-neutral-900 border border-neutral-700 rounded-lg font-mono text-sm text-green-400">
-      <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-xs flex justify-between items-center border-b border-neutral-700 pb-2">
+    <div className="p-4 bg-[#1E1A16] border border-[#3A342C] rounded-sm font-mono text-sm text-[#2E6B4B]">
+      <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-xs flex justify-between items-center border-b border-[#3A342C] pb-2">
         <span>DVK Cryptographic Trace</span>
-        <span className="bg-neutral-800 px-2 py-1 rounded text-neutral-400">EPO Layer</span>
+        <span className="bg-[#26211B] px-2 py-1 rounded text-[#666059] dark:text-[#A89F95]">EPO Layer</span>
       </h3>
       
       {latestProof ? (
         <div className="space-y-3">
           <div className="flex justify-between">
-            <span className="text-neutral-500">Target Tick:</span>
+            <span className="text-[#8C827A] dark:text-[#A89F95]">Target Tick:</span>
             <span>{latestProof.tick}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-neutral-500">Chain Length:</span>
+            <span className="text-[#8C827A] dark:text-[#A89F95]">Chain Length:</span>
             <span>{dvkChain.length} blocks</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-neutral-500">Proof ID:</span>
-            <span className="text-yellow-400">{latestProof.proof_id}</span>
+            <span className="text-[#8C827A] dark:text-[#A89F95]">Proof ID:</span>
+            <span className="text-[#D99B26]">{latestProof.proof_id}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-neutral-500">State Hash:</span>
-            <span className="text-blue-400">{latestProof.state_hash}</span>
+            <span className="text-[#8C827A] dark:text-[#A89F95]">State Hash:</span>
+            <span className="text-[#CC553D]">{latestProof.state_hash}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-neutral-500">CES Hash:</span>
-            <span className="text-purple-400">{latestProof.ces_hash}</span>
+            <span className="text-[#8C827A] dark:text-[#A89F95]">CES Hash:</span>
+            <span className="text-[#8C5A7A]">{latestProof.ces_hash}</span>
           </div>
           
-          <div className="pt-2 border-t border-neutral-800 mt-2">
-            <span className="text-neutral-500 block mb-1">Causal Ledger:</span>
+          <div className="pt-2 border-t border-[#3A342C] mt-2">
+            <span className="text-[#8C827A] dark:text-[#A89F95] block mb-1">Causal Ledger:</span>
             {latestProof.causal_events.map((evt, idx) => (
-              <div key={idx} className="text-xs text-neutral-300 ml-2">
+              <div key={idx} className="text-xs text-[#666059] dark:text-[#A89F95] ml-2">
                 &gt; {evt.event} @ t={evt.tick} [{evt.hash}]
               </div>
             ))}
           </div>
         </div>
       ) : (
-        <div className="text-neutral-500 italic">Waiting for DVK proofs...</div>
+        <div className="text-[#8C827A] dark:text-[#A89F95] italic">Waiting for DVK proofs...</div>
       )}
     </div>
   );

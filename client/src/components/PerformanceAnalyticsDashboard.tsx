@@ -267,7 +267,7 @@ export default function PerformanceAnalyticsDashboard() {
   ];
 
   return (
-    <div className='p-4 bg-neutral-950/60 border border-neutral-800 rounded-2xl text-white'>
+    <div className='p-4 bg-[#161310]/60 border border-[#3A342C] rounded-sm text-white'>
       <h2 className='text-lg font-bold mb-3'>Performance Analytics</h2>
 
       {/* Overall score and grade */}
@@ -308,7 +308,7 @@ export default function PerformanceAnalyticsDashboard() {
               <span>{m.label}</span>
               <span>{Math.round(m.value)}%</span>
             </div>
-            <div className='w-full h-2 bg-neutral-700 rounded'>
+            <div className='w-full h-2 bg-[#332C24] rounded'>
               <div
                 className='h-2 bg-primary rounded'
                 style={{ width: `${Math.min(Math.max(m.value, 0), 100)}%` }}
