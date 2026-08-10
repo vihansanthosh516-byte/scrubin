@@ -13,6 +13,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Profile from "./pages/Profile";
 import Signin from "./pages/Signin";
 import AnatomyExplorer from "./pages/AnatomyExplorer";
+import LearnHub from "./pages/LearnHub";
 import Onboarding from "./pages/Onboarding";
 import ResumeSimulation from "./pages/ResumeSimulation";
 import MySimulations from "./pages/MySimulations";
@@ -75,14 +76,20 @@ function Router() {
       <AnimatePresence mode="wait">
         <motion.div
           key={location}
-          initial={{ opacity: 0, y: 15, filter: "blur(8px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          exit={{ opacity: 0, y: -15, filter: "blur(8px)" }}
+          // No y-translate here: a translated route wrapper briefly extends the
+          // document's scrollable overflow during the enter animation, and the
+          // browser caches that height (leaving a phantom scrollbar on
+          // fixed-height dashboard pages). The opacity/blur fade is the same
+          // visual without any layout overflow.
+          initial={{ opacity: 0, filter: "blur(8px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, filter: "blur(8px)" }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="w-full min-h-screen"
         >
           <Switch location={location}>
             <Route path="/signin" component={Signin} />
+            <Route path="/onboarding" component={Onboarding} />
             <Route path="/" component={Home} />
             <Route path="/procedures" component={ProcedureLibrary} />
             <Route path="/simulation/:id" component={Simulation} />

@@ -47,6 +47,20 @@ export interface DecisionResultPublic {
   complicationTriggered: string | null;
 }
 
+export interface DebriefEvaluation {
+  final_score: number;
+  competency_score: number;
+  safety_score: number;
+  efficiency_score: number;
+  patient_outcome: string;
+  timeline_summary: { tick: number | null; description: string }[];
+  critical_events: { severity: string; tick: number | null; description: string }[];
+  mistakes: { tick: number | null; description: string }[];
+  strengths: { description: string }[];
+  recommendations: { description: string }[];
+  generated_by: string;
+}
+
 export interface SessionStartResponse {
   session_id: string;
   tick: number;
@@ -66,6 +80,7 @@ export interface NextResponse {
   events: string[];
   score: number;
   completed: boolean;
+  evaluation?: DebriefEvaluation | null;
 }
 
 export interface DecideResponse {
@@ -81,6 +96,7 @@ export interface DecideResponse {
   completed: boolean;
   correct_decisions: number;
   total_decisions: number;
+  evaluation?: DebriefEvaluation | null;
 }
 
 export interface ProceduresResponse {

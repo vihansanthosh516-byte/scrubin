@@ -79,8 +79,8 @@ export default function TimelinePanel() {
   };
 
   return (
-    <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-3xl text-white flex flex-col h-96">
-      <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Event Timeline</h3>
+    <div className="min-h-[140px] max-h-[320px] lg:max-h-none flex-1 p-4 bg-neutral-900 border border-neutral-800 rounded-2xl text-white flex flex-col">
+      <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-3">Event Timeline</h3>
       
       <div 
         ref={scrollRef}

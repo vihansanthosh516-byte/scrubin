@@ -1,29 +1,24 @@
 import React from 'react';
-import { useLocation } from 'wouter';
 import { useSimulationStore } from '../state/simulationStore';
-import { Button } from '@/components/ui/button';
-import { ShieldCheck, Clock, AlertTriangle, XCircle, CheckCircle, Lightbulb, Save, RotateCcw, Home, Play } from 'lucide-react';
+import { ShieldCheck, Clock, AlertTriangle, XCircle, CheckCircle, Lightbulb, Save } from 'lucide-react';
 
 export default function DebriefReport({ scenario }: { scenario: any }) {
-  const [, setLocation] = useLocation();
-  const { currentState, simId, setMode } = useSimulationStore();
+  const { currentState, simId } = useSimulationStore();
 
-  const evalData = currentState?.evaluation;
-  
-  if (!evalData) {
-    return (
-      <div className="p-12 bg-neutral-900 border border-neutral-800 rounded-3xl mt-6 text-white flex flex-col items-center justify-center text-center">
-        <div className="w-12 h-12 rounded-full border-t-2 border-primary animate-spin mb-4" />
-        <h2 className="text-xl font-bold">Compiling Causal Evaluation...</h2>
-        <p className="text-neutral-500 text-sm mt-2">The ScrubIn Core is generating a comprehensive deterministic debrief.</p>
-      </div>
-    );
-  }
+  // The Python core generates the deterministic `evaluation` payload when the
+  // case completes or the patient dies (scrubin_core_engine.build_evaluation).
+  // The client-side fallback below only covers legacy/offline sessions that
+  // never received a core payload.
+  const evalData = currentState?.evaluation || buildFallbackEvaluation(currentState);
 
   // Header Data
   const procedureName = scenario?.name || scenario?.id || "Surgical Procedure";
-  const completionStatus = currentState?.status || "Completed";
   const patientOutcome = evalData.patient_outcome || currentState?.patient_outcome || currentState?.patient_status || "Unknown";
+  // A deceased patient's completion status must not read "Completed".
+  const completionStatus =
+    String(patientOutcome).toLowerCase() === "deceased"
+      ? "Deceased"
+      : currentState?.status || "Completed";
 
   const exportMarkdown = () => {
     let markdown = `# Professional Debrief Report: ${procedureName}\n\n`;
@@ -46,17 +41,25 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
   };
 
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-3xl mt-6 text-white overflow-hidden">
+    <div id="debrief-report" className="bg-neutral-950/60 border border-neutral-800 rounded-2xl text-white overflow-hidden">
       {/* Header */}
-      <div className="p-8 border-b border-neutral-800 bg-black/20">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-5 border-b border-neutral-800 bg-black/20">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <ShieldCheck className="w-8 h-8 text-emerald-500" />
-            <h2 className="text-2xl font-bold tracking-tight">Professional Debrief</h2>
+            <ShieldCheck className="w-6 h-6 text-emerald-500" />
+            <h2 className="text-lg font-bold tracking-tight">Professional Debrief</h2>
           </div>
-          <span className="text-[10px] font-mono bg-black px-2 py-1 rounded text-neutral-500 border border-neutral-800">
-            ID: {simId}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportMarkdown}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-neutral-700 hover:bg-neutral-800 text-xs font-bold text-neutral-300 transition-all"
+            >
+              <Save className="w-3.5 h-3.5" /> Save Report
+            </button>
+            <span className="text-[10px] font-mono bg-black px-2 py-1 rounded text-neutral-500 border border-neutral-800">
+              ID: {simId}
+            </span>
+          </div>
         </div>
         <div className="grid grid-cols-3 gap-4">
           <div className="flex flex-col">
@@ -74,7 +77,7 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
         </div>
       </div>
 
-      <div className="p-8 space-y-10">
+      <div className="p-5 space-y-6">
         {/* Scores */}
         <div className="flex gap-4 overflow-x-auto pb-2">
           {evalData.final_score !== undefined && (
@@ -185,20 +188,6 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
         </div>
       </div>
 
-      <div className="p-6 bg-black/40 border-t border-neutral-800 flex items-center justify-end gap-3 flex-wrap">
-        <Button variant="outline" className="border-neutral-700 hover:bg-neutral-800" onClick={() => setMode("replay")}>
-          <RotateCcw className="w-4 h-4 mr-2" /> Replay Simulation
-        </Button>
-        <Button variant="outline" className="border-neutral-700 hover:bg-neutral-800" onClick={exportMarkdown}>
-          <Save className="w-4 h-4 mr-2" /> Save Report
-        </Button>
-        <Button variant="outline" className="border-neutral-700 hover:bg-neutral-800" onClick={() => setLocation("/procedures")}>
-          <Home className="w-4 h-4 mr-2" /> Dashboard
-        </Button>
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => window.location.reload()}>
-          <Play className="w-4 h-4 mr-2" /> New Simulation
-        </Button>
-      </div>
     </div>
   );
 }
@@ -210,4 +199,67 @@ function ScoreCard({ title, value }: { title: string, value: number | string }) 
       <span className="text-3xl font-black text-white">{value}</span>
     </div>
   );
+}
+
+/**
+ * Legacy client-side debrief built from the simulation's event log and final
+ * state — only used when the core payload is absent (older saved sessions).
+ */
+function buildFallbackEvaluation(currentState: any): any {
+  const events: string[] = Array.isArray(currentState?.events) ? currentState.events : [];
+  const correct = events.filter((e) => e.startsWith("✅ Correct Step")).length;
+  const incorrect = events.filter((e) => e.startsWith("❌ Incorrect Step")).length;
+  const complications = events.filter((e) => e.includes("⚠️ Complication")).length;
+  const resolved = events.filter((e) => e.includes("✅ Complication resolved")).length;
+
+  const status = String(currentState?.status || "").toLowerCase();
+  const isSuccess = ["success", "completed", "finished"].includes(status);
+  const isDeceased = String(currentState?.mode || "").toLowerCase() === "deceased" || ["failed", "terminated"].includes(status);
+
+  const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+  const safetyScore = clamp(isSuccess ? 92 : 38 - incorrect * 8 - complications * 4);
+  const competencyScore = clamp(72 + correct * 2 - incorrect * 12 - complications * 5);
+  const efficiencyScore = clamp(80 + correct * 0.5 - incorrect * 6 - complications * 6);
+  const finalScore = Math.round((safetyScore + competencyScore + efficiencyScore) / 3);
+
+  const timeline = events.map((description, i) => ({ tick: undefined, description }));
+  const criticalEvents = events
+    .filter((e) => e.includes("⚠️") || e.toLowerCase().includes("complication") || e.toLowerCase().includes("deteriorat"))
+    .map((description) => ({ severity: "CRITICAL", tick: undefined, description }));
+  const mistakes = events
+    .filter((e) => e.startsWith("❌") || e.toLowerCase().includes("incorrect"))
+    .map((description) => ({ description }));
+  const strengths = events
+    .filter((e) => e.startsWith("✅ Correct"))
+    .map((description) => ({ description }));
+
+  const recommendations: { description: string }[] = [
+    { description: "Perform a formal surgical time-out at every critical phase transition — identity, site, consent, and counts." },
+    { description: "Rehearse the rescue algorithm for the highest-risk complication of this procedure before scrubbing in." },
+    { description: "Debrief the team on hemodynamic management and blood-loss thresholds before closure." },
+  ];
+  if (complications > 0) {
+    recommendations.unshift({
+      description: `Review the physiology behind the ${complications} complication(s) that developed — early recognition is the highest-yield skill.`,
+    });
+  }
+
+  const patientOutcome = isDeceased
+    ? "Deceased"
+    : isSuccess
+    ? "Stable / Discharged"
+    : "Stabilized / Transferred";
+
+  return {
+    final_score: finalScore,
+    competency_score: competencyScore,
+    safety_score: safetyScore,
+    efficiency_score: efficiencyScore,
+    patient_outcome: patientOutcome,
+    timeline_summary: timeline,
+    critical_events: criticalEvents,
+    mistakes,
+    strengths,
+    recommendations,
+  };
 }

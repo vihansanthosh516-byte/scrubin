@@ -199,9 +199,16 @@ export default function Navbar() {
   const handleMouseLeave = () => {
     setCursorPosition((pv) => ({ ...pv, opacity: 0 }));
   };
-  // Determine displayed theme for icon
-  const systemPreference = "light";
-  const displayTheme = theme === "system" ? systemPreference : theme;
+  // Determine displayed theme for icon — follow the OS when in "system" mode
+  const [systemPrefersDark, setSystemPrefersDark] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+    const update = () => setSystemPrefersDark(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, []);
+  const displayTheme = theme === "system" ? (systemPrefersDark ? "dark" : "light") : theme;
   return (
     <>
       {/* === DESKTOP NAVBAR === */}

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useSimulationStore } from "../state/simulationStore";
-import { ShieldCheck, Activity, Clock, Play, AlertTriangle } from "lucide-react";
+import { Activity, Clock, Play, AlertTriangle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 export default function ResumeSimulation() {
   const [, setLocation] = useLocation();
@@ -19,7 +20,7 @@ export default function ResumeSimulation() {
         if (!res.ok) throw new Error("Failed to fetch saved simulations");
         const data = await res.json();
         // Fallback for different JSON structures the backend might return
-        setSessions(Array.isArray(data) ? data : (data.sessions || []));
+        setSessions(Array.isArray(data) ? data : (data.saved || data.sessions || []));
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -58,55 +59,97 @@ export default function ResumeSimulation() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center space-y-4">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
         <div className="w-16 h-16 rounded-full border-t-2 border-primary animate-spin" />
-        <p className="text-white font-mono">Loading saved simulations...</p>
+        <p className="text-muted-foreground font-mono-data">Loading saved simulations...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-8 font-mono">
-      <div className="max-w-4xl mx-auto pt-16">
-        <div className="flex items-center gap-4 mb-8">
-          <ShieldCheck className="w-10 h-10 text-emerald-500" />
-          <h1 className="text-3xl font-bold tracking-tight uppercase">Resume Simulation</h1>
+    <div className="h-dvh bg-background text-foreground relative overflow-clip">
+      {/* Ambient background */}
+      <div className="absolute inset-0 overflow-clip contain-paint pointer-events-none">
+        <motion.div
+          className="absolute w-[800px] h-[800px] rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, #7EC8E3 0%, transparent 70%)", top: "-20%", right: "-10%" }}
+          animate={{ x: [0, 80, 0], y: [0, 60, 0], scale: [1, 1.2, 1] }}
+          transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute w-[700px] h-[700px] rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, #5DCAA5 0%, transparent 70%)", bottom: "8%", left: "-8%" }}
+          animate={{ x: [0, -40, 0], scale: [1, 1.15, 1] }}
+          transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
+      {/* Fixed-height dashboard: header pinned, list scrolls internally */}
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-4xl flex-col gap-3 px-4 pt-20 pb-3">
+        <div className="flex items-center gap-4 shrink-0">
+          <motion.div
+            className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card"
+            whileHover={{ scale: 1.05 }}
+          >
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm font-mono-data text-primary">Pick Up Where You Left Off</span>
+          </motion.div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground" style={{ fontFamily: "'Syne', sans-serif" }}>
+            Resume <span className="text-gradient">Simulation</span>
+          </h1>
         </div>
 
+        {/* Scrollable list area — the only part of the dashboard that scrolls */}
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-4">
         {error && (
-          <div className="p-4 bg-red-950/50 border border-red-500/50 rounded-xl text-red-200 mb-6 flex items-center gap-3">
+          <div className="p-3 bg-red-950/50 border border-red-500/50 rounded-xl text-red-200 flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
             {error}
           </div>
         )}
 
         {!error && sessions.length === 0 ? (
-          <div className="p-12 bg-neutral-900 border border-neutral-800 rounded-3xl text-center flex flex-col items-center">
-            <Activity className="w-12 h-12 text-neutral-600 mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">No Saved Simulations</h2>
-            <p className="text-neutral-500 mb-6">You have no saved causal states available to resume.</p>
-            <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-12 glass-card text-center flex flex-col items-center"
+          >
+            <motion.div
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            >
+              <Activity className="w-12 h-12 text-muted-foreground/40 mb-4" />
+            </motion.div>
+            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>No Saved Simulations</h2>
+            <p className="text-muted-foreground mb-6">You have no saved causal states available to resume.</p>
+            <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               Start New Simulation
             </Button>
-          </div>
+          </motion.div>
         ) : (
           <div className="grid gap-4">
-            {sessions.map((sim: any) => (
-              <div key={sim.session_id} className="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl flex items-center justify-between hover:border-neutral-700 transition-colors">
+            {sessions.map((sim: any, i: number) => (
+              <motion.div
+                key={sim.session_id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+                className="p-6 glass-card flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+              >
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-3">
-                    <h3 className="font-bold text-lg text-white uppercase">{sim.procedure || "Unknown Procedure"}</h3>
-                    <span className="text-[10px] font-mono bg-black px-2 py-1 rounded border border-neutral-800 text-neutral-500">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h3 className="font-bold text-lg text-foreground" style={{ fontFamily: "'Syne', sans-serif" }}>{sim.procedure || "Unknown Procedure"}</h3>
+                    <span className="text-[10px] font-mono-data bg-background/60 px-2 py-1 rounded border border-border text-muted-foreground">
                       ID: {sim.session_id}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-neutral-400">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" /> 
                       Last Saved: {sim.last_saved ? new Date(sim.last_saved).toLocaleString() : "Unknown"}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Activity className="w-3 h-3 text-emerald-500" /> 
+                      <Activity className="w-3 h-3 text-primary" /> 
                       Tick: {sim.tick || 0}
                     </span>
                     <span>Status: {sim.patient_status || "Stable"}</span>
@@ -123,10 +166,11 @@ export default function ResumeSimulation() {
                     <><Play className="w-4 h-4 mr-2" /> Resume</>
                   )}
                 </Button>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

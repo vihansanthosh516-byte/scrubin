@@ -25,7 +25,7 @@ interface AuthContextType {
   isReturningUser: boolean;
   confirmReturningUser: () => void;
   restartOnboarding: () => void;
-  completeOnboarding: (data: { displayName: string; username: string }) => void;
+  completeOnboarding: (data: { displayName: string; username?: string; profession?: string }) => void;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string, profession: string) => Promise<{ error: any }>;
 }
@@ -70,6 +70,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     setLoading(false);
+
+    // Check for Supabase OAuth session (handles redirect back from Supabase OAuth flow)
+    (async () => {
+      try {
+        const { supabase } = await import("../lib/supabase");
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) {
+          const u = data.session.user;
+          const nameToUse = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "User";
+          const userData: User = {
+            id: u.id,
+            name: nameToUse,
+            login: u.user_metadata?.user_name || u.user_metadata?.preferred_username || (u.email ? u.email.split("@")[0] : "user"),
+            avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(nameToUse)}&backgroundColor=7EC8E3&textColor=000000`,
+            email: u.email || null,
+            hasCompletedOnboarding: true,
+          };
+          setUser(userData);
+          setHasCompletedOnboarding(true);
+          localStorage.setItem("scrubin_user", JSON.stringify(userData));
+          localStorage.setItem("scrubin_last_user", JSON.stringify({ name: userData.name, login: userData.login }));
+        }
+      } catch (e) {
+        console.error("Supabase session check failed", e);
+      }
+    })();
 
     // Check for OAuth code in URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -132,19 +158,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginWithGitHub = () => {
-    const scope = "read:user user:email";
-    sessionStorage.setItem("oauth_provider", "github");
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${scope}`;
+  const loginWithGitHub = async () => {
+    const { supabase } = await import("../lib/supabase");
+    await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: { redirectTo: window.location.origin },
+    });
   };
 
-  const loginWithGoogle = () => {
-    const scope = "openid email profile";
-    sessionStorage.setItem("oauth_provider", "google");
-    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`;
+  const loginWithGoogle = async () => {
+    const { supabase } = await import("../lib/supabase");
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
   };
 
-  const completeOnboarding = async (data: { displayName: string; profession: string }) => {
+  const completeOnboarding = async (data: { displayName: string; username?: string; profession?: string }) => {
     if (!user) return;
 
     const updatedUser = {

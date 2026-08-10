@@ -89,7 +89,7 @@ function ProcedureCard({ proc, unlocked, requiredXP, index, userXP }: any) {
           {/* Content */}
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
-              <motion.span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${proc.diffBg} backdrop-blur-sm`} whileHover={{ scale: 1.1 }}>
+              <motion.span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${proc.diffBg} ${proc.diffColor} backdrop-blur-sm`} whileHover={{ scale: 1.1 }}>
                 {proc.difficulty}
               </motion.span>
               <span className="text-xs text-muted-foreground font-mono-data">{proc.tag}</span>
@@ -156,23 +156,33 @@ export default function ProcedureLibrary() {
       if (!res.ok) throw new Error('Failed to fetch procedures');
       
       const data = await res.json();
-      const list = (Array.isArray(data) ? data : data.procedures || data.scenarios || []).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        tag: Array.isArray(p.tags) && p.tags.length > 0 ? p.tags[0] : (p.tag || ''),
-        difficulty: p.difficulty,
-        diffColor: p.difficulty?.toLowerCase() === 'beginner' ? 'text-emerald-400' : p.difficulty?.toLowerCase() === 'intermediate' ? 'text-amber-400' : 'text-red-400',
-        diffBg: p.difficulty?.toLowerCase() === 'beginner' ? 'bg-emerald-400/10 border-emerald-400/20' : p.difficulty?.toLowerCase() === 'intermediate' ? 'bg-amber-400/10 border-amber-400/20' : 'bg-red-400/10 border-red-400/20',
-        category: p.specialty || p.category,
-        time: p.estimated_time || `${p.totalTicks ?? 0} min`,
-        decisions: p.phases?.length ?? 0,
-        description: p.description,
-        thumbnail: p.thumbnail,
-        anatomy_regions: p.anatomy_regions,
-        learning_objectives: p.learning_objectives,
-        required_instruments: p.required_instruments,
-        unlocked: true,
-      }));
+      const list = (Array.isArray(data) ? data : data.procedures || data.scenarios || []).map((p: any) => {
+        // The registry API reports difficulty as `category` (e.g. "beginner");
+        // accept both sources so badges, colors, and XP locking work everywhere.
+        const rawDifficulty = String(p.difficulty || p.category || "").toLowerCase();
+        const difficulty =
+          rawDifficulty === "beginner" || rawDifficulty === "intermediate" || rawDifficulty === "advanced"
+            ? rawDifficulty
+            : "beginner";
+        const displayDifficulty = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+        return {
+          id: p.id,
+          name: p.name,
+          tag: p.specialty || (Array.isArray(p.tags) && p.tags.length > 0 ? p.tags[0] : "") || p.tag || "",
+          difficulty: displayDifficulty,
+          diffColor: difficulty === 'beginner' ? 'text-emerald-400' : difficulty === 'intermediate' ? 'text-amber-400' : 'text-red-400',
+          diffBg: difficulty === 'beginner' ? 'bg-emerald-400/10 border-emerald-400/20' : difficulty === 'intermediate' ? 'bg-amber-400/10 border-amber-400/20' : 'bg-red-400/10 border-red-400/20',
+          category: p.specialty || p.category,
+          time: p.estimated_time || `${p.totalTicks ?? 0} min`,
+          decisions: p.phases?.length ?? 0,
+          description: p.description,
+          thumbnail: p.thumbnail,
+          anatomy_regions: p.anatomy_regions,
+          learning_objectives: p.learning_objectives,
+          required_instruments: p.required_instruments,
+          unlocked: true,
+        };
+      });
       setProcedures(list);
     } catch (e: any) {
       console.error(e);
@@ -289,7 +299,7 @@ export default function ProcedureLibrary() {
                 />
               </motion.div>
               <div className="flex gap-2 flex-wrap">
-                {FILTERS.slice(0, 8).map(f => (
+                {FILTERS.map(f => (
                   <motion.button
                     key={f}
                     onClick={() => handleFilterClick(f)}

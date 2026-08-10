@@ -35,7 +35,7 @@ export default function Profile() {
     perfectRun: 0,
     hasReturned: false,
     fastestTime: 9999,
-    lastSurgeryDate: null,
+    lastSurgeryDate: null as string | null,
     surgeriesByDate: {} as Record<string, number>
   });
   const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
@@ -64,7 +64,7 @@ export default function Profile() {
 
       // Calculate real streak
       const dates = sessions.map(s => new Date(s.created_at).toISOString().split('T')[0]);
-      const uniqueDates = [...new Set(dates)].sort();
+      const uniqueDates = Array.from(new Set(dates)).sort();
       
       let currentStreak = 0;
       let longestStreak = 0;
@@ -181,7 +181,7 @@ export default function Profile() {
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Sign in to view Profile</h1>
           <p className="text-gray-400 mb-8 text-sm">Track your rank, XP, and detailed surgery performance across every session.</p>
-          <Button onClick={() => {}} className="w-full h-12 bg-white hover:bg-gray-100 text-black font-semibold rounded-lg flex items-center justify-center gap-3 transition-all">
+          <Button onClick={loginWithGitHub} className="w-full h-12 bg-white hover:bg-gray-100 text-black font-semibold rounded-lg flex items-center justify-center gap-3 transition-all">
             <Github className="w-5 h-5" /> Continue with GitHub
           </Button>
         </motion.div>
@@ -211,7 +211,7 @@ export default function Profile() {
               <motion.div className="flex items-center gap-3 mb-2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
                 <h1 className="text-3xl font-bold text-foreground tracking-tight" style={{ fontFamily: "'Syne', sans-serif" }}>{user.name}</h1>
                 <motion.span initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4, type: "spring" }}>
-                  <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary font-mono-data uppercase tracking-widest shadow-[0_0_15px_rgba(126,200,227,0.2)]">Resident</span>
+                  <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary font-mono-data uppercase tracking-widest shadow-[0_0_15px_rgba(126,200,227,0.2)]">{user.profession || "Resident"}</span>
                 </motion.span>
               </motion.div>
               <motion.p className="text-muted-foreground text-sm mb-6 font-mono-data tracking-wide">@{user.login} · {stats.totalSurgeries} Procedures · {stats.avgScore}% Avg</motion.p>

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { listSavedSimulations, deleteSimulation } from "../lib/saveSimulation";
 import { Button } from "../components/ui/button";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 
 export const SaveResumeUI: React.FC = () => {
   const [sims, setSims] = useState<any[]>([]);
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     setSims(listSavedSimulations());
@@ -13,7 +13,7 @@ export const SaveResumeUI: React.FC = () => {
 
   const handleResume = (id: string) => {
     // Load saved state from localStorage and navigate to simulation page with query param
-    navigate(`/simulation?resume=${id}`);
+    setLocation(`/simulation?resume=${id}`);
   };
 
   const handleDelete = (e: React.MouseEvent, id: string) => {

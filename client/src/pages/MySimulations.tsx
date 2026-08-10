@@ -3,9 +3,10 @@ import { useLocation } from "wouter";
 import { useSimulationStore } from "../state/simulationStore";
 import { 
   ShieldCheck, Activity, Clock, Play, AlertTriangle, 
-  Search, Trash2, RotateCcw, CheckCircle, XCircle 
+  Search, Trash2, RotateCcw, CheckCircle, XCircle, Sparkles 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 export default function MySimulations() {
   const [, setLocation] = useLocation();
@@ -27,7 +28,7 @@ export default function MySimulations() {
       const res = await fetch("/api/sim/list");
       if (!res.ok) throw new Error("Failed to fetch simulations");
       const data = await res.json();
-      setSessions(Array.isArray(data) ? data : (data.sessions || []));
+      setSessions(Array.isArray(data) ? data : (data.saved || data.sessions || []));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -126,52 +127,67 @@ export default function MySimulations() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center space-y-4">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
         <div className="w-16 h-16 rounded-full border-t-2 border-primary animate-spin" />
-        <p className="text-white font-mono">Loading your simulations...</p>
+        <p className="text-muted-foreground font-mono-data">Loading your simulations...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-8 font-mono">
-      <div className="max-w-5xl mx-auto pt-16">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+    <div className="h-dvh bg-background text-foreground relative overflow-clip">
+      {/* Ambient background */}
+      <div className="absolute inset-0 overflow-clip contain-paint pointer-events-none">
+        <motion.div
+          className="absolute w-[800px] h-[800px] rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, #7EC8E3 0%, transparent 70%)", top: "-20%", right: "-10%" }}
+          animate={{ x: [0, 80, 0], y: [0, 60, 0], scale: [1, 1.2, 1] }}
+          transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute w-[700px] h-[700px] rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, #5DCAA5 0%, transparent 70%)", bottom: "8%", left: "-8%" }}
+          animate={{ x: [0, -40, 0], scale: [1, 1.15, 1] }}
+          transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
+      {/* Fixed-height dashboard: header + filters pinned, list scrolls internally */}
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-5xl flex-col gap-3 px-4 pt-20 pb-3">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-4">
-            <ShieldCheck className="w-10 h-10 text-primary" />
-            <h1 className="text-3xl font-bold tracking-tight uppercase">My Simulations</h1>
+            <motion.div
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card"
+              whileHover={{ scale: 1.05 }}
+            >
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-mono-data text-primary">Your Case Log</span>
+            </motion.div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground" style={{ fontFamily: "'Syne', sans-serif" }}>
+              My <span className="text-gradient">Simulations</span>
+            </h1>
           </div>
-          <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90 hidden md:flex">
+          <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             New Simulation
           </Button>
         </div>
 
-        {error && (
-          <div className="p-4 bg-red-950/50 border border-red-500/50 rounded-xl text-red-200 mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
-              {error}
-            </div>
-            <button onClick={() => setError(null)}><XCircle className="w-4 h-4 text-red-500 hover:text-red-300" /></button>
-          </div>
-        )}
-
-        <div className="flex flex-col md:flex-row gap-4 mb-8 bg-neutral-900 p-4 border border-neutral-800 rounded-2xl">
+        <div className="flex flex-col md:flex-row gap-3 shrink-0 glass-card p-3">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input 
               type="text" 
               placeholder="Search ID or procedure..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-black border border-neutral-800 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary text-white"
+              className="w-full bg-background border border-border rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground transition-all"
             />
           </div>
           <div className="flex gap-2">
             <select 
               value={filter} 
               onChange={(e) => setFilter(e.target.value as any)}
-              className="bg-black border border-neutral-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary text-white"
+              className="bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground"
             >
               <option value="all">All States</option>
               <option value="active">Active</option>
@@ -180,7 +196,7 @@ export default function MySimulations() {
             <select 
               value={sort} 
               onChange={(e) => setSort(e.target.value as any)}
-              className="bg-black border border-neutral-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary text-white"
+              className="bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -188,20 +204,41 @@ export default function MySimulations() {
           </div>
         </div>
 
+        {/* Scrollable list area — the only part of the dashboard that scrolls */}
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-4">
+          {error && (
+            <div className="p-3 bg-red-950/50 border border-red-500/50 rounded-xl text-red-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
+                {error}
+              </div>
+              <button onClick={() => setError(null)}><XCircle className="w-4 h-4 text-red-500 hover:text-red-300" /></button>
+            </div>
+          )}
+
         {sessions.length === 0 ? (
-          <div className="p-12 bg-neutral-900 border border-neutral-800 rounded-3xl text-center flex flex-col items-center">
-            <Activity className="w-12 h-12 text-neutral-600 mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">No Simulations Found</h2>
-            <p className="text-neutral-500 mb-6">You have no simulation history available.</p>
-            <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-12 glass-card text-center flex flex-col items-center"
+          >
+            <motion.div
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            >
+              <Activity className="w-12 h-12 text-muted-foreground/40 mb-4" />
+            </motion.div>
+            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>No Simulations Found</h2>
+            <p className="text-muted-foreground mb-6">You have no simulation history available.</p>
+            <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               Start New Simulation
             </Button>
-          </div>
+          </motion.div>
         ) : filteredAndSortedSessions.length === 0 ? (
-          <div className="p-12 bg-neutral-900 border border-neutral-800 rounded-3xl text-center flex flex-col items-center">
-            <Search className="w-12 h-12 text-neutral-600 mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">No Matches</h2>
-            <p className="text-neutral-500">No simulations match your current filters.</p>
+          <div className="p-12 glass-card text-center flex flex-col items-center">
+            <Search className="w-12 h-12 text-muted-foreground/40 mb-4" />
+            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>No Matches</h2>
+            <p className="text-muted-foreground">No simulations match your current filters.</p>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -210,11 +247,16 @@ export default function MySimulations() {
               const isCompleted = ["completed", "finished", "success", "failed"].includes(status) || sim.is_completed;
               
               return (
-                <div key={sim.session_id} className="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-neutral-700 transition-colors">
+                <motion.div
+                  key={sim.session_id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 glass-card flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+                >
                   <div className="flex flex-col gap-3 flex-1">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-bold text-lg text-white uppercase">{sim.procedure || "Unknown Procedure"}</h3>
-                      <span className="text-[10px] font-mono bg-black px-2 py-1 rounded border border-neutral-800 text-neutral-500">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="font-bold text-lg text-foreground" style={{ fontFamily: "'Syne', sans-serif" }}>{sim.procedure || "Unknown Procedure"}</h3>
+                      <span className="text-[10px] font-mono-data bg-background/60 px-2 py-1 rounded border border-border text-muted-foreground">
                         ID: {sim.session_id}
                       </span>
                       {isCompleted ? (
@@ -228,7 +270,7 @@ export default function MySimulations() {
                       )}
                     </div>
                     
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-400">
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" /> 
                         Saved: {sim.last_saved ? new Date(sim.last_saved).toLocaleString() : "Unknown"}
@@ -244,8 +286,8 @@ export default function MySimulations() {
                     </div>
 
                     {isCompleted && sim.outcome && (
-                      <div className="text-xs text-neutral-500 border-t border-neutral-800 pt-2 mt-1">
-                        <span className="uppercase font-bold text-neutral-400 mr-2">Outcome:</span>
+                      <div className="text-xs text-muted-foreground border-t border-border pt-2 mt-1">
+                        <span className="uppercase font-bold text-foreground/70 mr-2">Outcome:</span>
                         {sim.outcome}
                       </div>
                     )}
@@ -271,7 +313,7 @@ export default function MySimulations() {
                         variant="outline"
                         onClick={() => handleReplay(sim.session_id)} 
                         disabled={!!actionLoadingId}
-                        className="border-neutral-700 hover:bg-neutral-800 text-purple-400 hover:text-purple-300 flex-1 md:flex-none"
+                        className="text-purple-400 hover:text-purple-300 flex-1 md:flex-none"
                       >
                         <RotateCcw className="w-4 h-4 mr-2" /> Replay
                       </Button>
@@ -281,7 +323,7 @@ export default function MySimulations() {
                       variant="outline"
                       onClick={() => handleDelete(sim.session_id)} 
                       disabled={!!actionLoadingId}
-                      className="border-red-900/50 hover:bg-red-950/50 text-red-500 hover:text-red-400 flex-1 md:flex-none"
+                      className="border-red-500/40 hover:bg-red-500/10 text-red-400 hover:text-red-300 flex-1 md:flex-none"
                     >
                       {actionLoadingId === `delete-${sim.session_id}` ? (
                         <div className="w-4 h-4 border-2 border-red-500/50 border-t-red-500 rounded-full animate-spin" />
@@ -290,11 +332,12 @@ export default function MySimulations() {
                       )}
                     </Button>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

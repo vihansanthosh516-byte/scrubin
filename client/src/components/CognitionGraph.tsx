@@ -129,7 +129,7 @@ export default function CognitionGraph() {
         zoomOnPinch={true}
         fitView
       >
-        <MiniMap nodeColor={(n) => n.style?.background || "#9ca3af"} />
+        <MiniMap nodeColor={(n) => (n.style?.background as string) || "#9ca3af"} />
         <Controls showZoom={true} showFitView={true} />
         <Background color="#1f2937" gap={16} />
       </ReactFlow>

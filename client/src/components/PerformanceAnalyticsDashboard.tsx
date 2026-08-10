@@ -267,17 +267,17 @@ export default function PerformanceAnalyticsDashboard() {
   ];
 
   return (
-    <div className='p-6 bg-neutral-900 border border-neutral-800 rounded-3xl mt-6 text-white'>
-      <h2 className='text-2xl font-bold mb-4'>Performance Analytics</h2>
+    <div className='p-4 bg-neutral-950/60 border border-neutral-800 rounded-2xl text-white'>
+      <h2 className='text-lg font-bold mb-3'>Performance Analytics</h2>
 
       {/* Overall score and grade */}
-      <div className='flex items-baseline mb-6'>
-        <span className='text-5xl font-bold mr-4'>{Math.round(overallScore)}%</span>
-        <span className='text-3xl font-semibold'>Grade {getLetterGrade(overallScore)}</span>
+      <div className='flex items-baseline mb-4'>
+        <span className='text-3xl font-bold mr-4'>{Math.round(overallScore)}%</span>
+        <span className='text-xl font-semibold'>Grade {getLetterGrade(overallScore)}</span>
       </div>
 
       {/* Radar chart */}
-      <div className='w-full h-64 mb-8'>
+      <div className='w-full h-52 mb-4'>
         <ResponsiveContainer>
           <RadarChart cx='50%' cy='50%' outerRadius='80%' data={radarData}>
             <PolarGrid />
@@ -289,7 +289,7 @@ export default function PerformanceAnalyticsDashboard() {
       </div>
 
       {/* Progress bars for primary metrics */}
-      <div className='grid grid-cols-2 gap-4 mb-8'>
+      <div className='grid grid-cols-2 gap-3 mb-4'>
         {[
           { label: 'Decision Quality', value: decisionQualityScore },
           { label: 'Executive Policy', value: executivePolicyQualityScore },
@@ -319,7 +319,7 @@ export default function PerformanceAnalyticsDashboard() {
       </div>
 
       {/* Score history line chart */}
-      <div className='w-full h-48 mb-8'>
+      <div className='w-full h-36 mb-4'>
         <ResponsiveContainer>
           <LineChart data={scoreHistory}>
             <XAxis dataKey='tick' stroke='#aaa' />
@@ -331,7 +331,7 @@ export default function PerformanceAnalyticsDashboard() {
       </div>
 
       {/* Detailed secondary metrics */}
-      <div className='grid grid-cols-2 gap-4'>
+      <div className='grid grid-cols-2 gap-x-3 gap-y-2 text-xs'>
         <div><strong>Executive Optimization Score:</strong> {executiveOptimizationScore.toFixed(2)}</div>
         <div><strong>Adaptation Confidence:</strong> {Math.round(adaptationConfidence)}%</div>
         <div><strong>Policy Confidence:</strong> {Math.round(policyConfidence)}%</div>

@@ -36,27 +36,37 @@ function AnimatedBackground() {
   );
 }
 
-function Digit({ value, delay }: { value: number; delay: number }) {
+function StatNumber({ value, suffix }: { value: number; suffix?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.3 });
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    let raf = 0;
+    const start = performance.now();
+    const duration = 1600;
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(eased * value));
+      if (progress < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, value]);
+
   return (
-    <div className="relative h-[44px] md:h-[60px] lg:h-[72px] w-[0.6em] overflow-hidden tabular-nums leading-none">
-      <motion.div
-        initial={{ y: 0 }}
-        animate={{ y: `-${value * 10}%` }}
-        transition={{
-          duration: 2.5,
-          delay: delay,
-          type: "spring",
-          stiffness: 40,
-          damping: 20,
-        }}
-        className="absolute inset-0 flex flex-col"
+    <div ref={ref} className="flex items-baseline">
+      <span
+        className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-white"
+        style={{ fontFamily: "'IBM Plex Mono', monospace", fontVariantNumeric: "tabular-nums" }}
       >
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-          <div key={n} className="flex h-full items-center justify-center shrink-0">
-            {n}
-          </div>
-        ))}
-      </motion.div>
+        {display.toLocaleString()}
+      </span>
+      {suffix && (
+        <span className="text-primary ml-1" style={{ fontFamily: "'Syne', sans-serif" }}>{suffix}</span>
+      )}
     </div>
   );
 }
@@ -82,8 +92,6 @@ function StatItem({ value, label, suffix = "", icon: Icon, delay = 0 }: any) {
     mouseY.set(0);
   };
 
-  const digits = value.toString().split("").map(Number);
-
   return (
     <motion.div
       ref={ref}
@@ -104,25 +112,10 @@ function StatItem({ value, label, suffix = "", icon: Icon, delay = 0 }: any) {
             <div className="p-3 rounded-2xl bg-white/5 border border-white/10 group-hover:bg-primary/20 group-hover:border-primary/40 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
               <Icon className="w-5 h-5 text-primary" />
             </div>
-            {suffix && (
-              <span className="text-primary/40 font-mono-data text-xs uppercase tracking-widest mt-1">
-                Verified Data
-              </span>
-            )}
           </div>
 
           <div>
-            <div 
-              className="flex items-baseline text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-white mb-1" 
-              style={{ fontFamily: "'Syne', sans-serif" }}
-            >
-              <div className="flex">
-                {inView && digits.map((digit, i) => (
-                  <Digit key={i} value={digit} delay={delay + i * 0.1} />
-                ))}
-              </div>
-              <span className="text-primary ml-1">{suffix}</span>
-            </div>
+            <StatNumber value={value} suffix={suffix} />
             <div className="text-[10px] md:text-xs text-muted-foreground font-mono-data uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">
               {label}
             </div>
@@ -208,9 +201,26 @@ function ProcedurePreview({ id, name, tag, difficulty, color, index }: any) {
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
+  const [procedureCount, setProcedureCount] = useState(7);
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
   useEffect(() => { setMounted(true); }, []);
+  // Keep the hero stat in sync with the live procedure registry (fallback to 7).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/procedures/search");
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.procedures || data.scenarios || []);
+        if (!cancelled && list.length > 0) setProcedureCount(list.length);
+      } catch {
+        /* keep fallback */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
   const procedures = [
     { 
       id: "appendectomy",
@@ -261,7 +271,7 @@ export default function Home() {
           <motion.p initial={{ opacity: 0, y: 30 }} animate={mounted ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay: 0.4 }} className="text-2xl md:text-3xl text-muted-foreground max-w-2xl mx-auto mb-4">Your First Surgery Starts Here</motion.p>
           <motion.p initial={{ opacity: 0, y: 30 }} animate={mounted ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay: 0.5 }} className="text-lg text-muted-foreground/80 max-w-xl mx-auto mb-12">Put ScrubIn on top of your first surgery.</motion.p>
           <motion.div initial={{ opacity: 0, y: 30 }} animate={mounted ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay: 0.6 }} className="flex flex-col sm:flex-row gap-6 justify-center">
-            <Link href="/procedures">
+            <Link href="/simulation">
               <motion.div whileHover={{ scale: 1.05, y: -5 }} whileTap={{ scale: 0.95 }}>
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-12 py-8 rounded-2xl text-lg shadow-[0_0_50px_rgba(126,200,227,0.5)] hover:shadow-[0_0_100px_rgba(126,200,227,0.8)] transition-all" style={{ fontFamily: "'Syne', sans-serif" }}>
                   <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="mr-2"><Activity className="w-6 h-6" /></motion.div>
@@ -288,7 +298,7 @@ export default function Home() {
       <section className="py-32 relative"><div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" /><div className="max-w-6xl mx-auto px-4 relative z-10">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="label-mono text-center mb-16 uppercase tracking-widest text-lg">Trusted by Medical Students Worldwide</motion.div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-          <StatItem value={7} label="Procedures" icon={Activity} delay={0} />
+          <StatItem value={procedureCount} label="Procedures" icon={Activity} delay={0} />
           <StatItem value={200} label="Decision Points" suffix="+" icon={Target} delay={0.1} />
           <StatItem value={14000} label="Students Trained" suffix="+" icon={Users} delay={0.2} />
           <StatItem value={0} label="Patients Harmed" icon={Heart} delay={0.3} />

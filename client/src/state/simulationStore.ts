@@ -37,7 +37,7 @@ export interface SimulationState {
   connectionStatus: "disconnected" | "connecting" | "connected" | "error";
 
   // DVK / replay extensions
-  mode: "live" | "replay";
+  mode: "live" | "replay" | "dvk";
   dvkChain: DVKProof[];
   replayTick: number;
   isReplaying: boolean;
@@ -55,7 +55,7 @@ export interface SimulationState {
     status: "disconnected" | "connecting" | "connected" | "error"
   ) => void;
 
-  setMode: (mode: "live" | "replay") => void;
+  setMode: (mode: "live" | "replay" | "dvk") => void;
   addDvkProof: (proof: DVKProof) => void;
   setReplayTick: (tick: number) => void;
   setIsReplaying: (isReplaying: boolean) => void;

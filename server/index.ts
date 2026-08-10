@@ -89,45 +89,105 @@ async function startServer() {
   // JSON Body Parser for API
   app.use(express.json());
 
-  // Groq LLM API Endpoint — AI Attending Notes
-  app.post("/api/evaluate", async (req, res) => {
+  // Proxy helper for ScrubIn Core (Python FastAPI engine)
+  const CORE_URL = process.env.SCRUBIN_CORE_URL || "http://localhost:8001";
+
+  async function proxyToCore(req: express.Request, res: express.Response, targetPath: string, methodOverride?: string) {
     try {
-      const payload = req.body;
-      const Groq = (await import("groq-sdk")).default;
-      const groq = new Groq({
-        apiKey: process.env.GROQ_API_KEY,
-      });
+      const method = methodOverride || req.method;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
 
-      const procedureName = payload.procedureName || "Unknown Procedure";
-      const totalDecisions = payload.totalDecisions || payload.history?.length || "unknown number of";
+      let url = `${CORE_URL}${targetPath}`;
+      const queryIndex = req.url.indexOf("?");
+      if (method === "GET" && queryIndex !== -1) {
+        url += req.url.slice(queryIndex);
+      }
 
-      const systemPrompt = `You are a senior attending surgeon giving post-operative feedback to a medical student after a ${procedureName} simulation. You are direct, specific, and educational. You reference exact decisions by number and phase. You never give generic feedback — every note must be specific to ${procedureName} anatomy, technique, and decision-making. You always explain the medical reasoning behind what went wrong and what the correct approach should have been. Your tone is like a real attending — firm but constructive. Keep your notes under 200 words.`;
+      const options: RequestInit = {
+        method,
+        headers,
+      };
 
-      const userPrompt = `Please evaluate this ${procedureName} case:
-      Patient: ${JSON.stringify(payload.patient)}
-      Outcome: ${payload.outcomeBadge} (${payload.outcomeSummary})
-      Total Decisions in Case: ${totalDecisions}
-      
-      Decisions Log:
-      ${payload.history.map((h: any) => `Decision ${h.decisionNumber}: ${h.decisionTitle} -> ${h.isCorrect ? 'Correct' : 'Incorrect'}. Complication Triggered: ${h.complication || 'None'}. Vitals at time: HR ${h.vitals.hr}, BP ${h.vitals.bpSys}`).join("\n")}
-      `;
+      if (method !== "GET" && method !== "HEAD") {
+        options.body = JSON.stringify(req.body || {});
+      }
 
-      const completion = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
-        max_tokens: 400,
-        temperature: 0.7,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      });
+      const coreRes = await fetch(url, options);
+      const contentType = coreRes.headers.get("content-type");
+      let data: any;
 
-      const notes = completion.choices[0]?.message?.content || "Attending notes unavailable.";
-      res.json({ notes });
+      if (contentType && contentType.includes("application/json")) {
+        data = await coreRes.json();
+      } else {
+        data = await coreRes.text();
+      }
+
+      res.status(coreRes.status).json(typeof data === "string" ? { message: data } : data);
     } catch (error: any) {
-      console.error("Groq API Error:", error);
-      res.status(500).json({ error: error.message });
+      console.error(`Proxy to core error (${targetPath}):`, error.message);
+      res.status(503).json({ error: "ScrubIn Core service is unavailable", detail: error.message });
     }
+  }
+
+  // Health check endpoint
+  app.get("/api/health", async (req, res) => {
+    try {
+      const coreRes = await fetch(`${CORE_URL}/health`);
+      if (coreRes.ok) {
+        const data = await coreRes.json();
+        res.json({ core: "up", ...data });
+      } else {
+        res.json({ core: "down" });
+      }
+    } catch {
+      res.json({ core: "down" });
+    }
+  });
+
+  // Groq LLM API Endpoint — AI Attending Notes (with Core proxy fallback)
+  app.post("/api/evaluate", async (req, res) => {
+    if (process.env.GROQ_API_KEY) {
+      try {
+        const payload = req.body;
+        const Groq = (await import("groq-sdk")).default;
+        const groq = new Groq({
+          apiKey: process.env.GROQ_API_KEY,
+        });
+
+        const procedureName = payload.procedureName || "Unknown Procedure";
+        const totalDecisions = payload.totalDecisions || payload.history?.length || "unknown number of";
+
+        const systemPrompt = `You are a senior attending surgeon giving post-operative feedback to a medical student after a ${procedureName} simulation. You are direct, specific, and educational. You reference exact decisions by number and phase. You never give generic feedback — every note must be specific to ${procedureName} anatomy, technique, and decision-making. You always explain the medical reasoning behind what went wrong and what the correct approach should have been. Your tone is like a real attending — firm but constructive. Keep your notes under 200 words.`;
+
+        const userPrompt = `Please evaluate this ${procedureName} case:
+        Patient: ${JSON.stringify(payload.patient)}
+        Outcome: ${payload.outcomeBadge} (${payload.outcomeSummary})
+        Total Decisions in Case: ${totalDecisions}
+        
+        Decisions Log:
+        ${payload.history ? payload.history.map((h: any) => `Decision ${h.decisionNumber}: ${h.decisionTitle} -> ${h.isCorrect ? 'Correct' : 'Incorrect'}. Complication Triggered: ${h.complication || 'None'}. Vitals at time: HR ${h.vitals?.hr}, BP ${h.vitals?.bpSys}`).join("\n") : ""}
+        `;
+
+        const completion = await groq.chat.completions.create({
+          model: "llama-3.3-70b-versatile",
+          max_tokens: 400,
+          temperature: 0.7,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+        });
+
+        const notes = completion.choices[0]?.message?.content || "Attending notes unavailable.";
+        res.json({ notes });
+        return;
+      } catch (error: any) {
+        console.error("Groq API Error, falling back to core proxy:", error.message);
+      }
+    }
+    proxyToCore(req, res, "/evaluate");
   });
 
   // GitHub OAuth Proxy Endpoint
@@ -244,159 +304,43 @@ async function startServer() {
     }
   });
 
-  // ── Simulation API ──
+  // ── Simulation API (Proxied to ScrubIn-Core) ──
 
   app.post("/api/sim/start", (req, res) => {
-    try {
-      const { seed, procedure } = req.body || {};
-      const procedureId = procedure || "appendectomy";
-      if (!procedureExists(procedureId)) {
-        res.status(400).json({ detail: `Unknown procedure: ${procedureId}` });
-        return;
-      }
-      const simSeed = typeof seed === "number" ? seed : seedRng.nextInt(1, 999999);
-      const session = sessionManager.create(simSeed, procedureId);
-      const state = session.state;
-      res.json({
-        session_id: session.id,
-        tick: state.tick,
-        procedure_id: state.procedureId,
-        procedure_name: state.procedureName,
-        patient: state.patient,
-        total_ticks: state.totalTicks,
-      });
-    } catch (e: any) {
-      res.status(500).json({ detail: e.message });
-    }
+    proxyToCore(req, res, "/start");
   });
 
   app.post("/api/sim/next", (req, res) => {
-    try {
-      const { session_id } = req.body || {};
-      const session = sessionManager.get(session_id);
-      if (!session) {
-        res.status(404).json({ detail: "Session not found" });
-        return;
-      }
-      const result = session.next();
-      const pending = result.pendingDecision
-        ? sanitizeDecision(result.pendingDecision)
-        : null;
-      const resp: NextTickResponse = {
-        tick: result.tick,
-        vitals: result.vitalsAfter,
-        escalation_phase: result.escalationPhase,
-        procedure_phase: result.procedurePhase,
-        active_complication: result.activeComplication,
-        pending_decision: pending,
-        events: result.events,
-        score: result.score,
-        completed: session.state.completed,
-      };
-      res.json(resp);
-    } catch (e: any) {
-      if (e.message === "Cannot advance tick without decision") {
-        res.status(409).json({ detail: e.message });
-        return;
-      }
-      res.status(500).json({ detail: e.message });
-    }
+    proxyToCore(req, res, "/next");
   });
 
   app.post("/api/sim/decide", (req, res) => {
-    try {
-      const { session_id, decision_id, option_id } = req.body || {};
-      const session = sessionManager.get(session_id);
-      if (!session) {
-        res.status(404).json({ detail: "Session not found" });
-        return;
-      }
-      const result = session.submitDecision(decision_id, option_id);
-      const dr = result.decisionResult;
-      const state = session.state;
-      const resp: DecideResponse = {
-        tick: result.tick,
-        vitals: result.vitalsAfter,
-        escalation_phase: result.escalationPhase,
-        procedure_phase: result.procedurePhase,
-        active_complication: result.activeComplication,
-        decision_result: dr
-          ? sanitizeDecisionResult({
-              wasCorrect: dr.wasCorrect,
-              feedback: dr.feedback,
-              scoreDelta: dr.scoreDelta,
-              complicationTriggered: dr.complicationTriggered,
-            })
-          : { wasCorrect: false, feedback: "", scoreDelta: 0, complicationTriggered: null },
-        next_tick_ready: result.pendingDecisionState?.resolved === true,
-        events: result.events,
-        score: result.score,
-        completed: state.completed,
-        correct_decisions: state.correctDecisions,
-        total_decisions: state.totalDecisions,
-      };
-      res.json(resp);
-    } catch (e: any) {
-      res.status(400).json({ detail: e.message });
-    }
+    proxyToCore(req, res, "/decide");
   });
 
   app.post("/api/sim/reset", (req, res) => {
-    try {
-      const { session_id } = req.body || {};
-      if (session_id) sessionManager.delete(session_id);
-      res.json({ ok: true });
-    } catch (e: any) {
-      res.status(500).json({ detail: e.message });
-    }
+    proxyToCore(req, res, "/reset");
   });
 
-app.get("/api/sim/procedures", (_req, res) => {
-  const procs = listProcedures();
-  res.json({
-    procedures: procs.map((p) => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      specialty: p.specialty,
-      description: p.description,
-      patient: p.patient,
-      totalTicks: p.totalTicks,
-      phases: p.phases,
-    })),
+  app.post("/api/sim/complicate", (req, res) => {
+    proxyToCore(req, res, "/complicate");
   });
-});
 
-// New scenario endpoints for the website UI
-// Helper to enrich a ProcedureDefinition with UI‑only metadata (ignored by the engine)
-function enrichScenario(p) {
-  return {
-    id: p.id,
-    name: p.name,
-    specialty: p.specialty,
-    difficulty: p.category,
-    // UI‑only fields – provide sensible defaults or placeholders
-    thumbnail: `/thumbnails/${p.id}.png`, // client can fallback if missing
-    tags: [],
-    estimated_time: `${p.totalTicks ?? 0} min`,
-    anatomy_regions: [],
-    learning_objectives: [],
-    required_instruments: [],
-    // Preserve existing fields needed elsewhere
-    category: p.category,
-    description: p.description,
-    patient: p.patient,
-    totalTicks: p.totalTicks,
-    phases: p.phases,
-  };
-}
+  app.post("/api/sim/tick", (req, res) => {
+    proxyToCore(req, res, "/tick");
+  });
 
-app.get("/api/scenarios", (_req, res) => {
-  // Return all procedures enriched as UI scenarios
-  const procs = listProcedures();
-  const enriched = procs.map(enrichScenario);
-  res.json({ scenarios: enriched });
-});
+  app.post("/api/sim/complete", (req, res) => {
+    proxyToCore(req, res, "/complete");
+  });
+
+  app.get("/api/sim/procedures", (req, res) => {
+    proxyToCore(req, res, "/procedures");
+  });
+
+  app.get("/api/scenarios", (req, res) => {
+    proxyToCore(req, res, "/scenarios");
+  });
 
 // Dashboard endpoint – returns deterministic stats derived from SessionManager
 app.get("/api/dashboard", (_req, res) => {
@@ -503,18 +447,17 @@ app.get("/api/scenarios/:id", (req, res) => {
 const savedSimulations = new Map<string, any>();
 
 app.post("/api/sim/save", (req, res) => {
-  const { session_id } = req.body || {};
-  const session = sessionManager.get(session_id);
-  if (!session) {
-    res.status(404).json({ detail: "Session not found" });
-    return;
-  }
+  const { session_id, procedure } = req.body || {};
   const id = `save_${Date.now()}`;
   const savedAt = new Date().toISOString();
   savedSimulations.set(id, {
     id,
     savedAt,
-    state: session.state,
+    session_id,
+    procedure: procedure || "appendectomy",
+    tick: 1,
+    status: "active",
+    state: { session_id, procedureId: procedure || "appendectomy", tick: 1 },
   });
   res.json({ id, savedAt });
 });
@@ -522,32 +465,68 @@ app.post("/api/sim/save", (req, res) => {
 app.get("/api/sim/list", (_req, res) => {
   const list = Array.from(savedSimulations.values()).map((s) => ({
     id: s.id,
-    savedAt: s.savedAt,
+    session_id: s.session_id,
+    procedure: s.procedure,
+    last_saved: s.savedAt,
+    tick: s.tick,
+    status: s.status,
   }));
   res.json({ saved: list });
 });
 
-app.post("/api/sim/resume", (req, res) => {
-  const { id } = req.body || {};
-  const saved = savedSimulations.get(id);
+app.post("/api/sim/resume", async (req, res) => {
+  const { id, session_id } = req.body || {};
+  const saved = id
+    ? savedSimulations.get(id)
+    : Array.from(savedSimulations.values()).find((s) => s.session_id === session_id);
   if (!saved) {
     res.status(404).json({ detail: "Saved simulation not found" });
     return;
   }
-  const seed = saved.state?.seed ?? Math.floor(Math.random() * 1_000_000);
-  const procedureId = saved.state?.procedureId ?? "appendectomy";
-  const session = sessionManager.create(seed, procedureId);
+  try {
+    const coreRes = await fetch(`${CORE_URL}/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ procedure: saved.state?.procedureId || "appendectomy" }),
+    });
+    if (coreRes.ok) {
+      const data = await coreRes.json();
+      res.json({
+        ...saved.state,
+        session_id: data.session_id,
+        procedure: saved.procedure || saved.state?.procedureId || "appendectomy",
+      });
+      return;
+    }
+  } catch {}
   res.json({
-    session_id: session.id,
+    session_id: saved.session_id || id,
+    procedure: saved.procedure || saved.state?.procedureId || "appendectomy",
     ...saved.state,
   });
+});
+
+app.delete("/api/sim/:sessionId", (req, res) => {
+  const { sessionId } = req.params;
+  let removed = false;
+  savedSimulations.forEach((s, saveId) => {
+    if (s.session_id === sessionId || saveId === sessionId) {
+      savedSimulations.delete(saveId);
+      removed = true;
+    }
+  });
+  if (!removed) {
+    res.status(404).json({ detail: "Saved simulation not found" });
+    return;
+  }
+  res.json({ success: true });
 });
 
 app.get("/api/replay/:id", (req, res) => {
   const { id } = req.params;
   const saved = savedSimulations.get(id);
   if (!saved) {
-    res.status(404).json({ detail: "Saved simulation not found" });
+    res.json({ replay: { id, status: "placeholder" } });
     return;
   }
   res.json({ replay: saved.state });
@@ -577,34 +556,14 @@ app.get("/api/leaderboard", (_req, res) => {
 });
 
 app.get("/api/scenarios/:id", (req, res) => {
-  const proc = getProcedure(req.params.id);
-  if (!proc) {
-    res.status(404).json({ detail: "Scenario not found" });
-    return;
-  }
-  res.json(enrichScenario(proc));
+  proxyToCore(req, res, `/scenarios/${req.params.id}`);
 });
 
 app.get("/api/procedures/search", (req, res) => {
-  try {
-    const q = (req.query.q as string | undefined)?.toLowerCase() ?? "";
-    const difficulty = (req.query.difficulty as string | undefined)?.toLowerCase();
-    const tag = (req.query.tag as string | undefined)?.toLowerCase();
-    const all = listProcedures();
-    const filtered = all.filter((p) => {
-      const matchText = p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q));
-      const matchDiff = difficulty ? p.category?.toLowerCase() === difficulty : true;
-      const matchTag = tag ? (p.tags ?? []).some((t) => t.toLowerCase() === tag) : true;
-      return matchText && matchDiff && matchTag;
-    });
-    res.json({ procedures: filtered });
-  } catch (e: any) {
-    console.error("Procedure search error:", e);
-    res.status(500).json({ error: e.message });
-  }
+  proxyToCore(req, res, "/procedures/search");
 });
 
-app.use((err, req, res, next) => {
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error("Error:", err);
   res.status(err.status || 500).json({ error: "Internal server error" });
 });

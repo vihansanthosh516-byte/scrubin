@@ -13,3 +13,8 @@ export function getLeaderboard() {
   // Backend endpoint not yet implemented; placeholder for future
   return request<{ entries: LeaderboardEntry[] }>("/api/leaderboard");
 }
+
+/** Stub implementation for user sync */
+export function upsertUser(user: any) {
+  return user;
+}
