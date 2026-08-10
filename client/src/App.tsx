@@ -2,30 +2,29 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect } from "react";
 import { Route, Switch, useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import ProcedureLibrary from "./pages/ProcedureLibrary";
 import Simulation from "./pages/Simulation";
-// import SimulationDashboard from "./pages/SimulationDashboard"; // Deprecated
 import Leaderboard from "./pages/Leaderboard";
 import Profile from "./pages/Profile";
 import Signin from "./pages/Signin";
 import AnatomyExplorer from "./pages/AnatomyExplorer";
 import LearnHub from "./pages/LearnHub";
 import Onboarding from "./pages/Onboarding";
-import ResumeSimulation from "./pages/ResumeSimulation";
 import MySimulations from "./pages/MySimulations";
 import ReplayViewer from "./pages/ReplayViewer";
+import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
 
 // Loading screen component
 function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center">
-      <div className="animate-spin w-8 h-8 border-2 border-baby-blue border-t-transparent rounded-full" />
+    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#161310] flex items-center justify-center">
+      <div className="animate-spin w-8 h-8 border-2 border-[#CC553D] border-t-transparent rounded-full" />
     </div>
   );
 }
@@ -48,8 +47,14 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Authenticated but on signin page -> redirect to profile
-    if (user && location === "/signin") {
+    // Authenticated but hasn't completed onboarding -> send to onboarding
+    if (user && !hasCompletedOnboarding && location !== "/onboarding") {
+      setLocation("/onboarding");
+      return;
+    }
+
+    // Authenticated and onboarded but on signin page -> redirect to profile
+    if (user && hasCompletedOnboarding && location === "/signin") {
       setLocation("/profile");
       return;
     }
@@ -94,7 +99,6 @@ function Router() {
             <Route path="/procedures" component={ProcedureLibrary} />
             <Route path="/simulation/:id" component={Simulation} />
             <Route path="/simulation" component={Simulation} />
-            <Route path="/resume" component={ResumeSimulation} />
             <Route path="/my-simulations" component={MySimulations} />
             <Route path="/replay/:sessionId" component={ReplayViewer} />
 
@@ -102,7 +106,7 @@ function Router() {
             <Route path="/learn" component={LearnHub} />
             <Route path="/anatomy" component={AnatomyExplorer} />
             <Route path="/profile" component={Profile} />
-            <Route component={Signin} />
+            <Route component={NotFound} />
           </Switch>
         </motion.div>
       </AnimatePresence>
@@ -115,12 +119,14 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <ThemeProvider defaultTheme="light" switchable>
-          <TooltipProvider>
-            <Toaster />
-            <AuthRedirect>
-              <Router />
-            </AuthRedirect>
-          </TooltipProvider>
+          <MotionConfig reducedMotion="user">
+            <TooltipProvider>
+              <Toaster />
+              <AuthRedirect>
+                <Router />
+              </AuthRedirect>
+            </TooltipProvider>
+          </MotionConfig>
         </ThemeProvider>
       </AuthProvider>
     </ErrorBoundary>

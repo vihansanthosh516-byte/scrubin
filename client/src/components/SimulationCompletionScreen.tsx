@@ -49,23 +49,23 @@ export default function SimulationCompletionScreen({ scenarioName, onViewDebrief
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="p-3 bg-[#F4F0E8] border border-[#E2DDD1] rounded-sm flex flex-col min-w-0 dark:bg-[#26211B] dark:border-[#3A342C]">
-          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Procedure</span>
+          <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Procedure</span>
           <span className="text-sm font-bold text-[#191919] truncate dark:text-[#EDEAE4]">{scenarioName}</span>
         </div>
         <div className="p-3 bg-[#F4F0E8] border border-[#E2DDD1] rounded-sm flex flex-col min-w-0 dark:bg-[#26211B] dark:border-[#3A342C]">
-          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Session ID</span>
+          <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Session ID</span>
           <span className="text-sm font-bold text-[#191919] font-mono truncate dark:text-[#EDEAE4]">{simId}</span>
         </div>
         <div className="p-3 bg-[#F4F0E8] border border-[#E2DDD1] rounded-sm flex flex-col min-w-0 dark:bg-[#26211B] dark:border-[#3A342C]">
-          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Total Ticks</span>
+          <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Total Ticks</span>
           <span className="text-sm font-bold text-[#191919] dark:text-[#EDEAE4]">{currentTick}</span>
         </div>
         <div className="p-3 bg-[#F4F0E8] border border-[#E2DDD1] rounded-sm flex flex-col min-w-0 dark:bg-[#26211B] dark:border-[#3A342C]">
-          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Final Phase</span>
+          <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Final Phase</span>
           <span className="text-sm font-bold text-[#191919] truncate dark:text-[#EDEAE4]">{finalPhase}</span>
         </div>
         <div className="p-3 bg-[#F4F0E8] border border-[#E2DDD1] rounded-sm flex flex-col min-w-0 col-span-2 dark:bg-[#26211B] dark:border-[#3A342C]">
-          <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Final Patient Status</span>
+          <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-1">Final Patient Status</span>
           <span className="text-sm font-bold text-[#191919] truncate dark:text-[#EDEAE4]">{finalPatientStatus}</span>
         </div>
       </div>

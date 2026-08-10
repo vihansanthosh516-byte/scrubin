@@ -12,7 +12,7 @@ const ALL_BADGES = [
   { id: "first_cut", name: "First Cut", desc: "Complete your first procedure", icon: Scissors, color: "text-[#2E6B4B] dark:text-[#8FBF9A]", requirement: (stats: any) => stats.totalSurgeries >= 1 },
   { id: "perfectionist", name: "Perfectionist", desc: "Get 100% on any procedure", icon: Star, color: "text-[#D99B26] dark:text-[#E0B060]", requirement: (stats: any) => stats.bestScore === 100 },
   { id: "survivor", name: "Survivor", desc: "Complete 10 procedures", icon: Heart, color: "text-[#A32A2A] dark:text-[#E08080]", requirement: (stats: any) => stats.totalSurgeries >= 10 },
-  { id: "scholar", name: "Scholar", desc: "Complete 25 procedures", icon: Brain, color: "text-[#8C5A7A] dark:text-[#C9A8BC]", requirement: (stats: any) => stats.totalSurgeries >= 25 },
+  { id: "scholar", name: "Scholar", desc: "Complete 25 procedures", icon: Brain, color: "text-[#C27820] dark:text-[#E0B060]", requirement: (stats: any) => stats.totalSurgeries >= 25 },
   { id: "master", name: "Master Surgeon", desc: "Complete 50 procedures", icon: Trophy, color: "text-[#C27820] dark:text-[#E0B060]", requirement: (stats: any) => stats.totalSurgeries >= 50 },
   { id: "legend", name: "Legend", desc: "Complete 100 procedures", icon: Award, color: "text-[#CC553D] dark:text-[#E06D53]", requirement: (stats: any) => stats.totalSurgeries >= 100 },
   { id: "streak_3", name: "On Fire", desc: "Maintain a 3-day streak", icon: Flame, color: "text-[#C27820] dark:text-[#E0B060]", requirement: (stats: any) => stats.streak >= 3 },

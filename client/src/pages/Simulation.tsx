@@ -45,8 +45,11 @@ export default function Simulation() {
     setState,
     setSimId,
     setMode,
-    setConnectionStatus
+    setConnectionStatus,
+    dvkChain
   } = useSimulationStore();
+
+  const causalPastes = dvkChain.length > 0 ? Math.round((dvkChain.filter((p: any) => Array.isArray(p.causal_events) && p.causal_events.length > 0).length / dvkChain.length) * 100) : 100;
 
   const [isStarting, setIsStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
@@ -534,11 +537,11 @@ export default function Simulation() {
             <div className="hidden lg:block h-6 w-px bg-[#E2DDD1] shrink-0" />
             <div className="hidden lg:flex items-center gap-5 min-w-0">
               <div className="flex flex-col min-w-0">
-                <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase">Patient</span>
+                <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase">Patient</span>
                 <span className="text-xs font-bold truncate">{PATIENT?.name || 'Unknown'} ({PATIENT?.age || '?'}y/o {PATIENT?.sex || ''})</span>
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase">Procedure</span>
+                <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase">Procedure</span>
                 <span className="text-xs font-bold text-primary truncate">{procId.toUpperCase()}</span>
               </div>
             </div>
@@ -551,7 +554,7 @@ export default function Simulation() {
               </div>
             )}
             <div className="hidden xl:flex flex-col items-end">
-              <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase">Session ID</span>
+              <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase">Session ID</span>
               <span className="text-[10px] font-mono text-[#666059] dark:text-[#C2BBB0]">{simId}</span>
             </div>
 
@@ -581,7 +584,7 @@ export default function Simulation() {
               </button>
               <button
                 onClick={() => setMode("replay")}
-                className={`px-3 py-1.5 rounded-sm text-xs font-bold transition-all ${mode === "replay" ? "bg-[#8C5A7A] text-white" : "text-muted-foreground hover:text-foreground"}`}
+                className={`px-3 py-1.5 rounded-sm text-xs font-bold transition-all ${mode === "replay" ? "bg-[#CC553D] text-white" : "text-muted-foreground hover:text-foreground"}`}
               >
                 REPLAY
               </button>
@@ -598,13 +601,13 @@ export default function Simulation() {
             <div className="shrink-0 glass-card p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Patient</h3>
-                <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider ${statusBadgeClass}`}>
+                <span className={`px-2 py-0.5 rounded-full border text-[11px] font-black uppercase tracking-wider ${statusBadgeClass}`}>
                   {statusBadge}
                 </span>
               </div>
               {patientProfile && (
                 <div className="mb-3 rounded-sm border border-[#E2DDD1] dark:border-[#3A342C] bg-white dark:bg-[#221F1C] px-2.5 py-2">
-                  <span className="block text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Patient Profile</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Patient Profile</span>
                   <span className="text-xs font-bold text-[#191919] dark:text-[#EDEAE4]">
                     {patientProfile.asaLabel || `ASA ${patientProfile.asaClass}`}
                   </span>
@@ -615,27 +618,27 @@ export default function Simulation() {
               )}
               <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                 <div className="min-w-0">
-                  <span className="block text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Name</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Name</span>
                   <span className="font-bold truncate block">{PATIENT?.name || 'Unknown'}</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Age / Sex</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Age / Sex</span>
                   <span className="font-bold">{PATIENT?.age || '?'}y/o {PATIENT?.sex || ''}</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Procedure</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Procedure</span>
                   <span className="font-bold text-primary truncate block">{procId.toUpperCase()}</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Phase</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Phase</span>
                   <span className="truncate block">{pendingDecision?.phaseLabel || pendingDecision?.procedurePhase || currentState?.procedure_phase || '—'}</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Step</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Step</span>
                   <span className="font-bold">{isStock ? `Step ${currentStockStepIndex + 1} / ${stockSteps.length}` : `Decision ${currentDecisionIdx + 1}`}</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-[9px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Tick</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Tick</span>
                   <span className="font-bold text-[#2E6B4B]">{currentTick}</span>
                 </div>
               </div>
@@ -644,7 +647,7 @@ export default function Simulation() {
               {currentState?.physiological_reserve !== undefined && (
                 <div className="mt-3 p-3 bg-background/50 border border-border rounded-sm space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <span className="text-[9px] font-bold text-[#8C827A] dark:text-[#C2BBB0] uppercase tracking-wider">Physiological Reserve</span>
+                    <span className="text-[11px] font-bold text-[#8C827A] dark:text-[#C2BBB0] uppercase tracking-wider">Physiological Reserve</span>
                     <span className={`text-[11px] font-bold font-mono ${
                       currentState.physiological_reserve < 30 ? "text-[#A32A2A] animate-pulse" :
                       currentState.physiological_reserve < 70 ? "text-[#C27820]" :
@@ -709,11 +712,11 @@ export default function Simulation() {
 
             <div className="relative flex h-[calc(100dvh-160px)] min-h-[440px] lg:h-auto lg:min-h-0 lg:flex-1 flex-col overflow-hidden glass-card p-5 text-foreground">
               {mode === "replay" && (
-                <div className="absolute inset-0 bg-[#8C5A7A]/5 backdrop-blur-[1px] rounded-sm z-10 flex items-center justify-center border border-[#8C5A7A]/20">
-                  <div className="bg-[#3A2A33] border border-[#8C5A7A] p-6 rounded-sm text-center shadow-2xl">
-                    <Power className="w-12 h-12 text-[#D9A8C4] mx-auto mb-4 animate-pulse" />
+                <div className="absolute inset-0 bg-[#CC553D]/5 backdrop-blur-[1px] rounded-sm z-10 flex items-center justify-center border border-[#CC553D]/20">
+                  <div className="bg-[#26211B] border border-[#CC553D] p-6 rounded-sm text-center shadow-2xl">
+                    <Power className="w-12 h-12 text-[#E8A99A] mx-auto mb-4 animate-pulse" />
                     <h2 className="text-xl font-bold text-[#EDEAE4]">Replay Engine Active</h2>
-                    <p className="text-[#D9A8C4] text-sm mt-2">Scrubbing through DVK Proof Chain</p>
+                    <p className="text-[#E8A99A] text-sm mt-2">Scrubbing through DVK Proof Chain</p>
                   </div>
                 </div>
               )}
@@ -779,7 +782,7 @@ export default function Simulation() {
                   </div>
 
                   <div className="shrink-0 grid grid-cols-1 sm:grid-cols-3 gap-2 mt-4">
-                    <Button variant="outline" className="h-10 border-[#E2DDD1] hover:bg-[#FBF9F5] text-[#8C5A7A] hover:text-[#8C5A7A]" onClick={() => setMode("replay")}>
+                    <Button variant="outline" className="h-10 border-[#E2DDD1] hover:bg-[#FBF9F5] text-[#CC553D] hover:text-[#CC553D]" onClick={() => setMode("replay")}>
                       <RotateCcw className="w-4 h-4 mr-2" /> View Replay
                     </Button>
                     <Button variant="outline" className="h-10 border-[#E2DDD1] hover:bg-[#FBF9F5] text-[#191919] dark:border-[#3A342C] dark:hover:bg-[#26211B] dark:text-[#EDEAE4]" onClick={() => setLocation("/procedures")}>
@@ -802,7 +805,7 @@ export default function Simulation() {
                         <h2 className="text-xl font-bold text-[#E08080]">
                           Complication: {String(currentState?.active_complication || '').replace(/_/g, ' ').toUpperCase()}
                         </h2>
-                        <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider ${complicationSource === "spontaneous" ? "bg-[#D99B26]/15 border-[#D99B26]/50 text-[#E0B060]" : "bg-[#A32A2A]/20 border-[#A32A2A]/60 text-[#E08080]"}`}>
+                        <span className={`px-2 py-0.5 rounded-full border text-[11px] font-black uppercase tracking-wider ${complicationSource === "spontaneous" ? "bg-[#D99B26]/15 border-[#D99B26]/50 text-[#E0B060]" : "bg-[#A32A2A]/20 border-[#A32A2A]/60 text-[#E08080]"}`}>
                           {complicationSource === "spontaneous" ? "Spontaneous Deterioration" : "Surgical Error"}
                         </span>
                       </div>
@@ -813,7 +816,7 @@ export default function Simulation() {
                       </p>
                       {complicationCause && (
                         <div className="p-3 bg-black/25 border border-[#A32A2A]/40 rounded-sm">
-                          <span className="text-[9px] font-black uppercase tracking-wider text-[#E08080]/80 block mb-1">Physiologic Cause</span>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-[#E08080]/80 block mb-1">Physiologic Cause</span>
                           <p className="text-xs text-[#EDEAE4]/85 leading-relaxed">{complicationCause}</p>
                         </div>
                       )}
@@ -887,16 +890,16 @@ export default function Simulation() {
             {/* Engine status strip (hidden on narrow screens — tick is already shown in the console header) */}
             <div className="hidden lg:grid shrink-0 grid-cols-3 gap-3">
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
-                <span className="text-[9px] text-muted-foreground uppercase">Tick Rate</span>
-                <span className="text-base font-bold text-[#CC553D]">1Hz</span>
+                <span className="text-[11px] text-muted-foreground uppercase">Tick Rate</span>
+                <span className="text-base font-bold text-[#CC553D]">1.5s</span>
               </div>
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
-                <span className="text-[9px] text-muted-foreground uppercase">Causal Clock</span>
+                <span className="text-[11px] text-muted-foreground uppercase">Causal Clock</span>
                 <span className="text-base font-bold text-[#2E6B4B]">{currentTick}t</span>
               </div>
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
-                <span className="text-[9px] text-muted-foreground uppercase">Consistency</span>
-                <span className="text-base font-bold text-[#C27820]">100%</span>
+                <span className="text-[11px] text-muted-foreground uppercase">Consistency</span>
+                <span className="text-base font-bold text-[#C27820]">{causalPastes}%</span>
               </div>
             </div>
           </div>
@@ -940,11 +943,11 @@ function formatBP(sys: number, dia: number | undefined) {
 
 function TrendArrow({ delta }: { delta: number | null }) {
   if (delta === null || Math.abs(delta) < 0.05) {
-    return <span className="text-[9px] text-[#8C827A] dark:text-[#C2BBB0] font-mono">–</span>;
+    return <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] font-mono">–</span>;
   }
   const up = delta > 0;
   return (
-    <span className={`text-[9px] font-mono font-black ${up ? "text-[#2E6B4B]" : "text-[#A32A2A]"}`}>
+    <span className={`text-[11px] font-mono font-black ${up ? "text-[#2E6B4B]" : "text-[#A32A2A]"}`}>
       {up ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}
     </span>
   );
@@ -983,7 +986,7 @@ function VitalItem({ icon, label, value, unit, color, trend = null, history = []
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 bg-white rounded-sm border border-[#E2DDD1] flex items-center justify-center shrink-0 dark:bg-[#1E1A16] dark:border-[#3A342C]">{icon}</div>
           <div className="flex flex-col min-w-0">
-            <span className="text-[8px] text-[#8C827A] dark:text-[#C2BBB0] uppercase">{label}</span>
+            <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase">{label}</span>
             <span className={`text-base font-black leading-none ${color}`}>{displayValue}<span className="text-[10px] font-normal opacity-50 ml-1">{unit}</span></span>
           </div>
         </div>

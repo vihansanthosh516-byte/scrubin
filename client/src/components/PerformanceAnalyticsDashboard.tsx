@@ -137,14 +137,14 @@ export default function PerformanceAnalyticsDashboard() {
     }
     const safetyScore = Math.max(0, 100 - criticalEvents * 5); // each critical event penalises 5 pts
 
-    // ----- Time efficiency (placeholder) -----
-    const timeEfficiencyScore = 100;
+    // ----- Time efficiency (ticks elapsed vs engendered pace is unknown; report honestly) -----
+    // Real: fraction of ticks whose toxic vitals stayed within normal ranges is
+    // already captured by patientStabilityScore. Time efficiency is left out of
+    // the headline metrics because no engine-determined expected duration exists.
 
     // ----- Procedure completion -----
-    const procedureCompletionScore = 100; // we are in the completed UI branch
-
-    // ----- Instrument economy (placeholder) -----
-    const instrumentEconomyScore = 100;
+    // Not reported: the engine provides no planned-step denominator in this
+    // view, so any number here would be fabricated.
 
     // ----- Overall score – simple average of primary metrics -----
     const primaryMetrics = [
@@ -192,11 +192,29 @@ export default function PerformanceAnalyticsDashboard() {
     // Critical events count (already computed)
     const criticalEventsCount = criticalEvents;
 
-    // Build history of overall score per tick (cumulative average)
+    // Build a REAL per-tick score history from per-tick observations instead of
+    // repeating the final overall score on every point.
     const scoreHistory: { tick: number; score: number }[] = [];
-    for (let i = 0; i <= maxTick; i++) {
-      // For deterministic simplicity we use the final overall score for each tick.
-      scoreHistory.push({ tick: i, score: overallScore });
+    for (let t = 0; t <= maxTick; t++) {
+      const cog = getCognition(t);
+      const tickVitals = dvkChain.find((p) => p.tick === t)?.state?.vitals || {};
+      let inRange = 0;
+      let total = 0;
+      const hr = tickVitals.hr ?? tickVitals.heartRate;
+      if (hr !== undefined) { total++; if (hr >= 60 && hr <= 100) inRange++; }
+      const bpSys = tickVitals.bpSys ?? tickVitals.bloodPressure?.sys ?? tickVitals.bp?.sys;
+      if (bpSys !== undefined) { total++; if (bpSys >= 90 && bpSys <= 160) inRange++; }
+      const spo2 = tickVitals.spo2 ?? tickVitals.SpO2;
+      if (spo2 !== undefined) { total++; if (spo2 >= 90) inRange++; }
+      const rr = tickVitals.rr ?? tickVitals.respiratoryRate;
+      if (rr !== undefined) { total++; if (rr >= 8 && rr <= 24) inRange++; }
+      const tickStability = total > 0 ? (inRange / total) * 100 : 100;
+
+      const decisionPresent = cog.policyDecision !== undefined ? 100 : 0;
+      const goalPresent = cog.executiveGoal !== undefined ? 100 : 0;
+      const hasCausal = dvkChain.find((p) => p.tick === t)?.causal_events?.length ? 100 : 0;
+      const tickScore = Math.round((tickStability + decisionPresent + goalPresent + hasCausal) / 4);
+      scoreHistory.push({ tick: t, score: tickScore });
     }
 
     return {
@@ -206,9 +224,6 @@ export default function PerformanceAnalyticsDashboard() {
       predictionAccuracyScore,
       complicationManagementScore,
       patientStabilityScore,
-      timeEfficiencyScore,
-      procedureCompletionScore,
-      instrumentEconomyScore,
       safetyScore,
       consistencyScore,
       replayIntegrityScore,
@@ -240,9 +255,6 @@ export default function PerformanceAnalyticsDashboard() {
     predictionAccuracyScore,
     complicationManagementScore,
     patientStabilityScore,
-    timeEfficiencyScore,
-    procedureCompletionScore,
-    instrumentEconomyScore,
     safetyScore,
     consistencyScore,
     replayIntegrityScore,
@@ -267,7 +279,7 @@ export default function PerformanceAnalyticsDashboard() {
   ];
 
   return (
-    <div className='p-4 bg-[#161310]/60 border border-[#3A342C] rounded-sm text-white'>
+    <div className='p-4 bg-card border border-border rounded-sm text-foreground'>
       <h2 className='text-lg font-bold mb-3'>Performance Analytics</h2>
 
       {/* Overall score and grade */}
@@ -281,9 +293,9 @@ export default function PerformanceAnalyticsDashboard() {
         <ResponsiveContainer>
           <RadarChart cx='50%' cy='50%' outerRadius='80%' data={radarData}>
             <PolarGrid />
-            <PolarAngleAxis dataKey='metric' stroke='#aaa' />
-            <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} stroke='#aaa' />
-            <Radar name='Score' dataKey='value' stroke='#29b1ff' fill='#29b1ff' fillOpacity={0.4} />
+            <PolarAngleAxis dataKey='metric' stroke='#8C827A' />
+            <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} stroke='#8C827A' />
+            <Radar name='Score' dataKey='value' stroke='#CC553D' fill='#CC553D' fillOpacity={0.4} />
           </RadarChart>
         </ResponsiveContainer>
       </div>
@@ -299,16 +311,13 @@ export default function PerformanceAnalyticsDashboard() {
           { label: 'Safety', value: safetyScore },
           { label: 'Consistency', value: consistencyScore },
           { label: 'Replay Integrity', value: replayIntegrityScore },
-          { label: 'Time Efficiency', value: timeEfficiencyScore },
-          { label: 'Procedure Completion', value: procedureCompletionScore },
-          { label: 'Instrument Economy', value: instrumentEconomyScore },
         ].map((m, i) => (
           <div key={i}>
             <div className='flex justify-between text-sm mb-1'>
               <span>{m.label}</span>
               <span>{Math.round(m.value)}%</span>
             </div>
-            <div className='w-full h-2 bg-[#332C24] rounded'>
+            <div className='w-full h-2 bg-muted rounded'>
               <div
                 className='h-2 bg-primary rounded'
                 style={{ width: `${Math.min(Math.max(m.value, 0), 100)}%` }}
@@ -322,10 +331,10 @@ export default function PerformanceAnalyticsDashboard() {
       <div className='w-full h-36 mb-4'>
         <ResponsiveContainer>
           <LineChart data={scoreHistory}>
-            <XAxis dataKey='tick' stroke='#aaa' />
-            <YAxis domain={[0, 100]} stroke='#aaa' />
+            <XAxis dataKey='tick' stroke='#8C827A' />
+            <YAxis domain={[0, 100]} stroke='#8C827A' />
             <Tooltip />
-            <Line type='monotone' dataKey='score' stroke='#29b1ff' strokeWidth={2} dot={false} />
+            <Line type='monotone' dataKey='score' stroke='#CC553D' strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>

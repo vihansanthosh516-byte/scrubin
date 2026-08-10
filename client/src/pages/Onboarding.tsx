@@ -39,9 +39,9 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="fixed inset-0 bg-[#0a0f1e] z-50 flex items-center justify-center p-4">
+    <div role="dialog" aria-modal="true" aria-label="Complete your profile" className="fixed inset-0 bg-[#161310] z-50 flex items-center justify-center p-4">
       {/* Animated background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 animate-gradient-shift" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/10 animate-gradient-shift" />
       
       {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -74,13 +74,13 @@ export default function Onboarding() {
         transition={{ duration: 0.5, type: "spring" }}
         className="relative w-full max-w-md"
       >
-        <div className="rounded-sm p-8 bg-card/95 backdrop-blur-xl border border-border shadow-[0_0_60px_rgba(126,200,227,0.2)]">
+        <div className="rounded-sm p-8 bg-[#1E1A16] border border-[#3A342C] shadow-[0_0_60px_rgba(204,85,61,0.15)]">
           <div className="text-center mb-8">
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", delay: 0.2, stiffness: 200 }}
-              className="w-20 h-20 rounded-sm border-2 border-primary/40 overflow-hidden mx-auto mb-4 bg-muted shadow-[0_0_20px_rgba(126,200,227,0.3)]"
+              className="w-20 h-20 rounded-sm border-2 border-primary/40 overflow-hidden mx-auto mb-4 bg-[#26211B] shadow-[0_0_20px_rgba(204,85,61,0.2)]"
             >
               <img
                 src={user?.avatar_url}
@@ -93,7 +93,7 @@ export default function Onboarding() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-2xl font-bold text-white mb-2"
+              className="text-2xl font-bold text-[#EDEAE4] mb-2"
               style={{ fontFamily: "'Inter', sans-serif" }}
             >
               Complete Your Profile
@@ -103,7 +103,7 @@ export default function Onboarding() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-muted-foreground text-sm"
+              className="text-[#A89F95] text-sm"
             >
               Let's set up your surgeon identity
             </motion.p>
@@ -115,17 +115,17 @@ export default function Onboarding() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <label className="block text-sm font-medium text-white mb-2">
+              <label className="block text-sm font-medium text-[#EDEAE4] mb-2">
                 Full Name
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A89F95]" />
                 <input
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Dr. House"
-                  className="w-full h-12 pl-11 pr-4 rounded-sm bg-muted border border-border text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                  className="w-full h-12 pl-11 pr-4 rounded-sm bg-[#26211B] border border-[#3A342C] text-[#EDEAE4] placeholder:text-[#8C827A] focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
                   maxLength={30}
                 />
               </div>
@@ -136,22 +136,22 @@ export default function Onboarding() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <label className="block text-sm font-medium text-white mb-2">
-                Profession / Rank
+<label className="block text-sm font-medium text-[#EDEAE4] mb-2">
+                Current Role
               </label>
               <div className="relative">
-                <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10 pointer-events-none" />
+                <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A89F95] z-10 pointer-events-none" />
                 <select
-                  value={profession}
-                  onChange={(e) => setProfession(e.target.value)}
-                  className="w-full h-12 pl-11 pr-10 rounded-sm bg-muted border border-border text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all appearance-none cursor-pointer"
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full h-12 pl-11 pr-10 rounded-sm bg-[#26211B] border border-[#3A342C] text-[#EDEAE4] focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all appearance-none cursor-pointer"
                 >
-                  <option value="" disabled className="bg-muted text-muted-foreground">Select your current role</option>
-                  {PROFESSIONS.map(p => (
-                    <option key={p} value={p} className="bg-background text-white">{p}</option>
+                  <option value="" disabled className="bg-[#26211B] text-[#8C827A]">Select your current role</option>
+                  {roleOptions.map((p) => (
+                    <option key={p} value={p} className="bg-[#1E1A16] text-[#EDEAE4]">{p}</option>
                   ))}
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#A89F95]">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                 </div>
               </div>

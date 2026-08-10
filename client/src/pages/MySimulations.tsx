@@ -194,7 +194,7 @@ export default function MySimulations() {
         {/* Scrollable list area — the only part of the dashboard that scrolls */}
         <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-4">
           {error && (
-            <div className="p-3 bg-[#3A0F0F]/90/50 border border-[#A32A2A]/50/50 rounded-sm text-[#E08080] flex items-center justify-between">
+            <div className="p-3 bg-[#A32A2A]/10 border border-[#A32A2A]/40 rounded-sm text-[#E08080] flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 text-[#A32A2A] shrink-0" />
                 {error}
@@ -250,11 +250,11 @@ export default function MySimulations() {
                         ID: {sim.session_id}
                       </span>
                       {isCompleted ? (
-                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-[#2E6B4B]/40/30 bg-[#2E6B4B]/10 text-[#2E6B4B] flex items-center gap-1">
+                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-[#2E6B4B]/40 bg-[#2E6B4B]/10 text-[#2E6B4B] flex items-center gap-1">
                           <CheckCircle className="w-3 h-3" /> Completed
                         </span>
                       ) : (
-                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-[#CC553D]/40/30 bg-[#CC553D]/10 text-[#CC553D] flex items-center gap-1">
+                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-[#CC553D]/40 bg-[#CC553D]/10 text-[#CC553D] flex items-center gap-1">
                           <Activity className="w-3 h-3" /> Active
                         </span>
                       )}
@@ -303,7 +303,7 @@ export default function MySimulations() {
                         variant="outline"
                         onClick={() => handleReplay(sim.session_id)} 
                         disabled={!!actionLoadingId}
-                        className="text-[#8C5A7A] hover:text-[#8C5A7A] flex-1 md:flex-none"
+                        className="text-[#CC553D] hover:text-[#CC553D] flex-1 md:flex-none"
                       >
                         <RotateCcw className="w-4 h-4 mr-2" /> Replay
                       </Button>
@@ -313,10 +313,10 @@ export default function MySimulations() {
                       variant="outline"
                       onClick={() => handleDelete(sim.session_id)} 
                       disabled={!!actionLoadingId}
-                      className="border-[#A32A2A]/50/40 hover:bg-[#A32A2A]/10 text-[#A32A2A] hover:text-[#E08080] flex-1 md:flex-none"
+                      className="border-[#A32A2A]/40 hover:bg-[#A32A2A]/10 text-[#A32A2A] hover:text-[#E08080] flex-1 md:flex-none"
                     >
                       {actionLoadingId === `delete-${sim.session_id}` ? (
-                        <div className="w-4 h-4 border-2 border-[#A32A2A]/50/50 border-t-red-500 rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-[#A32A2A]/50 border-t-[#A32A2A] rounded-full animate-spin" />
                       ) : (
                         <><Trash2 className="w-4 h-4" /> Delete</>
                       )}

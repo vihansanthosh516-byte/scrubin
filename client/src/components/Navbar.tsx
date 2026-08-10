@@ -26,6 +26,7 @@ const NAV_LINKS = [
   { href: "/procedures", label: "Procedures" },
   { href: "/anatomy", label: "Anatomy" },
   { href: "/learn", label: "Learn" },
+  { href: "/my-simulations", label: "My Simulations" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/profile", label: "Profile" },
 ];

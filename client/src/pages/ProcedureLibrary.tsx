@@ -27,7 +27,7 @@ const ProcedureIcon = ({ category }: { category: string }) => {
   const iconMap: Record<string, React.ReactNode> = {
     "Emergency": <Activity className={`${iconClass} text-[#A32A2A]`} />,
     "Cardiovascular": <Heart className={`${iconClass} text-[#CC553D]`} />,
-    "Neurological": <Brain className={`${iconClass} text-[#8C5A7A]`} />,
+    "Neurological": <Brain className={`${iconClass} text-[#C27820]`} />,
     "Orthopedic": <Bone className={`${iconClass} text-[#C27820]`} />,
     "OB/GYN": <Baby className={`${iconClass} text-[#A37A5A]`} />,
     "General": <Scissors className={`${iconClass} text-[#CC553D]`} />,
@@ -52,17 +52,48 @@ function ProcedureCard({ proc, unlocked, requiredXP, index }: any) {
       transition={{ duration: 0.5, delay: (index % 3) * 0.08, ease: EASE }}
       className="relative"
     >
-      <Link href={isLocked ? "#" : `/simulation?proc=${proc.id}`}>
-        <div className={`procedure-card h-full p-6 ${isLocked ? "opacity-60" : ""}`}>
+      {isLocked ? (
+        <div className={`procedure-card h-full p-6 opacity-60 select-none cursor-not-allowed`}>
           {/* Lock overlay */}
-          {isLocked && (
-            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-[#FBF9F5]/80 backdrop-blur-[2px]">
-              <Lock className="h-8 w-8 text-[#8C827A]" />
-              <p className="text-sm font-semibold text-[#191919]">Requires {requiredXP} XP</p>
-              <p className="text-xs text-[#666059]">Complete more procedures to unlock</p>
-            </div>
-          )}
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-[#FBF9F5]/80 backdrop-blur-[2px] dark:bg-[#161310]/80">
+            <Lock className="h-8 w-8 text-[#8C827A]" />
+            <p className="text-sm font-semibold text-[#191919] dark:text-[#EDEAE4]">Requires {requiredXP} XP</p>
+            <p className="text-xs text-[#666059] dark:text-[#A89F95]">Complete more procedures to unlock</p>
+          </div>
 
+          {/* Icon + difficulty pill */}
+          <div className="mb-5 flex items-start justify-between">
+            <div className="flex h-12 w-12 items-center justify-center rounded-sm border border-[#E2DDD1] bg-[#FBF9F5] dark:border-[#3A342C] dark:bg-[#26211B]">
+              <ProcedureIcon category={proc.category} />
+            </div>
+            <span className={`rounded-sm px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${pill}`}>
+              {proc.difficulty}
+            </span>
+          </div>
+
+          <h3 className="mb-2 text-lg font-semibold leading-snug tracking-tight text-[#191919] dark:text-[#EDEAE4]">
+            {proc.name}
+          </h3>
+          <p className="mb-5 line-clamp-2 text-sm leading-relaxed text-[#666059] dark:text-[#A89F95]">
+            {proc.description}
+          </p>
+
+          {/* Meta row */}
+          <div className="flex items-center justify-between border-t border-[#E2DDD1] pt-4 font-mono-data text-xs text-[#8C827A]">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" /> {proc.time}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Activity className="h-3.5 w-3.5" /> {proc.decisions} decisions
+              </span>
+            </div>
+            <Lock className="h-4 w-4 text-[#8C827A]" />
+          </div>
+        </div>
+      ) : (
+        <Link href={`/simulation?proc=${proc.id}`}>
+          <div className="procedure-card h-full p-6">
           {/* Icon + difficulty pill */}
           <div className="mb-5 flex items-start justify-between">
             <div className="flex h-12 w-12 items-center justify-center rounded-sm border border-[#E2DDD1] bg-[#FBF9F5] dark:border-[#3A342C] dark:bg-[#26211B]">
@@ -92,8 +123,9 @@ function ProcedureCard({ proc, unlocked, requiredXP, index }: any) {
             </div>
             <ArrowRight className="h-4 w-4 text-[#CC553D]" />
           </div>
-        </div>
-      </Link>
+          </div>
+        </Link>
+      )}
     </motion.div>
   );
 }

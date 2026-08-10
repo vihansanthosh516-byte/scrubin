@@ -41,9 +41,9 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
   };
 
   return (
-    <div id="debrief-report" className="bg-[#161310]/60 border border-[#3A342C] rounded-sm text-white overflow-hidden">
+    <div id="debrief-report" className="bg-card border border-border rounded-sm text-foreground overflow-hidden">
       {/* Header */}
-      <div className="p-5 border-b border-[#3A342C] bg-black/20">
+      <div className="p-5 border-b border-border bg-muted/40">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <ShieldCheck className="w-6 h-6 text-[#2E6B4B]" />
@@ -52,27 +52,27 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
           <div className="flex items-center gap-2">
             <button
               onClick={exportMarkdown}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-[#3A342C] hover:bg-[#26211B] text-xs font-bold text-[#666059] dark:text-[#C2BBB0] dark:text-[#A89F95] transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border hover:bg-accent text-xs font-bold text-muted-foreground transition-all"
             >
               <Save className="w-3.5 h-3.5" /> Save Report
             </button>
-            <span className="text-[10px] font-mono bg-black px-2 py-1 rounded text-[#8C827A] dark:text-[#C2BBB0] dark:text-[#A89F95] border border-[#3A342C]">
+            <span className="text-[10px] font-mono bg-muted px-2 py-1 rounded text-muted-foreground border border-border">
               ID: {simId}
             </span>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-4">
           <div className="flex flex-col">
-            <span className="text-[10px] text-[#8C827A] dark:text-[#C2BBB0] dark:text-[#A89F95] uppercase">Procedure Name</span>
-            <span className="text-sm font-bold text-[#191919] dark:text-[#EDEAE4]">{procedureName}</span>
+            <span className="text-[10px] text-muted-foreground uppercase">Procedure Name</span>
+            <span className="text-sm font-bold text-foreground">{procedureName}</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] text-[#8C827A] dark:text-[#C2BBB0] dark:text-[#A89F95] uppercase">Completion Status</span>
+            <span className="text-[10px] text-muted-foreground uppercase">Completion Status</span>
             <span className="text-sm font-bold text-[#2E6B4B] uppercase">{completionStatus}</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] text-[#8C827A] dark:text-[#C2BBB0] dark:text-[#A89F95] uppercase">Patient Outcome</span>
-            <span className="text-sm font-bold text-[#191919] dark:text-[#EDEAE4]">{patientOutcome}</span>
+            <span className="text-[10px] text-muted-foreground uppercase">Patient Outcome</span>
+            <span className="text-sm font-bold text-foreground">{patientOutcome}</span>
           </div>
         </div>
       </div>
@@ -97,15 +97,15 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
         {/* Timeline Summary */}
         {evalData.timeline_summary && Array.isArray(evalData.timeline_summary) && evalData.timeline_summary.length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-sm font-bold text-[#666059] dark:text-[#C2BBB0] dark:text-[#A89F95] uppercase tracking-widest flex items-center gap-2">
+            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
               <Clock className="w-4 h-4" /> Timeline Summary
             </h3>
-            <div className="space-y-2 pl-4 border-l border-[#3A342C]">
+            <div className="space-y-2 pl-4 border-l border-border">
               {evalData.timeline_summary.map((event: any, i: number) => (
                 <div key={i} className="relative flex items-start gap-4">
-                  <div className="absolute -left-[21px] mt-1 w-2 h-2 bg-[#332C24] rounded-full" />
-                  <span className="text-[10px] font-mono text-[#8C827A] dark:text-[#C2BBB0] dark:text-[#A89F95] mt-0.5 w-8">T:{event.tick ?? i}</span>
-                  <p className="text-sm text-[#666059] dark:text-[#C2BBB0] dark:text-[#A89F95]">{event.description || event}</p>
+                  <div className="absolute -left-[21px] mt-1 w-2 h-2 bg-border rounded-full" />
+                  <span className="text-[10px] font-mono text-muted-foreground mt-0.5 w-8">T:{event.tick ?? i}</span>
+                  <p className="text-sm text-muted-foreground">{event.description || event}</p>
                 </div>
               ))}
             </div>
@@ -121,12 +121,12 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
               </h3>
               <div className="space-y-2">
                 {evalData.critical_events.map((ev: any, i: number) => (
-                  <div key={i} className="p-3 bg-[#C27820]/5 border border-[#C27820]/40/20 rounded-sm">
+                  <div key={i} className="p-3 bg-[#C27820]/5 border border-[#C27820]/40 rounded-sm">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] font-bold text-[#C27820] uppercase">{ev.severity || "CRITICAL"}</span>
-                      {ev.tick !== undefined && <span className="text-[10px] font-mono text-[#8C827A] dark:text-[#C2BBB0] dark:text-[#A89F95]">T:{ev.tick}</span>}
+                      {ev.tick !== undefined && <span className="text-[10px] font-mono text-muted-foreground">T:{ev.tick}</span>}
                     </div>
-                    <p className="text-sm text-[#666059] dark:text-[#C2BBB0] dark:text-[#A89F95]">{ev.description || ev}</p>
+                    <p className="text-sm text-muted-foreground">{ev.description || ev}</p>
                   </div>
                 ))}
               </div>
@@ -194,9 +194,9 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
 
 function ScoreCard({ title, value }: { title: string, value: number | string }) {
   return (
-    <div className="p-4 bg-[#161310] border border-[#3A342C] rounded-sm flex flex-col items-center justify-center text-center flex-1 min-w-[120px]">
-      <span className="text-[10px] text-[#8C827A] dark:text-[#C2BBB0] dark:text-[#A89F95] uppercase mb-2">{title}</span>
-      <span className="text-3xl font-black text-white">{value}</span>
+    <div className="p-4 bg-muted border border-border rounded-sm flex flex-col items-center justify-center text-center flex-1 min-w-[120px]">
+      <span className="text-[10px] text-muted-foreground uppercase mb-2">{title}</span>
+      <span className="text-3xl font-black text-foreground">{value}</span>
     </div>
   );
 }

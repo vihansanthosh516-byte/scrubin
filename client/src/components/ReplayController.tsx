@@ -126,7 +126,7 @@ export default function ReplayController() {
             max={maxTick}
             value={Math.min(replayTick, maxTick)}
             onChange={handleScrub}
-            className="flex-1 accent-blue-500"
+            className="flex-1 accent-[#CC553D]"
             disabled={dvkChain.length === 0}
           />
         </div>

@@ -47,10 +47,14 @@ export default function TimelinePanel() {
     }
   }, [currentState, currentTick]);
 
-  // Auto-scroll to newest event at the bottom
+  // Auto-scroll to newest event, but only if the user is already near the
+  // bottom so reading/history review is never yanked away.
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const el = scrollRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 160;
+    if (nearBottom) {
+      el.scrollTop = el.scrollHeight;
     }
   }, [timeline]);
 

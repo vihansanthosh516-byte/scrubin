@@ -36,8 +36,8 @@ const ScrubinCard: React.FC<ScrubinCardProps> = ({
       bg: "bg-card/90 dark:bg-card/80",
     },
     teal: {
-      border: "border-[#2E6B4B]/40/20",
-      borderHover: "hover:border-[#2E6B4B]/40/40",
+      border: "border-[#2E6B4B]/40",
+      borderHover: "hover:border-[#2E6B4B]/60",
       glow: "hover:shadow-[0_0_30px_rgba(46,107,75,0.15)]",
       bg: "bg-card/90 dark:bg-card/80",
     },
@@ -187,11 +187,11 @@ const ScrubinStaticPanel: React.FC<ScrubinCardProps> = ({
   const colorStyles = {
     blue: {
       border: "border-primary/15",
-      bg: "bg-card/95 dark:bg-[#0a1628]/90",
+      bg: "bg-card/95 dark:bg-card/90",
     },
     teal: {
-      border: "border-[#2E6B4B]/40/15",
-      bg: "bg-card/95 dark:bg-[#0a1628]/90",
+      border: "border-[#2E6B4B]/20",
+      bg: "bg-card/95 dark:bg-card/90",
     },
   };
 

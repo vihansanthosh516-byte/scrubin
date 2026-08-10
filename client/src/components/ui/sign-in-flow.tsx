@@ -342,7 +342,7 @@ export const SignInPage = ({
             <CanvasRevealEffect
               animationSpeed={3}
               containerClassName="bg-black"
-              colors={[[126, 200, 227]]}
+              colors={[[204, 85, 61]]}
               dotSize={6}
               reverse={false}
             />
@@ -373,7 +373,7 @@ export const SignInPage = ({
               <div className="w-12 h-12 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center mb-3 shadow-lg shadow-primary/20">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="w-6 h-6 text-baby-blue"
+                  className="w-6 h-6 text-[#CC553D]"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -388,7 +388,7 @@ export const SignInPage = ({
                 className="text-3xl font-bold tracking-tight text-white"
                 style={{ fontFamily: "'Inter', sans-serif" }}
               >
-                Scrub<span className="text-baby-blue">In</span>
+                Scrub<span className="text-[#CC553D]">In</span>
               </h1>
             </motion.div>
 
@@ -467,7 +467,7 @@ export const SignInPage = ({
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-baby-blue hover:bg-baby-blue/90 text-black font-bold py-3 rounded-sm transition-all duration-200 mt-2 disabled:opacity-50 text-sm"
+                className="w-full bg-[#CC553D] hover:bg-[#D95338] text-white font-bold py-3 rounded-sm transition-all duration-200 mt-2 disabled:opacity-50 text-sm"
               >
                 {loading ? "Processing..." : mode === "signin" ? "Sign In" : "Sign Up"}
               </button>
@@ -508,7 +508,7 @@ export const SignInPage = ({
                   setMode(mode === "signin" ? "signup" : "signin");
                   setFormError(null);
                 }}
-                className="text-baby-blue hover:underline focus:outline-none"
+                className="text-[#CC553D] hover:underline focus:outline-none"
               >
                 {mode === "signin" ? "Sign Up" : "Sign In"}
               </button>
@@ -517,8 +517,8 @@ export const SignInPage = ({
             {/* Footer Text */}
             <p className="text-[10px] text-white/30 pt-4 leading-relaxed max-w-[280px] mx-auto">
               By continuing, you agree to ScrubIn's{" "}
-              <a href="#" className="underline hover:text-white/50">Terms</a> and{" "}
-              <a href="#" className="underline hover:text-white/50">Privacy Policy</a>.
+              <span className="underline">Terms</span> and{" "}
+              <span className="underline">Privacy Policy</span>.
             </p>
           </motion.div>
         </AnimatePresence>

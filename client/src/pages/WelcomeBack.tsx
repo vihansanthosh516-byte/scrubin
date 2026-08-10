@@ -18,7 +18,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
   if (!user) return null;
 
   return (
-    <div className="fixed inset-0 bg-[#0a0f1e] z-50 flex items-center justify-center p-4">
+    <div role="dialog" aria-modal="true" aria-label="Welcome back" className="fixed inset-0 bg-[#161310] z-50 flex items-center justify-center p-4">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
 
@@ -29,7 +29,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
         className="relative w-full max-w-md"
       >
         {/* Card */}
-        <div className="rounded-sm p-8 bg-card/95 backdrop-blur-xl border border-border shadow-[0_0_40px_rgba(204,85,61,0.15)]">
+        <div className="rounded-sm p-8 bg-[#1E1A16] border border-[#3A342C] shadow-[0_0_40px_rgba(204,85,61,0.15)]">
           {/* Header */}
           <div className="text-center mb-8">
             {/* Avatar */}
@@ -37,7 +37,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", delay: 0.1 }}
-              className="w-24 h-24 rounded-sm border-2 border-primary/40 overflow-hidden mx-auto mb-4 bg-muted"
+              className="w-24 h-24 rounded-sm border-2 border-primary/40 overflow-hidden mx-auto mb-4 bg-[#26211B]"
             >
               <img
                 src={user?.avatar_url}
@@ -60,7 +60,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-2xl font-bold text-white mb-1"
+              className="text-2xl font-bold text-[#EDEAE4] mb-1"
               style={{ fontFamily: "'Inter', sans-serif" }}
             >
               {user.name || user.login}
@@ -70,7 +70,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-muted-foreground text-sm"
+              className="text-[#A89F95] text-sm"
             >
               @{user.customUsername || user.login}
             </motion.p>
@@ -81,9 +81,9 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="bg-muted/50 rounded-sm p-4 mb-6"
+            className="bg-[#26211B] border border-[#3A342C] rounded-sm p-4 mb-6"
           >
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3 text-sm text-[#A89F95]">
               <div className="w-2 h-2 rounded-full bg-[#2E6B4B]" />
               <span>Your surgery history and XP are saved</span>
             </div>
@@ -107,7 +107,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
             <Button
               onClick={onNotYou}
               variant="outline"
-              className="w-full h-12 border-border hover:border-primary/30 hover:bg-primary/5 text-muted-foreground hover:text-foreground font-medium rounded-sm transition-all"
+              className="w-full h-12 border-[#3A342C] hover:border-primary/30 hover:bg-primary/5 text-[#A89F95] hover:text-[#EDEAE4] font-medium rounded-sm transition-all"
             >
               <X className="w-4 h-4" />
               Not You? Change Name
@@ -120,7 +120,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="text-center text-xs text-muted-foreground mt-6"
+          className="text-center text-xs text-[#A89F95] mt-6"
         >
           Click "Yes, It's Me" to continue to your profile
         </motion.p>

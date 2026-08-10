@@ -340,7 +340,7 @@ function Hotspot({ procedure, position, isSelected, onClick }: { procedure: Proc
         <meshBasicMaterial color={isSelected ? "#D99B26" : "#CC553D"} />
       </mesh>
       <Html position={[0, 0.05, 0]} center style={{ transition: "all 0.2s", opacity: isSelected ? 1 : 0.8, transform: `scale(${isSelected ? 1.2 : 1})`, pointerEvents: "none", userSelect: "none" }}>
-        <div className="px-2 py-1 rounded-full bg-[#0A1628]/90 backdrop-blur-sm border border-primary/30 text-xs font-semibold text-white whitespace-nowrap" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <div className="px-2 py-1 rounded-full bg-[#191919]/90 backdrop-blur-sm border border-primary/30 text-xs font-semibold text-[#FBF9F5] whitespace-nowrap" style={{ fontFamily: "'Inter', sans-serif" }}>
           {procedure.name}
         </div>
       </Html>
@@ -383,7 +383,7 @@ export default function AnatomyExplorer() {
   const layerColor = layerValue < 33 ? "#d4a574" : layerValue < 66 ? "#c8715a" : "#e8dcd0";
 
   return (
-    <div className="min-h-screen bg-[#0A1628] overflow-hidden">
+    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#161310] overflow-hidden">
       <div className="h-screen pt-20 flex flex-col lg:flex-row">
         {/* 3D Viewer */}
         <div className="w-full lg:w-[60%] h-[50%] lg:h-full relative">
@@ -400,7 +400,7 @@ export default function AnatomyExplorer() {
                 {/* Layer indicator */}
                 <div className="flex items-center gap-2 min-w-[80px]">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: layerColor }} />
-                  <span className="text-sm font-semibold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  <span className="text-sm font-semibold text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
                     {layerLabel}
                   </span>
                 </div>
@@ -411,13 +411,13 @@ export default function AnatomyExplorer() {
                 </div>
 
                 {/* Icons */}
-                <Layers className="w-4 h-4 text-white/40" />
+                <Layers className="w-4 h-4 text-muted-foreground" />
               </div>
             </ScrubinStaticPanel>
           </div>
 
           <div className="absolute bottom-20 left-1/2 -translate-x-1/2 text-center">
-            <p className="text-white/30 text-xs font-mono-data">Drag to rotate | Scroll to zoom</p>
+            <p className="text-muted-foreground/60 text-xs font-mono-data">Drag to rotate | Scroll to zoom</p>
           </div>
         </div>
 
@@ -442,7 +442,7 @@ function ProcedureInfo({ procedure }: { procedure: Procedure | null }) {
       <div className="h-full flex flex-col items-center justify-center p-8">
         <motion.div animate={{ opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 2, repeat: Infinity }} className="text-center">
           <Activity className="w-10 h-10 text-primary mx-auto mb-3 opacity-50" />
-          <p className="text-white/40 text-sm font-mono-data">Select a hotspot to explore</p>
+          <p className="text-muted-foreground/70 text-sm font-mono-data">Select a hotspot to explore</p>
         </motion.div>
       </div>
     );
@@ -450,7 +450,7 @@ function ProcedureInfo({ procedure }: { procedure: Procedure | null }) {
 
   const diffConfig = {
     Beginner: { color: "text-[#2E6B4B]", bg: "bg-[#2E6B4B]/10 border-[#2E6B4B]/20" },
-    Intermediate: { color: "text-[#C27820]", bg: "bg-[#C27820]/10 border-[#C27820]/40/20" },
+    Intermediate: { color: "text-[#C27820]", bg: "bg-[#C27820]/10 border-[#C27820]/20" },
     Advanced: { color: "text-[#A32A2A]", bg: "bg-[#A32A2A]/10 border-[#A32A2A]/20" },
   };
   const diff = diffConfig[procedure.difficulty];
@@ -461,18 +461,18 @@ function ProcedureInfo({ procedure }: { procedure: Procedure | null }) {
       {/* Header */}
       <div className="mb-4">
         <div className="flex items-start justify-between gap-3 mb-2">
-          <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
             {procedure.name}
           </h1>
           <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${diff.color} ${diff.bg} font-mono-data shrink-0`}>
             {procedure.difficulty}
           </span>
         </div>
-        <div className="flex items-center gap-3 text-xs text-white/50 font-mono-data">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono-data">
           <span>{procedure.specialty}</span>
-          <span className="text-white/20">|</span>
+          <span className="text-muted-foreground/50">|</span>
           <span>{procedure.duration}</span>
-          <span className="text-white/20">|</span>
+          <span className="text-muted-foreground/50">|</span>
           <span>{procedure.decisions} decisions</span>
         </div>
       </div>
@@ -484,26 +484,26 @@ function ProcedureInfo({ procedure }: { procedure: Procedure | null }) {
             <span className="text-2xl font-bold text-primary" style={{ fontFamily: "'Inter', sans-serif" }}>
               {step.number}
             </span>
-            <h3 className="text-sm font-semibold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
+            <h3 className="text-sm font-semibold text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
               {step.title}
             </h3>
           </div>
-          <p className="text-xs text-white/60 leading-relaxed mb-4">{step.description}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed mb-4">{step.description}</p>
 
           {/* Step dots */}
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
               {procedure.steps.map((_, idx) => (
-                <button key={idx} onClick={() => setStepIndex(idx)} className={`w-2 h-2 rounded-full transition-all ${idx === stepIndex ? "bg-primary w-6" : idx < stepIndex ? "bg-primary/50" : "bg-white/20"}`} />
+                <button key={idx} onClick={() => setStepIndex(idx)} className={`w-2 h-2 rounded-full transition-all ${idx === stepIndex ? "bg-primary w-6" : idx < stepIndex ? "bg-primary/50" : "bg-border"}`} />
               ))}
             </div>
 
             <div className="flex items-center gap-2">
-              <button onClick={() => setStepIndex((prev) => Math.max(0, prev - 1))} disabled={stepIndex === 0} className="p-1.5 rounded-sm bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                <ArrowLeft className="w-4 h-4 text-white/70" />
+              <button onClick={() => setStepIndex((prev) => Math.max(0, prev - 1))} disabled={stepIndex === 0} className="p-1.5 rounded-sm bg-muted/50 hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                <ArrowLeft className="w-4 h-4 text-muted-foreground" />
               </button>
-              <button onClick={() => setStepIndex((prev) => Math.min(procedure.steps.length - 1, prev + 1))} disabled={stepIndex === procedure.steps.length - 1} className="p-1.5 rounded-sm bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                <ArrowRight className="w-4 h-4 text-white/70" />
+              <button onClick={() => setStepIndex((prev) => Math.min(procedure.steps.length - 1, prev + 1))} disabled={stepIndex === procedure.steps.length - 1} className="p-1.5 rounded-sm bg-muted/50 hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                <ArrowRight className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
           </div>
@@ -517,11 +517,11 @@ function ProcedureInfo({ procedure }: { procedure: Procedure | null }) {
           { label: "Decisions", value: procedure.decisions },
           { label: "Duration", value: procedure.duration },
         ].map((stat) => (
-          <div key={stat.label} className="text-center py-2 rounded-sm bg-white/5 border border-white/10">
-            <div className="text-lg font-bold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <div key={stat.label} className="text-center py-2 rounded-sm bg-muted/50 border border-border">
+            <div className="text-lg font-bold text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
               {stat.value}
             </div>
-            <div className="text-xs text-white/40 font-mono-data">{stat.label}</div>
+            <div className="text-xs text-muted-foreground font-mono-data">{stat.label}</div>
           </div>
         ))}
       </div>
@@ -529,13 +529,13 @@ function ProcedureInfo({ procedure }: { procedure: Procedure | null }) {
       {/* Actions */}
       <div className="mt-auto pt-4 space-y-2">
         <Link href={`/simulation?proc=${procedure.id}`} className="block">
-          <Button className="w-full bg-primary hover:bg-primary/90 text-[#0A1628] font-bold py-3 rounded-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 rounded-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
             <Play className="w-4 h-4 mr-2" />
             Enter Simulation
           </Button>
         </Link>
         <Link href={`/learn?procedure=${procedure.name}`} className="block">
-          <Button variant="outline" className="w-full border-white/20 hover:border-primary/50 hover:bg-primary/5 py-3 rounded-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <Button variant="outline" className="w-full border-border hover:border-primary/50 hover:bg-primary/5 py-3 rounded-sm text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
             <BookOpen className="w-4 h-4 mr-2" />
             Full Surgical Guide
           </Button>

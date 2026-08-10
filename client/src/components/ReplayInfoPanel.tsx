@@ -24,11 +24,11 @@ export default function ReplayInfoPanel() {
   const phase = currentState?.procedure_phase ?? currentState?.phase ?? 'N/A';
 
   return (
-    <div className="p-4 bg-[#1E1A16] border border-[#3A342C] rounded-sm mt-4">
-      <h4 className="text-white font-bold text-sm mb-2">
+    <div className="p-4 bg-card border border-border rounded-sm mt-4">
+      <h4 className="text-foreground font-bold text-sm mb-2">
         Replay Details – Tick {replayTick}
       </h4>
-      <div className="grid grid-cols-2 gap-2 text-xs text-[#191919] dark:text-[#EDEAE4]">
+      <div className="grid grid-cols-2 gap-2 text-xs text-foreground">
         {/* Vitals */}
         <div className="font-medium">Heart Rate</div>
         <div>{vitals?.heartRate ?? vitals?.hr ?? '—'}</div>
