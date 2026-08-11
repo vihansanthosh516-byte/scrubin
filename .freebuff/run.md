@@ -1,63 +1,48 @@
-# ScrubIn — preview run doc
+# ScrubIn — dev server run doc
 
-ScrubIn is a 3-process app: a Vite React client, a Node/Express API server, and a
-Python "Scrubin-Core" simulation engine. The client proxies `/api/*` to the Node
-server (port 5000), which proxies simulation endpoints to the Python core
-(port 8001). A live preview needs all three.
+Project: **scrubin** — Vite + React client (`client/`), Express API (`server/index.ts`).
+Current checked-out version: `f9f3127` (GitHub `main`, "UI/UX overhaul: editorial palette") — the cream/terracotta design system (`#FBF9F5` base, `#CC553D` accent). Previously the workspace held an older Apr-30 snapshot (`c0359ef`) with the dark-blue UI.
 
-## Reproduce the artifacts
+## Reproduce the artifacts (fresh checkout)
 
-1. **Install dependencies** (root `package.json` / lockfile):
+The workspace (`C:\Users\vihan\scrubin`) starts EMPTY. Restore it from the full backup:
+
+1. Extract the project files:
    ```bash
-   npm install
+   cd /c/Users/vihan/scrubin
+   tar -xzf /c/Users/vihan/scrubin.tar.gz --strip-components=1
    ```
-   (This repo is the single checkout — `node_modules/` and `.env` are already in
-   place here. For a fresh worktree, copy `.env` from the main checkout; it holds
-   the Supabase/Groq/Anthropic keys the Node server reads at startup. Never
-   commit `.env`.)
+   (The archive includes `node_modules`, `.env`, `dist/`, and the `.git` repo. It does NOT touch `.freebuff/`.)
 
-2. **Python core venv** (separate repo at `C:\Users\Vihan\Documents\Scrubin-Core`):
+2. Restore the real `.env` — the repo tracks a **sanitized (empty) `.env`**; the checkout overwrites the working copy with it. Copy the real one from the WSL backup (never symlink, never commit values):
    ```bash
-   cd C:\Users\Vihan\Documents\Scrubin-Core
-   ./.venv/Scripts/python -m pip install -r requirements.txt   # if venv missing
+   wsl -d Ubuntu -e bash -lc "cp ~/repos/scrubin/.env /mnt/c/Users/vihan/scrubin/.env"
+   # or, from the archive: tar -xOzf /c/Users/vihan/scrubin.tar.gz scrubin/.env > .env
    ```
-   The `.venv` already exists in that checkout.
 
-## Run the servers
-
-Start all three, in any order (each must be up before the UI is fully usable):
-
-1. **Python core — port 8001** (from `C:\Users\Vihan\Documents\Scrubin-Core`):
+3. Install dependencies — **npm** is the lockfile manager for this version (`package-lock.json`, no pnpm-lock.yaml). The install FAILS with a plain `npm ci` because `@builder.io/vite-plugin-jsx-loc@0.1.1` declares a peer of `vite ^4||^5` while the project runs vite 7; use:
    ```bash
-   SCRUBIN_CORE_RELOAD=0 ./.venv/Scripts/python -m uvicorn server:app --host 0.0.0.0 --port 8001
+   npm ci --legacy-peer-deps
    ```
-   Health check: `curl http://localhost:8001/health` → `{"core":"up",...}`.
+   Do not reuse `node_modules` from the tar.gz: it was installed on Linux (WSL) and contains only `@esbuild/linux-x64` / Linux rollup binaries plus no Windows `.cmd` shims — `npm run dev` fails with "'concurrently' is not recognized" until reinstalled on Windows.
 
-2. **Node API server — port 5000** (from the repo root):
-   ```bash
-   npm run dev:server
-   ```
-   (`tsx watch server/index.ts`; reads `.env`.)
+## Run the server
 
-3. **Vite client — port 3000, falls back to 3001** (from the repo root):
-   ```bash
-   npm run dev:client
-   ```
-   `vite.config.ts` sets `port: 3000` with `strictPort: false` — if 3000 is
-   taken it auto-increments to 3001. The preview URL is whichever port Vite
-   reports in its startup log ("Local: http://localhost:3001/").
+- The shell environment sets `PORT=51697`, which overrides the Express default (`5000`) and breaks vite's `/api` proxy (hardcoded to `localhost:5000`). Launch with `PORT=5000`:
+- Default ports: Vite **3000**, Express API **5000** (both free normally; vite falls to the next port if 3000 is busy).
+- `npm run dev` runs `concurrently`: `vite --host` (client, 3000) + `tsx watch server/index.ts` (API, 5000).
 
-   The Vite dev server proxies `/api` → `http://localhost:5000` (configured in
-   `vite.config.ts`), so no CORS issues in dev.
-
-Smoke test the whole chain:
-```bash
-curl -s http://localhost:3001/                        # → 200 (client HTML)
-curl -s http://localhost:3001/api/sim/list            # → saved sessions JSON
+Detached launch (Windows) — stdout/stderr must go to DIFFERENT files:
+```powershell
+$env:PORT='5000'
+(Start-Process -FilePath 'npm.cmd' -ArgumentList 'run','dev' `
+  -WorkingDirectory 'C:\Users\vihan\scrubin' `
+  -RedirectStandardOutput 'C:\Users\vihan\scrubin\.freebuff\preview-5c1de970-7cde-4fd5-aec4-be8a00c23b37.log' `
+  -RedirectStandardError  'C:\Users\vihan\scrubin\.freebuff\preview-5c1de970-7cde-4fd5-aec4-be8a00c23b37.log.err' `
+  -WindowStyle Hidden -PassThru).Id
 ```
+Verify: `curl http://localhost:3000/` and `curl http://localhost:5000/` both return 200.
 
-Tip: a per-thread detached instance can be launched with:
-```bash
-(nohup npm run dev:client > .freebuff/preview-<id>.log 2>&1 &)
-```
-(log path lives under `.freebuff/`).
+Notes:
+- The sign-in/onboarding pages are intentionally dark (immersive) in this version; the warm-cream background is the design system used by the authenticated app pages. The app defaults to light theme (`ThemeProvider defaultTheme="light"`); a leftover `localStorage.theme=dark` from an older version forces dark until cleared.
+- `git status` may show `.freebuff/desktop-v2.db*` as modified — those files are tracked in the repo (committed under `96bfe08 "FreeBuff"`) and are live DB files, leave them alone.
