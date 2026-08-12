@@ -142,12 +142,12 @@ export default function Onboarding() {
               <div className="relative">
                 <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A89F95] z-10 pointer-events-none" />
                 <select
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
+                  value={profession}
+                  onChange={(e) => setProfession(e.target.value)}
                   className="w-full h-12 pl-11 pr-10 rounded-sm bg-[#26211B] border border-[#3A342C] text-[#EDEAE4] focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all appearance-none cursor-pointer"
                 >
                   <option value="" disabled className="bg-[#26211B] text-[#8C827A]">Select your current role</option>
-                  {roleOptions.map((p) => (
+                  {PROFESSIONS.map((p) => (
                     <option key={p} value={p} className="bg-[#1E1A16] text-[#EDEAE4]">{p}</option>
                   ))}
                 </select>

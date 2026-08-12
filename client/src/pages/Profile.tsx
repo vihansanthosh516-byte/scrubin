@@ -39,7 +39,6 @@ export default function Profile() {
     surgeriesByDate: {} as Record<string, number>
   });
   const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -49,7 +48,6 @@ export default function Profile() {
 
   const loadUserProgress = async () => {
     if (!user) return;
-    setLoading(true);
     try {
       const { data: sessions, error } = await supabase
         .from('sessions')
@@ -58,7 +56,6 @@ export default function Profile() {
         .order('created_at', { ascending: true });
 
       if (error || !sessions || sessions.length === 0) {
-        setLoading(false);
         return;
       }
 
@@ -69,7 +66,6 @@ export default function Profile() {
       let currentStreak = 0;
       let longestStreak = 0;
       let tempStreak = 0;
-      let lastDate: Date | null = null;
       const today = new Date();
       today.setHours(23, 59, 59, 999);
       const yesterday = new Date(today);
@@ -121,7 +117,6 @@ export default function Profile() {
       const bestScore = Math.max(...scores, 0);
       const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
       const complications = sessions.filter(s => s.outcome === "Complicated" || s.outcome === "Critical").length;
-      const perfectScores = sessions.filter(s => s.score === 100);
       const times = sessions.map(s => s.time_seconds || 9999);
       const fastestTime = Math.min(...times);
 
@@ -167,8 +162,6 @@ export default function Profile() {
 
     } catch (e) {
       console.error('Failed to load progress:', e);
-    } finally {
-      setLoading(false);
     }
   };
 

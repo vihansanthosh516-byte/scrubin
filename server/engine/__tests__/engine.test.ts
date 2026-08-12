@@ -68,7 +68,7 @@ describe("Determinism", () => {
 });
 
 describe("Decision Option Count", () => {
-  it("always produces exactly 4 options per decision", () => {
+  it("always produces 4-8 options per decision (mirrors Python core)", () => {
     const archetypes = [
       "AIRWAY_STABILITY",
       "HEMODYNAMIC_CONTROL",
@@ -92,9 +92,28 @@ describe("Decision Option Count", () => {
           null,
           "Pre-Op"
         );
-        expect(decision.options.length).toBe(4);
+        expect(decision.options.length).toBeGreaterThanOrEqual(4);
+        expect(decision.options.length).toBeLessThanOrEqual(8);
       }
     }
+  });
+
+  it("POST_OP_MONITORING ships the Python core's anticoagulation option (5 total)", () => {
+    // total-knee-replacement's archetype set is [PAIN_MANAGEMENT, POST_OP_MONITORING],
+    // and only POST_OP_MONITORING maps to thrombosis — so the recovery archetype is
+    // deterministic, and the options are the full 5-option Python table.
+    const procedure = getProcedure("total-knee-replacement");
+    const rng = new DeterministicRNG(42);
+    const engine = new DecisionEngine(rng, procedure);
+    const decision = engine.generateDecision(
+      10,
+      { spo2: 98, heart_rate: 72, bp_systolic: 120, bp_diastolic: 80, temperature: 37, respiratory_rate: 16 },
+      "active_complication",
+      "thrombosis",
+      "Post-Op"
+    );
+    expect(decision.options.map((o) => o.id)).toContain("anticoagulation");
+    expect(decision.options.length).toBe(5);
   });
 
   it("produces 4 options even with active complication", () => {

@@ -138,7 +138,7 @@ export default function ProcedureLibrary() {
   const [activeFilter, setActiveFilter] = useState("All");
 
   const {
-    procedures, loading, error, query, difficulty, tag, category,
+    procedures, loading, error, query, difficulty, category,
     setProcedures, setLoading, setError, setQuery, setDifficulty, setCategory
   } = useProcedureStore();
 
@@ -167,7 +167,6 @@ export default function ProcedureLibrary() {
         return {
           id: p.id,
           name: p.name,
-          tag: p.specialty || (Array.isArray(p.tags) && p.tags.length > 0 ? p.tags[0] : "") || p.tag || "",
           difficulty: displayDifficulty,
           category: p.specialty || p.category,
           time: p.estimated_time || `${p.totalTicks ?? 0} min`,

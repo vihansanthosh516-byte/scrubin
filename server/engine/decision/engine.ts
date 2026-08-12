@@ -344,6 +344,15 @@ const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInterventi
       wrongFeedback: "Doppler was negative. Unnecessary study performed.",
     },
     {
+      id: "anticoagulation",
+      label: "Start IV heparin (anticoagulation)",
+      treats: ["thrombosis"],
+      vitalsEffect: { spo2: +2, heart_rate: -3 },
+      riskIfWrong: { bp_systolic: -10 },
+      correctFeedback: "Anticoagulation halts clot propagation. Clinical status stabilizing.",
+      wrongFeedback: "Full anticoagulation in a bleeding-risk patient caused hemorrhage.",
+    },
+    {
       id: "serial_labs",
       label: "Serial labs (q6h Hgb, lactate)",
       treats: ["infection", "fluid_overload", "hemorrhage"],
@@ -399,8 +408,12 @@ export class DecisionEngine {
       feedback: { correct: iv.correctFeedback, wrong: iv.wrongFeedback },
     }));
 
-    if (options.length !== 4) {
-      throw new Error(`DecisionEngine: archetype ${archetype} produced ${options.length} options, expected exactly 4`);
+    // Mirror scrubin_core_engine.py generate_decision: archetypes may offer 4-8
+    // options (POST_OP_MONITORING ships 5 in the Python core).
+    if (options.length < 4 || options.length > 8) {
+      throw new Error(
+        `DecisionEngine: archetype ${archetype} produced ${options.length} options, expected 4-8`
+      );
     }
 
     this.shuffleArray(options);
@@ -487,10 +500,21 @@ export class DecisionEngine {
     archetypes: DecisionArchetypeType[],
     comp: ComplicationType
   ): DecisionArchetypeType {
+    // Mirror scrubin_core_engine.py `_pick_archetype_for_complication`: prefer an
+    // archetype this procedure offers that maps to the complication, otherwise fall
+    // back to ANY archetype in the global map that can address it. Without the global
+    // fallback, a procedure whose archetype set doesn't cover a complication would
+    // offer zero correct recovery options — the complication becomes unresolvable.
     const matching = archetypes.filter((a) =>
       ARCHETYPE_COMPLICATION_MAP[a].includes(comp)
     );
     if (matching.length > 0) return this.rng.pick(matching);
+
+    const globalMatching = DECISION_ARCHETYPES.filter((a) =>
+      ARCHETYPE_COMPLICATION_MAP[a].includes(comp)
+    );
+    if (globalMatching.length > 0) return this.rng.pick(globalMatching);
+
     return this.rng.pick(archetypes);
   }
 

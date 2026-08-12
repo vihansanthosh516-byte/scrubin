@@ -24,7 +24,6 @@ export default function LearnHub() {
   const catFilter = params.get("category");
   const initialCategory = catFilter && CATEGORIES.includes(catFilter) ? catFilter : "All";
   const [activeCategory, setActiveCategory] = useState(initialCategory);
-  const [mounted, setMounted] = useState(true);
 
   const filtered = ARTICLES.filter(a =>
     (activeCategory === "All" || a.category === activeCategory) &&

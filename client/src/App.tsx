@@ -69,7 +69,6 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
 }
 
 function Router() {
-  const { user, hasCompletedOnboarding } = useAuth();
   const [location] = useLocation();
 
   // If we are not on signin or onboarding, we show the Navbar

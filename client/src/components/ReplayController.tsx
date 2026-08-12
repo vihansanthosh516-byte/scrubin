@@ -5,7 +5,7 @@ import { Play, Pause, RotateCcw, ChevronLeftIcon, ChevronRightIcon } from 'lucid
 import { Button } from '@/components/ui/button';
 
 export default function ReplayController() {
-  const { dvkChain, replayTick, isReplaying, setReplayTick, setIsReplaying, setState, currentTick } = useSimulationStore();
+  const { dvkChain, replayTick, isReplaying, setReplayTick, setIsReplaying, setState } = useSimulationStore();
   const [speed, setSpeed] = useState<number>(1);
   // Speed options: 0.25x, 0.5x, 1x, 2x, 4x
   const speedOptions = [0.25, 0.5, 1, 2, 4];

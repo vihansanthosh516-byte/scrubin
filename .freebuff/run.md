@@ -14,7 +14,7 @@ The workspace (`C:\Users\vihan\scrubin`) starts EMPTY. Restore it from the full 
    ```
    (The archive includes `node_modules`, `.env`, `dist/`, and the `.git` repo. It does NOT touch `.freebuff/`.)
 
-2. Restore the real `.env` — the repo tracks a **sanitized (empty) `.env`**; the checkout overwrites the working copy with it. Copy the real one from the WSL backup (never symlink, never commit values):
+2. Restore the real `.env` — the repo does **not** track `.env` (it's gitignored), so a fresh checkout has no working copy. Copy the real one from the WSL backup (never symlink, never commit values):
    ```bash
    wsl -d Ubuntu -e bash -lc "cp ~/repos/scrubin/.env /mnt/c/Users/vihan/scrubin/.env"
    # or, from the archive: tar -xOzf /c/Users/vihan/scrubin.tar.gz scrubin/.env > .env
@@ -42,6 +42,32 @@ $env:PORT='5000'
   -WindowStyle Hidden -PassThru).Id
 ```
 Verify: `curl http://localhost:3000/` and `curl http://localhost:5000/` both return 200.
+
+## Python simulation engine (Scrubin-Core)
+
+The simulation logic runs in a separate Python FastAPI service that the Express server proxies to (`/api/sim/*`, `/api/health` → `CORE_URL`, default `http://localhost:8001`).
+
+Location: `C:\Users\vihan\Scrubin-Core` (git repo; `server.py` is the shim matching the UI contract — routes `/start`, `/next`, `/decide`, `/reset`, `/procedures`, `/scenarios`, `/evaluate`, `/health`).
+
+Initialize (once):
+```bash
+cd /c/Users/vihan/Scrubin-Core
+python -m venv .venv
+.venv/Scripts/python.exe -m pip install fastapi "uvicorn[standard]" pydantic
+```
+Runtime deps are only fastapi/uvicorn/pydantic (per `INTEGRATION.md`); the big `requirements.txt` is the full test/RL toolchain (incl. torch) and is not needed to serve.
+
+Run (detached, port 8001):
+```powershell
+(Start-Process -FilePath 'C:\Users\vihan\Scrubin-Core\.venv\Scripts\python.exe' `
+  -ArgumentList 'server.py' -WorkingDirectory 'C:\Users\vihan\Scrubin-Core' `
+  -RedirectStandardOutput 'C:\Users\vihan\Scrubin-Core\engine-8001.log' `
+  -RedirectStandardError  'C:\Users\vihan\Scrubin-Core\engine-8001.log.err' `
+  -WindowStyle Hidden -PassThru).Id
+```
+Verify: `curl http://localhost:8001/health` → `{"core":"up","sessions":0,...}`; then `curl http://localhost:5000/api/health` should report `"core":"up"`.
+
+Gotcha: `server.py` launches uvicorn with `reload=1` by default. Editing `server.py` while the engine runs can WEDGE the reloader on Windows — the old server process keeps port 8001 while the reloader never finishes starting the new one (log stops at `WatchFiles detected changes in 'server.py'. Reloading...`). If `/health` looks stale after an edit, kill the whole tree (`taskkill //PID <reloader-pid> //T //F`) and restart with the command above. Sessions are in-memory, so a restart also drops any in-flight preview simulation.
 
 Notes:
 - The sign-in/onboarding pages are intentionally dark (immersive) in this version; the warm-cream background is the design system used by the authenticated app pages. The app defaults to light theme (`ThemeProvider defaultTheme="light"`); a leftover `localStorage.theme=dark` from an older version forces dark until cleared.

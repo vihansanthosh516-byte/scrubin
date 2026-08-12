@@ -141,12 +141,24 @@ export default function Navbar() {
                   <span className="max-w-[110px] truncate text-xs font-semibold text-[#191919] dark:text-[#EDEAE4]">
                     {user.customUsername || user.name?.split(" ")[0] || user.login}
                   </span>
+                  {user.profession && (
+                    <span className="hidden sm:inline max-w-[84px] truncate rounded-sm bg-[#CC553D]/10 px-1.5 py-0.5 font-mono-data text-[10px] font-semibold uppercase tracking-widest text-[#CC553D] dark:bg-[#D95338]/15 dark:text-[#D95338]">
+                      {user.profession}
+                    </span>
+                  )}
                   <ChevronDown className="h-3 w-3 text-[#666059] dark:text-[#C2BBB0]" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 rounded-sm border-[#E2DDD1] bg-white dark:bg-[#1E1A16]">
                 <DropdownMenuLabel className="flex flex-col">
-                  <span className="text-sm">{user.name}</span>
+                  <span className="flex items-center gap-2 text-sm">
+                    {user.name}
+                    {user.profession && (
+                      <span className="rounded-full bg-[#CC553D] px-2 py-0.5 font-mono-data text-[10px] font-semibold uppercase tracking-widest text-white dark:bg-[#D95338]">
+                        {user.profession}
+                      </span>
+                    )}
+                  </span>
                   <span className="font-mono-data text-[10px] font-normal text-[#666059] dark:text-[#C2BBB0]">@{user.login}</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-[#E2DDD1]" />

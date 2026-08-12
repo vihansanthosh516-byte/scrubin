@@ -53,13 +53,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const existingProfile = localStorage.getItem(`scrubin_user_profile_${parsedUser.id}`);
         if (existingProfile) {
           const profileData = JSON.parse(existingProfile);
+          // The stored profile is the source of truth for onboarding state
+          // (completeOnboarding/signUp write true, restartOnboarding writes
+          // false). Default to true only for legacy profiles written before
+          // the flag existed.
+          const onboarded = profileData.hasCompletedOnboarding ?? parsedUser.hasCompletedOnboarding ?? true;
           const completeUser = {
             ...parsedUser,
             ...profileData,
-            hasCompletedOnboarding: true,
+            hasCompletedOnboarding: onboarded,
           };
           setUser(completeUser);
-          setHasCompletedOnboarding(true);
+          setHasCompletedOnboarding(onboarded);
         } else {
           setUser(parsedUser);
           setHasCompletedOnboarding(!!parsedUser.hasCompletedOnboarding);
@@ -79,16 +84,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (data.session?.user) {
           const u = data.session.user;
           const nameToUse = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "User";
+          // Honor the stored profile's onboarding flag when one exists;
+          // OAuth sessions without a profile keep the legacy default (true).
+          let onboarded = true;
+          try {
+            const existingProfile = localStorage.getItem(`scrubin_user_profile_${u.id}`);
+            if (existingProfile) {
+              onboarded = JSON.parse(existingProfile).hasCompletedOnboarding ?? true;
+            }
+          } catch {
+            /* ignore malformed profile */
+          }
           const userData: User = {
             id: u.id,
             name: nameToUse,
             login: u.user_metadata?.user_name || u.user_metadata?.preferred_username || (u.email ? u.email.split("@")[0] : "user"),
             avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(nameToUse)}&backgroundColor=CC553D&textColor=FFFFFF`,
             email: u.email || null,
-            hasCompletedOnboarding: true,
+            hasCompletedOnboarding: onboarded,
           };
           setUser(userData);
-          setHasCompletedOnboarding(true);
+          setHasCompletedOnboarding(onboarded);
           localStorage.setItem("scrubin_user", JSON.stringify(userData));
           localStorage.setItem("scrubin_last_user", JSON.stringify({ name: userData.name, login: userData.login }));
         }
@@ -122,13 +138,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (existingUserData) {
         const existingProfile = JSON.parse(existingUserData);
+        const onboarded = existingProfile.hasCompletedOnboarding ?? true;
         const completeUser = {
           ...userData,
           ...existingProfile,
-          hasCompletedOnboarding: true,
+          hasCompletedOnboarding: onboarded,
         };
         setUser(completeUser);
-        setHasCompletedOnboarding(true);
+        setHasCompletedOnboarding(onboarded);
         setIsReturningUser(true); // Show welcome back screen
         localStorage.setItem("scrubin_user", JSON.stringify(completeUser));
         localStorage.setItem("scrubin_last_user", JSON.stringify({ name: completeUser.name, login: completeUser.login }));
@@ -205,6 +222,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const restartOnboarding = () => {
     setIsReturningUser(false);
     setHasCompletedOnboarding(false);
+    // Persist the flag so a reload doesn't restore the old "onboarded" state
+    // from the stored profile (the profile is the source of truth).
+    if (user) {
+      const profileKey = `scrubin_user_profile_${user.id}`;
+      let profile: Record<string, unknown> = {};
+      try {
+        const existing = localStorage.getItem(profileKey);
+        if (existing) profile = JSON.parse(existing);
+      } catch {
+        /* ignore malformed profile */
+      }
+      localStorage.setItem(profileKey, JSON.stringify({ ...profile, hasCompletedOnboarding: false }));
+      localStorage.setItem("scrubin_user", JSON.stringify({ ...user, hasCompletedOnboarding: false }));
+    }
     // Keep user data but allow them to re-enter name/username
     window.location.href = "/onboarding";
   };
@@ -240,9 +271,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const existingUserData = localStorage.getItem(profileKey);
         if (existingUserData) {
           const existingProfile = JSON.parse(existingUserData);
-          const completeUser = { ...userData, ...existingProfile, hasCompletedOnboarding: true };
+          const onboarded = existingProfile.hasCompletedOnboarding ?? true;
+          const completeUser = { ...userData, ...existingProfile, hasCompletedOnboarding: onboarded };
           setUser(completeUser);
-          setHasCompletedOnboarding(true);
+          setHasCompletedOnboarding(onboarded);
           localStorage.setItem("scrubin_user", JSON.stringify(completeUser));
           localStorage.setItem("scrubin_last_user", JSON.stringify({ name: completeUser.name, login: completeUser.login }));
         } else {

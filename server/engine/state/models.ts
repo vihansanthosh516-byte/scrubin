@@ -27,7 +27,7 @@ export const VITAL_RANGES: Record<keyof Vitals, [number, number]> = {
 };
 
 export function clampVitals(v: Vitals): Vitals {
-  return {
+  const result: Vitals = {
     spo2: Math.max(VITAL_RANGES.spo2[0], Math.min(VITAL_RANGES.spo2[1], v.spo2)),
     heart_rate: Math.max(VITAL_RANGES.heart_rate[0], Math.min(VITAL_RANGES.heart_rate[1], v.heart_rate)),
     bp_systolic: Math.max(VITAL_RANGES.bp_systolic[0], Math.min(VITAL_RANGES.bp_systolic[1], v.bp_systolic)),
@@ -35,6 +35,12 @@ export function clampVitals(v: Vitals): Vitals {
     temperature: Math.max(VITAL_RANGES.temperature[0], Math.min(VITAL_RANGES.temperature[1], v.temperature)),
     respiratory_rate: Math.max(VITAL_RANGES.respiratory_rate[0], Math.min(VITAL_RANGES.respiratory_rate[1], v.respiratory_rate)),
   };
+  // Physiologic invariant mirroring the Python clamp_vitals: diastolic can never
+  // reach or exceed systolic. Anchor on systolic (the BP < 40 mortality driver).
+  if (result.bp_diastolic >= result.bp_systolic) {
+    result.bp_diastolic = result.bp_systolic - 1;
+  }
+  return result;
 }
 
 // ── Complication Types ──
@@ -235,6 +241,11 @@ export interface DecideResponse {
   escalation_phase: EscalationPhase;
   procedure_phase: string;
   active_complication: ComplicationType | null;
+  // Same shape as NextTickResponse: null after a decision resolves (the engine
+  // clears the pending decision on submit and the client fetches the next one
+  // via /next), an object while a decision is outstanding. Mirrors the Python
+  // core's /decide contract.
+  pending_decision: TickDecisionPublic | null;
   decision_result: DecisionResultPublic;
   next_tick_ready: boolean;
   events: string[];

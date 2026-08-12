@@ -92,7 +92,7 @@ export class ComplicationEngine {
 
   constructor(
     rng: DeterministicRNG,
-    weights: Record<ComplicationType, number>,
+    weights: Partial<Record<ComplicationType, number>>,
     allowed: ComplicationType[],
     riskProfile: RiskProfile
   ) {
@@ -102,7 +102,7 @@ export class ComplicationEngine {
     this.riskProfile = riskProfile;
   }
 
-  private normalizeWeights(w: Record<ComplicationType, number>): Record<ComplicationType, number> {
+  private normalizeWeights(w: Partial<Record<ComplicationType, number>>): Record<ComplicationType, number> {
     const filtered: Record<string, number> = {};
     let total = 0;
     for (const key of this.allowed) {

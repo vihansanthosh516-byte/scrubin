@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -150,11 +150,8 @@ export default function Simulation() {
   const { patient: patientData, phases: phaseData } = scenario || {};
   const PATIENT = patientData || (scenario as any)?.PATIENT || null;
   const PHASES = phaseData || (scenario as any)?.PHASES || [];
-  const baselineVitals = scenario?.patient?.baselineVitals || {};
   // Decisions are not authored statically anymore – the deterministic engine
-  // generates a decision every tick. We expose the phase count for the
-  // "Step X of N" indicator.
-  const decisionCount = PHASES?.length || 0;
+  // generates a decision every tick.
 
   // Resolve the pending decision – the Python backend returns snake_case keys
   // (pending_decision) while the old Node backend used camelCase (pendingDecision).
@@ -763,10 +760,10 @@ export default function Simulation() {
                             <h2 className="text-lg font-black text-[#E08080] mb-1 animate-pulse">Patient Expired</h2>
                             <p className="text-[#EDEAE4]/80 text-xs mb-3">Critical vitals crossed lethal thresholds. The simulation has ended.</p>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left text-xs text-[#EDEAE4]/60">
-                              <div>BP: {vitals.bp_systolic || '—'}/{vitals.bp_diastolic || '—'} mmHg</div>
-                              <div>HR: {vitals.heart_rate || '—'} bpm</div>
-                              <div>SpO₂: {vitals.spo2 || '—'}%</div>
-                              <div>Temp: {vitals.temperature || '—'}°C</div>
+                              <div>BP: {fmtVital(vitals.bp_systolic)}/{fmtVital(vitals.bp_diastolic)} mmHg</div>
+                              <div>HR: {fmtVital(vitals.heart_rate)} bpm</div>
+                              <div>SpO₂: {fmtVital(vitals.spo2)}%</div>
+                              <div>Temp: {fmtVital(vitals.temperature)}°C</div>
                             </div>
                           </div>
                         )}
@@ -888,13 +885,14 @@ export default function Simulation() {
             </div>
 
             {/* Engine status strip (hidden on narrow screens — tick is already shown in the console header) */}
+            {/* The 1.5s loop is the VITALS REFRESH rate — the causal clock only advances with each surgical step or decision, so don't brand the poll as a tick rate. */}
             <div className="hidden lg:grid shrink-0 grid-cols-3 gap-3">
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
-                <span className="text-[11px] text-muted-foreground uppercase">Tick Rate</span>
+                <span className="text-[11px] text-muted-foreground uppercase" title="Live vitals refresh cadence — physiology decays in real time between steps">Vitals Refresh</span>
                 <span className="text-base font-bold text-[#CC553D]">1.5s</span>
               </div>
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
-                <span className="text-[11px] text-muted-foreground uppercase">Causal Clock</span>
+                <span className="text-[11px] text-muted-foreground uppercase" title="Advances with each surgical step or decision, not per poll — vitals keep decaying between them">Causal Clock</span>
                 <span className="text-base font-bold text-[#2E6B4B]">{currentTick}t</span>
               </div>
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
@@ -939,6 +937,12 @@ export default function Simulation() {
 function formatBP(sys: number, dia: number | undefined) {
   const r = (n: number) => (Number.isInteger(n) ? n.toString() : n.toFixed(1));
   return `${r(sys)}/${dia !== undefined ? r(dia) : '—'}`;
+}
+
+/** Format a vital for display: integers whole, floats to one decimal, missing → '—' (matches VitalItem). */
+function fmtVital(value: number | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  return Number.isInteger(value) ? value.toString() : value.toFixed(1);
 }
 
 function TrendArrow({ delta }: { delta: number | null }) {

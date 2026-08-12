@@ -1,0 +1,65 @@
+name: Engine tests (offline + live Python core)
+
+# Runs the full vitest suite with the Python simulation engine (Scrubin-Core)
+# booted locally, so the live tier of server/engine/__tests__/deathPacing.test.ts
+# runs instead of skipping. The live tier asserts death-pacing floors, correct
+# recovery resolution, and the sys > dia vitals invariant against the real engine.
+#
+# NOTE: the live tier's sys > dia assertion requires the clamp_vitals fix in
+# Scrubin-Core (scrubin_core_procedures.py) to be committed to that repo's
+# default branch — until then this job fails on that one assertion.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout Scrubin-Core (Python engine)
+        uses: actions/checkout@v4
+        with:
+          repository: vihansanthosh516-byte/Scrubin-Core
+          path: Scrubin-Core
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci --legacy-peer-deps
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install engine runtime deps
+        run: pip install fastapi "uvicorn[standard]" pydantic
+
+      - name: Start the Python simulation engine
+        run: |
+          cd Scrubin-Core
+          nohup python server.py > engine.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -sf http://127.0.0.1:8001/health > /dev/null; then
+              echo "engine healthy after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "engine failed to start; tail of engine.log:"
+          tail -40 engine.log
+          exit 1
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Vitest (offline tiers + live engine tier)
+        run: npx vitest run
