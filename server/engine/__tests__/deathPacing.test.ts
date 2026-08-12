@@ -243,17 +243,17 @@ describe("Re-trigger suppression (TS mirror of Python fresh-episode semantics)",
   const weights: Partial<Record<ComplicationType, number>> = { hemorrhage: 1, hypoxia: 1 };
   const allowed: ComplicationType[] = ["hemorrhage", "hypoxia"];
 
-  it("nothing can spawn within 3 ticks of a resolution", () => {
+  it("nothing can spawn within 8 ticks of a resolution", () => {
     const engine = new ComplicationEngine(new DeterministicRNG(3), weights, allowed, risk);
     expect(engine.tick(1, "active_complication")).not.toBeNull(); // forced spawn
     engine.resolve(engine.getActive()!, 1);
-    for (let t = 2; t <= 4; t++) {
+    for (let t = 2; t <= 9; t++) {
       expect(
         engine.tick(t, "active_complication"),
-        `spawned at tick ${t} inside the 3-tick stabilization window`
+        `spawned at tick ${t} inside the 8-tick stabilization window`
       ).toBeNull();
     }
-    expect(engine.tick(5, "active_complication")).not.toBeNull(); // detection resumes
+    expect(engine.tick(10, "active_complication")).not.toBeNull(); // detection resumes
   });
 
   it("resolve() without a complication also opens the stabilization window", () => {
@@ -261,7 +261,8 @@ describe("Re-trigger suppression (TS mirror of Python fresh-episode semantics)",
     expect(engine.tick(1, "active_complication")).not.toBeNull();
     engine.resolve();
     expect(engine.tick(2, "active_complication")).toBeNull();
-    expect(engine.tick(5, "active_complication")).not.toBeNull();
+    expect(engine.tick(8, "active_complication")).toBeNull();
+    expect(engine.tick(9, "active_complication")).not.toBeNull();
   });
 });
 

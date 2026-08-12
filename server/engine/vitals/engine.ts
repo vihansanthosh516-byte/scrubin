@@ -14,6 +14,11 @@ import {
 } from "../state/models.js";
 import { DeterministicRNG } from "../rng.js";
 
+// Mirrors POST_RESOLUTION_STABILIZATION_TICKS in scrubin_core_engine.py: after a
+// complication resolves, hold all spontaneous spawning for this many ticks so a
+// correct recovery buys the trainee real clean play.
+export const POST_RESOLUTION_STABILIZATION_TICKS = 8;
+
 export class VitalsEngine {
   private vitals: Vitals;
   private rng: DeterministicRNG;
@@ -90,10 +95,10 @@ export class ComplicationEngine {
   private active: ComplicationType | null = null;
   private activeSinceTick: number = -1;
   // Fresh-episode mirror of scrubin_core_engine.py: a resolved complication is
-  // disqualified from re-spawning for 3 ticks, and the whole engine enters a
-  // 3-tick stabilization window where nothing can spawn at all (the Python core
-  // holds detection until the trigger vitals clear; the TS engine is
-  // probability-based, so a fixed cooldown is the analog).
+  // disqualified from re-spawning for POST_RESOLUTION_STABILIZATION_TICKS, and
+  // the whole engine enters a stabilization window where nothing can spawn at
+  // all (the Python core holds detection until the trigger vitals clear; the TS
+  // engine is probability-based, so a fixed cooldown is the analog).
   private resolvedCooldowns = new Map<ComplicationType, number>();
   private stabilizationUntil = -1;
 
@@ -134,9 +139,9 @@ export class ComplicationEngine {
     this.active = null;
     this.activeSinceTick = -1;
     if (comp) {
-      this.resolvedCooldowns.set(comp, currentTick + 3);
+      this.resolvedCooldowns.set(comp, currentTick + POST_RESOLUTION_STABILIZATION_TICKS);
     }
-    this.stabilizationUntil = currentTick + 3;
+    this.stabilizationUntil = currentTick + POST_RESOLUTION_STABILIZATION_TICKS;
   }
 
   tick(tick: number, escalationPhase: EscalationPhase): ComplicationType | null {
