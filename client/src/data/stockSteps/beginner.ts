@@ -180,7 +180,20 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         wrongComps: ["hemorrhage", "infection"],
       },
       { kind: "exposure", title: "Re-check the appendiceal base", description: "Confirm the stump and cecum are intact before lavage.", f: { structure: "the appendiceal base", landmark: "the cecal wall" } },
-      { kind: "dissect", title: "Lavage the right lower quadrant", description: "Clear the field of purulent or contaminated fluid.", f: { landmark: "the right paracolic gutter" } },
+      {
+        kind: "dissect", title: "Lavage the right lower quadrant", description: "Clear the field of purulent or contaminated fluid.",
+        choices: [
+          "Irrigate the right lower quadrant with warm saline, aspirating until the return is clear.",
+          "Dry the field with sponges only, leaving the contaminated fluid in place.",
+          "Irrigate with concentrated antiseptic solution to sterilize the field.",
+        ],
+        feedback: [
+          "The field is lavaged until clear; contamination and abscess risk are reduced.",
+          "Leaving purulent fluid behind invites a postoperative abscess.",
+          "Concentrated antiseptic irrigation is cytotoxic and not indicated for peritoneal lavage.",
+        ],
+        wrongComps: ["infection", "infection"],
+      },
       {
         kind: "verify", title: "Search for perforation or abscess", description: "Look for a contained abscess or perforation before closing.",
         choices: [

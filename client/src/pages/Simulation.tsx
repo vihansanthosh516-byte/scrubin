@@ -120,7 +120,16 @@ export default function Simulation() {
           });
           if (res.ok) {
             const data = await res.json();
-            setState(data);
+            // /tick never carries events (the engine's log is reset per step),
+            // so keep the client's cumulative log and append anything the
+            // engine does send — the event timeline is a monotonic append-only
+            // log and re-sending the same batch is a no-op in TimelinePanel.
+            const prevEvents = useSimulationStore.getState().currentState?.events ?? [];
+            const engineEvents = Array.isArray(data.events) ? data.events : [];
+            setState({
+              ...data,
+              events: [...prevEvents, ...engineEvents],
+            });
             setTick(data.tick);
           }
         } catch (e) {
@@ -281,6 +290,7 @@ export default function Simulation() {
               patient_status: "Stable / Extubated",
               vitals_status: "Normal",
               events: [
+                ...(useSimulationStore.getState().currentState?.events || []),
                 ...(data.events || []),
                 "✅ Complication resolved!",
                 "🎉 Procedure completed successfully!"
@@ -293,6 +303,7 @@ export default function Simulation() {
           setState({
             ...data,
             events: [
+              ...(useSimulationStore.getState().currentState?.events || []),
               ...(data.events || []),
               "✅ Complication resolved! Returning to surgical procedure."
             ]
@@ -300,8 +311,15 @@ export default function Simulation() {
           setTick(data.tick);
         }
       } else {
-        // Still in branched mode
-        setState(data);
+        // Still in branched mode — append the engine's events to the
+        // cumulative log instead of replacing it.
+        setState({
+          ...data,
+          events: [
+            ...(useSimulationStore.getState().currentState?.events || []),
+            ...(data.events || [])
+          ]
+        });
         setTick(data.tick);
 
         // Best-effort: advance to the next tick so the engine surfaces a fresh
@@ -314,7 +332,13 @@ export default function Simulation() {
           });
           if (nextRes.ok) {
             const nextData = await nextRes.json();
-            setState(nextData);
+            setState({
+              ...nextData,
+              events: [
+                ...(useSimulationStore.getState().currentState?.events || []),
+                ...(nextData.events || [])
+              ]
+            });
             setTick(nextData.tick);
           }
         }
