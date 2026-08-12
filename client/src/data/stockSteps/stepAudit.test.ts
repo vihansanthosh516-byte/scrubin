@@ -58,6 +58,18 @@ describe("stock step banks content audit", () => {
     expect(dups).toEqual([]);
   });
 
+  it("triggers only valid, bank-declared complications, and never the same one twice", () => {
+    const bad = auditAllBanks().filter((f) =>
+      ["complication_invalid", "complication_not_in_risks", "complication_duplicate"].includes(f.reason)
+    );
+    expect(bad).toEqual([]);
+  });
+
+  it("keeps every bank's steps in surgical phase order", () => {
+    const descents = auditAllBanks().filter((f) => f.reason === "phase_descent");
+    expect(descents).toEqual([]);
+  });
+
   it("flags no NEW template mismatches (the lavage-step bug class)", () => {
     const mismatches = auditAllBanks().filter((f) => f.reason === "template_mismatch");
     const unexpected = mismatches.filter((f) => !ALLOWED_TEMPLATE_MISMATCHES.has(key(f)));

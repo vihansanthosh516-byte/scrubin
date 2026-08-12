@@ -1,18 +1,24 @@
 // Content audit for the authored procedure banks, run as a CI check.
 //
-// Two detectors:
+// Detectors:
 //  1. template_mismatch — a template step (`f:` config) whose generated
 //     correct choice shares almost no content with the step's own title or
 //     description. This is the class of bug where the lavage step offered
 //     verbatim dissection options, and seven more steps were found with it.
 //  2. duplicate_option — an explicit-choice step with two identical choices,
 //     or a wrong choice that duplicates the correct one.
-//
-// The template-mismatch detector is deliberately conservative: many template
-// steps are *intended* to reuse a generic clinical response (the closure
-// template, the bleed template, the exposure template), so its output is
-// allowlisted in stepAudit.test.ts. The duplicate-option detector is strict —
-// duplicates are always bugs.
+//  3. complication_invalid — a wrong choice names a complication that is not
+//     in the engine's canonical set (catches typos like "cardiac_arrythmia").
+//  4. complication_not_in_risks — a wrong choice names a complication the
+//     bank's own `spec.risks` list does not declare. The bank risk lists are
+//     kept in sync with what the steps actually trigger.
+//  5. complication_duplicate — both wrong choices trigger the same
+//     complication, which makes the choice meaningless.
+//  6. phase_descent — a step's kind belongs to an earlier surgical phase than
+//     a step already seen in the bank (e.g. a post-op step appearing before
+//     the closure). Template steps with a generic response are exempt from
+//     the template-mismatch check via the allowlist in stepAudit.test.ts; the
+//     other detectors are strict.
 
 import { ProcedureBank, buildStockSteps } from "./stepBuilder";
 import { STOCK_STEP_BANKS } from "./index";
@@ -32,18 +38,60 @@ const contentWords = (s: string): string[] => {
 
 const INTRINSICALLY_GENERIC_KINDS = new Set(["closure", "bleed", "vitals", "dvt", "postop", "preop", "antibiotic", "position"]);
 
+// The engine's canonical complication set (server/engine/state/models.ts).
+export const VALID_COMPLICATIONS = new Set([
+  "hypoxia",
+  "hemorrhage",
+  "infection",
+  "thrombosis",
+  "cardiac_arrhythmia",
+  "anaphylaxis",
+  "nerve_injury",
+  "fluid_overload",
+]);
+
+// Surgical phase each step kind belongs to, in clinical order. A bank's
+// steps must not descend to an earlier phase after a later one has started.
+// `landmark` is intentionally phase-agnostic: identifying a structure is
+// legitimate at every operative stage (from pre-op imaging through the
+// dissection), so those steps never trigger a descent.
+export const KIND_PHASE: Record<string, number> = {
+  preop: 0,
+  antibiotic: 0,
+  position: 0,
+  access: 1,
+  exposure: 1,
+  dissect: 2,
+  core: 2,
+  vessel: 2,
+  nerve: 2,
+  bleed: 2,
+  verify: 2,
+  closure: 3,
+  postop: 4,
+  dvt: 4,
+};
+
 export interface AuditFlag {
   bankId: string;
   stepIndex: number; // 1-based, for easy reference to the source data
   kind: string;
   title: string;
-  reason: "template_mismatch" | "duplicate_option";
+  reason:
+    | "template_mismatch"
+    | "duplicate_option"
+    | "complication_invalid"
+    | "complication_not_in_risks"
+    | "complication_duplicate"
+    | "phase_descent";
   detail: string;
 }
 
 export function auditBank(bank: ProcedureBank): AuditFlag[] {
   const flags: AuditFlag[] = [];
   const steps = buildStockSteps(bank);
+  const risks: string[] = (bank.spec as any).risks || [];
+  let maxPhase = -1;
 
   steps.forEach((step, i) => {
     const raw = bank.steps[i] as any;
@@ -72,6 +120,58 @@ export function auditBank(bank: ProcedureBank): AuditFlag[] {
         });
       }
       return;
+    }
+
+    // Every wrong choice must name a valid complication declared by the bank.
+    for (const c of step.choices.filter((c) => !c.isCorrect)) {
+      if (!c.complication) continue;
+      if (!VALID_COMPLICATIONS.has(c.complication)) {
+        flags.push({
+          bankId: bank.id,
+          stepIndex: i + 1,
+          kind,
+          title: step.title,
+          reason: "complication_invalid",
+          detail: `wrong choice triggers unknown complication "${c.complication}"`,
+        });
+      } else if (!risks.includes(c.complication)) {
+        flags.push({
+          bankId: bank.id,
+          stepIndex: i + 1,
+          kind,
+          title: step.title,
+          reason: "complication_not_in_risks",
+          detail: `wrong choice triggers "${c.complication}" but the bank's risks are [${risks.join(", ")}] — add it or fix the choice`,
+        });
+      }
+    }
+    const wrongComps = step.choices.filter((c) => !c.isCorrect).map((c) => c.complication).filter(Boolean);
+    if (wrongComps.length === 2 && wrongComps[0] === wrongComps[1]) {
+      flags.push({
+        bankId: bank.id,
+        stepIndex: i + 1,
+        kind,
+        title: step.title,
+        reason: "complication_duplicate",
+        detail: `both wrong choices trigger the same complication "${wrongComps[0]}" — make the choice meaningful`,
+      });
+    }
+
+    // The step's surgical phase must not go backwards.
+    const phase = KIND_PHASE[kind];
+    if (phase !== undefined) {
+      if (phase < maxPhase) {
+        flags.push({
+          bankId: bank.id,
+          stepIndex: i + 1,
+          kind,
+          title: step.title,
+          reason: "phase_descent",
+          detail: `kind "${kind}" (phase ${phase}) appears after a phase-${maxPhase} step — out of surgical order`,
+        });
+      } else {
+        maxPhase = Math.max(maxPhase, phase);
+      }
     }
 
     // Explicit-choice steps: all options must be distinct, and a wrong option

@@ -217,6 +217,10 @@ export default function ProcedureLibrary() {
   };
 
   const isUnlocked = (proc: any) => {
+    // Dev-mode bypass: the preview runs the Vite dev server, so every
+    // procedure is playable for testing without grinding XP. Production
+    // builds keep the real gate below.
+    if (import.meta.env.DEV) return true;
     if (proc.difficulty?.toLowerCase() === "beginner") return true;
     if (proc.difficulty?.toLowerCase() === "intermediate") return userXP >= 500;
     if (proc.difficulty?.toLowerCase() === "advanced") return userXP >= 2000;
