@@ -89,6 +89,13 @@ export class ComplicationEngine {
   private riskProfile: RiskProfile;
   private active: ComplicationType | null = null;
   private activeSinceTick: number = -1;
+  // Fresh-episode mirror of scrubin_core_engine.py: a resolved complication is
+  // disqualified from re-spawning for 3 ticks, and the whole engine enters a
+  // 3-tick stabilization window where nothing can spawn at all (the Python core
+  // holds detection until the trigger vitals clear; the TS engine is
+  // probability-based, so a fixed cooldown is the analog).
+  private resolvedCooldowns = new Map<ComplicationType, number>();
+  private stabilizationUntil = -1;
 
   constructor(
     rng: DeterministicRNG,
@@ -123,9 +130,13 @@ export class ComplicationEngine {
     return this.active;
   }
 
-  resolve(): void {
+  resolve(comp: ComplicationType | null = null, currentTick: number = 0): void {
     this.active = null;
     this.activeSinceTick = -1;
+    if (comp) {
+      this.resolvedCooldowns.set(comp, currentTick + 3);
+    }
+    this.stabilizationUntil = currentTick + 3;
   }
 
   tick(tick: number, escalationPhase: EscalationPhase): ComplicationType | null {
@@ -133,13 +144,26 @@ export class ComplicationEngine {
       return null;
     }
 
+    // Stabilization window: nothing spawns right after a resolution.
+    if (tick <= this.stabilizationUntil) return null;
+
+    // Expire resolved-complication cooldowns past their window.
+    for (const [comp, until] of this.resolvedCooldowns) {
+      if (tick > until) this.resolvedCooldowns.delete(comp);
+    }
+
     const chance = this.getSpawnChance(escalationPhase);
     if (this.rng.next() > chance) return null;
 
-    const keys = Object.keys(this.weights) as ComplicationType[];
+    const keys = (Object.keys(this.weights) as ComplicationType[]).filter(
+      (c) => !this.resolvedCooldowns.has(c)
+    );
     if (keys.length === 0) return null;
 
-    const comp = this.rng.weightedPick(this.weights);
+    const filteredWeights = {} as Record<ComplicationType, number>;
+    for (const key of keys) filteredWeights[key] = this.weights[key];
+
+    const comp = this.rng.weightedPick(filteredWeights);
     this.active = comp;
     this.activeSinceTick = tick;
     return comp;

@@ -1,12 +1,13 @@
 import { describe, it, expect } from "vitest";
 import {
   type ComplicationType,
+  type RiskProfile,
   type Vitals,
   COMPLICATION_TYPES,
   ARCHETYPE_COMPLICATION_MAP,
   clampVitals,
 } from "../state/models.js";
-import { VitalsEngine } from "../vitals/engine.js";
+import { VitalsEngine, ComplicationEngine } from "../vitals/engine.js";
 import { DecisionEngine } from "../decision/engine.js";
 import { DeterministicRNG } from "../rng.js";
 import { SimulationOrchestrator } from "../orchestrator.js";
@@ -225,6 +226,45 @@ describe("Complication onset is never instantly lethal", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 3b. Re-trigger suppression — TS mirror of the Python fresh-episode semantics
+//    (scrubin_core_engine.py): after a resolution, nothing may spawn for 3
+//    ticks (the Python core holds detection until trigger vitals clear). The
+//    TS engine is probability-based with no vitals thresholds, so a fixed
+//    3-tick cooldown is the analog.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("Re-trigger suppression (TS mirror of Python fresh-episode semantics)", () => {
+  const risk: RiskProfile = {
+    base_complication_chance: 1, // force a spawn on every eligible tick
+    crisis_threshold_factor: 1,
+    recovery_speed: 1,
+  };
+  const weights: Partial<Record<ComplicationType, number>> = { hemorrhage: 1, hypoxia: 1 };
+  const allowed: ComplicationType[] = ["hemorrhage", "hypoxia"];
+
+  it("nothing can spawn within 3 ticks of a resolution", () => {
+    const engine = new ComplicationEngine(new DeterministicRNG(3), weights, allowed, risk);
+    expect(engine.tick(1, "active_complication")).not.toBeNull(); // forced spawn
+    engine.resolve(engine.getActive()!, 1);
+    for (let t = 2; t <= 4; t++) {
+      expect(
+        engine.tick(t, "active_complication"),
+        `spawned at tick ${t} inside the 3-tick stabilization window`
+      ).toBeNull();
+    }
+    expect(engine.tick(5, "active_complication")).not.toBeNull(); // detection resumes
+  });
+
+  it("resolve() without a complication also opens the stabilization window", () => {
+    const engine = new ComplicationEngine(new DeterministicRNG(3), weights, allowed, risk);
+    expect(engine.tick(1, "active_complication")).not.toBeNull();
+    engine.resolve();
+    expect(engine.tick(2, "active_complication")).toBeNull();
+    expect(engine.tick(5, "active_complication")).not.toBeNull();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 4a. Vitals invariant — bp_systolic must always exceed bp_diastolic (mirrors
 //    the Python clamp_vitals fix; the live tier re-checks every engine response).
 // ─────────────────────────────────────────────────────────────────────────────
@@ -370,7 +410,7 @@ async function liveFumble(comp: ComplicationType): Promise<{ died: boolean; deat
   try {
     const c = await liveCall("/complicate", { session_id: sid, complication: comp });
     let pd = c.data?.pending_decision;
-    for (let tick = 0; tick < 12; tick++) {
+    for (let tick = 0; tick < 60; tick++) {
       const opts: { id: string }[] = pd?.options ?? [];
       const wrong =
         opts.find((o) => !LIVE_CORRECT_OPTIONS[comp].includes(o.id))?.id ??
@@ -383,6 +423,22 @@ async function liveFumble(comp: ComplicationType): Promise<{ died: boolean; deat
       pd = n.data.pending_decision;
     }
     return { died: false, deathAtTick: null };
+  } finally {
+    await liveCall("/reset", { session_id: sid });
+  }
+}
+
+/** Pure idleness: complicate, then /tick polls with no decisions at all. */
+async function liveIdleDeath(comp: ComplicationType): Promise<number> {
+  const s = await liveCall("/start", { procedure: "appendectomy" });
+  const sid = s.data.session_id;
+  try {
+    const c = await liveCall("/complicate", { session_id: sid, complication: comp });
+    for (let poll = 1; poll <= 150; poll++) {
+      const t = await liveCall("/tick", { session_id: sid });
+      if (t.data?.mode === "deceased") return poll;
+    }
+    return 999;
   } finally {
     await liveCall("/reset", { session_id: sid });
   }
@@ -498,6 +554,26 @@ describe.skipIf(!coreReachable)(`Live Python engine death pacing (${CORE_URL})`,
       fumbleDrop,
       `fumble cycle drops ${fumbleDrop.toFixed(1)} BP vs ${untendedDrop.toFixed(1)} untended — the observe_hemostasis penalty (-8) stacks with decay (-3.5)`
     ).toBeGreaterThan(untendedDrop * 1.5);
+  }, 180_000);
+
+  it("repeated wrong decisions never outlive pure idleness (no inversion)", async () => {
+    // A trainee who keeps guessing wrong must die no later than one who walks
+    // away. Measured on the live engine: hemorrhage 5-6 vs 12-13, infection
+    // 10-11 vs 48-55, hypoxia 11-15 vs 14-15 (wrong play ≈ idling —
+    // call_anesthesia carries no penalty), nerve_injury 10-15 vs 53-68,
+    // thrombosis 7-14 vs 25-36. The +1 tolerance absorbs RNG variance (hypoxia
+    // worst case 15 vs 14). The old "inversion" was the balance script's
+    // fallback pick accidentally RESOLVING the complication — not an engine
+    // behavior; this test locks the real contract.
+    for (const comp of Object.keys(LIVE_WRONG_OPTION) as ComplicationType[]) {
+      const fumble = await liveFumble(comp);
+      const idle = await liveIdleDeath(comp);
+      expect(fumble.died, `${comp}: fumbling wrong recoveries should eventually kill`).toBe(true);
+      expect(
+        fumble.deathAtTick!,
+        `${comp}: fumbling died at tick ${fumble.deathAtTick} but idling survived to ${idle} — wrong play outlived idleness`
+      ).toBeLessThanOrEqual(idle + 1);
+    }
   }, 180_000);
 
   it("a correct recovery is not immediately re-triggered (stabilization window)", async () => {
