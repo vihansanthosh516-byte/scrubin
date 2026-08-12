@@ -1239,7 +1239,21 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "A long clean-contaminated case demands timely prophylaxis." },
       { kind: "position", title: "Position the patient", description: "Supine with the epigastrium exposed.", f: { wrongPositions: ["prone", "lateral decubitus"] } },
       { kind: "access", title: "Make the incision", description: "Choose the laparotomy approach.", f: { wrongApproaches: ["a left subcostal approach", "a thoracoabdominal approach"] } },
-      { kind: "exposure", title: "Explore the abdomen", description: "Assess resectability and look for metastasis.", f: { structure: "the peritoneal cavity", landmark: "the liver and the peritoneum" } },
+      {
+        kind: "exposure", title: "Explore the abdomen", description: "Assess resectability and look for metastasis.",
+        f: { structure: "the peritoneal cavity", landmark: "the liver and the peritoneum" },
+        choices: [
+          "Systematically examine the liver, peritoneum, and omentum for metastasis, and assess the SMA, SMV, and portal vein before committing to resection.",
+          "Commit to resection immediately based on the preoperative staging scans.",
+          "Palpate only the pancreatic head and begin the Kocher maneuver.",
+        ],
+        feedback: [
+          "The staging laparotomy is complete; the disease is resectable with clear margins.",
+          "Skipping the staging laparotomy risks resecting a patient with occult metastasis.",
+          "A limited palpation can miss liver or peritoneal disease that changes the plan.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       {
         kind: "landmark", title: "Assess the tumor-vessel relationship", description: "Determine resectability.",
         choices: [

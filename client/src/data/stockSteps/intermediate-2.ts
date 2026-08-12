@@ -702,7 +702,21 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         ],
         wrongComps: ["hypoxia", "hemorrhage"],
       },
-      { kind: "core", title: "Lock the nail", description: "Secure the nail with interlocking screws.", f: { structure: "the proximal and distal locking screws" } },
+      {
+        kind: "core", title: "Lock the nail", description: "Secure the nail with interlocking screws.",
+        f: { structure: "the proximal and distal locking screws" },
+        choices: [
+          "Insert the interlocking screws through the alignment guide, confirming each hole engages the nail under fluoroscopy.",
+          "Lock only the proximal holes and leave the distal screws out.",
+          "Freehand drill the distal holes without fluoroscopic confirmation.",
+        ],
+        feedback: [
+          "The nail is locked both proximally and distally, controlling rotation and length.",
+          "Leaving the distal screws out risks shortening and malrotation of the fracture.",
+          "Freehand drilling can skive off the nail or injure the popliteal vessels.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
       {
         kind: "verify", title: "Test rotational stability", description: "Confirm the construct is stable.",
         choices: [

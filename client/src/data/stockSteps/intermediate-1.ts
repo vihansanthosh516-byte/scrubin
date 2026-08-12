@@ -704,7 +704,21 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["nerve_injury", "thrombosis"],
       },
-      { kind: "core", title: "Prepare the patella", description: "Resurface the patella appropriately.", f: { structure: "the patellar articular surface" } },
+      {
+        kind: "core", title: "Prepare the patella", description: "Resurface the patella appropriately.",
+        f: { structure: "the patellar articular surface" },
+        choices: [
+          "Evert the patella, resect the articular surface, and resurface with a patellar button tracking neutrally.",
+          "Over-resect the patella to a thin shell to gain extra flexion.",
+          "Forcefully evert the patella without protecting the patellar tendon origin.",
+        ],
+        feedback: [
+          "The patella is resurfaced and tracks neutrally in the trochlear groove.",
+          "Over-resection leaves the patella thin and prone to fracture.",
+          "Forceful eversion can avulse the patellar tendon insertion.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
       {
         kind: "verify", title: "Perform the trial reduction", description: "Test the components before cementing.",
         choices: [

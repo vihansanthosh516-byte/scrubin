@@ -233,17 +233,20 @@ export default function ProcedureLibrary() {
 
   const loadUserProgress = async () => {
     if (!user) return;
-    try {
-      const { data } = await supabase.from('sessions').select('procedure_id, score, outcome');
-      if (data) {
-        const totalXP = data.reduce((acc: number, session: any) => {
-          if (session.outcome === "Critical") return acc + 50;
-          return acc + 100 + Math.floor(session.score / 10);
-        }, 0);
-        setUserXP(totalXP);
-      }
-    } catch (e) {
-      console.error('Failed to load progress:', e);
+    // supabase returns { data, error } — it never throws, so the old try/catch
+    // silently swallowed a missing sessions table (the schema in
+    // supabase_schema.sql must be applied to the connected project).
+    const { data, error } = await supabase.from('sessions').select('procedure_id, score, outcome');
+    if (error) {
+      setUserXP(0);
+      return;
+    }
+    if (data) {
+      const totalXP = data.reduce((acc: number, session: any) => {
+        if (session.outcome === "Critical") return acc + 50;
+        return acc + 100 + Math.floor(session.score / 10);
+      }, 0);
+      setUserXP(totalXP);
     }
   };
 

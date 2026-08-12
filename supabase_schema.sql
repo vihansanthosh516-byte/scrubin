@@ -1,5 +1,9 @@
 -- ScrubIn Database Schema
--- Run this in Supabase SQL Editor (https://supabase.com/dashboard/project/vbnkbdhznkqpzpkegdsu/sql)
+-- Run this in Supabase SQL Editor (https://supabase.com/dashboard/project/ewtwxcjshdejwpxeroeg/sql)
+-- NOTE: this MUST be the project the app actually points at — the anon key in
+-- .env / client/src/lib/supabase.ts uses project ewtwxcjshdejwpxeroeg. If the
+-- sessions table is missing (the app 404s on /rest/v1/sessions), apply this
+-- file to that project.
 
 -- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

@@ -277,9 +277,16 @@ function buildStepChoices(
   const [correct, wrong1, wrong2] = step.choices
     ? step.choices
     : CHOICE_TEMPLATES[step.kind](s);
+  // Template steps inherit per-kind feedback, which is identical for every
+  // step of that kind in a bank. Prefixing the step's title makes each step's
+  // feedback read uniquely in the timeline ("✅ Correct Step: Close the skin —
+  // Layered closure restores…") instead of repeating the same line several
+  // times per case. Steps with hand-authored feedback are untouched.
+  const isTemplate = !step.feedback;
   const [fbCorrect, fbWrong1, fbWrong2] = step.feedback
     ? step.feedback
     : FEEDBACK_TEMPLATES[step.kind];
+  const prefix = (fb: string) => `${step.title} — ${fb}`;
   const [comp1, comp2] = step.wrongComps
     ? step.wrongComps
     : [pick(s.risks, stepIndex), pick(s.risks, stepIndex + 1)];
@@ -290,21 +297,21 @@ function buildStepChoices(
       text: correct,
       isCorrect: true,
       complication: "",
-      feedback: fbCorrect,
+      feedback: isTemplate ? prefix(fbCorrect) : fbCorrect,
     },
     {
       id: `${stepId}_b`,
       text: wrong1,
       isCorrect: false,
       complication: comp1,
-      feedback: fbWrong1,
+      feedback: isTemplate ? prefix(fbWrong1) : fbWrong1,
     },
     {
       id: `${stepId}_c`,
       text: wrong2,
       isCorrect: false,
       complication: comp2,
-      feedback: fbWrong2,
+      feedback: isTemplate ? prefix(fbWrong2) : fbWrong2,
     },
   ];
 }
