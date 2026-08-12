@@ -7,45 +7,11 @@ import { auditAllBanks, AuditFlag } from "./stepAudit";
 // "bankId|title". When a step's content legitimately improves, remove its
 // entry here — the stale-entry check below will tell you it is no longer
 // flagged.
-const ALLOWED_TEMPLATE_MISMATCHES = new Set([
-  "appendectomy|Control the mesoappendix",
-  "inguinal-hernia|Assess the contralateral side",
-  "thyroidectomy|Protect the RLN during dissection",
-  "thyroidectomy|Inspect for bleeding before closure",
-  "thyroidectomy|Develop the capsular plane on the second side",
-  "cholecystectomy|Inspect the clips under tension",
-  "cholecystectomy|Check the liver bed once more",
-  "acl-reconstruction|Establish the portals",
-  "acl-reconstruction|Wash out the joint",
-  "c-section|Inspect the adnexa and pelvis",
-  "c-section|Check the bladder and the ureters",
-  "total-hysterectomy|Confirm the ureters again",
-  "sigmoid-colectomy|Inspect the splenic flexure take-down",
-  "lap-cholecystectomy|Re-inspect the liver bed",
-  "radical-nephrectomy|Reflect the colon and identify the retroperitoneum",
-  "radical-nephrectomy|Inspect the adrenal bed",
-  "hip-replacement|Make the skin incision",
-  "hip-replacement|Check the acetabular cup fixation",
-  "hip-replacement|Wash the wound",
-  "tympanoplasty|Choose the approach",
-  "femoral-nail-fixation|Check the knee range",
-  "rotator-cuff-repair|Establish the portals",
-  "rotator-cuff-repair|Wash out the subacromial space",
-  "parathyroidectomy|Raise the flaps and open the midline",
-  "cabg|Open the pericardium",
-  "cabg|Check the LIMA bed",
-  "spinal-fusion|Check the decompression",
-  "pulmonary-lobectomy|Divide the fissures",
-  "whipple|Inspect the retroperitoneum",
-  "aaa-repair|Retract the small bowel",
-  "aaa-repair|Check the retroperitoneal bed",
-  "esophagectomy|Check the anastomotic tension",
-  "lumbar-microdiscectomy|Subperiosteal exposure",
-  "lumbar-microdiscectomy|Check the dural repair",
-  "lumbar-microdiscectomy|Wash the wound",
-  "cabg-offpump|Open the pericardium",
-  "cabg-offpump|Check the LIMA bed",
-]);
+//
+// Currently empty: every previously-allowlisted template step has been
+// polished into an explicit-choice step, so any template_mismatch flag that
+// appears now is a genuine defect and fails CI.
+const ALLOWED_TEMPLATE_MISMATCHES = new Set<string>([]);
 
 const key = (f: AuditFlag) => `${f.bankId}|${f.title}`;
 

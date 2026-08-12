@@ -162,8 +162,34 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         wrongComps: ["infection", "hemorrhage"],
       },
       { kind: "exposure", title: "Extract the gallbladder", description: "Deliver the specimen through the umbilical port.", f: { structure: "the gallbladder specimen", landmark: "the umbilical port site" } },
-      { kind: "verify", title: "Inspect the clips under tension", description: "Re-inflate the abdomen and check the clips under tension.", f: { test: "the cystic duct and artery clips under pneumoperitoneum", wrongTests: ["a routine cholangiogram", "an on-table MRI"] } },
-      { kind: "exposure", title: "Check the liver bed once more", description: "Re-inspect the bed for delayed oozing before final closure.", f: { structure: "the liver bed", landmark: "the middle hepatic vein plane" } },
+      {
+        kind: "verify", title: "Inspect the clips under tension", description: "Re-inflate the abdomen and check the clips under tension.",
+        choices: [
+          "Re-inflate the abdomen and confirm the cystic duct and artery clips hold under tension, re-clipping if needed.",
+          "Close after a routine cholangiogram instead of stressing the clips.",
+          "Trust the initial placement and skip the tension check.",
+        ],
+        feedback: [
+          "Clips that hold under pneumoperitoneum tension will hold once the abdomen is decompressed.",
+          "A cholangiogram shows the duct anatomy, not clip security — a slipped artery clip bleeds.",
+          "A slipped cystic duct clip leaks bile and sets up an abscess — the tension check is the only real test.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
+      {
+        kind: "verify", title: "Check the liver bed once more", description: "Re-inspect the bed for delayed oozing before final closure.",
+        choices: [
+          "Lower the pneumoperitoneum, then re-inspect the gallbladder fossa along the middle hepatic vein plane for oozing.",
+          "Close once the bed looks dry at full insufflation pressure.",
+          "Pack the bed with Surgicel and close without a second look.",
+        ],
+        feedback: [
+          "Lowering the pressure reveals venous oozing that tamponades at full insufflation — catch it now.",
+          "A bed that is dry only under pressure can ooze once the abdomen is decompressed.",
+          "Leaving the bed unchecked trades a two-minute look for a postoperative bleed or biloma.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       { kind: "bleed", title: "Manage a port-site bleeder", description: "A port site is bleeding on removal.", f: { vessel: "the epigastric vessels at the port site", wrongVessels: ["the iliac artery", "the femoral artery"] } },
       { kind: "verify", title: "Count the instruments and sponges", description: "Confirm the counts are correct before closure.", f: { test: "the instrument and sponge count", wrongTests: ["a routine X-ray", "a CT scan"] } },
       { kind: "closure", title: "Close the port sites", description: "Close the fascia at the larger port sites.", f: { structure: "the port site fascia" } },
@@ -237,7 +263,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       { kind: "preop", title: "Confirm the diagnosis and plan", description: "Confirm the Lachman test and imaging findings before induction." },
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "Bone tunnels make infection prophylaxis critical." },
       { kind: "position", title: "Position the knee", description: "A lateral post and foot support allow a 90° flexed knee." },
-      { kind: "access", title: "Establish the portals", description: "Place the anterolateral viewing and anteromedial working portals.", f: { wrongApproaches: ["a high suprapatellar portal", "a posterolateral portal only"] } },
+      {
+        kind: "access", title: "Establish the portals", description: "Place the anterolateral viewing and anteromedial working portals.",
+        choices: [
+          "Place the anterolateral viewing and anteromedial working portals at the patellar margins.",
+          "Use a high suprapatellar portal for viewing and skip the working portal.",
+          "Make a single posterolateral portal and work through it alone.",
+        ],
+        feedback: [
+          "Standard anterolateral viewing plus anteromedial working portals give full access to the notch.",
+          "A high suprapatellar portal angles poorly into the notch and risks the articular cartilage.",
+          "A single posterolateral portal cannot instrument the ACL footprint safely.",
+        ],
+        wrongComps: ["nerve_injury", "infection"],
+      },
       {
         kind: "landmark", title: "Diagnostic arthroscopy", description: "Survey the joint and confirm the ACL tear.",
         choices: [
@@ -355,7 +394,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       { kind: "verify", title: "Confirm the graft tension in flexion", description: "Re-check the graft tension with the knee in flexion.", f: { test: "the graft tension through flexion and extension", wrongTests: ["an on-table X-ray", "a stress radiograph"] } },
       { kind: "exposure", title: "Check the posterior horn", description: "Re-inspect the posterior horn of the menisci before closing.", f: { structure: "the posterior horn of the menisci", landmark: "the posterior cruciate ligament" } },
       { kind: "bleed", title: "Control a graft harvest-site bleeder", description: "The harvest site is oozing.", f: { vessel: "the vessels at the harvest site", wrongVessels: ["the popliteal artery", "the femoral artery"] } },
-      { kind: "verify", title: "Wash out the joint", description: "Irrigate the joint to remove debris before closure.", f: { test: "the joint washout", wrongTests: ["a routine MRI", "an X-ray"] } },
+      {
+        kind: "verify", title: "Wash out the joint", description: "Irrigate the joint to remove debris before closure.",
+        choices: [
+          "Irrigate the joint thoroughly and suction out all bone and graft debris before closure.",
+          "Skip the washout — the graft site is clean and the joint will clear on its own.",
+          "Close while the tourniquet is still inflated to keep the field dry.",
+        ],
+        feedback: [
+          "A thorough washout removes the debris that would otherwise irritate the joint and seed infection.",
+          "Retained debris causes postoperative irritation and can seed infection — always wash out.",
+          "Closing under tourniquet hides the bleeding that appears on deflation — release it and confirm a dry field.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       { kind: "closure", title: "Close the portals", description: "Close the skin and apply the dressing.", f: { structure: "the portal sites" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Knee surgery carries a measurable thrombosis risk." },
       { kind: "postop", title: "Cryotherapy and elevation", description: "Define the early swelling-control plan.", f: { test: "the swelling and effusion", wrongTests: ["a routine X-ray", "an ultrasound"] } },
@@ -527,9 +579,35 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["hemorrhage", "hypoxia"],
       },
-      { kind: "exposure", title: "Inspect the adnexa and pelvis", description: "Check for bleeding and injury before closure.", f: { structure: "the adnexa and the broad ligament", landmark: "the uterine vessels" } },
+      {
+        kind: "verify", title: "Inspect the adnexa and pelvis", description: "Check for bleeding and injury before closure.",
+        choices: [
+          "Inspect both adnexa, the broad ligaments, and the pelvic sidewalls for bleeding or injury before closure.",
+          "Close once the uterine incision looks dry, without examining the adnexa.",
+          "Ask for more uterine tone and close — the adnexa can be checked at the six-week visit.",
+        ],
+        feedback: [
+          "A systematic look catches the lateral extension, broad-ligament bleed, or adnexal injury that would otherwise declare later.",
+          "A bleed from the broad ligament or adnexa can be silent until the patient is in recovery.",
+          "Deferring the adnexal check risks missing an infected or torsed adnexa that will present postoperatively.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       { kind: "verify", title: "Confirm the uterine tone", description: "Re-check the fundal tone after the closure.", f: { test: "the uterine tone and the estimated blood loss", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "exposure", title: "Check the bladder and the ureters", description: "Inspect the bladder and confirm the ureters are intact.", f: { structure: "the bladder and the pelvic sidewalls", landmark: "the ureteral course" } },
+      {
+        kind: "verify", title: "Check the bladder and the ureters", description: "Inspect the bladder and confirm the ureters are intact.",
+        choices: [
+          "Trace each ureter along the pelvic sidewall and inspect the bladder dome for injury or suture entrapment.",
+          "Inspect only the bladder dome — the ureters are deep and hard to see.",
+          "Close once the bladder looks dry, without checking the pelvic sidewalls.",
+        ],
+        feedback: [
+          "Tracing both ureters and the bladder dome confirms no injury or entrapment from the lateral extensions.",
+          "A ureteral injury can hide at the pelvic brim — it must be looked for, not assumed away.",
+          "A sidewall bleed can sit quietly behind the bladder until the patient is in recovery.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       { kind: "bleed", title: "Control a broad-ligament bleeder", description: "A venous bleeder is seen at the uterine vessels.", f: { vessel: "the uterine vein at the broad ligament", wrongVessels: ["the ovarian artery", "the internal iliac artery"] } },
       { kind: "verify", title: "Confirm the sponge and instrument counts", description: "Complete the counts before closing the uterus.", f: { test: "the sponge and instrument count", wrongTests: ["a routine X-ray", "a CT scan"] } },
       { kind: "closure", title: "Close the peritoneum and fascia", description: "Close the layers in order.", f: { structure: "the peritoneum and rectus sheath" } },
@@ -951,7 +1029,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         wrongComps: ["nerve_injury", "hemorrhage"],
       },
       { kind: "bleed", title: "Control a pelvic venous bleeder", description: "The uterine venous plexus is oozing.", f: { vessel: "the uterine venous plexus", wrongVessels: ["the external iliac artery", "the ovarian artery"] } },
-      { kind: "verify", title: "Confirm the ureters again", description: "Re-check both ureters for a pulse before closure.", f: { test: "the ureteral pulses", wrongTests: ["a routine cystoscopy", "a CT scan"] } },
+      {
+        kind: "verify", title: "Confirm the ureters again", description: "Re-check both ureters for a pulse before closure.",
+        choices: [
+          "Re-trace both ureters to their entry into the bladder and confirm each is uninjured and not angulated.",
+          "Trust the initial inspection — the ureters were seen early in the case.",
+          "Divide any bands crossing the ureters to confirm they are free.",
+        ],
+        feedback: [
+          "A final trace confirms no clamp, suture, or angulation compromised either ureter during the dissection.",
+          "The ureters can be injured late in the case at the vaginal angles — the second look is essential.",
+          "The ureter's blood supply travels in those bands — divide them and you devascularize the ureter.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       { kind: "exposure", title: "Inspect the pelvic sidewalls", description: "Look for venous bleeding along the sidewalls.", f: { structure: "the pelvic sidewalls", landmark: "the internal iliac vessels" } },
       { kind: "bleed", title: "Control a cuff-angle bleeder", description: "The vaginal angle is bleeding.", f: { vessel: "the vaginal angle vessels", wrongVessels: ["the external iliac artery", "the obturator artery"] } },
       { kind: "verify", title: "Complete the sponge count", description: "Confirm the counts are correct before the abdomen is closed.", f: { test: "the sponge and instrument count", wrongTests: ["a routine X-ray", "a CT scan"] } },
@@ -1169,7 +1260,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       },
       { kind: "verify", title: "Confirm hemostasis and perfusion", description: "Check the anastomotic limbs and the field.", f: { test: "perfusion of the anastomotic limbs and pelvic hemostasis", wrongTests: ["a routine colonoscopy", "an on-table MRI"] } },
       { kind: "verify", title: "Re-check the anastomotic limbs", description: "Confirm the perfusion of both limbs once more.", f: { test: "the perfusion of the anastomotic limbs", wrongTests: ["a routine colonoscopy", "an on-table MRI"] } },
-      { kind: "exposure", title: "Inspect the splenic flexure take-down", description: "Confirm no splenic capsular tear from the mobilization.", f: { structure: "the splenic capsule", landmark: "the splenocolic ligament" } },
+      {
+        kind: "verify", title: "Inspect the splenic flexure take-down", description: "Confirm no splenic capsular tear from the mobilization.",
+        choices: [
+          "Inspect the splenic capsule along the splenocolic ligament for a capsular tear or subcapsular hematoma.",
+          "Close once the flexure is mobilized — the spleen was not touched directly.",
+          "Close over a drain to monitor the splenic bed for delayed bleeding.",
+        ],
+        feedback: [
+          "A capsular tear from traction on the splenocolic ligament is a classic hidden bleed — look for it specifically.",
+          "Traction on the flexure can tear the splenic capsule even when the spleen is never touched.",
+          "A drain does not stop a capsular bleed and adds an infection risk — control the source now.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       { kind: "bleed", title: "Control a mesenteric bleeder", description: "A mesenteric vessel is bleeding at the resection line.", f: { vessel: "the mesenteric vessels at the resection", wrongVessels: ["the iliac artery", "the aorta"] } },
       { kind: "verify", title: "Confirm the doughnuts", description: "Check both stapler doughnuts are intact and complete.", f: { test: "the stapler doughnuts", wrongTests: ["a routine X-ray", "a CT scan"] } },
       { kind: "closure", title: "Close the mesenteric defect and ports", description: "Close the defects and the port sites.", f: { structure: "the mesenteric defect and port sites" } },
@@ -1360,7 +1464,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       { kind: "verify", title: "Check for bile leak", description: "Inspect the clips and the bed before removal.", f: { test: "inspection of the clips and liver bed for bile", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
       { kind: "exposure", title: "Extract the gallbladder", description: "Remove the specimen safely.", f: { structure: "the gallbladder specimen", landmark: "the umbilical port" } },
       { kind: "verify", title: "Re-check the clips under tension", description: "Re-inflate the abdomen and confirm the clips hold.", f: { test: "the cystic duct and artery clips under tension", wrongTests: ["a routine cholangiogram", "an on-table MRI"] } },
-      { kind: "exposure", title: "Re-inspect the liver bed", description: "Confirm the bed is dry before removal.", f: { structure: "the liver bed", landmark: "the gallbladder fossa" } },
+      {
+        kind: "verify", title: "Re-inspect the liver bed", description: "Confirm the bed is dry before removal.",
+        choices: [
+          "Desufflate briefly and re-inspect the gallbladder fossa for oozing before removing the ports.",
+          "Trust the earlier inspection and remove the ports once the gallbladder is out.",
+          "Close over a subhepatic drain to manage any oozing from the bed.",
+        ],
+        feedback: [
+          "Lowering the pneumoperitoneum uncovers the venous ooze that full insufflation masks.",
+          "A bed that is dry only under pressure can bleed after the abdomen is decompressed.",
+          "A drain does not stop a bed ooze and adds an infection risk — control the source now.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       { kind: "bleed", title: "Control a port-site bleeder", description: "A port site is bleeding on removal.", f: { vessel: "the epigastric vessels at the port site", wrongVessels: ["the iliac artery", "the femoral artery"] } },
       { kind: "verify", title: "Confirm the sponge count", description: "Complete the counts before closure.", f: { test: "the instrument and sponge count", wrongTests: ["a routine X-ray", "a CT scan"] } },
       { kind: "closure", title: "Close the port sites", description: "Close the fascia at the larger sites.", f: { structure: "the port site fascia" } },
@@ -1435,7 +1552,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "A major resection warrants timely prophylaxis." },
       { kind: "position", title: "Position for the approach", description: "Flank position opens the retroperitoneum.", f: { wrongPositions: ["prone", "supine flat"] } },
       { kind: "access", title: "Choose the approach", description: "Transperitoneal or flank — both must reach the hilum.", f: { wrongApproaches: ["a transanal approach", "a thoracic approach as routine"] } },
-      { kind: "exposure", title: "Reflect the colon and identify the retroperitoneum", description: "Enter the correct plane.", f: { structure: "the retroperitoneum", landmark: "the white line of Toldt" } },
+      {
+        kind: "exposure", title: "Reflect the colon and identify the retroperitoneum", description: "Enter the correct plane.",
+        choices: [
+          "Incise the white line of Toldt and reflect the colon medially to open the retroperitoneum in the avascular plane.",
+          "Divide the lateral peritoneal attachments blindly to speed the reflection.",
+          "Reflect the colon medially without identifying the ureter and gonadal vein beneath it.",
+        ],
+        feedback: [
+          "The avascular plane along the white line of Toldt exposes the retroperitoneum without trauma.",
+          "Blind division of the peritoneum risks the colon, the mesenteric vessels, and the underlying ureter.",
+          "The ureter and gonadal vein travel just beneath the reflected colon — they must be identified first.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       {
         kind: "landmark", title: "Identify the ureter and gonadal vein", description: "The ureter crosses the iliac vessels — find it early.",
         choices: [
@@ -1550,7 +1680,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       },
       { kind: "verify", title: "Check hemostasis and the contralateral kidney", description: "Confirm the field is dry.", f: { test: "the renal bed and the contralateral kidney function", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
       { kind: "verify", title: "Check the renal vein stump", description: "Confirm the staple line is secure and the cava is intact.", f: { test: "the renal vein staple line and the vena cava", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
-      { kind: "exposure", title: "Inspect the adrenal bed", description: "Check the bed for bleeding after the specimen is out.", f: { structure: "the adrenal bed", landmark: "the diaphragm and the cava" } },
+      {
+        kind: "verify", title: "Inspect the adrenal bed", description: "Check the bed for bleeding after the specimen is out.",
+        choices: [
+          "Inspect the adrenal bed along the diaphragm and the vena cava for venous oozing after the specimen is out.",
+          "Close once the specimen is out — the clips should have controlled the bed.",
+          "Close over a drain in the adrenal bed to monitor for delayed bleeding.",
+        ],
+        feedback: [
+          "The adrenal veins are short and fragile — the bed must be provably dry against the cava and diaphragm.",
+          "A clip that has slipped from the short adrenal vein bleeds into a space that hides it.",
+          "A drain does not control an adrenal vein bleed and adds an infection risk — verify the bed is dry.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       { kind: "bleed", title: "Control a lumbar bleeder", description: "A lumbar vessel is bleeding in the renal bed.", f: { vessel: "the lumbar vessels in the renal bed", wrongVessels: ["the aorta", "the iliac artery"] } },
       { kind: "verify", title: "Confirm the bowel is intact", description: "Check the colon and the duodenum after the retraction.", f: { test: "the colon and the duodenum for injury", wrongTests: ["a routine liver biopsy", "a CT scan"] } },
       { kind: "closure", title: "Close the wound", description: "Close the fascia and skin in layers.", f: { structure: "the abdominal wall layers" } },

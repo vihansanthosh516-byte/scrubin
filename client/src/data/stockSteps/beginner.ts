@@ -93,7 +93,20 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         ],
         wrongComps: ["hemorrhage", "infection"],
       },
-      { kind: "vessel", title: "Control the mesoappendix", description: "Secure the blood supply before dividing the appendix.", f: { vessel: "the appendiceal artery in the mesoappendix", wrongVessels: ["the ileocolic artery", "the marginal artery"] } },
+      {
+        kind: "vessel", title: "Control the mesoappendix", description: "Secure the blood supply before dividing the appendix.",
+        choices: [
+          "Clamp the mesoappendix near the appendiceal base and ligate the appendiceal artery in continuity.",
+          "Clamp and divide the ileocolic artery trunk to devascularize the whole mesentery.",
+          "Include a generous cuff of cecal wall in the ligation to guarantee a clean margin.",
+        ],
+        feedback: [
+          "The appendiceal artery is ligated close to the appendix, so the specimen can be divided safely.",
+          "The ileocolic artery supplies the terminal ileum and cecum — dividing it devascularizes viable bowel.",
+          "A cecal cuff risks a serosal leak and contamination — keep the ligation to the mesoappendix alone.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       {
         kind: "core", title: "Divide the mesoappendix", description: "Take the mesoappendix down to the appendix wall in a controlled way.",
         choices: [
@@ -450,7 +463,20 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
       { kind: "landmark", title: "Locate the deep ring", description: "The deep ring lies above the inguinal ligament, lateral to the epigastric vessels.", f: { landmark: "the deep ring above the inguinal ligament", wrongLandmarks: ["the femoral ring", "the superficial ring"] } },
       { kind: "vessel", title: "Protect the inferior epigastric vessels", description: "The deep ring borders the inferior epigastric vessels.", f: { vessel: "the inferior epigastric vessels at the deep ring", wrongVessels: ["the femoral artery", "the superficial circumflex iliac artery"] } },
       { kind: "exposure", title: "Reduce the hernia contents", description: "Return the contents to the abdominal cavity gently.", f: { structure: "the hernia contents", landmark: "the deep ring" } },
-      { kind: "verify", title: "Assess the contralateral side", description: "Ask whether a contralateral defect was noted preoperatively.", f: { test: "the contralateral groin examination", wrongTests: ["a bilateral ultrasound", "a CT scan"] } },
+      {
+        kind: "verify", title: "Assess the contralateral side", description: "Ask whether a contralateral defect was noted preoperatively.",
+        choices: [
+          "Review the preoperative notes and examine the contralateral groin for a clinically occult defect.",
+          "Open the contralateral groin to explore it, since defects are commonly bilateral.",
+          "Close without a contralateral check — the consent covers this side only.",
+        ],
+        feedback: [
+          "A quick clinical check confirms whether a contralateral defect needs addressing or documenting.",
+          "Unnecessary contralateral exploration adds dissection and nerve risk for an unproven finding.",
+          "A missed contralateral defect may later strangulate — record the assessment, not the assumption.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
       {
         kind: "core", title: "Classify the defect", description: "Determine whether the hernia is direct or indirect to choose the repair.",
         choices: [
@@ -603,7 +629,20 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         ],
         wrongComps: ["nerve_injury", "hemorrhage"],
       },
-      { kind: "nerve", title: "Protect the RLN during dissection", description: "Keep the nerve in view as the gland is rolled medially.", f: { nerve: "the recurrent laryngeal nerve", wrongNerves: ["the hypoglossal nerve", "the vagus nerve"] } },
+      {
+        kind: "nerve", title: "Protect the RLN during dissection", description: "Keep the nerve in view as the gland is rolled medially.",
+        choices: [
+          "Identify the recurrent laryngeal nerve in the tracheoesophageal groove and keep it in view while rolling the gland medially.",
+          "Retract the recurrent laryngeal nerve with a self-retaining retractor to improve exposure of the groove.",
+          "Sweep the tissue in the tracheoesophageal groove with cautery to speed the medial roll.",
+        ],
+        feedback: [
+          "The nerve is traced under direct vision — the gland is rolled without ever putting the nerve on tension.",
+          "Retraction injury to the nerve risks permanent vocal cord dysfunction.",
+          "Cautery across the groove risks the nerve and the inferior thyroid vessels — dissect sharply in the plane.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
       {
         kind: "vessel", title: "Control the inferior thyroid artery", description: "The artery crosses near the nerve.",
         choices: [
@@ -702,8 +741,34 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         ],
         wrongComps: ["hypoxia", "nerve_injury"],
       },
-      { kind: "verify", title: "Inspect for bleeding before closure", description: "The empty bed must be dry before closure.", f: { test: "a Valsalva maneuver to reveal venous bleeders", wrongTests: ["a postoperative CT", "a routine ultrasound"] } },
-      { kind: "dissect", title: "Develop the capsular plane on the second side", description: "Repeat the capsular dissection on the contralateral lobe.", f: { structure: "the contralateral thyroid lobe", landmark: "the tracheoesophageal groove" } },
+      {
+        kind: "verify", title: "Inspect for bleeding before closure", description: "The empty bed must be dry before closure.",
+        choices: [
+          "Ask anesthesia to perform a Valsalva maneuver, then control any venous bleeders that appear.",
+          "Close the bed and rely on a postoperative CT to detect any bleeding.",
+          "Trust the stable vitals and close without raising venous pressure.",
+        ],
+        feedback: [
+          "Valsalva raises venous pressure and reveals bleeders that would otherwise tamponade at closure.",
+          "A postoperative CT finds a hematoma only after it forms — a delayed collection can compress the airway.",
+          "Vitals lag behind slow venous oozing — the empty bed must be provably dry.",
+        ],
+        wrongComps: ["hypoxia", "hemorrhage"],
+      },
+      {
+        kind: "dissect", title: "Develop the capsular plane on the second side", description: "Repeat the capsular dissection on the contralateral lobe.",
+        choices: [
+          "Develop the avascular capsular plane along the tracheoesophageal groove of the second lobe.",
+          "Sweep the recurrent laryngeal nerve aside with a peanut to speed the capsular dissection.",
+          "Run cautery across the capsular plane to clear the second lobe quickly.",
+        ],
+        feedback: [
+          "The avascular capsular plane is followed — the nerve stays out of harm's way.",
+          "Pushing the nerve with a peanut risks traction injury — dissect along the capsule instead.",
+          "Cautery across the capsule risks the nerve and the parathyroid vessels.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
       { kind: "verify", title: "Confirm the external laryngeal nerve", description: "Identify the external branch of the superior laryngeal nerve as it crosses the superior pole vessels.", f: { test: "the external branch of the superior laryngeal nerve", wrongTests: ["a nerve conduction study", "an ultrasound"] } },
       { kind: "bleed", title: "Control a superior pole bleeder", description: "The superior thyroid vessels are retracting.", f: { vessel: "the superior thyroid artery at the upper pole", wrongVessels: ["the carotid artery", "the inferior thyroid artery"] } },
       { kind: "vitals", title: "Respond to the rising heart rate", description: "The heart rate is climbing during the second-side dissection.", f: { structure: "the hemodynamics", landmark: "the temperature and the calcium" } },

@@ -33,7 +33,20 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       { kind: "preop", title: "Confirm the plan", description: "Review the templating, the consent, and the implant plan." },
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "Implant surgery demands timely prophylaxis." },
       { kind: "position", title: "Position in lateral decubitus", description: "Stabilize the pelvis for the posterior approach.", f: { wrongPositions: ["supine", "prone"] } },
-      { kind: "access", title: "Make the skin incision", description: "Center the incision over the greater trochanter.", f: { wrongApproaches: ["an anterior incision as routine", "a medial incision"] } },
+      {
+        kind: "access", title: "Make the skin incision", description: "Center the incision over the greater trochanter.",
+        choices: [
+          "Make a straight lateral incision centered over the greater trochanter for the posterior approach.",
+          "Make an anterior incision as routine, even for the planned posterior approach.",
+          "Make a medial incision to stay away from the sciatic nerve.",
+        ],
+        feedback: [
+          "A lateral incision over the greater trochanter is the correct access for the posterior approach.",
+          "An anterior incision does not line up with the posterior approach and strains the exposure.",
+          "A medial incision crosses the adductor origin and gives poor access to the acetabulum.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
       { kind: "exposure", title: "Divide the short external rotators", description: "Expose the posterior capsule.", f: { structure: "the short external rotators", landmark: "the posterior capsule" } },
       {
         kind: "nerve", title: "Protect the sciatic nerve", description: "The sciatic nerve lies just posterior to the exposure.",
@@ -136,9 +149,35 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       },
       { kind: "verify", title: "Confirm stability and closure", description: "Check the repair of the capsule and rotators.", f: { test: "stability through range and the rotator repair", wrongTests: ["an on-table X-ray", "a CT scan"] } },
       { kind: "verify", title: "Confirm the leg length", description: "Re-check the leg-length equality before closure.", f: { test: "the leg-length comparison", wrongTests: ["an on-table X-ray", "a CT scan"] } },
-      { kind: "exposure", title: "Check the acetabular cup fixation", description: "Confirm the cup is fully seated and stable.", f: { structure: "the acetabular cup", landmark: "the acetabular rim" } },
+      {
+        kind: "verify", title: "Check the acetabular cup fixation", description: "Confirm the cup is fully seated and stable.",
+        choices: [
+          "Inspect the cup–rim interface and confirm the component is fully seated with no gap or rock.",
+          "Confirm the cup by feel — if it does not move with a strong push, it is seated.",
+          "Skip the seating check — the press-fit was forceful and the cup is unlikely to move.",
+        ],
+        feedback: [
+          "A visual check of the rim and a stable press-fit confirm the cup will not rock or dislodge.",
+          "A partially seated cup can feel stable to a push while still being proud of the rim.",
+          "A proud or loose cup fails early — the seating check is not optional.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
       { kind: "bleed", title: "Control a capsular bleeder", description: "The capsule is bleeding during the repair.", f: { vessel: "the circumflex branches in the capsule", wrongVessels: ["the femoral artery", "the profunda femoris artery"] } },
-      { kind: "verify", title: "Wash the wound", description: "Irrigate the joint and the wound before closure.", f: { test: "the wound washout", wrongTests: ["a routine X-ray", "a CT scan"] } },
+      {
+        kind: "verify", title: "Wash the wound", description: "Irrigate the joint and the wound before closure.",
+        choices: [
+          "Irrigate the joint and wound thoroughly and suction out all debris and cement fragments before closure.",
+          "Close over a routine X-ray to confirm the components rather than washing out.",
+          "Skip the washout — the field has been clean throughout the case.",
+        ],
+        feedback: [
+          "A thorough washout clears the cement and bone debris that would otherwise irritate the joint and seed infection.",
+          "An X-ray confirms component position, not a clean wound — debris left behind still causes problems.",
+          "Cement fragments and debris can sit unnoticed until they cause a third-body wear or infection.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
       { kind: "closure", title: "Repair the capsule and rotators", description: "Restore the posterior structures.", f: { structure: "the posterior capsule and short external rotators" } },
       { kind: "closure", title: "Close the skin", description: "Close the subcutaneous layer and skin.", f: { structure: "the subcutaneous layer and skin" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Hip arthroplasty is among the highest-risk procedures for thrombosis." },
@@ -399,7 +438,20 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
     steps: [
       { kind: "preop", title: "Confirm the indication", description: "Review the otoscopy, the audiogram, and the dry ear status." },
       { kind: "position", title: "Position the head", description: "Rotate the head to expose the ear canal.", f: { wrongPositions: ["prone", "lateral decubitus"] } },
-      { kind: "access", title: "Choose the approach", description: "Match the approach to the perforation.", f: { wrongApproaches: ["a cervical approach", "a transcanal approach through a stenotic canal"] } },
+      {
+        kind: "access", title: "Choose the approach", description: "Match the approach to the perforation.",
+        choices: [
+          "Use an endaural or postauricular approach that matches the perforation location and canal width.",
+          "Use a cervical approach to reach the middle ear from below.",
+          "Force a transcanal approach through the stenotic canal for a cosmetic result.",
+        ],
+        feedback: [
+          "An endaural or postauricular approach fits the perforation and the canal anatomy.",
+          "A cervical approach does not access the middle ear and risks the great vessels.",
+          "Working through a stenotic canal injures the canal skin and the chorda tympani.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
       {
         kind: "exposure", title: "Prepare the ear canal", description: "Expose the tympanic membrane.",
         choices: [
@@ -732,7 +784,20 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         wrongComps: ["infection", "hemorrhage"],
       },
       { kind: "verify", title: "Confirm the fracture alignment", description: "Re-check the rotation and the alignment on fluoroscopy.", f: { test: "the rotation and the alignment", wrongTests: ["an on-table MRI", "a bone scan"] } },
-      { kind: "exposure", title: "Check the knee range", description: "Confirm the knee motion is full after the nailing.", f: { structure: "the knee joint", landmark: "the patella and the joint line" } },
+      {
+        kind: "verify", title: "Check the knee range", description: "Confirm the knee motion is full after the nailing.",
+        choices: [
+          "Range the knee through full flexion and extension and confirm the patella tracks without catching.",
+          "Confirm the motion by feel — if the knee moves, the nail has not blocked it.",
+          "Skip the range check — the nail sits in the medullary canal and cannot affect the knee.",
+        ],
+        feedback: [
+          "Full motion with smooth patellar tracking confirms the nail has not violated the joint.",
+          "A proud or prominent nail tip can block motion without feeling like a hard stop.",
+          "A nail that has backed out or breached the joint will present as stiffness and pain — check now.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
       { kind: "bleed", title: "Control a fracture-site bleeder", description: "The fracture hematoma is oozing.", f: { vessel: "the branches at the fracture site", wrongVessels: ["the popliteal artery", "the femoral artery"] } },
       { kind: "verify", title: "Confirm the screw lengths", description: "Check the locking screws do not protrude excessively.", f: { test: "the screw lengths and the positions", wrongTests: ["an on-table MRI", "a CT scan"] } },
       { kind: "closure", title: "Close the wounds", description: "Close the entry and screw sites.", f: { structure: "the entry wound and screw incisions" } },
@@ -820,7 +885,20 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       { kind: "preop", title: "Confirm the plan", description: "Review the MRI and the repair feasibility." },
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "Anchor placement warrants prophylaxis." },
       { kind: "position", title: "Position the patient", description: "Beach-chair or lateral — either works if set up correctly.", f: { wrongPositions: ["prone", "supine with the arm adducted"] } },
-      { kind: "access", title: "Establish the portals", description: "Place the posterior viewing and anterior working portals.", f: { wrongApproaches: ["an open approach as routine", "a posterior midline approach"] } },
+      {
+        kind: "access", title: "Establish the portals", description: "Place the posterior viewing and anterior working portals.",
+        choices: [
+          "Place the posterior viewing and anterior working portals just off the acromial edge.",
+          "Convert to an open deltoid-splitting approach as routine before looking.",
+          "Place a posterior midline approach and work straight down the deltoid.",
+        ],
+        feedback: [
+          "Standard posterior viewing and anterior working portals give full access to the footprint.",
+          "An open approach as routine adds deltoid morbidity that arthroscopy avoids.",
+          "A midline posterior approach risks the axillary nerve and gives poor footprint access.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
       {
         kind: "landmark", title: "Diagnostic arthroscopy", description: "Survey the joint and confirm the tear.",
         choices: [
@@ -922,7 +1000,20 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       { kind: "verify", title: "Re-check the repair under rotation", description: "Confirm the repair holds with gentle internal rotation.", f: { test: "the repair under rotation", wrongTests: ["an on-table X-ray", "a stress radiograph"] } },
       { kind: "exposure", title: "Check the biceps tendon", description: "Confirm the biceps was not damaged during the repair.", f: { structure: "the biceps tendon", landmark: "the bicipital groove" } },
       { kind: "bleed", title: "Control a portal bleeder", description: "A portal site is bleeding.", f: { vessel: "the vessels at the portal site", wrongVessels: ["the axillary artery", "the brachial artery"] } },
-      { kind: "verify", title: "Wash out the subacromial space", description: "Irrigate the space before closure.", f: { test: "the subacromial washout", wrongTests: ["a routine MRI", "an X-ray"] } },
+      {
+        kind: "verify", title: "Wash out the subacromial space", description: "Irrigate the space before closure.",
+        choices: [
+          "Irrigate the subacromial space and suction out all bone and anchor debris before closure.",
+          "Close over a routine MRI to check for retained debris.",
+          "Skip the washout — the space drains through the portals on its own.",
+        ],
+        feedback: [
+          "A thorough washout clears the debris that would otherwise irritate the subacromial space and seed infection.",
+          "An MRI cannot remove debris — the washout must happen while the portals are in.",
+          "Retained debris causes postoperative catching and can seed infection.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
       { kind: "closure", title: "Close the portals", description: "Close the portal sites.", f: { structure: "the portal sites" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Standard prophylaxis for shoulder surgery." },
       { kind: "postop", title: "Sling positioning", description: "Define the sling use and the passive motion plan.", f: { test: "the sling and the passive motion schedule", wrongTests: ["a routine X-ray", "a CT scan"] } },
@@ -1199,7 +1290,20 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       { kind: "preop", title: "Confirm the localization", description: "Review the sestamibi and ultrasound to plan the focused approach." },
       { kind: "position", title: "Position the neck", description: "Extension opens the operative space.", f: { wrongPositions: ["prone", "lateral decubitus"] } },
       { kind: "access", title: "Make the incision", description: "A small incision over the localized adenoma.", f: { wrongApproaches: ["a bilateral exploration as routine", "a transoral approach"] } },
-      { kind: "exposure", title: "Raise the flaps and open the midline", description: "Expose the thyroid bed.", f: { structure: "the strap muscles", landmark: "the midline raphe" } },
+      {
+        kind: "exposure", title: "Raise the flaps and open the midline", description: "Expose the thyroid bed.",
+        choices: [
+          "Raise subplatysmal flaps and open the midline raphe between the strap muscles.",
+          "Divide the strap muscles transversely to expose the gland quickly.",
+          "Open the midline raphe below the thyroid isthmus only.",
+        ],
+        feedback: [
+          "Subplatysmal flaps and the midline raphe open the thyroid bed without dividing muscle.",
+          "Transverse division of the strap muscles adds denervation and bleeding for no benefit.",
+          "Opening only the lower raphe restricts access to the upper pole and the external laryngeal nerve.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
       {
         kind: "landmark", title: "Identify the inferior thyroid artery", description: "This artery leads to the parathyroid glands.",
         choices: [

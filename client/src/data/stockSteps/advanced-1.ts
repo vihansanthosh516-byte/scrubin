@@ -34,7 +34,20 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "Implant and bypass demand timely prophylaxis." },
       { kind: "position", title: "Position the patient", description: "Supine with arms tucked and defibrillator pads placed.", f: { wrongPositions: ["prone", "lateral decubitus"] } },
       { kind: "access", title: "Perform the median sternotomy", description: "Open the chest.", f: { wrongApproaches: ["a thoracotomy as routine", "a subcostal approach"] } },
-      { kind: "exposure", title: "Open the pericardium", description: "Create a pericardial well and identify the heart.", f: { structure: "the pericardium", landmark: "the aorta and the right atrium" } },
+      {
+        kind: "exposure", title: "Open the pericardium", description: "Create a pericardial well and identify the heart.",
+        choices: [
+          "Open the pericardium over the aorta and right atrium and create a pericardial well with stay sutures.",
+          "Open the pericardium directly over the left ventricular surface to reach the heart fastest.",
+          "Incise the pericardium and skip the stay sutures to keep the field uncluttered.",
+        ],
+        feedback: [
+          "Opening over the aorta and building the well gives a stable cradle for the heart and the grafts.",
+          "The ventricular surface is the most irritable part of the heart — opening over it risks arrhythmia.",
+          "Without stay sutures the well collapses and the heart can rotate — build the cradle properly.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "hypoxia"],
+      },
       {
         kind: "core", title: "Harvest the LIMA", description: "Take down the left internal mammary artery.",
         choices: [
@@ -206,7 +219,20 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         wrongComps: ["cardiac_arrhythmia", "hypoxia"],
       },
       { kind: "verify", title: "Confirm the hemostasis with protamine", description: "Reverse the heparin and confirm the field stays dry.", f: { test: "the field after protamine", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
-      { kind: "exposure", title: "Check the LIMA bed", description: "Inspect the LIMA harvest bed for bleeding.", f: { structure: "the LIMA bed", landmark: "the internal thoracic vessels" } },
+      {
+        kind: "verify", title: "Check the LIMA bed", description: "Inspect the LIMA harvest bed for bleeding.",
+        choices: [
+          "Inspect the LIMA bed along the internal thoracic vessels and control any side-branch bleeding before closing.",
+          "Close the sternum and rely on the drains to reveal any LIMA bed bleeding.",
+          "Reinforce the LIMA bed with cautery along its full length just in case.",
+        ],
+        feedback: [
+          "Side-branch bleeding from the harvest bed is controlled before the sternum closes.",
+          "Drains reveal a bleed only after it has collected — the bed must be dry before closure.",
+          "Cautery along the bed risks the phrenic nerve, which runs with the internal thoracic vessels — control only what is bleeding.",
+        ],
+        wrongComps: ["hemorrhage", "hypoxia"],
+      },
       { kind: "bleed", title: "Control a graft bed bleeder", description: "The vein harvest site is bleeding.", f: { vessel: "the harvest site vessels", wrongVessels: ["the femoral artery", "the aorta"] } },
       { kind: "verify", title: "Confirm the rhythm", description: "Check the rhythm is stable before closure.", f: { test: "the cardiac rhythm and the pacing", wrongTests: ["a routine ECG", "a CT scan"] } },
       { kind: "closure", title: "Close the sternum", description: "Wire the sternum and close the layers.", f: { structure: "the sternum and the soft tissues" } },
@@ -678,7 +704,20 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
       },
       { kind: "vessel", title: "Protect the segmental vessels", description: "The segmentals cross the mid-vertebral body.", f: { vessel: "the segmental vessels", wrongVessels: ["the aorta", "the iliac artery"] } },
       { kind: "verify", title: "Confirm the screws on final imaging", description: "Re-check the screw positions on the final fluoroscopy.", f: { test: "the screw positions on the final image", wrongTests: ["an on-table MRI", "a CT scan"] } },
-      { kind: "exposure", title: "Check the decompression", description: "Confirm the thecal sac is free of compression.", f: { structure: "the thecal sac", landmark: "the laminectomy edges" } },
+      {
+        kind: "verify", title: "Check the decompression", description: "Confirm the thecal sac is free of compression.",
+        choices: [
+          "Inspect the laminectomy edges and confirm the thecal sac is free of bone or ligament compression.",
+          "Confirm the decompression by palpation through the wound.",
+          "Widen the laminectomy prophylactically to be sure the sac is free.",
+        ],
+        feedback: [
+          "Seeing the sac free of bone and ligament confirms the decompression is complete.",
+          "Blind palpation can injure the dura and nerve roots — the sac must be seen.",
+          "Extending the laminectomy risks epidural bleeding — only the compressed segment needs freeing.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
       { kind: "bleed", title: "Control a muscle bleeder", description: "The paraspinal muscle is bleeding.", f: { vessel: "the paraspinal vessels", wrongVessels: ["the aorta", "the iliac artery"] } },
       { kind: "verify", title: "Confirm the neuromonitoring signals", description: "Re-check the motor and sensory signals before closure.", f: { test: "the neuromonitoring signals", wrongTests: ["a nerve conduction study", "a CT scan"] } },
       { kind: "closure", title: "Close the wound", description: "Close the fascia, subcutaneous layer, and skin.", f: { structure: "the thoracolumbar fascia and skin" } },
@@ -1023,7 +1062,20 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["hypoxia", "hemorrhage"],
       },
-      { kind: "exposure", title: "Divide the fissures", description: "Complete the fissures to expose the hilum.", f: { structure: "the major and minor fissures", landmark: "the interlobar artery" } },
+      {
+        kind: "dissect", title: "Divide the fissures", description: "Complete the fissures to expose the hilum.",
+        choices: [
+          "Complete the major and minor fissures with the interlobar artery identified and protected.",
+          "Divide the fissures with a stapler through the lung parenchyma without finding the artery.",
+          "Divide the fissures with cautery to save stapler time.",
+        ],
+        feedback: [
+          "With the interlobar artery identified, the fissure can be completed without vascular injury.",
+          "Stapling blind risks the interlobar artery — find it before dividing anything.",
+          "A cautery-sealed fissure leaves a prolonged air leak that can set up an empyema — staple the parenchyma.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       {
         kind: "vessel", title: "Control the pulmonary vein", description: "Secure the venous drainage of the lobe.",
         choices: [
@@ -1424,7 +1476,20 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         wrongComps: ["hemorrhage", "infection"],
       },
       { kind: "verify", title: "Re-check the anastomotic perfusion", description: "Confirm the perfusion of the bowel and the stomach limbs.", f: { test: "the perfusion of the anastomotic limbs", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
-      { kind: "exposure", title: "Inspect the retroperitoneum", description: "Check the retroperitoneal bed for bleeding.", f: { structure: "the retroperitoneal bed", landmark: "the aorta and the vena cava" } },
+      {
+        kind: "verify", title: "Inspect the retroperitoneum", description: "Check the retroperitoneal bed for bleeding.",
+        choices: [
+          "Inspect the retroperitoneal bed along the aorta and vena cava and control any bleeding before reconstruction.",
+          "Close the abdomen and rely on the drains to reveal retroperitoneal bleeding.",
+          "Close over a retroperitoneal drain to manage any delayed oozing.",
+        ],
+        feedback: [
+          "The retroperitoneal bed is verified dry against the great vessels before the reconstruction begins.",
+          "Drains reveal a retroperitoneal bleed only after it has collected — the bed must be seen now.",
+          "A drain does not stop a retroperitoneal bleed and adds an infection risk — verify the bed is dry.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       { kind: "bleed", title: "Control an anastomotic bleeder", description: "An anastomotic suture line is bleeding.", f: { vessel: "the anastomotic vessels", wrongVessels: ["the aorta", "the portal vein"] } },
       { kind: "verify", title: "Confirm the drain positions", description: "Check the drains are placed at the anastomoses.", f: { test: "the drain positions", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
       { kind: "closure", title: "Place drains and close", description: "Drain the anastomoses and close.", f: { structure: "the drains and the abdominal wall" } },

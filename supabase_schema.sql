@@ -63,6 +63,25 @@ GROUP BY u.id, u.name, u.avatar_url
 HAVING COUNT(s.id) > 0
 ORDER BY avg_score DESC;
 
+-- Leaderboard view for the app's Leaderboard page (queries `.from('leaderboard')`
+-- with user_id / username / avatar_url / total_xp / procedures_completed).
+-- total_xp mirrors the client-side XP formula in ProcedureLibrary.tsx:
+-- sum(100 + floor(score / 10)) over the user's sessions. Keep this view and
+-- the client query in sync — the CI schema check (supabaseSchema.test.ts)
+-- fails if the app queries a relation this file does not define.
+DROP VIEW IF EXISTS leaderboard;
+CREATE VIEW leaderboard AS
+SELECT
+  u.id AS user_id,
+  u.name AS username,
+  u.avatar_url,
+  COALESCE(SUM(100 + FLOOR(GREATEST(0, s.score) / 10)), 0) AS total_xp,
+  COUNT(s.id) AS procedures_completed
+FROM users u
+LEFT JOIN sessions s ON u.id = s.user_id
+GROUP BY u.id, u.name, u.avatar_url
+HAVING COUNT(s.id) > 0;
+
 -- Row Level Security (RLS) policies
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
@@ -91,6 +110,7 @@ FOR INSERT WITH CHECK (true);
 GRANT ALL ON users TO anon;
 GRANT ALL ON sessions TO anon;
 GRANT ALL ON leaderboard_view TO anon;
+GRANT ALL ON leaderboard TO anon;
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

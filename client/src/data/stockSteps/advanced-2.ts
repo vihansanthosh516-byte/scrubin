@@ -34,7 +34,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "Graft placement demands timely prophylaxis." },
       { kind: "position", title: "Position the patient", description: "Supine with the abdomen exposed for a midline approach.", f: { wrongPositions: ["prone", "lateral decubitus"] } },
       { kind: "access", title: "Make the midline incision", description: "Open the abdomen.", f: { wrongApproaches: ["a flank approach as routine", "a thoracoabdominal approach"] } },
-      { kind: "exposure", title: "Retract the small bowel", description: "Expose the retroperitoneum.", f: { structure: "the retroperitoneum", landmark: "the aortic pulsation" } },
+      {
+        kind: "exposure", title: "Retract the small bowel", description: "Expose the retroperitoneum.",
+        choices: [
+          "Pack the small bowel cephalad and to the right to expose the retroperitoneum over the aorta.",
+          "Retract the small bowel with deep retractors and hold it steady against the spine.",
+          "Clamp the small bowel mesentery with a bowel clamp to hold it out of the way.",
+        ],
+        feedback: [
+          "Packing positions the bowel without trauma and exposes the aortic bed cleanly.",
+          "Deep retraction can tear the mesentery — pack and position instead of pulling.",
+          "A bowel clamp across the mesentery can thrombose the mesenteric vessels — pack, never clamp.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
       {
         kind: "landmark", title: "Expose the infrarenal neck", description: "Define the proximal clamp site.",
         choices: [
@@ -162,7 +175,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         wrongComps: ["cardiac_arrhythmia", "hypoxia"],
       },
       { kind: "verify", title: "Re-check the anastomoses after the flow", description: "Re-inspect the anastomoses after the clamps are off.", f: { test: "the anastomoses after flow", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
-      { kind: "exposure", title: "Check the retroperitoneal bed", description: "Inspect the bed for oozing before the sac closure.", f: { structure: "the retroperitoneal bed", landmark: "the left renal vein" } },
+      {
+        kind: "verify", title: "Check the retroperitoneal bed", description: "Inspect the bed for oozing before the sac closure.",
+        choices: [
+          "Inspect the retroperitoneal bed along the left renal vein and the graft for oozing before closing the sac.",
+          "Close the sac once the graft is in — the bed was controlled during the dissection.",
+          "Close over a drain in the retroperitoneal bed to manage any oozing.",
+        ],
+        feedback: [
+          "The bed and the graft are verified dry before the sac is closed over them.",
+          "The retroperitoneal bed can ooze for hours after a clamp time — it must be seen, not assumed dry.",
+          "A drain does not stop a bed ooze and adds an infection risk — control the source now.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       { kind: "bleed", title: "Control a sac-edge bleeder", description: "The sac edge is bleeding.", f: { vessel: "the sac edge vessels", wrongVessels: ["the aorta", "the vena cava"] } },
       { kind: "verify", title: "Confirm the foot pulses", description: "Confirm the pedal pulses are present.", f: { test: "the pedal pulses", wrongTests: ["a routine X-ray", "a Doppler of the legs"] } },
       { kind: "closure", title: "Close the sac over the graft", description: "Wrap the sac around the graft.", f: { structure: "the aneurysm sac" } },
@@ -663,7 +689,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         wrongComps: ["infection", "hypoxia"],
       },
       { kind: "verify", title: "Re-check the conduit tip", description: "Confirm the conduit tip stays well-perfused.", f: { test: "the conduit perfusion at the tip", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
-      { kind: "exposure", title: "Check the anastomotic tension", description: "Confirm the anastomosis is tension-free.", f: { structure: "the anastomosis", landmark: "the conduit and the esophagus" } },
+      {
+        kind: "verify", title: "Check the anastomotic tension", description: "Confirm the anastomosis is tension-free.",
+        choices: [
+          "Confirm the conduit reaches the esophagus without tension and the anastomosis lies free of stretch.",
+          "Close once the anastomosis is sewn — the conduit was measured during the mobilization.",
+          "Accept some tension — the anastomosis will stretch into place over the first week.",
+        ],
+        feedback: [
+          "A tension-free anastomosis heals; a stretched one leaks — confirm the conduit lies slack.",
+          "A tensioned anastomosis leaks, and the leak sets up a mediastinal infection.",
+          "A tense anastomosis can tear along the staple line and bleed — the conduit must lie without stretch.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       { kind: "bleed", title: "Control a conduit-edge bleeder", description: "The conduit staple line is bleeding.", f: { vessel: "the conduit staple line vessels", wrongVessels: ["the aorta", "the pulmonary artery"] } },
       { kind: "verify", title: "Confirm the drain positions", description: "Check the drains are at the anastomosis and the chest.", f: { test: "the drain positions", wrongTests: ["a routine chest X-ray", "an on-table MRI"] } },
       { kind: "closure", title: "Place the drains and close", description: "Drain the chest and abdomen.", f: { structure: "the chest drain and the abdominal closure" } },
@@ -982,7 +1021,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "A spinal procedure demands timely prophylaxis." },
       { kind: "position", title: "Position prone on the frame", description: "Open the interlaminar space and protect the abdomen.", f: { wrongPositions: ["supine", "lateral decubitus"] } },
       { kind: "access", title: "Make the midline incision", description: "Expose the L4-L5 interlaminar space.", f: { wrongApproaches: ["an anterior approach", "a lateral approach"] } },
-      { kind: "exposure", title: "Subperiosteal exposure", description: "Strip the paraspinal muscles off the laminae.", f: { structure: "the laminae and the ligamentum flavum", landmark: "the spinous processes" } },
+      {
+        kind: "exposure", title: "Subperiosteal exposure", description: "Strip the paraspinal muscles off the laminae.",
+        choices: [
+          "Strip the paraspinal muscles subperiosteally off the spinous processes and laminae.",
+          "Strip the muscles with cautery deep to the periosteum to speed the exposure.",
+          "Strip the muscles sharply toward the facet joints to expose the canal fully.",
+        ],
+        feedback: [
+          "The subperiosteal plane keeps the dissection bloodless and stays out of the canal.",
+          "Going deep to the periosteum bleeds and risks entering the spinal canal.",
+          "Carrying the dissection onto the facets destabilizes the segment and risks the nerve root.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
       {
         kind: "landmark", title: "Confirm the level", description: "Verify the interlaminar space before the decompression.",
         choices: [
@@ -1082,9 +1134,35 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         wrongComps: ["infection", "nerve_injury"],
       },
       { kind: "verify", title: "Re-confirm the root is free", description: "Re-check the root mobility after the Valsalva.", f: { test: "the root mobility and the decompression", wrongTests: ["an on-table MRI", "a bone scan"] } },
-      { kind: "exposure", title: "Check the dural repair", description: "Confirm the dura is intact and dry.", f: { structure: "the dura", landmark: "the laminotomy edges" } },
+      {
+        kind: "verify", title: "Check the dural repair", description: "Confirm the dura is intact and dry.",
+        choices: [
+          "Inspect the dura along the laminotomy edges and confirm it is intact and dry.",
+          "Skip the leak check — if the dura is leaking, the drain will show it.",
+          "Reinforce the dura with an overlying stitch just in case, without seeing the hole.",
+        ],
+        feedback: [
+          "An intact, dry dura confirmed under direct vision means no CSF leak to repair.",
+          "A CSF leak can set up meningitis — it must be seen and sealed now, not discovered on the floor.",
+          "A blind stitch through the dura can catch a nerve root — identify the leak and repair it precisely.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
       { kind: "bleed", title: "Control a bone-edge bleeder", description: "The lamina edge is bleeding.", f: { vessel: "the bone edge vessels", wrongVessels: ["the aorta", "the iliac artery"] } },
-      { kind: "verify", title: "Wash the wound", description: "Irrigate the wound before the closure.", f: { test: "the wound washout", wrongTests: ["a routine X-ray", "a CT scan"] } },
+      {
+        kind: "verify", title: "Wash the wound", description: "Irrigate the wound before the closure.",
+        choices: [
+          "Irrigate the wound thoroughly and confirm no retained disc fragments or bone dust before closure.",
+          "Close over a routine X-ray to confirm the levels rather than washing out.",
+          "Close while the epidural veins are still oozing — the pressure of closure will tamponade them.",
+        ],
+        feedback: [
+          "The washout clears the fragments and bone dust that would otherwise irritate the root and seed infection.",
+          "An X-ray shows the levels, not a retained fragment — the washout is what protects the disc space.",
+          "Closure does not tamponade epidural oozing — an epidural hematoma can compress the cauda equina.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       { kind: "closure", title: "Close the wound", description: "Close the fascia, subcutaneous layer, and skin.", f: { structure: "the fascia and skin" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Spinal surgery patients are at risk for thrombosis." },
       { kind: "postop", title: "Watch for a CSF leak", description: "Monitor for a positional headache or a wound leak.", f: { test: "the wound and the headache symptoms", wrongTests: ["a routine CT", "a blood panel"] } },
@@ -1186,7 +1264,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "Implant and grafting demand timely prophylaxis." },
       { kind: "position", title: "Position the patient", description: "Supine with arms tucked and pads placed.", f: { wrongPositions: ["prone", "lateral decubitus"] } },
       { kind: "access", title: "Perform the median sternotomy", description: "Open the chest.", f: { wrongApproaches: ["a thoracotomy as routine", "a subcostal approach"] } },
-      { kind: "exposure", title: "Open the pericardium", description: "Expose the heart and the targets.", f: { structure: "the pericardium", landmark: "the aorta and the right atrium" } },
+      {
+        kind: "exposure", title: "Open the pericardium", description: "Expose the heart and the targets.",
+        choices: [
+          "Open the pericardium over the aorta and right atrium and create a pericardial well with stay sutures.",
+          "Open the pericardium directly over the left ventricular surface to reach the heart fastest.",
+          "Incise the pericardium and skip the stay sutures to keep the field uncluttered.",
+        ],
+        feedback: [
+          "Opening over the aorta and building the well gives a stable cradle for the beating heart and the grafts.",
+          "The ventricular surface is the most irritable part of the heart — opening over it risks arrhythmia.",
+          "Without stay sutures the well collapses and the heart can rotate — build the cradle properly.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "hypoxia"],
+      },
       {
         kind: "core", title: "Harvest the LIMA", description: "Take down the conduit.",
         choices: [
@@ -1316,7 +1407,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       },
       { kind: "vessel", title: "Control sternal bleeding", description: "The sternal edges are oozing.", f: { vessel: "the sternal bleeding points", wrongVessels: ["the aorta", "the pulmonary artery"] } },
       { kind: "verify", title: "Confirm the hemostasis with protamine", description: "Reverse the heparin and confirm the field stays dry.", f: { test: "the field after protamine", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
-      { kind: "exposure", title: "Check the LIMA bed", description: "Inspect the LIMA harvest bed for bleeding.", f: { structure: "the LIMA bed", landmark: "the internal thoracic vessels" } },
+      {
+        kind: "verify", title: "Check the LIMA bed", description: "Inspect the LIMA harvest bed for bleeding.",
+        choices: [
+          "Inspect the LIMA bed along the internal thoracic vessels and control any side-branch bleeding before closing.",
+          "Close the sternum and rely on the drains to reveal any LIMA bed bleeding.",
+          "Reinforce the LIMA bed with cautery along its full length just in case.",
+        ],
+        feedback: [
+          "Side-branch bleeding from the harvest bed is controlled before the sternum closes.",
+          "Drains reveal a bleed only after it has collected — the bed must be dry before closure.",
+          "Cautery along the bed risks the phrenic nerve, which runs with the internal thoracic vessels — control only what is bleeding.",
+        ],
+        wrongComps: ["hemorrhage", "hypoxia"],
+      },
       { kind: "bleed", title: "Control a graft bed bleeder", description: "The harvest site is bleeding.", f: { vessel: "the harvest site vessels", wrongVessels: ["the femoral artery", "the aorta"] } },
       { kind: "verify", title: "Confirm the rhythm", description: "Check the rhythm is stable before closure.", f: { test: "the cardiac rhythm", wrongTests: ["a routine ECG", "a CT scan"] } },
       { kind: "closure", title: "Close the sternum", description: "Wire the sternum and close the layers.", f: { structure: "the sternum and the soft tissues" } },
