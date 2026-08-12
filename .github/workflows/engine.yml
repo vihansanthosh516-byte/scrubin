@@ -27,9 +27,15 @@ jobs:
           repository: vihansanthosh516-byte/Scrubin-Core
           path: Scrubin-Core
 
+      # Node is pinned exactly (22.22.3) against the jsdom 26.1.0 devDependency
+      # pin: jsdom 26 requires node >= 18, and versions were validated against it
+      # (Node 18 ESM-require failure, Node 20.19 undici CacheStorage crash with
+      # jsdom 30; jsdom 26.1.0 is green on 20.19, 22.22, and 24). A floating
+      # `20`/`22` range could drift into a jsdom-incompatible combo, so keep the
+      # two pins in lockstep when either changes.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.22.3
           cache: npm
 
       - name: Install JS dependencies

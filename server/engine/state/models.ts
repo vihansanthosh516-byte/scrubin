@@ -85,7 +85,7 @@ export type DecisionArchetypeType = (typeof DECISION_ARCHETYPES)[number];
 // ── Archetype→Complication mapping ──
 export const ARCHETYPE_COMPLICATION_MAP: Record<DecisionArchetypeType, ComplicationType[]> = {
   AIRWAY_STABILITY:     ["hypoxia", "anaphylaxis"],
-  HEMODYNAMIC_CONTROL:  ["hemorrhage", "cardiac_arrhythmia", "fluid_overload"],
+  HEMODYNAMIC_CONTROL:  ["hemorrhage", "cardiac_arrhythmia", "fluid_overload", "anaphylaxis"],
   BLEEDING_CONTROL:     ["hemorrhage"],
   INFECTION_MANAGEMENT: ["infection"],
   PAIN_MANAGEMENT:      ["nerve_injury"],

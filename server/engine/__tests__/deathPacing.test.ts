@@ -347,7 +347,7 @@ const LIVE_WRONG_OPTION: Record<string, string> = {
 // the Python ARCHETYPE_INTERVENTIONS. NOTE: serial_labs treats infection/fluid
 // overload/hemorrhage but NOT thrombosis — it must never appear in that list.
 const LIVE_CORRECT_OPTIONS: Record<string, string[]> = {
-  hemorrhage: ["ligation", "cautery", "packing", "blood_transfusion", "fluid_resuscitation", "vasopressor"],
+  hemorrhage: ["ligation", "cautery", "packing", "blood_transfusion", "fluid_resuscitation"],
   infection: ["antibiotics_iv", "wound_irrigation", "source_control", "labs", "vitals_check"],
   hypoxia: ["oxygen_therapy", "intubate", "cricothyroidotomy"],
   nerve_injury: ["regional_block", "iv_opioid", "nsaid", "imaging", "exploration", "proceed", "modify"],

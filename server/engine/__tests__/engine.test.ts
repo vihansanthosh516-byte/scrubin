@@ -129,6 +129,41 @@ describe("Decision Option Count", () => {
     );
     expect(decision.options.length).toBe(4);
   });
+
+  it("HEMODYNAMIC_CONTROL mirrors the Python core's 6-option table (diuretic + epinephrine)", () => {
+    // radical-nephrectomy's archetype set is exactly [HEMODYNAMIC_CONTROL], and
+    // only HEMODYNAMIC_CONTROL maps to cardiac_arrhythmia — so the recovery
+    // archetype is deterministic and the options are the full Python table.
+    const procedure = getProcedure("radical-nephrectomy");
+    const rng = new DeterministicRNG(42);
+    const engine = new DecisionEngine(rng, procedure);
+    const decision = engine.generateDecision(
+      10,
+      { spo2: 98, heart_rate: 72, bp_systolic: 120, bp_diastolic: 80, temperature: 37, respiratory_rate: 16 },
+      "active_complication",
+      "cardiac_arrhythmia",
+      "Core Procedure"
+    );
+
+    const ids = decision.options.map((o) => o.id).sort();
+    expect(ids).toEqual([
+      "blood_transfusion",
+      "cardioversion",
+      "diuretic",
+      "epinephrine",
+      "fluid_resuscitation",
+      "vasopressor",
+    ]);
+    expect(decision.options.length).toBe(6);
+
+    // treats lists mirror the Python table exactly (fluid_resuscitation only
+    // treats hemorrhage; vasopressor treats nothing).
+    const byId = Object.fromEntries(decision.options.map((o) => [o.id, o]));
+    expect(byId["fluid_resuscitation"].correctForComplications).toEqual(["hemorrhage"]);
+    expect(byId["vasopressor"].correctForComplications).toEqual([]);
+    expect(byId["diuretic"].correctForComplications).toEqual(["fluid_overload"]);
+    expect(byId["epinephrine"].correctForComplications).toEqual(["anaphylaxis"]);
+  });
 });
 
 describe("No Auto-Execution", () => {
