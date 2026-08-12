@@ -1,15 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSimulationStore } from "../state/simulationStore";
 import { Info, AlertTriangle, AlertCircle } from "lucide-react";
-
-interface TimelineEvent {
-  tick: number;
-  timestamp?: string;
-  type: string;
-  description: string;
-  severity?: "info" | "warning" | "critical";
-  [key: string]: any;
-}
+import { applyTimelineBatch, TimelineEvent } from "./timelineEvents";
 
 export default function TimelinePanel() {
   const { currentState, currentTick } = useSimulationStore();
@@ -18,49 +10,34 @@ export default function TimelinePanel() {
 
   // The store's `events` field is a cumulative, append-only log: every
   // consumer appends to it and the /tick poller preserves it, so the same
-  // batch is re-sent on every poll. We therefore append only the tail we have
-  // not seen yet, keyed by position — re-sends become no-ops and legitimately
-  // repeated text (e.g. the same closure feedback from two steps) stays
-  // distinct. A shorter incoming array or a reset clock means a new session or
-  // a wholesale backend replacement, so we restart from it.
+  // batch is re-sent on every poll. `applyTimelineBatch` (see timelineEvents.ts)
+  // appends only the unseen tail, keyed by position — re-sends become no-ops,
+  // legitimately repeated text stays distinct, and a shorter array or a reset
+  // clock restarts the timeline. `timelineRef` mirrors state so the batch
+  // logic stays a pure function of the last result.
   const lastLenRef = useRef(0);
   const lastTickRef = useRef(0);
+  const timelineRef = useRef<TimelineEvent[]>([]);
 
   useEffect(() => {
     if (!currentState) return;
 
-    // A new simulation restarts the causal clock — drop any stale timeline.
-    if (currentTick < lastTickRef.current) {
-      lastLenRef.current = 0;
-      setTimeline([]);
-    }
-    lastTickRef.current = currentTick;
-
     // Backend may send events in `events`, `timeline_events`, or `new_events`
     const incomingEvents = currentState.timeline_events || currentState.new_events || currentState.events || [];
-    if (!Array.isArray(incomingEvents) || incomingEvents.length === 0) return;
+    const result = applyTimelineBatch(
+      {
+        timeline: timelineRef.current,
+        lastLen: lastLenRef.current,
+        lastTick: lastTickRef.current,
+      },
+      incomingEvents,
+      currentTick
+    );
 
-    // Wholesale replacement (shorter than what we have consumed) = reset.
-    if (incomingEvents.length < lastLenRef.current) {
-      lastLenRef.current = 0;
-      setTimeline([]);
-    }
-
-    const tail = incomingEvents.slice(lastLenRef.current);
-    if (tail.length === 0) return;
-    lastLenRef.current = incomingEvents.length;
-
-    const norm = (ev: any) =>
-      typeof ev === "string" ? ev : (ev && (ev.description || ev.message)) || JSON.stringify(ev);
-
-    const eventsToAdd: TimelineEvent[] = tail.map((ev) => ({
-      ...(typeof ev === "object" && ev !== null ? ev : {}),
-      tick: ev && ev.tick !== undefined ? ev.tick : currentTick,
-      type: ev?.type || "Event",
-      description: norm(ev),
-    }));
-
-    setTimeline((prev) => [...prev, ...eventsToAdd]);
+    timelineRef.current = result.timeline;
+    lastLenRef.current = result.lastLen;
+    lastTickRef.current = result.lastTick;
+    setTimeline(result.timeline);
   }, [currentState, currentTick]);
 
   // Auto-scroll to newest event, but only if the user is already near the

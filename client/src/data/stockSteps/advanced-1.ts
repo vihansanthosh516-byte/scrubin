@@ -779,7 +779,20 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
       { kind: "preop", title: "Activate the trauma protocol", description: "Massive transfusion and a warm OR — every minute counts." },
       { kind: "position", title: "Position for the laparotomy", description: "Supine with the arms out for access.", f: { wrongPositions: ["prone", "lateral decubitus"] } },
       { kind: "access", title: "Make the midline incision", description: "Open the abdomen fast and wide.", f: { wrongApproaches: ["a transverse RUQ incision", "a flank incision"] } },
-      { kind: "exposure", title: "Evacuate the blood and pack", description: "Get control of the field.", f: { structure: "the abdominal cavity", landmark: "the four quadrants" } },
+      {
+        kind: "exposure", title: "Evacuate the blood and pack", description: "Get control of the field.",
+        choices: [
+          "Sweep the pooled blood out with packs, then pack all four quadrants to tamponade the bleeding.",
+          "Start hunting for the source before any packing.",
+          "Pack only the right upper quadrant where the wound is.",
+        ],
+        feedback: [
+          "Packing all four quadrants buys time and lets you find the source sequentially.",
+          "Searching before packing allows continued loss and obscures the field.",
+          "Packing only the RUQ misses other sources and leaves the field uncontrolled.",
+        ],
+        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
+      },
       {
         kind: "bleed", title: "Control the major bleeding", description: "Blood is pooling — find the source.",
         choices: [

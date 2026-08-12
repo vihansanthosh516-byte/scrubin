@@ -429,7 +429,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       { kind: "position", title: "Position with left uterine displacement", description: "Supine positioning can compress the vena cava.", f: { wrongPositions: ["supine without displacement", "Trendelenburg"] } },
       { kind: "access", title: "Make the skin incision", description: "Choose the entry for this urgent delivery.", f: { wrongApproaches: ["a midline vertical incision as routine", "a transverse incision above the umbilicus"] } },
       { kind: "exposure", title: "Divide the subcutaneous tissue and fascia", description: "Open the rectus sheath and separate the rectus muscles.", f: { structure: "the rectus sheath", landmark: "the linea alba" } },
-      { kind: "access", title: "Enter the peritoneum", description: "Open the peritoneum carefully at the upper extent.", f: { wrongApproaches: ["the bladder dome", "the lateral pelvic sidewall"] } },
+      {
+        kind: "access", title: "Enter the peritoneum", description: "Open the peritoneum carefully at the upper extent.",
+        choices: [
+          "Open the peritoneum under direct vision at the upper extent of the incision, protecting the underlying bowel.",
+          "Push through the peritoneum bluntly with a finger at the bladder dome.",
+          "Open the peritoneum laterally toward the pelvic sidewall.",
+        ],
+        feedback: [
+          "The peritoneum is opened safely away from the bladder, at the upper extent.",
+          "Entry at the dome risks bladder injury and bleeding.",
+          "A lateral entry endangers the uterine vessels and the pelvic sidewall.",
+        ],
+        wrongComps: ["hemorrhage", "hypoxia"],
+      },
       {
         kind: "landmark", title: "Create the bladder flap", description: "Reflect the bladder off the lower uterine segment.",
         choices: [
@@ -1013,7 +1026,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       { kind: "preop", title: "Confirm the plan", description: "Review the CT, the abscess, and the bowel preparation plan." },
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "This is a clean-contaminated case with an abscess." },
       { kind: "position", title: "Position with left tilt", description: "Modified lithotomy with a left-side-up tilt opens the left colon.", f: { wrongPositions: ["prone", "supine flat"] } },
-      { kind: "access", title: "Establish access", description: "Enter the abdomen and place ports.", f: { wrongApproaches: ["a right-sided approach", "a transanal approach"] } },
+      {
+        kind: "access", title: "Establish access", description: "Enter the abdomen and place ports.",
+        choices: [
+          "Insert the Veress needle or use an open Hasson entry, confirm insufflation, then place the working ports under vision.",
+          "Enter the abdomen through the abscess cavity to save time.",
+          "Place all ports blindly in a single pass.",
+        ],
+        feedback: [
+          "Access is confirmed and the ports are placed under vision, clear of the abscess.",
+          "Entering through the abscess spreads contamination and can seed the wound.",
+          "Blind port placement risks major vessel or bowel injury.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       {
         kind: "landmark", title: "Identify the left ureter", description: "Find the ureter before dividing any vessels.",
         choices: [
@@ -1216,7 +1242,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       { kind: "preop", title: "Confirm the indication", description: "Review the ultrasound and the liver function tests." },
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "Timely prophylaxis for a contaminated biliary case." },
       { kind: "position", title: "Position with reverse Trendelenburg and left tilt", description: "This position lets the liver fall away from the field.", f: { wrongPositions: ["prone", "steep Trendelenburg"] } },
-      { kind: "access", title: "Establish pneumoperitoneum", description: "Safe entry at the umbilicus.", f: { wrongApproaches: ["a suprapubic entry", "a flank entry"] } },
+      {
+        kind: "access", title: "Establish pneumoperitoneum", description: "Safe entry at the umbilicus.",
+        choices: [
+          "Insert the Veress needle at the umbilicus and confirm low-pressure insufflation before entry.",
+          "Enter with the first trocar at the left subcostal margin.",
+          "Insufflate to high pressure immediately to maximize working space.",
+        ],
+        feedback: [
+          "Access is confirmed safe before the first trocar is placed.",
+          "A subcostal entry misses the umbilicus and risks injury to the liver or vessels.",
+          "Excessive pressure compromises venous return and ventilation.",
+        ],
+        wrongComps: ["hemorrhage", "hypoxia"],
+      },
       { kind: "exposure", title: "Place the working ports", description: "Triangulate on the gallbladder bed.", f: { structure: "the gallbladder", landmark: "the subcostal margin" } },
       {
         kind: "landmark", title: "Identify Rouviere's sulcus", description: "This sulcus marks the plane of the common bile duct.",

@@ -451,7 +451,20 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
       { kind: "vessel", title: "Protect the inferior epigastric vessels", description: "The deep ring borders the inferior epigastric vessels.", f: { vessel: "the inferior epigastric vessels at the deep ring", wrongVessels: ["the femoral artery", "the superficial circumflex iliac artery"] } },
       { kind: "exposure", title: "Reduce the hernia contents", description: "Return the contents to the abdominal cavity gently.", f: { structure: "the hernia contents", landmark: "the deep ring" } },
       { kind: "verify", title: "Assess the contralateral side", description: "Ask whether a contralateral defect was noted preoperatively.", f: { test: "the contralateral groin examination", wrongTests: ["a bilateral ultrasound", "a CT scan"] } },
-      { kind: "core", title: "Classify the defect", description: "Determine whether the hernia is direct or indirect to choose the repair.", f: { structure: "the defect at the deep ring", landmark: "the inferior epigastric vessels" } },
+      {
+        kind: "core", title: "Classify the defect", description: "Determine whether the hernia is direct or indirect to choose the repair.",
+        choices: [
+          "Inspect the sac position relative to the inferior epigastric vessels — lateral is indirect, medial is direct.",
+          "Classify the hernia by the size of the bulge alone.",
+          "Skip classification — the repair is identical either way.",
+        ],
+        feedback: [
+          "The epigastric vessels mark the boundary: lateral is indirect, medial is direct.",
+          "Bulge size does not distinguish a direct from an indirect sac.",
+          "Classification matters — a direct sac has no neck to ligate and changes the repair.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
       { kind: "closure", title: "Close the external oblique", description: "Recreate the canal over the cord without compression.", f: { structure: "the external oblique aponeurosis" } },
       {
         kind: "closure", title: "Close the subcutaneous layers and skin", description: "Complete the wound closure.",

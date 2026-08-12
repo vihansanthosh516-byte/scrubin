@@ -264,7 +264,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       { kind: "preop", title: "Confirm the plan", description: "Review the biopsy, the staging, and the nerve-sparing plan." },
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "Urologic implant-adjacent surgery demands timely prophylaxis." },
       { kind: "position", title: "Position in steep Trendelenburg", description: "The head-down position opens the pelvis.", f: { wrongPositions: ["supine flat", "prone"] } },
-      { kind: "access", title: "Place the ports", description: "Set up the robotic access.", f: { wrongApproaches: ["a suprapubic approach as routine", "a transrectal approach"] } },
+      {
+        kind: "access", title: "Place the ports", description: "Set up the robotic access.",
+        choices: [
+          "Place a periumbilical camera port and fan the robotic arm ports to triangulate on the prostate.",
+          "Place all ports low in the pelvis, close to the symphysis.",
+          "Skip the camera port and work through a single large incision.",
+        ],
+        feedback: [
+          "The ports fan toward the prostate with enough spacing for the robotic arms.",
+          "Crowded low ports limit instrument range and risk vascular injury.",
+          "An open single incision abandons the robotic approach without benefit.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
       { kind: "exposure", title: "Divide the urachus and enter the space of Retzius", description: "Expose the prostate.", f: { structure: "the space of Retzius", landmark: "the pubic bone and the prostate" } },
       {
         kind: "vessel", title: "Control the dorsal venous complex", description: "Secure the venous complex at the apex.",
@@ -494,7 +507,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       { kind: "preop", title: "Confirm the plan", description: "Review the staging, the lung function, and the two-phase plan." },
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "A long clean-contaminated case demands timely prophylaxis." },
       { kind: "position", title: "Position for the abdominal phase", description: "Supine for the abdominal dissection.", f: { wrongPositions: ["prone throughout", "right lateral decubitus"] } },
-      { kind: "access", title: "Open the abdomen", description: "Expose the hiatus and the stomach.", f: { wrongApproaches: ["a left thoracic approach as routine", "a cervical approach alone"] } },
+      {
+        kind: "access", title: "Open the abdomen", description: "Expose the hiatus and the stomach.",
+        choices: [
+          "Open the abdomen through an upper midline incision and retract to expose the hiatus and the stomach.",
+          "Open through a left thoracic incision as routine.",
+          "Expose the hiatus through a cervical incision alone.",
+        ],
+        feedback: [
+          "The upper midline exposure reaches the hiatus and the stomach for the abdominal phase.",
+          "A left thoracotomy is not the abdominal access for this two-phase approach.",
+          "A cervical incision alone cannot reach the hiatus or the stomach.",
+        ],
+        wrongComps: ["hypoxia", "infection"],
+      },
       { kind: "exposure", title: "Mobilize the stomach", description: "Preserve the right gastroepiploic arcade.", f: { structure: "the stomach and the gastroepiploic arcade", landmark: "the greater curvature" } },
       {
         kind: "vessel", title: "Control the left gastric artery", description: "Secure the gastric blood supply.",
