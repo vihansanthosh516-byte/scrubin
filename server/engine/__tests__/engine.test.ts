@@ -241,6 +241,42 @@ describe("Decision Option Count", () => {
     }
   });
 
+  it("option-level phase filter: intra-op-only decoys never offered during Post-Op", () => {
+    // exploration (DIAGNOSTIC_STEP) is surgical-only; imaging is pre/post only.
+    // For appendectomy + thrombosis in Post-Op, exploration must NEVER appear
+    // (it does not treat thrombosis, so it is only ever a decoy) while a
+    // treating option is always offered.
+    const procedure = getProcedure("appendectomy");
+    const VITALS = { spo2: 98, heart_rate: 72, bp_systolic: 120, bp_diastolic: 80, temperature: 37, respiratory_rate: 16 };
+    for (let seed = 1; seed <= 60; seed++) {
+      const decision = new DecisionEngine(new DeterministicRNG(seed), procedure).generateDecision(
+        10,
+        VITALS,
+        "active_complication",
+        "thrombosis",
+        "Post-Op"
+      );
+      const ids = decision.options.map((o) => o.id);
+      expect(ids).not.toContain("exploration");
+      expect(
+        ids.some((id) => ["doppler", "anticoagulation", "imaging", "labs"].includes(id)),
+        `seed ${seed}: no treating option offered (${ids.join(",")})`
+      ).toBe(true);
+    }
+
+    // And in the OR (intra-op), imaging/labs treating options are offered when
+    // DIAGNOSTIC_STEP is the archetype (seed 7 picks it deterministically).
+    const intra = new DecisionEngine(new DeterministicRNG(7), procedure).generateDecision(
+      10,
+      VITALS,
+      "active_complication",
+      "thrombosis",
+      "Core Procedure"
+    );
+    expect(intra.archetype).toBe("DIAGNOSTIC_STEP");
+    expect(intra.options.map((o) => o.id)).toContain("imaging");
+  });
+
   it("stock decisions prefer a phase-eligible archetype (pre-op forces AIRWAY_STABILITY)", () => {
     // appendectomy is [AIRWAY_STABILITY, BLEEDING_CONTROL, INFECTION_MANAGEMENT];
     // BLEEDING_CONTROL is intra-op-only and INFECTION_MANAGEMENT is intra/post —

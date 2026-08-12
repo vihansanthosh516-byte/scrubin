@@ -12,6 +12,7 @@ import {
   classifyPhaseBucket,
   COMPLICATION_VITAL_EFFECTS,
   DECISION_ARCHETYPES,
+  OPTION_PHASE_OVERRIDES,
 } from "../state/models.js";
 import { DeterministicRNG } from "../rng.js";
 
@@ -497,9 +498,14 @@ export class DecisionEngine {
     const seen = new Set(excludeIds);
 
     const build = (a: DecisionArchetypeType, out: DecisionOption[]) => {
-      if (!ARCHETYPE_PHASE_BUCKETS[a].includes(bucket)) return;
+      const archetypeBuckets = ARCHETYPE_PHASE_BUCKETS[a];
       for (const iv of ARCHETYPE_INTERVENTIONS[a]) {
         if (iv.treats.includes(comp) || seen.has(iv.id)) continue;
+        // Option-level phase filter: an option is offerable when its own bucket
+        // list (override ?? archetype) includes the current bucket. Treating
+        // options are never filtered — only decoys.
+        const optBuckets = OPTION_PHASE_OVERRIDES[iv.id] ?? archetypeBuckets;
+        if (!optBuckets.includes(bucket)) continue;
         seen.add(iv.id);
         out.push({
           id: iv.id,

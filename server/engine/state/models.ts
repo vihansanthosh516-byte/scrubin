@@ -133,6 +133,16 @@ export const ARCHETYPE_PHASE_BUCKETS: Record<DecisionArchetypeType, PhaseBucket[
   POST_OP_MONITORING:   ["post_op"],
 };
 
+// Per-OPTION phase overrides on top of the archetype's buckets. Options not
+// listed inherit their archetype's buckets. Treating options are NEVER filtered
+// (a complication must always stay resolvable) — this governs the DECOY pool
+// only, so e.g. "Surgical exploration" never appears as a decoy during Post-Op
+// and "CT imaging" is not offered mid-case.
+export const OPTION_PHASE_OVERRIDES: Partial<Record<string, PhaseBucket[]>> = {
+  exploration: ["intra_op"], // surgical exploration only in the OR
+  imaging: ["pre_op", "post_op"], // no intra-operative imaging
+};
+
 // ── Escalation Phases ──
 export const ESCALATION_PHASES = [
   "stable_workup",
