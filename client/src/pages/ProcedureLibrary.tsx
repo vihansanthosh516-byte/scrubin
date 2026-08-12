@@ -10,10 +10,39 @@ import { Lock, Clock, Search, ArrowRight, XCircle, Activity, Heart, Brain, Bone,
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useProcedureStore } from "@/state/procedureStore";
+import { STOCK_STEP_BANKS } from "@/data/stockSteps";
 
 const FILTERS = ["All", "Beginner", "Intermediate", "Advanced", "Emergency", "Cardiovascular", "Neurological", "Orthopedic", "General", "OB/GYN", "Thoracic", "Urologic", "Plastic", "ENT"];
 
 const EASE = [0.25, 1, 0.5, 1] as const;
+
+// Humanized names for the engine's complication ids (server/engine/state/models.ts).
+const RISK_LABELS: Record<string, string> = {
+  hemorrhage: "Hemorrhage",
+  infection: "Infection",
+  hypoxia: "Hypoxia",
+  nerve_injury: "Nerve injury",
+  thrombosis: "Thrombosis",
+  cardiac_arrhythmia: "Arrhythmia",
+  anaphylaxis: "Anaphylaxis",
+  fluid_overload: "Fluid overload",
+};
+
+const KeyRisks = ({ procId }: { procId: string }) => {
+  const risks = (STOCK_STEP_BANKS as any)[procId]?.spec?.risks as string[] | undefined;
+  if (!risks || risks.length === 0) return null;
+  return (
+    <p className="mb-5 flex items-start gap-1.5 text-xs leading-relaxed text-[#8C827A] dark:text-[#C2BBB0]">
+      <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+      <span>
+        Key risks:{" "}
+        <span className="text-[#666059] dark:text-[#A89F95]">
+          {risks.map((r) => RISK_LABELS[r] || r).join(" · ")}
+        </span>
+      </span>
+    </p>
+  );
+};
 
 // Editorial difficulty pills
 const DIFF_PILL: Record<string, string> = {
@@ -77,6 +106,7 @@ function ProcedureCard({ proc, unlocked, requiredXP, index }: any) {
           <p className="mb-5 line-clamp-2 text-sm leading-relaxed text-[#666059] dark:text-[#A89F95]">
             {proc.description}
           </p>
+          <KeyRisks procId={proc.id} />
 
           {/* Meta row */}
           <div className="flex items-center justify-between border-t border-[#E2DDD1] pt-4 font-mono-data text-xs text-[#8C827A]">
@@ -110,6 +140,7 @@ function ProcedureCard({ proc, unlocked, requiredXP, index }: any) {
           <p className="mb-5 line-clamp-2 text-sm leading-relaxed text-[#666059] dark:text-[#A89F95]">
             {proc.description}
           </p>
+          <KeyRisks procId={proc.id} />
 
           {/* Meta row */}
           <div className="flex items-center justify-between border-t border-[#E2DDD1] pt-4 font-mono-data text-xs text-[#8C827A]">
