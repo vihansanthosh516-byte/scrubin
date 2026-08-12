@@ -310,7 +310,7 @@ const LIVE_CORRECT_OPTIONS: Record<string, string[]> = {
   hemorrhage: ["ligation", "cautery", "packing", "blood_transfusion", "fluid_resuscitation", "vasopressor"],
   infection: ["antibiotics_iv", "wound_irrigation", "source_control", "labs", "vitals_check"],
   hypoxia: ["oxygen_therapy", "intubate", "cricothyroidotomy"],
-  nerve_injury: ["regional_block", "iv_opioid", "nsaid", "imaging", "modify"],
+  nerve_injury: ["regional_block", "iv_opioid", "nsaid", "imaging", "exploration", "proceed", "modify"],
   thrombosis: ["doppler", "anticoagulation", "imaging", "labs", "modify", "abort"],
 };
 
