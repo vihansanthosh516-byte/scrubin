@@ -412,8 +412,11 @@ const MIN_LIVE_POLLS_BEFORE_DEATH = 3; // ≈ 4.5 s of 1.5 s polls — hemorrhag
 const MIN_FUMBLE_TICKS = 3; // hemorrhage fumbling measured 4–6 across 14 randomized patients
 
 /** Fumbling path: repeatedly submit a WRONG recovery, one /next per cycle. */
-async function liveFumble(comp: ComplicationType): Promise<{ died: boolean; deathAtTick: number | null }> {
-  const s = await liveCall("/start", { procedure: "appendectomy" });
+async function liveFumble(
+  comp: ComplicationType,
+  seed?: number
+): Promise<{ died: boolean; deathAtTick: number | null }> {
+  const s = await liveCall("/start", { procedure: "appendectomy", seed });
   const sid = s.data.session_id;
   try {
     const c = await liveCall("/complicate", { session_id: sid, complication: comp });
@@ -437,8 +440,8 @@ async function liveFumble(comp: ComplicationType): Promise<{ died: boolean; deat
 }
 
 /** Pure idleness: complicate, then /tick polls with no decisions at all. */
-async function liveIdleDeath(comp: ComplicationType): Promise<number> {
-  const s = await liveCall("/start", { procedure: "appendectomy" });
+async function liveIdleDeath(comp: ComplicationType, seed?: number): Promise<number> {
+  const s = await liveCall("/start", { procedure: "appendectomy", seed });
   const sid = s.data.session_id;
   try {
     const c = await liveCall("/complicate", { session_id: sid, complication: comp });
@@ -590,23 +593,30 @@ describe.skipIf(!coreReachable)(`Live Python engine death pacing (${CORE_URL})`,
     ).toBeGreaterThan(untendedDrop * 1.5);
   }, 180_000);
 
-  it("repeated wrong decisions never outlive pure idleness (no inversion) — all 8 complications", async () => {
+  it("repeated wrong decisions never outlive pure idleness on the same patient (no inversion) — all 8 complications", async () => {
     // A trainee who keeps guessing wrong must die no later than one who walks
     // away — the wrong-play penalty contract for EVERY complication (hemorrhage,
     // infection, hypoxia, nerve_injury, thrombosis, cardiac_arrhythmia,
-    // anaphylaxis, fluid_overload). The +1 tolerance absorbs RNG variance
-    // (anaphylaxis fumble/idle both land at 3-4 because onset BP is already
-    // 55). The old "inversion" was the balance script's fallback pick
-    // accidentally RESOLVING the complication — not an engine behavior; this
-    // test locks the real contract.
+    // anaphylaxis, fluid_overload).
+    //
+    // Both runs use the SAME seed, so the fumbler and the idler face the
+    // identical patient and onset vitals. The earlier cross-session comparison
+    // pitted two random patients against each other, and patient variance
+    // (anaphylaxis idle death ranges 8-14 polls) occasionally outran the
+    // wrong-play penalty — a test artifact, not an engine inversion (0/320
+    // same-patient inversions across all 8 complications). The engine is
+    // deterministic per seed, so each assertion here is stable for a given
+    // engine version.
     for (const comp of Object.keys(LIVE_WRONG_OPTION) as ComplicationType[]) {
-      const fumble = await liveFumble(comp);
-      const idle = await liveIdleDeath(comp);
-      expect(fumble.died, `${comp}: fumbling wrong recoveries should eventually kill`).toBe(true);
-      expect(
-        fumble.deathAtTick!,
-        `${comp}: fumbling died at tick ${fumble.deathAtTick} but idling survived to ${idle} — wrong play outlived idleness`
-      ).toBeLessThanOrEqual(idle + 1);
+      for (const seed of [7, 23, 40]) {
+        const fumble = await liveFumble(comp, seed);
+        const idle = await liveIdleDeath(comp, seed);
+        expect(fumble.died, `${comp} seed ${seed}: fumbling wrong recoveries should eventually kill`).toBe(true);
+        expect(
+          fumble.deathAtTick!,
+          `${comp} seed ${seed}: fumbling died at tick ${fumble.deathAtTick} but idling survived to ${idle} — wrong play outlived idleness`
+        ).toBeLessThanOrEqual(idle + 1);
+      }
     }
   }, 180_000);
 
