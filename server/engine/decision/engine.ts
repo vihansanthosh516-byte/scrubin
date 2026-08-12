@@ -3,10 +3,13 @@ import {
   type ComplicationType,
   type DecisionArchetypeType,
   type EscalationPhase,
+  type PhaseBucket,
   type TickDecision,
   type DecisionOption,
   type ProcedureDefinition,
   ARCHETYPE_COMPLICATION_MAP,
+  ARCHETYPE_PHASE_BUCKETS,
+  classifyPhaseBucket,
   COMPLICATION_VITAL_EFFECTS,
   DECISION_ARCHETYPES,
 } from "../state/models.js";
@@ -409,9 +412,10 @@ export class DecisionEngine {
     procedurePhase: string
   ): TickDecision {
     const archetypes = this.procedure.decisionArchetypes;
+    const bucket = classifyPhaseBucket(procedurePhase);
     const archetype = activeComplication
-      ? this.pickArchetypeForComplication(archetypes, activeComplication)
-      : this.rng.pick(archetypes);
+      ? this.pickArchetypeForComplication(archetypes, activeComplication, bucket)
+      : this.pickStockArchetype(archetypes, bucket);
 
     const promptData = ARCHETYPE_PROMPTS[archetype];
     const interventions = ARCHETYPE_INTERVENTIONS[archetype];
@@ -426,15 +430,34 @@ export class DecisionEngine {
       feedback: { correct: iv.correctFeedback, wrong: iv.wrongFeedback },
     }));
 
-    // Mirror scrubin_core_engine.py generate_decision: archetypes may offer 4-8
-    // options (POST_OP_MONITORING ships 5 in the Python core).
-    if (options.length < 4 || options.length > 8) {
+    // Situation-aware option assembly (mirrors scrubin_core_engine.py): treating
+    // options are always offered (recovery guarantee), then decoys are drawn in
+    // TWO TIERS — the chosen archetype's own non-treating options first (so e.g.
+    // observe_hemostasis reliably accompanies BLEEDING_CONTROL), then a random
+    // subset of phase-eligible options from other archetypes. This keeps the
+    // offer clinically plausible for where the surgery is AND makes consecutive
+    // decisions differ. With no active complication, the chosen archetype's
+    // low-risk options are always offered and its high-risk options are sampled.
+    const always = activeComplication
+      ? options.filter((o) => o.correctForComplications.includes(activeComplication))
+      : options.filter((o) => this.isLowRisk(o.riskIfWrong));
+    let primary: DecisionOption[];
+    let secondary: DecisionOption[];
+    if (activeComplication) {
+      [primary, secondary] = this.decoyPool(archetype, activeComplication, bucket, new Set(always.map((o) => o.id)));
+    } else {
+      primary = options.filter((o) => !always.includes(o));
+      secondary = [];
+    }
+    const chosen = this.sampleOptions(always, primary, secondary);
+
+    if (chosen.length < 4 || chosen.length > 8) {
       throw new Error(
-        `DecisionEngine: archetype ${archetype} produced ${options.length} options, expected 4-8`
+        `DecisionEngine: archetype ${archetype} produced ${chosen.length} options, expected 4-8`
       );
     }
 
-    this.shuffleArray(options);
+    this.shuffleArray(chosen);
 
     const urgency = this.computeUrgency(vitals, activeComplication, escalationPhase);
 
@@ -450,9 +473,79 @@ export class DecisionEngine {
       archetype,
       prompt: this.contextualizePrompt(promptData.prompt, vitals, activeComplication),
       context: promptData.context,
-      options,
+      options: chosen,
       urgency,
     };
+  }
+
+  private isLowRisk(risk: Partial<Vitals>): boolean {
+    return Object.values(risk).every((v) => v === undefined || Math.abs(v) < 8);
+  }
+
+  private decoyPool(
+    archetype: DecisionArchetypeType,
+    comp: ComplicationType,
+    bucket: PhaseBucket,
+    excludeIds: Set<string>
+  ): [DecisionOption[], DecisionOption[]] {
+    // Two-tier decoy pool: (primary) the chosen archetype's own non-treating
+    // options — clinically coherent with the treating options; (secondary)
+    // phase-eligible non-treating options from every other archetype — adds
+    // situation variety.
+    const primary: DecisionOption[] = [];
+    const secondary: DecisionOption[] = [];
+    const seen = new Set(excludeIds);
+
+    const build = (a: DecisionArchetypeType, out: DecisionOption[]) => {
+      if (!ARCHETYPE_PHASE_BUCKETS[a].includes(bucket)) return;
+      for (const iv of ARCHETYPE_INTERVENTIONS[a]) {
+        if (iv.treats.includes(comp) || seen.has(iv.id)) continue;
+        seen.add(iv.id);
+        out.push({
+          id: iv.id,
+          label: iv.label,
+          archetype: a,
+          correctForComplications: iv.treats,
+          effectOnVitals: iv.vitalsEffect,
+          riskIfWrong: iv.riskIfWrong,
+          feedback: { correct: iv.correctFeedback, wrong: iv.wrongFeedback },
+        });
+      }
+    };
+
+    build(archetype, primary);
+    for (const a of DECISION_ARCHETYPES) {
+      if (a !== archetype) build(a, secondary);
+    }
+    return [primary, secondary];
+  }
+
+  private sampleOptions(
+    always: DecisionOption[],
+    primary: DecisionOption[],
+    secondary: DecisionOption[]
+  ): DecisionOption[] {
+    // Always offer `always`; draw decoys from `primary` first (shuffled), then
+    // `secondary`, so the total lands in 4-8. RNG-driven, so a fixed seed
+    // replays bit-identically.
+    const total = always.length + primary.length + secondary.length;
+    if (total < 4) return [...always, ...primary, ...secondary];
+    const target = this.rng.nextInt(4, Math.min(8, total));
+    let need = Math.min(Math.max(target - always.length, 0), primary.length + secondary.length);
+    if (always.length + need < 4) need = Math.min(4 - always.length, primary.length + secondary.length);
+    if (need <= 0) return [...always];
+    const p = [...primary];
+    this.shuffleArray(p);
+    if (need <= p.length) return [...always, ...p.slice(0, need)];
+    const s = [...secondary];
+    this.shuffleArray(s);
+    return [...always, ...p, ...s.slice(0, need - p.length)];
+  }
+
+  private pickStockArchetype(archetypes: DecisionArchetypeType[], bucket: PhaseBucket): DecisionArchetypeType {
+    const eligible = archetypes.filter((a) => ARCHETYPE_PHASE_BUCKETS[a].includes(bucket));
+    if (eligible.length > 0) return this.rng.pick(eligible);
+    return this.rng.pick(archetypes);
   }
 
   evaluateDecision(
@@ -516,21 +609,28 @@ export class DecisionEngine {
 
   private pickArchetypeForComplication(
     archetypes: DecisionArchetypeType[],
-    comp: ComplicationType
+    comp: ComplicationType,
+    bucket: PhaseBucket
   ): DecisionArchetypeType {
-    // Mirror scrubin_core_engine.py `_pick_archetype_for_complication`: prefer an
-    // archetype this procedure offers that maps to the complication, otherwise fall
-    // back to ANY archetype in the global map that can address it. Without the global
-    // fallback, a procedure whose archetype set doesn't cover a complication would
-    // offer zero correct recovery options — the complication becomes unresolvable.
+    // Mirror scrubin_core_engine.py `_pick_archetype_for_complication`: prefer a
+    // phase-eligible archetype this procedure offers that maps to the
+    // complication (so decisions match where the surgery actually is), then any
+    // procedure archetype that maps to it, then a phase-eligible global
+    // archetype, then any global archetype. Without the global fallback, a
+    // procedure whose archetype set doesn't cover a complication would offer
+    // zero correct recovery options — the complication becomes unresolvable.
     const matching = archetypes.filter((a) =>
       ARCHETYPE_COMPLICATION_MAP[a].includes(comp)
     );
+    const phaseEligible = matching.filter((a) => ARCHETYPE_PHASE_BUCKETS[a].includes(bucket));
+    if (phaseEligible.length > 0) return this.rng.pick(phaseEligible);
     if (matching.length > 0) return this.rng.pick(matching);
 
     const globalMatching = DECISION_ARCHETYPES.filter((a) =>
       ARCHETYPE_COMPLICATION_MAP[a].includes(comp)
     );
+    const globalEligible = globalMatching.filter((a) => ARCHETYPE_PHASE_BUCKETS[a].includes(bucket));
+    if (globalEligible.length > 0) return this.rng.pick(globalEligible);
     if (globalMatching.length > 0) return this.rng.pick(globalMatching);
 
     return this.rng.pick(archetypes);

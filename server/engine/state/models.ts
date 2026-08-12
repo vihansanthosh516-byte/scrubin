@@ -94,6 +94,45 @@ export const ARCHETYPE_COMPLICATION_MAP: Record<DecisionArchetypeType, Complicat
   POST_OP_MONITORING:   ["infection", "thrombosis", "fluid_overload"],
 };
 
+// ── Procedure-phase awareness ──
+// Mirrors scrubin_core_procedures.py: each procedure phase falls into one of
+// three buckets (pre-op / intra-op / post-op), and each archetype is only
+// offered in the buckets where its interventions make clinical sense (e.g.
+// BLEEDING_CONTROL — cautery/ligation — only while the patient is in the OR).
+// The engine prefers phase-eligible archetypes so decisions match where the
+// surgery actually is, falling back so a complication is always resolvable.
+export type PhaseBucket = "pre_op" | "intra_op" | "post_op";
+
+const PHASE_PRE_KEYWORDS = [
+  "intake", "pre-op", "preop", "evaluation", "positioning",
+  "stabilization", "induction", "anesthesia", "consult", "planning", "template",
+];
+const PHASE_POST_KEYWORDS = ["post-op", "postop", "debrief", "icu", "recovery"];
+
+/** Map a procedure phase NAME to a bucket. Phases that aren't recognizably
+ *  pre- or post-op are treated as intra-op (the default operating-room state). */
+export function classifyPhaseBucket(name: string): PhaseBucket {
+  const n = (name ?? "").toLowerCase();
+  for (const kw of PHASE_POST_KEYWORDS) {
+    if (n.includes(kw)) return "post_op";
+  }
+  for (const kw of PHASE_PRE_KEYWORDS) {
+    if (n.includes(kw)) return "pre_op";
+  }
+  return "intra_op";
+}
+
+export const ARCHETYPE_PHASE_BUCKETS: Record<DecisionArchetypeType, PhaseBucket[]> = {
+  AIRWAY_STABILITY:     ["pre_op", "intra_op", "post_op"],
+  HEMODYNAMIC_CONTROL:  ["intra_op", "post_op"],
+  BLEEDING_CONTROL:     ["intra_op"],
+  INFECTION_MANAGEMENT: ["intra_op", "post_op"],
+  PAIN_MANAGEMENT:      ["intra_op", "post_op"],
+  DIAGNOSTIC_STEP:      ["pre_op", "intra_op", "post_op"],
+  SURGICAL_DECISION:    ["intra_op"],
+  POST_OP_MONITORING:   ["post_op"],
+};
+
 // ── Escalation Phases ──
 export const ESCALATION_PHASES = [
   "stable_workup",

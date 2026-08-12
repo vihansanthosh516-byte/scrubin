@@ -5,6 +5,7 @@ import { ComplicationEngine } from "../vitals/engine";
 import { DeterministicRNG } from "../rng";
 import { getProcedure, procedureExists } from "../procedures/registry";
 import { SessionManager } from "../session";
+import { classifyPhaseBucket } from "../state/models";
 
 describe("Tick Blocking", () => {
   it("throws if next() called before resolving pending decision", () => {
@@ -98,71 +99,181 @@ describe("Decision Option Count", () => {
     }
   });
 
-  it("POST_OP_MONITORING ships the Python core's anticoagulation option (5 total)", () => {
+  it("POST_OP_MONITORING always offers the treating options, incl. anticoagulation (4-8 total)", () => {
     // total-knee-replacement's archetype set is [PAIN_MANAGEMENT, POST_OP_MONITORING],
-    // and only POST_OP_MONITORING maps to thrombosis — so the recovery archetype is
-    // deterministic, and the options are the full 5-option Python table.
+    // and only POST_OP_MONITORING maps to thrombosis — so the recovery archetype
+    // is deterministic. The treating options (doppler + anticoagulation) must be
+    // offered in EVERY decision; decoys vary per seed so the total is 4-8.
     const procedure = getProcedure("total-knee-replacement");
-    const rng = new DeterministicRNG(42);
-    const engine = new DecisionEngine(rng, procedure);
-    const decision = engine.generateDecision(
-      10,
-      { spo2: 98, heart_rate: 72, bp_systolic: 120, bp_diastolic: 80, temperature: 37, respiratory_rate: 16 },
-      "active_complication",
-      "thrombosis",
-      "Post-Op"
-    );
-    expect(decision.options.map((o) => o.id)).toContain("anticoagulation");
-    expect(decision.options.length).toBe(5);
+    const VITALS = { spo2: 98, heart_rate: 72, bp_systolic: 120, bp_diastolic: 80, temperature: 37, respiratory_rate: 16 };
+    for (let seed = 1; seed <= 10; seed++) {
+      const decision = new DecisionEngine(new DeterministicRNG(seed), procedure).generateDecision(
+        10,
+        VITALS,
+        "active_complication",
+        "thrombosis",
+        "Post-Op"
+      );
+      const ids = decision.options.map((o) => o.id);
+      expect(ids).toContain("anticoagulation");
+      expect(ids).toContain("doppler");
+      expect(ids.length).toBeGreaterThanOrEqual(4);
+      expect(ids.length).toBeLessThanOrEqual(8);
+    }
   });
 
-  it("produces 4 options even with active complication", () => {
+  it("always offers every treating option with an active complication (4-8 total)", () => {
+    // appendectomy+hemorrhage → BLEEDING_CONTROL. The three treating options
+    // (cautery, ligation, packing) must ALWAYS be offered; decoys are sampled
+    // from a phase-eligible cross-archetype pool so the total is 4-8.
     const procedure = getProcedure("appendectomy");
-    const rng = new DeterministicRNG(42);
-    const engine = new DecisionEngine(rng, procedure);
-    const decision = engine.generateDecision(
-      10,
-      { spo2: 88, heart_rate: 110, bp_systolic: 90, bp_diastolic: 60, temperature: 38, respiratory_rate: 20 },
-      "active_complication",
-      "hemorrhage",
-      "Dissection"
-    );
-    expect(decision.options.length).toBe(4);
+    const VITALS = { spo2: 88, heart_rate: 110, bp_systolic: 90, bp_diastolic: 60, temperature: 38, respiratory_rate: 20 };
+    for (let seed = 1; seed <= 10; seed++) {
+      const decision = new DecisionEngine(new DeterministicRNG(seed), procedure).generateDecision(
+        10,
+        VITALS,
+        "active_complication",
+        "hemorrhage",
+        "Dissection"
+      );
+      const ids = decision.options.map((o) => o.id);
+      expect(ids).toContain("cautery");
+      expect(ids).toContain("ligation");
+      expect(ids).toContain("packing");
+      expect(ids.length).toBeGreaterThanOrEqual(4);
+      expect(ids.length).toBeLessThanOrEqual(8);
+    }
   });
 
-  it("HEMODYNAMIC_CONTROL mirrors the Python core's 6-option table (diuretic + epinephrine)", () => {
+  it("HEMODYNAMIC_CONTROL's pool mirrors the Python core's 6-option table (diuretic + epinephrine)", () => {
     // radical-nephrectomy's archetype set is exactly [HEMODYNAMIC_CONTROL], and
     // only HEMODYNAMIC_CONTROL maps to cardiac_arrhythmia — so the recovery
-    // archetype is deterministic and the options are the full Python table.
+    // archetype is deterministic. Treating options are always offered; decoys
+    // are sampled, so assert the UNION across seeds spans the full Python table.
     const procedure = getProcedure("radical-nephrectomy");
-    const rng = new DeterministicRNG(42);
-    const engine = new DecisionEngine(rng, procedure);
-    const decision = engine.generateDecision(
-      10,
-      { spo2: 98, heart_rate: 72, bp_systolic: 120, bp_diastolic: 80, temperature: 37, respiratory_rate: 16 },
-      "active_complication",
-      "cardiac_arrhythmia",
-      "Core Procedure"
-    );
+    const VITALS = { spo2: 98, heart_rate: 72, bp_systolic: 120, bp_diastolic: 80, temperature: 37, respiratory_rate: 16 };
+    const union = new Set<string>();
+    // 80 fixed seeds = 80 × ~4 sampled decoys from a 29-option phase-eligible
+    // pool; deterministic (same seeds → same outcome), so once green it stays
+    // green while still proving every HEMODYNAMIC_CONTROL option is reachable.
+    for (let seed = 1; seed <= 80; seed++) {
+      const decision = new DecisionEngine(new DeterministicRNG(seed), procedure).generateDecision(
+        10,
+        VITALS,
+        "active_complication",
+        "cardiac_arrhythmia",
+        "Core Procedure"
+      );
+      const ids = decision.options.map((o) => o.id);
+      ids.forEach((id) => union.add(id));
+      expect(ids).toContain("cardioversion"); // treating option always offered
+      expect(ids.length).toBeGreaterThanOrEqual(4);
+      expect(ids.length).toBeLessThanOrEqual(8);
 
-    const ids = decision.options.map((o) => o.id).sort();
-    expect(ids).toEqual([
-      "blood_transfusion",
-      "cardioversion",
-      "diuretic",
-      "epinephrine",
-      "fluid_resuscitation",
-      "vasopressor",
-    ]);
-    expect(decision.options.length).toBe(6);
+      // treats lists mirror the Python table exactly whenever the option is
+      // offered (fluid_resuscitation only treats hemorrhage; vasopressor treats
+      // nothing; diuretic/epinephrine the Python-only options).
+      const byId = Object.fromEntries(decision.options.map((o) => [o.id, o]));
+      if (byId["fluid_resuscitation"]) {
+        expect(byId["fluid_resuscitation"].correctForComplications).toEqual(["hemorrhage"]);
+      }
+      if (byId["vasopressor"]) expect(byId["vasopressor"].correctForComplications).toEqual([]);
+      if (byId["diuretic"]) expect(byId["diuretic"].correctForComplications).toEqual(["fluid_overload"]);
+      if (byId["epinephrine"]) expect(byId["epinephrine"].correctForComplications).toEqual(["anaphylaxis"]);
+    }
+    // The full Python HEMODYNAMIC_CONTROL table must be reachable across
+    // decisions (treating options always; decoys sampled), and decoys must also
+    // come from OTHER phase-eligible archetypes (situation variety).
+    for (const id of ["blood_transfusion", "cardioversion", "diuretic", "epinephrine", "fluid_resuscitation", "vasopressor"]) {
+      expect(union.has(id), `${id} never offered across 80 decisions`).toBe(true);
+    }
+    expect(union.size).toBeGreaterThan(6); // cross-archetype decoys present
+  });
 
-    // treats lists mirror the Python table exactly (fluid_resuscitation only
-    // treats hemorrhage; vasopressor treats nothing).
-    const byId = Object.fromEntries(decision.options.map((o) => [o.id, o]));
-    expect(byId["fluid_resuscitation"].correctForComplications).toEqual(["hemorrhage"]);
-    expect(byId["vasopressor"].correctForComplications).toEqual([]);
-    expect(byId["diuretic"].correctForComplications).toEqual(["fluid_overload"]);
-    expect(byId["epinephrine"].correctForComplications).toEqual(["anaphylaxis"]);
+  it("option composition varies across decisions (not always the same set)", () => {
+    // Same complication + same archetype (appendectomy+thrombosis →
+    // DIAGNOSTIC_STEP via the global fallback), different seeds: the treating
+    // options stay, the decoy subset changes — consecutive decisions differ.
+    const procedure = getProcedure("appendectomy");
+    const VITALS = { spo2: 98, heart_rate: 72, bp_systolic: 120, bp_diastolic: 80, temperature: 37, respiratory_rate: 16 };
+    const sets = new Set<string>();
+    // Seeds 1-40: 29 distinct compositions (verified — seeds 1-12 draw the same
+    // low xorshift window and yield the same 4-option set; 13+ vary).
+    for (let seed = 1; seed <= 40; seed++) {
+      const decision = new DecisionEngine(new DeterministicRNG(seed), procedure).generateDecision(
+        10,
+        VITALS,
+        "active_complication",
+        "thrombosis",
+        "Core Procedure"
+      );
+      const ids = decision.options.map((o) => o.id).sort();
+      sets.add(ids.join(","));
+      expect(ids.some((id) => id === "imaging" || id === "labs")).toBe(true); // treating always offered
+    }
+    expect(sets.size).toBeGreaterThan(5);
+  });
+
+  it("archetype selection is phase-aware (pre-op excludes intra-op-only archetypes)", () => {
+    // lap-cholecystectomy is [DIAGNOSTIC_STEP, SURGICAL_DECISION]; nerve_injury
+    // maps to both, but SURGICAL_DECISION (proceed/modify/abort) is intra-op
+    // only — so in Patient Intake the engine must offer DIAGNOSTIC_STEP.
+    const procedure = getProcedure("lap-cholecystectomy");
+    const VITALS = { spo2: 98, heart_rate: 72, bp_systolic: 120, bp_diastolic: 80, temperature: 37, respiratory_rate: 16 };
+    for (let seed = 1; seed <= 6; seed++) {
+      const preOp = new DecisionEngine(new DeterministicRNG(seed), procedure).generateDecision(
+        10,
+        VITALS,
+        "active_complication",
+        "nerve_injury",
+        "Patient Intake"
+      );
+      expect(preOp.archetype).toBe("DIAGNOSTIC_STEP");
+
+      const intraOp = new DecisionEngine(new DeterministicRNG(seed), procedure).generateDecision(
+        10,
+        VITALS,
+        "active_complication",
+        "nerve_injury",
+        "Core Procedure"
+      );
+      expect(["DIAGNOSTIC_STEP", "SURGICAL_DECISION"]).toContain(intraOp.archetype);
+    }
+  });
+
+  it("stock decisions prefer a phase-eligible archetype (pre-op forces AIRWAY_STABILITY)", () => {
+    // appendectomy is [AIRWAY_STABILITY, BLEEDING_CONTROL, INFECTION_MANAGEMENT];
+    // BLEEDING_CONTROL is intra-op-only and INFECTION_MANAGEMENT is intra/post —
+    // in Patient Intake only AIRWAY_STABILITY is eligible, so it's deterministic.
+    const procedure = getProcedure("appendectomy");
+    const VITALS = { spo2: 98, heart_rate: 72, bp_systolic: 120, bp_diastolic: 80, temperature: 37, respiratory_rate: 16 };
+    for (let seed = 1; seed <= 6; seed++) {
+      const decision = new DecisionEngine(new DeterministicRNG(seed), procedure).generateDecision(
+        10,
+        VITALS,
+        "stable_workup",
+        null,
+        "Patient Intake"
+      );
+      expect(decision.archetype).toBe("AIRWAY_STABILITY");
+    }
+  });
+});
+
+describe("Phase bucket classifier", () => {
+  it("classifies procedure phase names into pre/intra/post buckets", () => {
+    expect(classifyPhaseBucket("Patient Intake")).toBe("pre_op");
+    expect(classifyPhaseBucket("Pre-Op Planning")).toBe("pre_op");
+    expect(classifyPhaseBucket("Anesthesia & Induction")).toBe("pre_op");
+    expect(classifyPhaseBucket("Evaluation")).toBe("pre_op");
+    expect(classifyPhaseBucket("Core Procedure")).toBe("intra_op");
+    expect(classifyPhaseBucket("Dissection")).toBe("intra_op");
+    expect(classifyPhaseBucket("Incision & Access")).toBe("intra_op");
+    expect(classifyPhaseBucket("Closing")).toBe("intra_op");
+    expect(classifyPhaseBucket("Hemostasis & Closure")).toBe("intra_op");
+    expect(classifyPhaseBucket("Post-Op")).toBe("post_op");
+    expect(classifyPhaseBucket("Post-Op Debrief")).toBe("post_op");
+    expect(classifyPhaseBucket("ICU & Recovery")).toBe("post_op");
   });
 });
 
@@ -237,7 +348,8 @@ describe("Session Manager", () => {
     const result = session.next();
     expect(result.tick).toBe(1);
     expect(result.pendingDecision).not.toBeNull();
-    expect(result.pendingDecision!.options.length).toBe(4);
+    expect(result.pendingDecision!.options.length).toBeGreaterThanOrEqual(4);
+    expect(result.pendingDecision!.options.length).toBeLessThanOrEqual(8);
 
     // Try double-next — should throw
     expect(() => session.next()).toThrow();

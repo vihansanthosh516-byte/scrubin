@@ -202,7 +202,8 @@ describe("DecideResponse contract (pending_decision symmetry)", () => {
     const resp = toDecideResponse(first, orch.getState());
     expect(resp.pending_decision).not.toBeNull();
     expect(resp.pending_decision!.id).toBe(first.pendingDecision!.id);
-    expect(resp.pending_decision!.options.length).toBe(4);
+    expect(resp.pending_decision!.options.length).toBeGreaterThanOrEqual(4);
+    expect(resp.pending_decision!.options.length).toBeLessThanOrEqual(8);
     expect(resp.next_tick_ready).toBe(false);
   });
 });
@@ -341,6 +342,9 @@ const LIVE_WRONG_OPTION: Record<string, string> = {
   hypoxia: "call_anesthesia", // AIRWAY_STABILITY treats:[]
   nerve_injury: "non_pharmacologic", // PAIN_MANAGEMENT treats:[]
   thrombosis: "consult_specialist", // DIAGNOSTIC_STEP treats:[]
+  cardiac_arrhythmia: "vasopressor", // HEMODYNAMIC_CONTROL treats:[]
+  anaphylaxis: "call_anesthesia", // AIRWAY_STABILITY treats:[]
+  fluid_overload: "icu_transfer", // POST_OP_MONITORING treats:[]
 };
 // Correct option ids PER COMPLICATION, in priority order (the API's public option
 // shape doesn't expose `treats`, so the treating set is encoded here). Drawn from
@@ -352,6 +356,9 @@ const LIVE_CORRECT_OPTIONS: Record<string, string[]> = {
   hypoxia: ["oxygen_therapy", "intubate", "cricothyroidotomy"],
   nerve_injury: ["regional_block", "iv_opioid", "nsaid", "imaging", "exploration", "proceed", "modify"],
   thrombosis: ["doppler", "anticoagulation", "imaging", "labs", "modify", "abort"],
+  cardiac_arrhythmia: ["cardioversion"],
+  anaphylaxis: ["epinephrine", "intubate", "cricothyroidotomy"],
+  fluid_overload: ["diuretic", "serial_labs", "vitals_check"],
 };
 
 /** Pick the first OFFERED option from a priority-ordered list (list order wins
@@ -470,10 +477,20 @@ async function liveRecoveryWindow(
   }
 }
 
-/** BP drops per cycle: fumbling (decide-wrong + /next) vs untended (/tick only). */
+/** BP drops per cycle: fumbling (decide-wrong + /next) vs untended (/tick only).
+ *  Advances 12 decision cycles first (appendectomy phase 3, Incision & Access —
+ *  intra-op) so BLEEDING_CONTROL is phase-eligible and observe_hemostasis is
+ *  offerable; at tick 0 (Patient Intake) the decoy pool excludes intra-op-only
+ *  archetypes. */
 async function bpDropPerCycle(comp: ComplicationType, mode: "fumble" | "untended"): Promise<number[]> {
   const s = await liveCall("/start", { procedure: "appendectomy" });
   const sid = s.data.session_id;
+  for (let t = 0; t < 12; t++) {
+    const n = await liveCall("/next", { session_id: sid });
+    if (n.status !== 200 || n.data.mode === "deceased") break;
+    const pd = n.data.pending_decision;
+    await liveCall("/decide", { session_id: sid, decision_id: pd?.id, option_id: pd?.options?.[0]?.id });
+  }
   try {
     const c = await liveCall("/complicate", { session_id: sid, complication: comp });
     let prev = c.data.vitals.bp_systolic;
@@ -482,7 +499,11 @@ async function bpDropPerCycle(comp: ComplicationType, mode: "fumble" | "untended
       let pd = c.data.pending_decision;
       for (let i = 0; i < 3; i++) {
         const opts: { id: string }[] = pd?.options ?? [];
+        // Pin the mechanism under test: the observe_hemostasis penalty (-8 BP /
+        // +8 HR) stacks on top of decay. Decoys now vary per decision, so prefer
+        // observe_hemostasis explicitly when offered, else any non-treating pick.
         const wrong =
+          opts.find((o) => o.id === "observe_hemostasis")?.id ??
           opts.find((o) => !LIVE_CORRECT_OPTIONS[comp].includes(o.id))?.id ??
           LIVE_WRONG_OPTION[comp] ??
           opts[0]?.id;
@@ -509,7 +530,19 @@ async function bpDropPerCycle(comp: ComplicationType, mode: "fumble" | "untended
 
 describe.skipIf(!coreReachable)(`Live Python engine death pacing (${CORE_URL})`, () => {
   it("wrong recovery eventually kills, but never before the pacing floor", async () => {
-    for (const comp of Object.keys(LIVE_WRONG_OPTION) as ComplicationType[]) {
+    // Only the five "slow-burn" complications get a pacing floor: anaphylaxis
+    // and cardiac_arrhythmia are physiologically near-lethal from onset (BP 55 /
+    // HR 150 baselines) so a wrong recovery there can cross a lethal threshold
+    // in 1-3 polls by design — the no-inversion test below still guarantees
+    // wrong play never outlives idleness for ALL 8 complications.
+    const FLOORED: ComplicationType[] = [
+      "hemorrhage",
+      "infection",
+      "hypoxia",
+      "nerve_injury",
+      "thrombosis",
+    ];
+    for (const comp of FLOORED) {
       const r = await liveRun(comp, true);
       expect(r.died, `${comp}: engine should still kill on a wrong recovery`).toBe(true);
       expect(
@@ -556,15 +589,15 @@ describe.skipIf(!coreReachable)(`Live Python engine death pacing (${CORE_URL})`,
     ).toBeGreaterThan(untendedDrop * 1.5);
   }, 180_000);
 
-  it("repeated wrong decisions never outlive pure idleness (no inversion)", async () => {
+  it("repeated wrong decisions never outlive pure idleness (no inversion) — all 8 complications", async () => {
     // A trainee who keeps guessing wrong must die no later than one who walks
-    // away. Measured on the live engine: hemorrhage 5-6 vs 12-13, infection
-    // 10-11 vs 48-55, hypoxia 11-15 vs 14-15 (wrong play ≈ idling —
-    // call_anesthesia carries no penalty), nerve_injury 10-15 vs 53-68,
-    // thrombosis 7-14 vs 25-36. The +1 tolerance absorbs RNG variance (hypoxia
-    // worst case 15 vs 14). The old "inversion" was the balance script's
-    // fallback pick accidentally RESOLVING the complication — not an engine
-    // behavior; this test locks the real contract.
+    // away — the wrong-play penalty contract for EVERY complication (hemorrhage,
+    // infection, hypoxia, nerve_injury, thrombosis, cardiac_arrhythmia,
+    // anaphylaxis, fluid_overload). The +1 tolerance absorbs RNG variance
+    // (anaphylaxis fumble/idle both land at 3-4 because onset BP is already
+    // 55). The old "inversion" was the balance script's fallback pick
+    // accidentally RESOLVING the complication — not an engine behavior; this
+    // test locks the real contract.
     for (const comp of Object.keys(LIVE_WRONG_OPTION) as ComplicationType[]) {
       const fumble = await liveFumble(comp);
       const idle = await liveIdleDeath(comp);
