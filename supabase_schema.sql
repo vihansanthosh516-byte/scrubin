@@ -1,5 +1,7 @@
 -- ScrubIn Database Schema
 -- Run this in Supabase SQL Editor (https://supabase.com/dashboard/project/ewtwxcjshdejwpxeroeg/sql)
+-- AFTER this file, run supabase_seed.sql to backfill user profiles from any
+-- existing sessions and seed demo data so the leaderboard has rows.
 -- NOTE: this MUST be the project the app actually points at — the anon key in
 -- .env / client/src/lib/supabase.ts uses project ewtwxcjshdejwpxeroeg. If the
 -- sessions table is missing (the app 404s on /rest/v1/sessions), apply this

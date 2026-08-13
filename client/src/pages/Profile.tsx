@@ -7,6 +7,7 @@ import { Activity, Star, Trophy, Shield, Zap, Target, Award, Flame, TrendingUp, 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { getLeaderboard } from "@/lib/leaderboard";
 
 const ALL_BADGES = [
   { id: "first_cut", name: "First Cut", desc: "Complete your first procedure", icon: Scissors, color: "text-[#2E6B4B] dark:text-[#8FBF9A]", requirement: (stats: any) => stats.totalSurgeries >= 1 },
@@ -39,11 +40,32 @@ export default function Profile() {
     surgeriesByDate: {} as Record<string, number>
   });
   const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
+  const [rankInfo, setRankInfo] = useState<{ rank: number | null; totalPlayers: number; totalXp: number; proceduresCompleted: number } | null>(null);
 
   useEffect(() => {
     if (user) {
       loadUserProgress();
     }
+  }, [user]);
+
+  // Global rank + XP from the leaderboard view — the single source of truth
+  // shared with the Leaderboard page (sum(100 + floor(score / 10)) per session).
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    getLeaderboard().then(({ entries }) => {
+      if (cancelled) return;
+      const index = entries.findIndex((e) => e.user_id === user.id);
+      setRankInfo({
+        rank: index >= 0 ? index + 1 : null,
+        totalPlayers: entries.length,
+        totalXp: index >= 0 ? entries[index].total_xp : 0,
+        proceduresCompleted: index >= 0 ? entries[index].procedures_completed : 0,
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   const loadUserProgress = async () => {
@@ -207,7 +229,31 @@ export default function Profile() {
                   <span className="px-3 py-1 rounded-full bg-[#CC553D] text-white text-xs font-semibold font-mono-data uppercase tracking-widest shadow-sm dark:bg-[#D95338]">{user.profession || "Resident"}</span>
                 </motion.span>
               </motion.div>
-              <motion.p className="text-[#666059] dark:text-[#D1C9BF] text-sm mb-6 font-mono-data tracking-wide">@{user.login} · {stats.totalSurgeries} Procedures · {stats.avgScore}% Avg</motion.p>
+              <motion.p className="text-[#666059] dark:text-[#D1C9BF] text-sm mb-4 font-mono-data tracking-wide">@{user.login} · {stats.totalSurgeries} Procedures · {stats.avgScore}% Avg</motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 }}
+                className="flex flex-wrap items-center gap-2.5"
+              >
+                {rankInfo ? (
+                  <>
+                    <span className="px-3 py-1.5 rounded-sm bg-[#2E6B4B]/15 border border-[#2E6B4B]/40 text-[#2E6B4B] dark:text-[#8FBF9A] text-xs font-bold font-mono-data tracking-widest">
+                      {rankInfo.rank ? `#${rankInfo.rank} of ${rankInfo.totalPlayers}` : "UNRANKED"}
+                    </span>
+                    <span className="px-3 py-1.5 rounded-sm bg-primary/10 border border-primary/30 text-primary dark:text-[#E06D53] text-xs font-bold font-mono-data tracking-widest">
+                      {rankInfo.totalXp.toLocaleString()} XP
+                    </span>
+                    <span className="px-3 py-1.5 rounded-sm bg-card/60 border border-border text-[#8C827A] dark:text-[#C2BBB0] text-xs font-mono-data tracking-widest">
+                      {rankInfo.proceduresCompleted} procedures on record
+                    </span>
+                  </>
+                ) : (
+                  <span className="px-3 py-1.5 rounded-sm bg-card/60 border border-border text-[#8C827A] dark:text-[#C2BBB0] text-xs font-mono-data tracking-widest">
+                    Rank unavailable — apply the Supabase schema to enable the leaderboard
+                  </span>
+                )}
+              </motion.div>
             </div>
           </div>
         </motion.div>

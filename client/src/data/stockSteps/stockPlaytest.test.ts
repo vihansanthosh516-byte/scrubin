@@ -24,6 +24,7 @@
 import { describe, it, expect } from "vitest";
 import { STOCK_STEP_BANKS } from "./index";
 import { buildStockSteps, ProcedureBank } from "./stepBuilder";
+import { VALID_COMPLICATIONS } from "./stepAudit";
 
 const banks = Object.values(STOCK_STEP_BANKS) as ProcedureBank[];
 
@@ -88,6 +89,39 @@ describe("every bank plays start-to-finish", () => {
             choice.feedback.trim().length,
             `${at}: option "${choice.text.slice(0, 40)}…" has no feedback`
           ).toBeGreaterThan(0);
+        }
+      });
+    }
+  });
+
+  it("maps every wrong choice to a valid engine complication", () => {
+    for (const bank of banks) {
+      const steps = buildStockSteps(bank);
+      steps.forEach((step, i) => {
+        const at = `${bank.id} step ${i + 1} "${step.title}"`;
+        for (const choice of step.choices) {
+          if (choice.isCorrect) {
+            expect(choice.complication, `${at}: the correct choice must not trigger a complication`).toBe("");
+            continue;
+          }
+          expect(
+            VALID_COMPLICATIONS.has(choice.complication),
+            `${at}: wrong choice "${choice.text.slice(0, 40)}…" triggers unknown complication "${choice.complication}" — must be one of ${[...VALID_COMPLICATIONS].join(", ")}`
+          ).toBe(true);
+        }
+      });
+    }
+  });
+
+  it("keeps authored wrongComps inside the canonical complication set", () => {
+    for (const bank of banks) {
+      bank.steps.forEach((step, i) => {
+        if (!step.wrongComps) return;
+        for (const comp of step.wrongComps) {
+          expect(
+            VALID_COMPLICATIONS.has(comp),
+            `${bank.id} step ${i + 1} "${step.title}": wrongComps references unknown complication "${comp}"`
+          ).toBe(true);
         }
       });
     }
