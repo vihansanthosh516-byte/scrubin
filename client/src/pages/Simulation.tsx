@@ -8,6 +8,8 @@ import {
   Home, Play, RotateCcw
 } from "lucide-react";
 import { useSimulationStore } from "../state/simulationStore";
+import { useAuth } from "../contexts/AuthContext";
+import { recordSession } from "../lib/leaderboard";
 
 // NOTE: Procedure data is now fetched from the backend registry API.
 // The static imports have been removed.
@@ -50,6 +52,12 @@ export default function Simulation() {
   } = useSimulationStore();
 
   const causalPastes = dvkChain.length > 0 ? Math.round((dvkChain.filter((p: any) => Array.isArray(p.causal_events) && p.causal_events.length > 0).length / dvkChain.length) * 100) : 100;
+
+  const { user } = useAuth();
+  // Session started at wall-clock time — used for the sessions.time_seconds column.
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  // One-shot guard so the terminal effect records each sim exactly once.
+  const [recordedSessionId, setRecordedSessionId] = useState<string | null>(null);
 
   const [isStarting, setIsStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
@@ -145,6 +153,50 @@ export default function Simulation() {
     };
   }, [simId, isCompleted]);
 
+  // Persist the finished simulation into Supabase once, on any terminal state:
+  // successful completion, recovery-and-complete, or the patient expiring.
+  // The engine carries score / complication_count / correct_steps / total_steps
+  // on every response, so currentState always has what the sessions row needs.
+  // Placed above the loadingScenario early return so the hook count is stable
+  // across the loading -> loaded transition (Rules of Hooks).
+  useEffect(() => {
+    if (!simId || recordedSessionId === simId) return;
+    const mode = (currentState?.mode || "stock").toLowerCase();
+    const terminal = isCompleted || mode === "deceased";
+    if (!terminal) return;
+    if (!user) return; // anonymous play is not recorded
+    const c = currentState || {};
+    const score = typeof c.score === "number" ? c.score : 0;
+    const compCount = typeof c.complication_count === "number" ? c.complication_count : 0;
+    const correct = typeof c.correct_steps === "number" ? c.correct_steps : 0;
+    const total = typeof c.total_steps === "number" ? c.total_steps : 0;
+    const outcome: "Successful" | "Complicated" | "Critical" = mode === "deceased"
+      ? "Critical"
+      : compCount > 0
+      ? "Complicated"
+      : "Successful";
+    setRecordedSessionId(simId);
+    void recordSession(
+      {
+        user_id: user.id,
+        procedure_id: procId,
+        procedure_name: scenario?.name || procId,
+        score,
+        outcome,
+        time_seconds: startedAt ? Math.max(1, Math.round((Date.now() - startedAt) / 1000)) : 0,
+        decisions_correct: correct,
+        decisions_total: total,
+        complications_count: compCount,
+      },
+      {
+        id: user.id,
+        name: user.name,
+        login: user.login,
+        avatar_url: user.avatar_url,
+      }
+    );
+  }, [simId, isCompleted, user, currentState, procId, scenario, startedAt, recordedSessionId]);
+
   if (loadingScenario) {
     return (
       <div className="min-h-screen bg-[#FBF9F5] flex flex-col items-center justify-center space-y-4">
@@ -214,6 +266,7 @@ export default function Simulation() {
       const resData = await res.json();
       const newSimId = resData.session_id;
       setSimId(newSimId);
+      setStartedAt(Date.now());
       setState(resData); // whole response contains tick, patient, etc.
       setPatientProfile(resData.patient_profile ?? resData.patientProfile ?? null);
       setTick(resData.tick);

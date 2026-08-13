@@ -13,7 +13,9 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "supabase:apply": "node scripts/apply-supabase.mjs",
+    "supabase:apply:run": "node scripts/apply-supabase.mjs --apply"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",

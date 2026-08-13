@@ -19,7 +19,8 @@
 --   with the cleanup block at the bottom.
 --
 --   The demo XP spread mirrors the app's client-side formula exactly
---   (sum(100 + floor(score / 10)) per session, as in ProcedureLibrary.tsx).
+--   (Critical session = 50 XP, otherwise 100 + floor(score / 10), as in
+--   ProcedureLibrary.tsx) — the same CASE the `leaderboard` view encodes.
 
 -- ─── 1. Backfill users from orphaned sessions ────────────────────────────────
 -- Sessions written by any future code path (or manual SQL) whose user has no

@@ -68,16 +68,22 @@ ORDER BY avg_score DESC;
 -- Leaderboard view for the app's Leaderboard page (queries `.from('leaderboard')`
 -- with user_id / username / avatar_url / total_xp / procedures_completed).
 -- total_xp mirrors the client-side XP formula in ProcedureLibrary.tsx:
--- sum(100 + floor(score / 10)) over the user's sessions. Keep this view and
--- the client query in sync — the CI schema check (supabaseSchema.test.ts)
--- fails if the app queries a relation this file does not define.
+-- a Critical session is worth 50 XP, every other session 100 + floor(score / 10).
+-- Keep this view and the client formula in sync — the CI cross-check
+-- (supabaseSeed.test.ts) recomputes the seed's demo totals with the client
+-- formula and asserts the view SQL agrees; supabaseSchema.test.ts fails if the
+-- app queries a relation this file does not define.
 DROP VIEW IF EXISTS leaderboard;
 CREATE VIEW leaderboard AS
 SELECT
   u.id AS user_id,
   u.name AS username,
   u.avatar_url,
-  COALESCE(SUM(100 + FLOOR(GREATEST(0, s.score) / 10)), 0) AS total_xp,
+  COALESCE(SUM(
+    CASE WHEN s.outcome = 'Critical' THEN 50
+         ELSE 100 + FLOOR(GREATEST(0, s.score) / 10)
+    END
+  ), 0) AS total_xp,
   COUNT(s.id) AS procedures_completed
 FROM users u
 LEFT JOIN sessions s ON u.id = s.user_id
