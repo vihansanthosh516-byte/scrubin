@@ -251,7 +251,20 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         ],
         wrongComps: ["infection", "hemorrhage"],
       },
-      { kind: "closure", title: "Close the skin", description: "Finish the wound with the skin approximated." },
+      {
+        kind: "closure", title: "Close the skin", description: "Finish the wound with the skin approximated.",
+        choices: [
+          "Approve the skin edges and close the skin with a subcuticular stitch.",
+          "Close the skin with vertical mattress sutures through all layers.",
+          "Leave the skin open and pack the wound for secondary healing.",
+        ],
+        feedback: [
+          "A subcuticular closure approximates the skin with the least wound tension.",
+          "Full-thickness mattress sutures through a clean appendectomy wound add avoidable scarring and can catch a vessel.",
+          "Leaving a clean wound open delays recovery and invites contamination.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       { kind: "dvt", title: "DVT prophylaxis", description: "The patient is obese and will be relatively immobile." },
       {
         kind: "postop", title: "Plan post-operative antibiotics", description: "Duration depends on what you found inside.",

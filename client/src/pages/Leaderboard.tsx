@@ -7,16 +7,9 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Trophy, Medal, Crown, ArrowLeft, Activity, User, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
+import { getLeaderboard, LeaderboardEntry } from "@/lib/leaderboard";
 
-interface LeaderboardEntry {
-  user_id: string;
-  username: string;
-  avatar_url: string;
-  total_xp: number;
-  procedures_completed: number;
-  rank: number;
-}
+type RankedLeaderboardEntry = LeaderboardEntry & { rank: number };
 
 const EASE = [0.25, 1, 0.5, 1] as const;
 
@@ -28,7 +21,7 @@ const PODIUM: Record<number, { ring: string; badge: string; label: string }> = {
 };
 
 export default function Leaderboard() {
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboard, setLeaderboard] = useState<RankedLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("all");
 
@@ -39,27 +32,10 @@ export default function Leaderboard() {
   const loadLeaderboard = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('leaderboard')
-        .select('*')
-        .order('total_xp', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-
-      const rankedData = data?.map((entry: any, index: number) => ({
-        user_id: entry.user_id,
-        username: entry.username || 'Unknown',
-        avatar_url: entry.avatar_url,
-        total_xp: entry.total_xp,
-        procedures_completed: entry.procedures_completed,
-        rank: index + 1
-      })) || [];
-
-      setLeaderboard(rankedData);
-    } catch (error) {
-      console.error('Failed to load leaderboard:', error);
-      setLeaderboard([]);
+      const { entries } = await getLeaderboard();
+      setLeaderboard(
+        entries.map((entry, index) => ({ ...entry, username: entry.username || "Unknown", rank: index + 1 }))
+      );
     } finally {
       setLoading(false);
     }

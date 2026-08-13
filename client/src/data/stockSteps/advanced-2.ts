@@ -192,7 +192,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       { kind: "bleed", title: "Control a sac-edge bleeder", description: "The sac edge is bleeding.", f: { vessel: "the sac edge vessels", wrongVessels: ["the aorta", "the vena cava"] } },
       { kind: "verify", title: "Confirm the foot pulses", description: "Confirm the pedal pulses are present.", f: { test: "the pedal pulses", wrongTests: ["a routine X-ray", "a Doppler of the legs"] } },
       { kind: "closure", title: "Close the sac over the graft", description: "Wrap the sac around the graft.", f: { structure: "the aneurysm sac" } },
-      { kind: "closure", title: "Close the abdomen", description: "Close the fascia and skin.", f: { structure: "the abdominal wall" } },
+      {
+        kind: "closure", title: "Close the abdomen", description: "Close the fascia and skin.",
+        choices: [
+          "Close the abdominal fascia in layers and approximate the skin.",
+          "Close the skin only to keep tension off the aortic repair.",
+          "Close the fascia with a single tight running suture to prevent a hernia.",
+        ],
+        feedback: [
+          "Layered fascial closure restores the abdominal wall without tension on the retroperitoneum.",
+          "Skin-only closure leaves the fascia open — evisceration risk and a weak repair.",
+          "A single tight running suture strangulates the fascial edges and risks dehiscence and delayed bleeding.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       { kind: "dvt", title: "DVT prophylaxis", description: "Major vascular surgery carries a high thrombosis risk." },
       { kind: "postop", title: "Watch for graft limb occlusion", description: "Monitor the legs for acute ischemia.", f: { test: "the leg perfusion", wrongTests: ["a routine X-ray", "a Doppler of the legs"] } },
       { kind: "postop", title: "Monitor the bowel", description: "Watch for ischemic colitis signs.", f: { test: "the bowel function and the symptoms", wrongTests: ["a routine CT", "a blood panel"] } },

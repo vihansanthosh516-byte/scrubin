@@ -179,7 +179,20 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         wrongComps: ["infection", "thrombosis"],
       },
       { kind: "closure", title: "Repair the capsule and rotators", description: "Restore the posterior structures.", f: { structure: "the posterior capsule and short external rotators" } },
-      { kind: "closure", title: "Close the skin", description: "Close the subcutaneous layer and skin.", f: { structure: "the subcutaneous layer and skin" } },
+      {
+        kind: "closure", title: "Close the skin", description: "Close the subcutaneous layer and skin.",
+        choices: [
+          "Approve the skin edges and close with a subcuticular stitch over a deep dermal layer.",
+          "Close the skin with wide vertical mattress sutures under tension.",
+          "Close the skin and apply a compression dressing over a still-oozing wound.",
+        ],
+        feedback: [
+          "A deep dermal layer with subcuticular skin closure heals cleanly under no tension.",
+          "Wide mattress sutures under tension strangulate the skin edges and invite infection.",
+          "Closing over oozing tissue risks a hematoma that can compromise the repair.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       { kind: "dvt", title: "DVT prophylaxis", description: "Hip arthroplasty is among the highest-risk procedures for thrombosis." },
       { kind: "postop", title: "Watch for dislocation signs", description: "Teach the patient the dislocation precautions and the signs.", f: { test: "the hip position and the precautions", wrongTests: ["a routine X-ray", "a CT scan"] } },
       { kind: "postop", title: "Monitor the wound", description: "Watch for drainage and infection signs.", f: { test: "the wound for drainage and erythema", wrongTests: ["a routine ultrasound", "a CT scan"] } },

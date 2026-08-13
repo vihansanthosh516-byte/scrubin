@@ -396,17 +396,6 @@ app.get("/api/profile", (_req, res) => {
   // existing code unchanged
 });
 
-// Phase 8 – Leaderboard placeholder (to be extended later)
-app.get("/api/leaderboard", (_req, res) => {
-  // Simple static leaderboard for now – can be replaced with DB later
-  const dummy = [
-    { id: "1", name: "Alice", login: "alice", avatar_url: "https://i.pravatar.cc/150?u=alice", score: 1200 },
-    { id: "2", name: "Bob", login: "bob", avatar_url: "https://i.pravatar.cc/150?u=bob", score: 1150 },
-    { id: "3", name: "Carol", login: "carol", avatar_url: "https://i.pravatar.cc/150?u=carol", score: 1100 },
-  ];
-  res.json({ entries: dummy });
-});
-
 });
 
 app.get("/api/scenarios/:id", (req, res) => {
@@ -544,15 +533,6 @@ app.get("/api/profile", (_req, res) => {
     badges: [],
   };
   res.json(dummy);
-});
-
-app.get("/api/leaderboard", (_req, res) => {
-  const dummy = [
-    { id: "1", name: "Alice", login: "alice", avatar_url: "https://i.pravatar.cc/150?u=alice", score: 1200 },
-    { id: "2", name: "Bob", login: "bob", avatar_url: "https://i.pravatar.cc/150?u=bob", score: 1150 },
-    { id: "3", name: "Carol", login: "carol", avatar_url: "https://i.pravatar.cc/150?u=carol", score: 1100 },
-  ];
-  res.json({ entries: dummy });
 });
 
 app.get("/api/scenarios/:id", (req, res) => {

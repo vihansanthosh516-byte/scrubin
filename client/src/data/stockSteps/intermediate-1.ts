@@ -611,7 +611,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       { kind: "bleed", title: "Control a broad-ligament bleeder", description: "A venous bleeder is seen at the uterine vessels.", f: { vessel: "the uterine vein at the broad ligament", wrongVessels: ["the ovarian artery", "the internal iliac artery"] } },
       { kind: "verify", title: "Confirm the sponge and instrument counts", description: "Complete the counts before closing the uterus.", f: { test: "the sponge and instrument count", wrongTests: ["a routine X-ray", "a CT scan"] } },
       { kind: "closure", title: "Close the peritoneum and fascia", description: "Close the layers in order.", f: { structure: "the peritoneum and rectus sheath" } },
-      { kind: "closure", title: "Close the skin", description: "Subcuticular skin closure." },
+      {
+        kind: "closure", title: "Close the skin", description: "Subcuticular skin closure.",
+        choices: [
+          "Approve the skin edges and close with a subcuticular stitch.",
+          "Close the skin with a running locked suture through the full thickness.",
+          "Close the skin before confirming the uterine incision is dry — time is short.",
+        ],
+        feedback: [
+          "A subcuticular closure approximates the skin cleanly with minimal tension.",
+          "Full-thickness running sutures catch the subcutaneous fat and increase wound infection risk.",
+          "Closing over an oozing uterus hides a hemorrhage that will declare in recovery.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       { kind: "dvt", title: "DVT prophylaxis", description: "Pregnancy and surgery are both prothrombotic." },
       { kind: "postop", title: "Monitor the lochia and the tone", description: "Watch for heavy lochia and a soft uterus.", f: { test: "the lochia and the fundal tone", wrongTests: ["a routine ultrasound", "a CT scan"] } },
       { kind: "postop", title: "Antibiotic plan", description: "Define the postoperative antibiotic course.", f: { test: "the infection markers", wrongTests: ["a routine blood panel", "an ultrasound"] } },
@@ -1047,7 +1060,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       { kind: "bleed", title: "Control a cuff-angle bleeder", description: "The vaginal angle is bleeding.", f: { vessel: "the vaginal angle vessels", wrongVessels: ["the external iliac artery", "the obturator artery"] } },
       { kind: "verify", title: "Complete the sponge count", description: "Confirm the counts are correct before the abdomen is closed.", f: { test: "the sponge and instrument count", wrongTests: ["a routine X-ray", "a CT scan"] } },
       { kind: "closure", title: "Close the vaginal cuff", description: "Suture the cuff with the angles incorporated.", f: { structure: "the vaginal cuff" } },
-      { kind: "closure", title: "Close the abdomen", description: "Close the fascia and skin in layers.", f: { structure: "the rectus sheath" } },
+      {
+        kind: "closure", title: "Close the abdomen", description: "Close the fascia and skin in layers.",
+        choices: [
+          "Close the rectus sheath with a running suture, then approximate the skin.",
+          "Close the skin only and leave the fascia to close on its own.",
+          "Close the rectus sheath with a single layer of full-thickness mattress sutures.",
+        ],
+        feedback: [
+          "Layered closure reapproximates the rectus sheath and skin without tension.",
+          "Skin-only closure leaves a fascial gap that can eviscerate or herniate and invites infection.",
+          "Full-thickness mattress sutures can catch an epigastric vessel and leave poor cosmesis.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       { kind: "dvt", title: "DVT prophylaxis", description: "Pelvic surgery carries a significant thrombosis risk." },
       { kind: "postop", title: "Watch for cuff infection", description: "Vaginal cuff cellulitis can develop after hysterectomy.", f: { test: "the cuff for discharge and tenderness", wrongTests: ["a routine ultrasound", "a CT scan"] } },
       { kind: "postop", title: "Manage the catheter", description: "Define the catheter removal timing.", f: { test: "the voiding trial", wrongTests: ["a routine ultrasound", "a blood panel"] } },
