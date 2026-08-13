@@ -18,6 +18,27 @@ jobs:
   engine:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Real Postgres for the schema/seed integration tier
+    # (client/src/lib/supabasePostgres.test.ts) — applies supabase_schema.sql
+    # + supabase_seed.sql, simulates the app's recordSession insert, and
+    # asserts the leaderboard view's totals. Skipped locally when DATABASE_URL
+    # is unset.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: scrubin_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/scrubin_test
     steps:
       - uses: actions/checkout@v4
 

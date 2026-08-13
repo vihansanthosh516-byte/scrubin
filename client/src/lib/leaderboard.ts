@@ -61,6 +61,39 @@ export async function upsertUser(user: {
   return user;
 }
 
+export interface PersistedSession {
+  id: string;
+  user_id: string;
+  procedure_id: string;
+  procedure_name: string;
+  score: number;
+  outcome: "Successful" | "Complicated" | "Critical";
+  time_seconds: number;
+  decisions_correct: number;
+  decisions_total: number;
+  complications_count: number;
+  created_at: string;
+}
+
+/**
+ * The signed-in user's persisted sessions (completed cases), newest first.
+ * Same source as the leaderboard — the `sessions` table. Degrades to [] when
+ * the schema is not applied or the table is unreachable.
+ */
+export async function getUserSessions(userId: string): Promise<PersistedSession[]> {
+  const { data, error } = await supabase
+    .from("sessions")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) {
+    console.error("Failed to load session history:", error);
+    return [];
+  }
+  return (data ?? []) as PersistedSession[];
+}
+
 export interface SessionRecord {
   user_id: string;
   procedure_id: string;

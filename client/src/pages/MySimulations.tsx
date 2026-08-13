@@ -7,12 +7,16 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useAuth } from "../contexts/AuthContext";
+import { getUserSessions, PersistedSession } from "../lib/leaderboard";
 
 export default function MySimulations() {
   const [, setLocation] = useLocation();
   const { setState, setTick, setSimId } = useSimulationStore();
+  const { user } = useAuth();
   
   const [sessions, setSessions] = useState<any[]>([]);
+  const [completedCases, setCompletedCases] = useState<PersistedSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -39,6 +43,20 @@ export default function MySimulations() {
   useEffect(() => {
     fetchSaved();
   }, []);
+
+  // Completed cases live in Supabase (persisted by Simulation.tsx on
+  // completion); the in-memory /api/sim/list below only holds saves/resumes.
+  // Load both so the page is the single place to review a trainee's record.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    getUserSessions(user.id).then((rows) => {
+      if (!cancelled) setCompletedCases(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const handleResume = async (sessionId: string) => {
     setActionLoadingId(`resume-${sessionId}`);
@@ -193,6 +211,54 @@ export default function MySimulations() {
 
         {/* Scrollable list area — the only part of the dashboard that scrolls */}
         <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-4">
+          {completedCases.length > 0 && (
+            <div className="glass-card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <ShieldCheck className="w-4 h-4 text-[#2E6B4B] dark:text-[#8FBF9A]" />
+                <h2 className="font-bold text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>Completed Cases</h2>
+                <span className="text-[10px] font-mono-data px-2 py-0.5 rounded-full bg-background/60 border border-border text-muted-foreground">
+                  {completedCases.length} on record
+                </span>
+              </div>
+              <div className="grid gap-2.5">
+                {completedCases.map((c) => {
+                  const xp =
+                    c.outcome === "Critical" ? 50 : 100 + Math.floor(Math.max(0, c.score) / 10);
+                  const outcomeColor =
+                    c.outcome === "Successful"
+                      ? "text-[#2E6B4B] dark:text-[#8FBF9A] border-[#2E6B4B]/40 bg-[#2E6B4B]/10"
+                      : c.outcome === "Complicated"
+                      ? "text-[#D99B26] dark:text-[#E0B060] border-[#D99B26]/40 bg-[#D99B26]/10"
+                      : "text-[#A32A2A] dark:text-[#E08080] border-[#A32A2A]/40 bg-[#A32A2A]/10";
+                  return (
+                    <div
+                      key={c.id}
+                      className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-sm bg-background/50 border border-border"
+                    >
+                      <div className="flex flex-wrap items-center gap-3 min-w-0">
+                        <span className="font-semibold text-sm text-foreground">{c.procedure_name || c.procedure_id}</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${outcomeColor}`}>
+                          {c.outcome}
+                        </span>
+                        <span className="text-xs text-muted-foreground font-mono-data">Score {c.score}%</span>
+                        <span className="text-xs text-muted-foreground font-mono-data">+{xp} XP</span>
+                        {c.complications_count > 0 && (
+                          <span className="text-[10px] font-mono-data px-2 py-0.5 rounded-full bg-[#A32A2A]/10 border border-[#A32A2A]/30 text-[#E08080]">
+                            {c.complications_count} complication{c.complications_count > 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        <Clock className="w-3 h-3 inline mr-1 -mt-0.5" />
+                        {c.created_at ? new Date(c.created_at).toLocaleString() : "Unknown"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="p-3 bg-[#A32A2A]/10 border border-[#A32A2A]/40 rounded-sm text-[#E08080] flex items-center justify-between">
               <div className="flex items-center gap-3">
