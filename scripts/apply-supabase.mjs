@@ -32,12 +32,25 @@ const API = "https://api.supabase.com";
 
 const args = process.argv.slice(2);
 const apply = args.includes("--apply");
+const check = args.includes("--check");
 const schemaOnly = args.includes("--schema-only");
 const seedOnly = args.includes("--seed-only");
 const projectFlag = args.find((a) => a.startsWith("--project="));
 const project = projectFlag ? projectFlag.split("=")[1] : DEFAULT_PROJECT;
 
 const token = process.env.SUPABASE_ACCESS_TOKEN;
+
+/**
+ * Load a key from the repo's .env file (gitignored). Returns null if absent.
+ */
+function envFromFile(name) {
+  const envPath = path.join(ROOT, ".env");
+  if (!existsSync(envPath)) return null;
+  const line = readFileSync(envPath, "utf-8")
+    .split(/\r?\n/)
+    .find((l) => l.startsWith(name + "="));
+  return line ? line.slice(name.length + 1).trim() : null;
+}
 
 const files = [];
 if (!seedOnly) files.push("supabase_schema.sql");
@@ -47,9 +60,10 @@ function showHelp() {
   console.log(`ScrubIn Supabase apply script
 
 Usage:
-  node scripts/apply-supabase.mjs [--apply] [--schema-only|--seed-only] [--project=<ref>]
+  node scripts/apply-supabase.mjs [--apply|--check] [--schema-only|--seed-only] [--project=<ref>]
 
   --apply         actually send the SQL (default is a dry run)
+  --check         probe the live project for the schema (no token needed)
   --schema-only   only supabase_schema.sql
   --seed-only     only supabase_seed.sql
   --project=ref   override the project ref (default ${DEFAULT_PROJECT})
@@ -60,6 +74,46 @@ Requires SUPABASE_ACCESS_TOKEN (a personal access token, sbp_…) to apply.
 
 if (args.includes("--help") || args.includes("-h")) {
   showHelp();
+  process.exit(0);
+}
+
+// ── --check: probe the live project without a management token ──
+// Uses the anon key (from .env) to query the Rest API for the schema-defined
+// tables/views. If the schema hasn't been applied, the tables 404 and the
+// probe reports them missing — no token required.
+if (check) {
+  const anon = envFromFile("VITE_SUPABASE_ANON_KEY");
+  const url = envFromFile("VITE_SUPABASE_URL");
+  if (!anon || !url) {
+    console.error("VITE_SUPABASE_ANON_KEY / VITE_SUPABASE_URL not found in .env — cannot probe.");
+    process.exit(1);
+  }
+  const base = url.replace(/\/$/, "");
+  const probes = [
+    ["users table", `${base}/rest/v1/users?select=id&limit=1`],
+    ["sessions table", `${base}/rest/v1/sessions?select=id&limit=1`],
+    ["leaderboard view", `${base}/rest/v1/leaderboard?select=*&limit=1`],
+  ];
+  console.log(`Probing ${project} via the anon key (no token needed):`);
+  let missing = 0;
+  for (const [label, u] of probes) {
+    const res = await fetch(u, { headers: { apikey: anon, Authorization: `Bearer ${anon}` } });
+    if (res.ok) {
+      const rows = await res.json();
+      console.log(`  ✓ ${label}: present (${Array.isArray(rows) ? rows.length : "?"} rows)`);
+    } else {
+      console.log(`  ✗ ${label}: ${res.status} — not applied yet`);
+      missing++;
+    }
+  }
+  if (missing > 0) {
+    console.log(
+      `\n${missing}/3 missing. Run with a management token:\n` +
+        `  export SUPABASE_ACCESS_TOKEN=sbp_… && npm run supabase:apply:run`
+    );
+  } else {
+    console.log("\nSchema is applied — leaderboard/rank features are live.");
+  }
   process.exit(0);
 }
 

@@ -15,7 +15,8 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "supabase:apply": "node scripts/apply-supabase.mjs",
-    "supabase:apply:run": "node scripts/apply-supabase.mjs --apply"
+    "supabase:apply:run": "node scripts/apply-supabase.mjs --apply",
+    "supabase:check": "node scripts/apply-supabase.mjs --check"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",

@@ -74,11 +74,18 @@ npm run supabase:apply -- --help              # full usage
 ### Notes
 
 - Apply requires the token; dry-run does not.
+- **Check whether the schema is applied** without a token:
+  `npm run supabase:check` (probes the live project with the anon key).
 - The schema's RLS policies grant the anon key insert access, so once applied,
   every finished simulation is recorded automatically and drives the
   leaderboard — no further setup needed.
 - To wipe the demo data, uncomment the cleanup block at the bottom of
   `supabase_seed.sql`.
+
+## Security
+
+- `.env` is gitignored — never commit it. A leaked-key rotation checklist lives
+  in [SECURITY.md](SECURITY.md).
 
 ## Tests & checks
 

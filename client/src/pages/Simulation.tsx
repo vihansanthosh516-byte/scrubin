@@ -25,6 +25,67 @@ import { getStockStepsForProcedure } from "../data/stockProcedures";
 
 // NOTE: PROCEDURES_MAP has been removed – procedure data is loaded dynamically.
 
+/**
+ * Derive the completion presentation from the engine's final state instead of
+ * declaring success unconditionally. The Python core already computes
+ * `evaluation.patient_outcome` from the actual final vitals vs baseline
+ * ("Stable / Discharged" vs "Stabilized / Transferred"), so trust it when
+ * present, and fall back to a vitals-derangement check (mirroring the
+ * engine's tolerance table) when it is not.
+ */
+function deriveCompletionState(data: any): {
+  status: "success" | "complicated";
+  outcome: string;
+  patient_status: string;
+  vitals_status: string;
+} {
+  const patientOutcome =
+    data?.evaluation?.patient_outcome || data?.patient_outcome || data?.patient_status;
+  if (patientOutcome === "Stabilized / Transferred" || patientOutcome === "Critical") {
+    return {
+      status: "complicated",
+      outcome:
+        "Procedure completed with complications. Patient stabilized and transferred for ongoing care.",
+      patient_status: "Stabilized / Transferred",
+      vitals_status: "Compromised",
+    };
+  }
+  if (patientOutcome === "Stable / Discharged" || patientOutcome === "Stable / Extubated") {
+    return {
+      status: "success",
+      outcome:
+        "Procedure completed successfully. Patient stabilized and transferred to recovery.",
+      patient_status: "Stable / Extubated",
+      vitals_status: "Normal",
+    };
+  }
+  // Fallback: no evaluation payload — grade from final vitals vs baseline.
+  const v = data?.vitals || {};
+  const base = data?.baseline_vitals || {};
+  const deranged =
+    (base.spo2 != null && v.spo2 != null && Math.abs(v.spo2 - base.spo2) > 4) ||
+    (base.bp_systolic != null && v.bp_systolic != null && Math.abs(v.bp_systolic - base.bp_systolic) > 18) ||
+    (base.heart_rate != null && v.heart_rate != null && Math.abs(v.heart_rate - base.heart_rate) > 22) ||
+    (base.temperature != null && v.temperature != null && Math.abs(v.temperature - base.temperature) > 0.8) ||
+    (base.respiratory_rate != null && v.respiratory_rate != null && Math.abs(v.respiratory_rate - base.respiratory_rate) > 5);
+  if (deranged) {
+    return {
+      status: "complicated",
+      outcome:
+        "Procedure completed with complications. Patient stabilized and transferred for ongoing care.",
+      patient_status: "Stabilized / Transferred",
+      vitals_status: "Compromised",
+    };
+  }
+  return {
+    status: "success",
+    outcome:
+      "Procedure completed successfully. Patient stabilized and transferred to recovery.",
+    patient_status: "Stable / Extubated",
+    vitals_status: "Normal",
+  };
+}
+
 export default function Simulation() {
   const [, setLocation] = useLocation();
   // wouter's useLocation() returns only the pathname (no query string), so
@@ -136,6 +197,11 @@ export default function Simulation() {
             const engineEvents = Array.isArray(data.events) ? data.events : [];
             setState({
               ...data,
+              // The engine can flip `completed` on any response (e.g. the last
+              // tick), not only the explicit /complete call — carry the derived
+              // presentation in that case so the dashboard never falls back to
+              // a generic "Completed".
+              ...(data.completed || data.is_completed ? deriveCompletionState(data) : {}),
               events: [...prevEvents, ...engineEvents],
             });
             setTick(data.tick);
@@ -170,9 +236,10 @@ export default function Simulation() {
     const compCount = typeof c.complication_count === "number" ? c.complication_count : 0;
     const correct = typeof c.correct_steps === "number" ? c.correct_steps : 0;
     const total = typeof c.total_steps === "number" ? c.total_steps : 0;
+    const completion = deriveCompletionState(c);
     const outcome: "Successful" | "Complicated" | "Critical" = mode === "deceased"
       ? "Critical"
-      : compCount > 0
+      : completion.status === "complicated"
       ? "Complicated"
       : "Successful";
     setRecordedSessionId(simId);
@@ -336,17 +403,15 @@ export default function Simulation() {
           });
           if (compRes.ok) {
             const compData = await compRes.json();
+            const completion = deriveCompletionState(compData);
             setState({
               ...compData,
-              status: "success",
-              outcome: "Procedure completed successfully. Patient stabilized and transferred to recovery.",
-              patient_status: "Stable / Extubated",
-              vitals_status: "Normal",
+              ...completion,
               events: [
                 ...(useSimulationStore.getState().currentState?.events || []),
                 ...(data.events || []),
                 "✅ Complication resolved!",
-                "🎉 Procedure completed successfully!"
+                "🎉 Procedure completed!"
               ]
             });
             setTick(compData.tick);
@@ -355,6 +420,11 @@ export default function Simulation() {
           setCurrentStockStepIndex(nextIndex);
           setState({
             ...data,
+            // A spontaneous complication resolved on the final tick can leave
+            // the engine `completed` even though this branch didn't call
+            // /complete — derive the presentation so the dashboard reflects
+            // the patient's actual final state.
+            ...(data.completed || data.is_completed ? deriveCompletionState(data) : {}),
             events: [
               ...(useSimulationStore.getState().currentState?.events || []),
               ...(data.events || []),
@@ -425,15 +495,13 @@ export default function Simulation() {
           });
           if (res.ok) {
             const data = await res.json();
+            const completion = deriveCompletionState(data);
             setState({
               ...data,
-              status: "success",
-              outcome: "Procedure completed successfully. Patient stabilized and transferred to recovery.",
-              patient_status: "Stable / Extubated",
-              vitals_status: "Normal",
+              ...completion,
               events: [
                 ...updatedEvents,
-                "🎉 Procedure completed successfully!"
+                "🎉 Procedure completed!"
               ]
             });
             setTick(data.tick);
@@ -461,6 +529,7 @@ export default function Simulation() {
             const data = await res.json();
             setState({
               ...data,
+              ...(data.completed || data.is_completed ? deriveCompletionState(data) : {}),
               events: updatedEvents
             });
             setTick(data.tick);
