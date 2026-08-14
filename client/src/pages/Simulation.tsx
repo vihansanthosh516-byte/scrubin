@@ -34,13 +34,24 @@ import { getStockStepsForProcedure } from "../data/stockProcedures";
  * engine's tolerance table) when it is not.
  */
 function deriveCompletionState(data: any): {
-  status: "success" | "complicated";
+  status: "success" | "complicated" | "deceased";
   outcome: string;
   patient_status: string;
   vitals_status: string;
 } {
   const patientOutcome =
     data?.evaluation?.patient_outcome || data?.patient_outcome || data?.patient_status;
+  if (
+    patientOutcome === "Deceased" ||
+    (data?.mode || data?.mode_ || "").toLowerCase() === "deceased"
+  ) {
+    return {
+      status: "deceased",
+      outcome: "The patient did not survive the procedure.",
+      patient_status: "Deceased",
+      vitals_status: "Critical",
+    };
+  }
   if (patientOutcome === "Stabilized / Transferred" || patientOutcome === "Critical") {
     return {
       status: "complicated",

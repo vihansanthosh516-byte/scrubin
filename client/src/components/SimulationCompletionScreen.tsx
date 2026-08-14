@@ -19,9 +19,11 @@ export default function SimulationCompletionScreen({ scenarioName, onViewDebrief
 
   const outcome = currentState?.outcome || currentState?.completion_reason || currentState?.termination_reason;
 
-  const isSuccess = ["success", "completed", "finished"].includes(status.toLowerCase());
+  const isSuccess = isDeceased
+    ? false
+    : ["success", "completed", "finished"].includes(status.toLowerCase());
   const statusColor = isDeceased ? "text-[#A32A2A]" : isSuccess ? "text-[#2E6B4B]" : "text-[#C27820]";
-  const StatusIcon = isSuccess ? ShieldCheck : Activity;
+  const StatusIcon = isDeceased ? Activity : isSuccess ? ShieldCheck : Activity;
 
   return (
     <div className="flex flex-col gap-4">
@@ -31,7 +33,9 @@ export default function SimulationCompletionScreen({ scenarioName, onViewDebrief
             <StatusIcon className={`w-5 h-5 ${statusColor}`} />
           </div>
           <div className="min-w-0">
-            <h2 className="text-xl font-bold tracking-tight uppercase">Simulation {status}</h2>
+            <h2 className="text-xl font-bold tracking-tight uppercase">
+              Simulation {isDeceased ? "Deceased" : status}
+            </h2>
             {outcome && (
               <p className="text-[#8C827A] dark:text-[#C2BBB0] text-xs mt-0.5 leading-relaxed">{outcome}</p>
             )}
