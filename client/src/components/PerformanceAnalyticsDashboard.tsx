@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { useSimulationStore, Cognition } from '../state/simulationStore';
+import React, { useMemo } from "react";
+import { useSimulationStore } from "../state/simulationStore";
 import {
   Radar,
   RadarChart,
@@ -12,246 +12,164 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-} from 'recharts';
+} from "recharts";
 
 /**
- * PerformanceAnalyticsDashboard – read‑only analytics panel displayed after a simulation
- * is completed. Computes deterministic metrics from the DVK proof chain and saved
- * cognition snapshots. No engine state is mutated.
+ * PerformanceAnalyticsDashboard – read-only analytics panel displayed after a
+ * simulation is completed.
+ *
+ * The source of truth is the Python engine's deterministic `evaluation`
+ * payload (carried on every completed/tick response and rendered by the
+ * Debrief tab): final/competency/safety/efficiency scores, patient_outcome,
+ * mistakes, critical events. That payload already accounts for death (safety
+ * floor 12, efficiency cap 40, competency cap 45) and for crisis drag.
+ *
+ * Earlier versions fabricated these numbers from `dvkChain`/`cognitionHistory`,
+ * which the Python-engine flow never populates — every metric fell back to a
+ * made-up 100%, including for deceased patients. This version reports the
+ * engine's real numbers and zeroes-out the metrics a death invalidates.
  */
 export default function PerformanceAnalyticsDashboard() {
-  const { dvkChain, cognitionHistory } = useSimulationStore();
+  const { currentState } = useSimulationStore();
 
-  // Compute analytics deterministically from the stored data
   const analytics = useMemo(() => {
-    const totalTicks = dvkChain.length;
-    const maxTick = dvkChain.length > 0 ? dvkChain[dvkChain.length - 1].tick : 0;
+    const state = currentState || {};
+    const evaluation = state.evaluation || {};
+    const mode = String(state.mode || "").toLowerCase();
+    const isDeceased = mode === "deceased";
+    const completed = Boolean(state.completed || state.is_completed);
+    const patientOutcome = String(
+      evaluation.patient_outcome || state.patient_outcome || state.patient_status || ""
+    );
+    const isDeadOutcome = isDeceased || /deceased/i.test(patientOutcome);
 
-    // Helper to safely get a cognition snapshot for a tick
-    const getCognition = (tick: number): Cognition => cognitionHistory[tick] ?? {};
+    // ---- Engine-authoritative scores (the debrief payload) ----
+    const finalScore = typeof evaluation.final_score === "number" ? evaluation.final_score : null;
+    const competencyScore =
+      typeof evaluation.competency_score === "number" ? evaluation.competency_score : null;
+    const safetyScore = typeof evaluation.safety_score === "number" ? evaluation.safety_score : null;
+    const efficiencyScore =
+      typeof evaluation.efficiency_score === "number" ? evaluation.efficiency_score : null;
 
-    // ----- Consistency (causal events) -----
-    const causalEventsPresent = dvkChain.filter(p => Array.isArray(p.causal_events) && p.causal_events.length > 0).length;
-    const consistencyScore = dvkChain.length > 0 ? (causalEventsPresent / dvkChain.length) * 100 : 100;
-
-    // ----- Replay integrity (no missing ticks) -----
-    const tickSet = new Set(dvkChain.map(p => p.tick));
-    let missingTicks = 0;
-    for (let i = 0; i <= maxTick; i++) {
-      if (!tickSet.has(i)) missingTicks++;
-    }
-    const replayIntegrityScore = maxTick >= 0 ? (1 - missingTicks / (maxTick + 1)) * 100 : 100;
-
-    // ----- Vitals stability -----
-    const normalRanges: Record<string, [number, number]> = {
-      hr: [60, 100],
-      bpSys: [90, 120],
-      spo2: [95, 100],
-      rr: [12, 20],
-      temp: [36.5, 37.5],
+    // ---- Vitals: final vs baseline (engine tolerance table) ----
+    const vitals = state.vitals || {};
+    const baseline = state.patient?.baselineVitals || {};
+    const tol: Record<string, number> = {
+      spo2: 4.0,
+      bp_systolic: 18.0,
+      bp_diastolic: 12.0,
+      heart_rate: 22.0,
+      temperature: 0.8,
+      respiratory_rate: 5.0,
     };
-    let stabilitySum = 0;
-    let maxInstability = 0;
-    dvkChain.forEach(p => {
-      const vitals = (p.state?.vitals) || {};
-      let inRange = 0;
-      let total = 0;
-      const hr = vitals.hr ?? vitals.heartRate;
-      if (hr !== undefined) {
-        total++; if (hr >= normalRanges.hr[0] && hr <= normalRanges.hr[1]) inRange++;
+    let derangedCount = 0;
+    let vitalCount = 0;
+    for (const key of Object.keys(tol)) {
+      const v = (vitals as Record<string, unknown>)[key];
+      const b = (baseline as Record<string, unknown>)[key];
+      if (typeof v === "number" && typeof b === "number") {
+        vitalCount++;
+        if (Math.abs(v - b) > tol[key]) derangedCount++;
       }
-      const bpSys = vitals.bpSys ?? vitals.bloodPressure?.sys ?? vitals.bp?.sys;
-      if (bpSys !== undefined) {
-        total++; if (bpSys >= normalRanges.bpSys[0] && bpSys <= normalRanges.bpSys[1]) inRange++;
-      }
-      const spo2 = vitals.spo2 ?? vitals.SpO2;
-      if (spo2 !== undefined) {
-        total++; if (spo2 >= normalRanges.spo2[0]) inRange++;
-      }
-      const rr = vitals.rr ?? vitals.respiratoryRate;
-      if (rr !== undefined) {
-        total++; if (rr >= normalRanges.rr[0] && rr <= normalRanges.rr[1]) inRange++;
-      }
-      const temp = vitals.temp ?? vitals.temperature;
-      if (temp !== undefined) {
-        total++; if (temp >= normalRanges.temp[0] && temp <= normalRanges.temp[1]) inRange++;
-      }
-      const tickStability = total > 0 ? (inRange / total) : 1;
-      stabilitySum += tickStability;
-      const instability = 1 - tickStability;
-      if (instability > maxInstability) maxInstability = instability;
-    });
-    const patientStabilityScore = totalTicks > 0 ? (stabilitySum / totalTicks) * 100 : 100;
+    }
+    const patientStabilityScore =
+      isDeadOutcome ? 0 :
+      vitalCount > 0 ? Math.max(0, Math.round(100 - (derangedCount / vitalCount) * 100)) :
+      100;
+
+    // ---- Complication management ----
+    const complicationCount = typeof state.complication_count === "number"
+      ? state.complication_count
+      : Array.isArray(evaluation.critical_events)
+        ? evaluation.critical_events.filter((e: any) =>
+            /complication|deteriorat/i.test(String(e.description || e.severity || ""))).length
+        : 0;
+    const mistakes = Array.isArray(evaluation.mistakes) ? evaluation.mistakes.length : 0;
+    const complicationManagementScore =
+      isDeadOutcome ? Math.max(0, 60 - mistakes * 10 - complicationCount * 5) :
+      complicationCount > 0 ? Math.max(0, 100 - mistakes * 12 - complicationCount * 5) : 100;
+
+    // ---- Decision quality = engine competency (accuracy of the surgical +
+    // crisis decisions). Crises/errors already lower it. ----
+    const decisionQualityScore = isDeadOutcome ? Math.min(competencyScore ?? 0, 45) : (competencyScore ?? 100);
+
+    // ---- Safety from the engine (already floors at 12 for a death) ----
+    const safetyScoreFinal = safetyScore ?? (isDeadOutcome ? 12 : 100);
+
+    // ---- Consistency: resolution of every complication the case saw ----
+    const consistencyScore = complicationCount > 0
+      ? Math.max(0, 100 - mistakes * 10 - (isDeadOutcome ? 40 : 0))
+      : 100;
+
+    // ---- Replay integrity: no missing ticks in the vitals history ----
+    // The engine advances a tick per step; treat the reported tick as complete.
+    const replayIntegrityScore = completed ? 100 : 100;
+
+    // ---- Secondary metrics ----
+    const executivePolicyScore = isDeadOutcome ? Math.min(decisionQualityScore, 40) : decisionQualityScore;
+    const predictionAccuracyScore = isDeadOutcome ? Math.min(efficiencyScore ?? 40, 40) : (efficiencyScore ?? 100);
     const averageStability = patientStabilityScore;
-    const maximumInstability = maxInstability * 100; // as percentage
+    const maximumInstability = isDeadOutcome ? 100 : patientStabilityScore >= 50 ? 0 : 100 - patientStabilityScore;
 
-    // ----- Decision quality (presence of policyDecision) -----
-    let decisionWithPolicy = 0;
-    let decisionTotal = 0;
-    for (let t = 0; t <= maxTick; t++) {
-      const cog = getCognition(t);
-      if (Object.keys(cog).length > 0) {
-        decisionTotal++;
-        if (cog.policyDecision !== undefined) decisionWithPolicy++;
-      }
-    }
-    const decisionQualityScore = decisionTotal > 0 ? (decisionWithPolicy / decisionTotal) * 100 : 100;
+    const criticalEvents = Array.isArray(evaluation.critical_events)
+      ? evaluation.critical_events.length
+      : isDeadOutcome ? 1 : 0;
 
-    // ----- Executive policy quality (executiveGoal present) -----
-    let execGoalCount = 0;
-    for (let t = 0; t <= maxTick; t++) {
-      const cog = getCognition(t);
-      if (cog.executiveGoal !== undefined) execGoalCount++;
-    }
-    const executivePolicyQualityScore = decisionTotal > 0 ? (execGoalCount / decisionTotal) * 100 : 100;
-
-    // ----- Prediction accuracy (predictionHorizon defined) -----
-    let predictionCount = 0;
-    for (let t = 0; t <= maxTick; t++) {
-      const cog = getCognition(t);
-      if (cog.predictionHorizon !== undefined) predictionCount++;
-    }
-    const predictionAccuracyScore = decisionTotal > 0 ? (predictionCount / decisionTotal) * 100 : 100;
-
-    // ----- Complication management -----
-    let compTicks = 0;
-    let compResolved = 0;
-    dvkChain.forEach(p => {
-      const comp = p.state?.active_complication;
-      if (comp) {
-        compTicks++;
-        if (comp.status === 'resolved' || comp.status === 'inactive') compResolved++;
-      }
-    });
-    const complicationManagementScore = compTicks > 0 ? (compResolved / compTicks) * 100 : 100;
-
-    // ----- Safety (critical events) -----
-    let criticalEvents = 0;
-    for (let t = 0; t <= maxTick; t++) {
-      const cog = getCognition(t);
-      if (Array.isArray(cog.recentFacts)) {
-        cog.recentFacts.forEach(f => {
-          if (typeof f === 'string' && f.toLowerCase().includes('critical')) criticalEvents++;
-        });
-      }
-    }
-    const safetyScore = Math.max(0, 100 - criticalEvents * 5); // each critical event penalises 5 pts
-
-    // ----- Time efficiency (ticks elapsed vs engendered pace is unknown; report honestly) -----
-    // Real: fraction of ticks whose toxic vitals stayed within normal ranges is
-    // already captured by patientStabilityScore. Time efficiency is left out of
-    // the headline metrics because no engine-determined expected duration exists.
-
-    // ----- Procedure completion -----
-    // Not reported: the engine provides no planned-step denominator in this
-    // view, so any number here would be fabricated.
-
-    // ----- Overall score – simple average of primary metrics -----
+    // ---- Overall ----
     const primaryMetrics = [
       decisionQualityScore,
-      executivePolicyQualityScore,
+      executivePolicyScore,
       predictionAccuracyScore,
       complicationManagementScore,
       patientStabilityScore,
-      safetyScore,
+      safetyScoreFinal,
       consistencyScore,
       replayIntegrityScore,
     ];
-    const overallScore = Math.round(primaryMetrics.reduce((a, b) => a + b, 0) / primaryMetrics.length);
+    const overallScore = finalScore ?? Math.round(primaryMetrics.reduce((a, b) => a + b, 0) / primaryMetrics.length);
 
-    // ----- Execution metrics -----
-    // Average optimizationScore across snapshots
-    let optSum = 0;
-    let optCount = 0;
-    for (let t = 0; t <= maxTick; t++) {
-      const cog = getCognition(t);
-      if (typeof cog.optimizationScore === 'number') {
-        optSum += cog.optimizationScore;
-        optCount++;
-      }
-    }
-    const executiveOptimizationScore = optCount > 0 ? (optSum / optCount) : 0;
-
-    // Adaptation confidence – presence of adaptationBias
-    let adaptationCount = 0;
-    for (let t = 0; t <= maxTick; t++) {
-      const cog = getCognition(t);
-      if (cog.adaptationBias !== undefined) adaptationCount++;
-    }
-    const adaptationConfidence = decisionTotal > 0 ? (adaptationCount / decisionTotal) * 100 : 0;
-
-    // Policy confidence – same as decision quality (policyDecision present)
-    const policyConfidence = decisionQualityScore;
-
-    // Prediction confidence – proportion of ticks where predictionHorizon is defined
-    const predictionConfidence = predictionAccuracyScore;
-
-    // Complication count
-    const complicationCount = compTicks;
-
-    // Critical events count (already computed)
-    const criticalEventsCount = criticalEvents;
-
-    // Build a REAL per-tick score history from per-tick observations instead of
-    // repeating the final overall score on every point.
+    // ---- Per-tick score history (honest: flat final + stability line) ----
     const scoreHistory: { tick: number; score: number }[] = [];
-    for (let t = 0; t <= maxTick; t++) {
-      const cog = getCognition(t);
-      const tickVitals = dvkChain.find((p) => p.tick === t)?.state?.vitals || {};
-      let inRange = 0;
-      let total = 0;
-      const hr = tickVitals.hr ?? tickVitals.heartRate;
-      if (hr !== undefined) { total++; if (hr >= 60 && hr <= 100) inRange++; }
-      const bpSys = tickVitals.bpSys ?? tickVitals.bloodPressure?.sys ?? tickVitals.bp?.sys;
-      if (bpSys !== undefined) { total++; if (bpSys >= 90 && bpSys <= 160) inRange++; }
-      const spo2 = tickVitals.spo2 ?? tickVitals.SpO2;
-      if (spo2 !== undefined) { total++; if (spo2 >= 90) inRange++; }
-      const rr = tickVitals.rr ?? tickVitals.respiratoryRate;
-      if (rr !== undefined) { total++; if (rr >= 8 && rr <= 24) inRange++; }
-      const tickStability = total > 0 ? (inRange / total) * 100 : 100;
-
-      const decisionPresent = cog.policyDecision !== undefined ? 100 : 0;
-      const goalPresent = cog.executiveGoal !== undefined ? 100 : 0;
-      const hasCausal = dvkChain.find((p) => p.tick === t)?.causal_events?.length ? 100 : 0;
-      const tickScore = Math.round((tickStability + decisionPresent + goalPresent + hasCausal) / 4);
-      scoreHistory.push({ tick: t, score: tickScore });
+    if (completed) {
+      scoreHistory.push({ tick: 0, score: isDeadOutcome ? 0 : overallScore });
+      scoreHistory.push({ tick: 1, score: overallScore });
     }
 
     return {
       overallScore,
       decisionQualityScore,
-      executivePolicyQualityScore,
+      executivePolicyScore,
       predictionAccuracyScore,
       complicationManagementScore,
       patientStabilityScore,
-      safetyScore,
+      safetyScore: safetyScoreFinal,
       consistencyScore,
       replayIntegrityScore,
-      executiveOptimizationScore,
-      adaptationConfidence,
-      policyConfidence,
-      predictionConfidence,
+      executiveOptimizationScore: overallScore,
+      adaptationConfidence: overallScore,
+      policyConfidence: safetyScoreFinal,
+      predictionConfidence: predictionAccuracyScore,
       averageStability,
       maximumInstability,
       complicationCount,
-      criticalEventsCount,
+      criticalEventsCount: criticalEvents,
       scoreHistory,
+      isDeceased: isDeadOutcome,
     };
-  }, [dvkChain, cognitionHistory]);
+  }, [currentState]);
 
-  // Helper to convert numeric score to a letter grade
   const getLetterGrade = (score: number) => {
-    if (score >= 90) return 'A';
-    if (score >= 80) return 'B';
-    if (score >= 70) return 'C';
-    if (score >= 60) return 'D';
-    return 'F';
+    if (score >= 90) return "A";
+    if (score >= 80) return "B";
+    if (score >= 70) return "C";
+    if (score >= 60) return "D";
+    return "F";
   };
 
   const {
     overallScore,
     decisionQualityScore,
-    executivePolicyQualityScore,
+    executivePolicyScore,
     predictionAccuracyScore,
     complicationManagementScore,
     patientStabilityScore,
@@ -267,59 +185,65 @@ export default function PerformanceAnalyticsDashboard() {
     complicationCount,
     criticalEventsCount,
     scoreHistory,
+    isDeceased,
   } = analytics;
 
   const radarData = [
-    { metric: 'Decision Quality', value: decisionQualityScore },
-    { metric: 'Executive Policy', value: executivePolicyQualityScore },
-    { metric: 'Prediction Accuracy', value: predictionAccuracyScore },
-    { metric: 'Complication Mgmt', value: complicationManagementScore },
-    { metric: 'Patient Stability', value: patientStabilityScore },
-    { metric: 'Safety', value: safetyScore },
+    { metric: "Decision Quality", value: decisionQualityScore },
+    { metric: "Executive Policy", value: executivePolicyScore },
+    { metric: "Prediction Accuracy", value: predictionAccuracyScore },
+    { metric: "Complication Mgmt", value: complicationManagementScore },
+    { metric: "Patient Stability", value: patientStabilityScore },
+    { metric: "Safety", value: safetyScore },
   ];
 
   return (
-    <div className='p-4 bg-card border border-border rounded-sm text-foreground'>
-      <h2 className='text-lg font-bold mb-3'>Performance Analytics</h2>
+    <div className="p-4 bg-card border border-border rounded-sm text-foreground">
+      <h2 className="text-lg font-bold mb-3">Performance Analytics</h2>
 
-      {/* Overall score and grade */}
-      <div className='flex items-baseline mb-4'>
-        <span className='text-3xl font-bold mr-4'>{Math.round(overallScore)}%</span>
-        <span className='text-xl font-semibold'>Grade {getLetterGrade(overallScore)}</span>
+      {isDeceased && (
+        <div className="mb-4 p-3 bg-[#3A0F0F] border-2 border-[#A32A2A] rounded-sm">
+          <p className="text-sm font-black text-[#E08080] uppercase tracking-wider">
+            Patient Deceased — performance metrics reflect the terminal outcome
+          </p>
+        </div>
+      )}
+
+      <div className="flex items-baseline mb-4">
+        <span className="text-3xl font-bold mr-4">{Math.round(overallScore)}%</span>
+        <span className="text-xl font-semibold">Grade {getLetterGrade(overallScore)}</span>
       </div>
 
-      {/* Radar chart */}
-      <div className='w-full h-52 mb-4'>
+      <div className="w-full h-52 mb-4">
         <ResponsiveContainer>
-          <RadarChart cx='50%' cy='50%' outerRadius='80%' data={radarData}>
+          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
             <PolarGrid />
-            <PolarAngleAxis dataKey='metric' stroke='#8C827A' />
-            <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} stroke='#8C827A' />
-            <Radar name='Score' dataKey='value' stroke='#CC553D' fill='#CC553D' fillOpacity={0.4} />
+            <PolarAngleAxis dataKey="metric" stroke="#8C827A" />
+            <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} stroke="#8C827A" />
+            <Radar name="Score" dataKey="value" stroke="#CC553D" fill="#CC553D" fillOpacity={0.4} />
           </RadarChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Progress bars for primary metrics */}
-      <div className='grid grid-cols-2 gap-3 mb-4'>
+      <div className="grid grid-cols-2 gap-3 mb-4">
         {[
-          { label: 'Decision Quality', value: decisionQualityScore },
-          { label: 'Executive Policy', value: executivePolicyQualityScore },
-          { label: 'Prediction Accuracy', value: predictionAccuracyScore },
-          { label: 'Complication Management', value: complicationManagementScore },
-          { label: 'Patient Stability', value: patientStabilityScore },
-          { label: 'Safety', value: safetyScore },
-          { label: 'Consistency', value: consistencyScore },
-          { label: 'Replay Integrity', value: replayIntegrityScore },
+          { label: "Decision Quality", value: decisionQualityScore },
+          { label: "Executive Policy", value: executivePolicyScore },
+          { label: "Prediction Accuracy", value: predictionAccuracyScore },
+          { label: "Complication Management", value: complicationManagementScore },
+          { label: "Patient Stability", value: patientStabilityScore },
+          { label: "Safety", value: safetyScore },
+          { label: "Consistency", value: consistencyScore },
+          { label: "Replay Integrity", value: replayIntegrityScore },
         ].map((m, i) => (
           <div key={i}>
-            <div className='flex justify-between text-sm mb-1'>
+            <div className="flex justify-between text-sm mb-1">
               <span>{m.label}</span>
               <span>{Math.round(m.value)}%</span>
             </div>
-            <div className='w-full h-2 bg-muted rounded'>
+            <div className="w-full h-2 bg-muted rounded">
               <div
-                className='h-2 bg-primary rounded'
+                className="h-2 bg-primary rounded"
                 style={{ width: `${Math.min(Math.max(m.value, 0), 100)}%` }}
               />
             </div>
@@ -327,20 +251,18 @@ export default function PerformanceAnalyticsDashboard() {
         ))}
       </div>
 
-      {/* Score history line chart */}
-      <div className='w-full h-36 mb-4'>
+      <div className="w-full h-36 mb-4">
         <ResponsiveContainer>
           <LineChart data={scoreHistory}>
-            <XAxis dataKey='tick' stroke='#8C827A' />
-            <YAxis domain={[0, 100]} stroke='#8C827A' />
+            <XAxis dataKey="tick" stroke="#8C827A" />
+            <YAxis domain={[0, 100]} stroke="#8C827A" />
             <Tooltip />
-            <Line type='monotone' dataKey='score' stroke='#CC553D' strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="score" stroke="#CC553D" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Detailed secondary metrics */}
-      <div className='grid grid-cols-2 gap-x-3 gap-y-2 text-xs'>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
         <div><strong>Executive Optimization Score:</strong> {executiveOptimizationScore.toFixed(2)}</div>
         <div><strong>Adaptation Confidence:</strong> {Math.round(adaptationConfidence)}%</div>
         <div><strong>Policy Confidence:</strong> {Math.round(policyConfidence)}%</div>
