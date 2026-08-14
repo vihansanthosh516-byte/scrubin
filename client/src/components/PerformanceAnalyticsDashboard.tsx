@@ -29,6 +29,10 @@ import {
  * made-up 100%, including for deceased patients. This version reports the
  * engine's real numbers and zeroes-out the metrics a death invalidates.
  */
+// Even a perfect case is never graded 100%: a managed complication, vitals
+// deviation, and anesthesia time always leave a trace of imperfection.
+const capPerfection = (n: number) => Math.min(Math.max(0, Math.round(n)), 98);
+
 export default function PerformanceAnalyticsDashboard() {
   const { currentState } = useSimulationStore();
 
@@ -74,8 +78,8 @@ export default function PerformanceAnalyticsDashboard() {
     }
     const patientStabilityScore =
       isDeadOutcome ? 0 :
-      vitalCount > 0 ? Math.max(0, Math.round(100 - (derangedCount / vitalCount) * 100)) :
-      100;
+      vitalCount > 0 ? capPerfection(100 - (derangedCount / vitalCount) * 100) :
+      capPerfection(100);
 
     // ---- Complication management ----
     const complicationCount = typeof state.complication_count === "number"
@@ -87,27 +91,30 @@ export default function PerformanceAnalyticsDashboard() {
     const mistakes = Array.isArray(evaluation.mistakes) ? evaluation.mistakes.length : 0;
     const complicationManagementScore =
       isDeadOutcome ? Math.max(0, 60 - mistakes * 10 - complicationCount * 5) :
-      complicationCount > 0 ? Math.max(0, 100 - mistakes * 12 - complicationCount * 5) : 100;
+      complicationCount > 0 ? capPerfection(100 - mistakes * 12 - complicationCount * 5) :
+      capPerfection(100);
 
     // ---- Decision quality = engine competency (accuracy of the surgical +
     // crisis decisions). Crises/errors already lower it. ----
-    const decisionQualityScore = isDeadOutcome ? Math.min(competencyScore ?? 0, 45) : (competencyScore ?? 100);
+    const decisionQualityScore = isDeadOutcome ? Math.min(competencyScore ?? 0, 45) : capPerfection(competencyScore ?? 100);
 
     // ---- Safety from the engine (already floors at 12 for a death) ----
-    const safetyScoreFinal = safetyScore ?? (isDeadOutcome ? 12 : 100);
+    const safetyScoreFinal = isDeadOutcome ? 12 : capPerfection(safetyScore ?? 100);
 
     // ---- Consistency: resolution of every complication the case saw ----
     const consistencyScore = complicationCount > 0
-      ? Math.max(0, 100 - mistakes * 10 - (isDeadOutcome ? 40 : 0))
-      : 100;
+      ? capPerfection(100 - mistakes * 10 - (isDeadOutcome ? 40 : 0))
+      : isDeadOutcome
+        ? 60
+        : capPerfection(100);
 
     // ---- Replay integrity: no missing ticks in the vitals history ----
     // The engine advances a tick per step; treat the reported tick as complete.
     const replayIntegrityScore = completed ? 100 : 100;
 
     // ---- Secondary metrics ----
-    const executivePolicyScore = isDeadOutcome ? Math.min(decisionQualityScore, 40) : decisionQualityScore;
-    const predictionAccuracyScore = isDeadOutcome ? Math.min(efficiencyScore ?? 40, 40) : (efficiencyScore ?? 100);
+    const executivePolicyScore = isDeadOutcome ? Math.min(decisionQualityScore, 40) : capPerfection(decisionQualityScore);
+    const predictionAccuracyScore = isDeadOutcome ? Math.min(efficiencyScore ?? 40, 40) : capPerfection(efficiencyScore ?? 100);
     const averageStability = patientStabilityScore;
     const maximumInstability = isDeadOutcome ? 100 : patientStabilityScore >= 50 ? 0 : 100 - patientStabilityScore;
 
@@ -126,7 +133,7 @@ export default function PerformanceAnalyticsDashboard() {
       consistencyScore,
       replayIntegrityScore,
     ];
-    const overallScore = finalScore ?? Math.round(primaryMetrics.reduce((a, b) => a + b, 0) / primaryMetrics.length);
+    const overallScore = capPerfection(finalScore ?? primaryMetrics.reduce((a, b) => a + b, 0) / primaryMetrics.length);
 
     // ---- Per-tick score history (honest: flat final + stability line) ----
     const scoreHistory: { tick: number; score: number }[] = [];
