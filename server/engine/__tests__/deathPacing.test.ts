@@ -668,4 +668,24 @@ describe.skipIf(!coreReachable)(`Live Python engine death pacing (${CORE_URL})`,
       }
     }
   }, 180_000);
+
+  it("the Python core's totalTicks matches the TS registry for every procedure", async () => {
+    // The authored banks are pinned to the TS registry's totalTicks by
+    // stockPlaytest.test.ts ("keeps every bank's length equal to the engine's
+    // totalTicks"); this pins the LIVE Python engine to the same numbers, so
+    // the case length is one source of truth across the whole stack.
+    const res = await fetch(`${CORE_URL}/procedures`);
+    expect(res.ok).toBe(true);
+    const data = await res.json();
+    const procs = Array.isArray(data) ? data : (data.procedures ?? data.scenarios ?? []);
+    expect(procs.length).toBeGreaterThanOrEqual(30);
+    for (const p of procs) {
+      const ts = getProcedure(p.id);
+      expect(ts, `TS registry has no procedure "${p.id}"`).toBeTruthy();
+      expect(
+        p.totalTicks,
+        `Python core totalTicks=${p.totalTicks} for ${p.id} ≠ TS registry ${ts.totalTicks} — case length must agree`
+      ).toBe(ts.totalTicks);
+    }
+  }, 60_000);
 });

@@ -10,6 +10,7 @@ import {
 import { useSimulationStore } from "../state/simulationStore";
 import { useAuth } from "../contexts/AuthContext";
 import { recordSession } from "../lib/leaderboard";
+import { API_BASE } from "../lib/api";
 
 // NOTE: Procedure data is now fetched from the backend registry API.
 // The static imports have been removed.
@@ -135,6 +136,12 @@ export default function Simulation() {
   const [startError, setStartError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [decisionError, setDecisionError] = useState<string | null>(null);
+  // Network hiccup banner: any failed engine request (start / decide / next /
+  // complete / tick) flips this on; the next successful response clears it.
+  // React ErrorBoundaries cannot catch async fetch failures, so this is the
+  // visible "Reconnecting to Surgical Engine…" surface instead of a blank
+  // screen while the 1.5s poll retries.
+  const [engineReconnecting, setEngineReconnecting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{type: "success" | "error", text: string} | null>(null);
 
@@ -151,7 +158,7 @@ export default function Simulation() {
   useEffect(() => {
     const fetchScenario = async () => {
       try {
-        const res = await fetch(`/api/scenarios/${procId}`);
+        const res = await fetch(`${API_BASE}/api/scenarios/${procId}`);
         if (!res.ok) throw new Error('Failed to fetch scenario');
         const data = await res.json();
         setScenario(data);
@@ -193,7 +200,7 @@ export default function Simulation() {
     if (simId && !isCompleted) {
       intervalId = setInterval(async () => {
         try {
-          const res = await fetch('/api/sim/tick', {
+          const res = await fetch(`${API_BASE}/api/sim/tick`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ session_id: simId })
@@ -216,9 +223,15 @@ export default function Simulation() {
               events: [...prevEvents, ...engineEvents],
             });
             setTick(data.tick);
+            setEngineReconnecting(false);
+          } else {
+            // The Express proxy answers 503 (JSON body) when the core is down —
+            // not a thrown fetch error — so treat any non-ok as a reconnect.
+            setEngineReconnecting(true);
           }
         } catch (e) {
           console.error("Error ticking vitals:", e);
+          setEngineReconnecting(true);
         }
       }, 1500);
     }
@@ -330,7 +343,7 @@ export default function Simulation() {
     setConnectionStatus("connecting");
 
     try {
-      const res = await fetch("/api/sim/start", {
+      const res = await fetch(`${API_BASE}/api/sim/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ procedure: procId })
@@ -340,6 +353,7 @@ export default function Simulation() {
         const errData = await res.json();
         throw new Error(errData.detail || "Failed to start simulation");
       }
+      setEngineReconnecting(false);
 
       const resData = await res.json();
       const newSimId = resData.session_id;
@@ -350,7 +364,7 @@ export default function Simulation() {
       setTick(resData.tick);
 
       // Immediately fetch the first tick (the engine generates a decision per tick).
-      const nextRes = await fetch("/api/sim/next", {
+          const nextRes = await fetch(`${API_BASE}/api/sim/next`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_id: newSimId })
@@ -365,6 +379,7 @@ export default function Simulation() {
       console.error("Failed to start simulation", err);
       setStartError(err.message);
       setConnectionStatus("error");
+      setEngineReconnecting(true);
     } finally {
       setIsStarting(false);
     }
@@ -383,7 +398,7 @@ export default function Simulation() {
     }
 
     try {
-      const res = await fetch('/api/sim/decide', {
+      const res = await fetch(`${API_BASE}/api/sim/decide`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -396,6 +411,7 @@ export default function Simulation() {
         const errData = await res.json();
         throw new Error(errData.detail || 'Decision failed');
       }
+      setEngineReconnecting(false);
       const data = await res.json();
 
       // If we recovered and returned to stock:
@@ -407,7 +423,7 @@ export default function Simulation() {
         const nextIndex = currentStockStepIndex + (advance ? 1 : 0);
         if (nextIndex >= stockSteps.length) {
           // Complete simulation
-          const compRes = await fetch('/api/sim/complete', {
+          const compRes = await fetch(`${API_BASE}/api/sim/complete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ session_id: simId })
@@ -459,7 +475,7 @@ export default function Simulation() {
         // Best-effort: advance to the next tick so the engine surfaces a fresh
         // pending decision. Guard against the simulation being complete.
         if (!data.completed && !data.next_tick_ready === false && !data.pending_decision) {
-          const nextRes = await fetch('/api/sim/next', {
+          const nextRes = await fetch(`${API_BASE}/api/sim/next`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ session_id: simId }),
@@ -480,6 +496,7 @@ export default function Simulation() {
     } catch (err: any) {
       console.error('Decision error', err);
       setDecisionError(err.message);
+      setEngineReconnecting(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -499,7 +516,7 @@ export default function Simulation() {
       if (nextIndex >= stockSteps.length) {
         // Complete the simulation
         try {
-          const res = await fetch('/api/sim/complete', {
+          const res = await fetch(`${API_BASE}/api/sim/complete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ session_id: simId })
@@ -516,16 +533,18 @@ export default function Simulation() {
               ]
             });
             setTick(data.tick);
+            setEngineReconnecting(false);
           }
         } catch (err: any) {
           console.error(err);
           setDecisionError(err.message);
+          setEngineReconnecting(true);
         }
       } else {
         setCurrentStockStepIndex(nextIndex);
         // Let the backend know we completed a stock step by advancing the tick!
         try {
-          const res = await fetch('/api/sim/next', {
+          const res = await fetch(`${API_BASE}/api/sim/next`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -544,9 +563,11 @@ export default function Simulation() {
               events: updatedEvents
             });
             setTick(data.tick);
+            setEngineReconnecting(false);
           }
         } catch (err: any) {
           console.error("Error advancing tick", err);
+          setEngineReconnecting(true);
           setState({
             ...currentState,
             events: updatedEvents
@@ -557,7 +578,7 @@ export default function Simulation() {
     } else {
       // Incorrect choice -> trigger complication in Python Engine
       try {
-        const res = await fetch('/api/sim/complicate', {
+        const res = await fetch(`${API_BASE}/api/sim/complicate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -572,6 +593,7 @@ export default function Simulation() {
           const errData = await res.json();
           throw new Error(errData.detail || 'Failed to trigger complication');
         }
+        setEngineReconnecting(false);
         const data = await res.json();
         
         setState({
@@ -586,6 +608,7 @@ export default function Simulation() {
       } catch (err: any) {
         console.error(err);
         setDecisionError(err.message);
+        setEngineReconnecting(true);
       } finally {
         setIsSubmitting(false);
       }
@@ -597,7 +620,7 @@ export default function Simulation() {
     setIsSaving(true);
     setSaveMessage(null);
     try {
-      const res = await fetch("/api/sim/save", {
+      const res = await fetch(`${API_BASE}/api/sim/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -622,6 +645,11 @@ export default function Simulation() {
 
   const runtimeOptions = options.length ? options : [];
   const currentMode = (currentState?.mode || "stock").toLowerCase();
+  // Real case length = the engine's totalTicks (each tick is one decision step).
+  // The authored stock bank can drift from it, so the OR header always reflects
+  // the engine's authoritative numbers.
+  const totalTicks = currentState?.total_ticks ?? scenario?.totalTicks ?? stockSteps.length;
+  const stepNow = Math.min(Math.max(currentTick, 1), Math.max(totalTicks, 1));
   const isDeceased = currentMode === "deceased";
   const isBranched = currentMode === "branched";
   const isStock = currentMode === "stock";
@@ -656,6 +684,16 @@ export default function Simulation() {
           </div>
           <h1 className="text-3xl font-bold text-[#191919] dark:text-[#EDEAE4] mb-2 uppercase tracking-tight">Start {PATIENT?.name || 'the'}'s Surgery</h1>
           <p className="text-[#666059] dark:text-[#C2BBB0] mb-8">The ScrubIn Causal Engine will boot a deterministic simulation session for this procedure.</p>
+          {engineReconnecting && !startError && (
+            <div className="p-3 mb-6 bg-[#3A2A0A]/10 border border-[#D99B26]/60 rounded-sm text-left animate-pulse">
+              <p className="text-xs font-bold text-[#8A5A00] dark:text-[#E0B060]">
+                ⚠️ Reconnecting to Surgical Engine…
+              </p>
+              <p className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] mt-0.5">
+                The engine is unreachable right now. Retrying automatically — press the button again once it is back.
+              </p>
+            </div>
+          )}
           {startError && (
             <div className="p-4 mb-6 bg-[#A32A2A]/8 border border-[#A32A2A]/40 rounded-sm text-[#A32A2A] text-left">
               <h3 className="font-bold text-[#A32A2A] mb-1">Initialization Failed</h3>
@@ -789,11 +827,11 @@ export default function Simulation() {
                 </div>
                 <div className="min-w-0">
                   <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Step</span>
-                  <span className="font-bold">{isStock ? `Step ${currentStockStepIndex + 1} / ${stockSteps.length}` : `Decision ${currentDecisionIdx + 1}`}</span>
+                  <span className="font-bold">{isStock ? `Step ${stepNow} / ${totalTicks}` : `Decision ${currentDecisionIdx + 1}`}</span>
                 </div>
                 <div className="min-w-0">
                   <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Tick</span>
-                  <span className="font-bold text-[#2E6B4B]">{currentTick}</span>
+                  <span className="font-bold text-[#2E6B4B]">{currentTick} / {totalTicks}</span>
                 </div>
               </div>
 
@@ -857,6 +895,16 @@ export default function Simulation() {
 
           {/* CENTER COLUMN: DECISION CONSOLE (always first on narrow screens so the buttons are above the fold) */}
           <div className="order-1 col-span-12 lg:order-none lg:col-span-6 flex min-h-0 flex-col gap-3">
+            {engineReconnecting && (
+              <div className="shrink-0 p-3 bg-[#3A2A0A]/10 border border-[#D99B26]/60 rounded-sm text-left animate-pulse">
+                <p className="text-xs font-bold text-[#8A5A00] dark:text-[#E0B060]">
+                  ⚠️ Reconnecting to Surgical Engine…
+                </p>
+                <p className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] mt-0.5">
+                  A network hiccup interrupted the last request. Retrying automatically — your session is safe.
+                </p>
+              </div>
+            )}
             {decisionError && (
               <div className="shrink-0 p-3 bg-[#A32A2A]/8 border border-[#A32A2A]/40 rounded-sm text-[#A32A2A] text-left">
                 <h3 className="font-bold text-[#A32A2A] mb-1 text-xs">Backend Error</h3>
@@ -885,9 +933,9 @@ export default function Simulation() {
                   {isDeceased ? "PATIENT DECEASED" :
                    isCompleted ? "SIMULATION COMPLETE" :
                    isBranched ? (complicationSource === "spontaneous" ? "PATIENT DETERIORATING" : "CRITICAL: Complication Active") :
-                   `Step ${currentStockStepIndex + 1} of ${stockSteps.length}`}
+                   `Step ${stepNow} of ${totalTicks}`}
                 </span>
-                <span className="text-xs text-[#8C827A] dark:text-[#C2BBB0] font-bold">Tick {currentTick}</span>
+                <span className="text-xs text-[#8C827A] dark:text-[#C2BBB0] font-bold">Tick {currentTick} / {totalTicks}</span>
               </div>
 
               {(isDeceased || isCompleted) ? (
@@ -1050,7 +1098,7 @@ export default function Simulation() {
               </div>
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground uppercase" title="Advances with each surgical step or decision, not per poll — vitals keep decaying between them">Causal Clock</span>
-                <span className="text-base font-bold text-[#2E6B4B]">{currentTick}t</span>
+                <span className="text-base font-bold text-[#2E6B4B]">{currentTick}t / {totalTicks}t</span>
               </div>
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground uppercase">Consistency</span>

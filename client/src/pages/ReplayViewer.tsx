@@ -6,6 +6,7 @@ import {
   Map, Target, Scissors, Layers, ShieldAlert, AlertCircle, AlertTriangle, Info, Clock, Home
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { API_BASE } from "@/lib/api";
 
 export default function ReplayViewer() {
   const params = useParams();
@@ -32,7 +33,7 @@ export default function ReplayViewer() {
     const fetchReplay = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/replay/${sessionId}`);
+        const res = await fetch(`${API_BASE}/api/replay/${sessionId}`);
         if (!res.ok) {
           const errData = await res.json();
           throw new Error(errData.detail || "Replay not available.");

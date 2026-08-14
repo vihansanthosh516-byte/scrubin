@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axios from "axios";
 import { upsertUser } from "@/lib/leaderboard";
+import { API_BASE } from "@/lib/api";
 
 interface User {
   id: string;
@@ -129,7 +130,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     setError(null);
     try {
-      const endpoint = provider === "google" ? "/api/auth/google" : "/api/auth/github";
+      const endpoint =
+        provider === "google" ? `${API_BASE}/api/auth/google` : `${API_BASE}/api/auth/github`;
       const response = await axios.post(endpoint, { code, redirect_uri: REDIRECT_URI });
       const userData = response.data.user;
 

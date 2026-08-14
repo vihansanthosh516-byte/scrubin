@@ -25,6 +25,7 @@ import { describe, it, expect } from "vitest";
 import { STOCK_STEP_BANKS } from "./index";
 import { buildStockSteps, ProcedureBank } from "./stepBuilder";
 import { VALID_COMPLICATIONS } from "./stepAudit";
+import { getProcedure } from "../../../../server/engine/procedures/registry";
 
 const banks = Object.values(STOCK_STEP_BANKS) as ProcedureBank[];
 
@@ -124,6 +125,26 @@ describe("every bank plays start-to-finish", () => {
           ).toBe(true);
         }
       });
+    }
+  });
+
+  it("keeps every bank's length equal to the engine's totalTicks in BOTH registries", () => {
+    // The client plays one bank step per engine tick and the case ends when
+    // the bank runs out, so a drift between the authored bank length and the
+    // engine's totalTicks silently cuts off trailing steps (bank longer) or
+    // distorts the efficiency score's case-length denominator (bank shorter).
+    // Both the TS mirror and the Python core must carry the same totalTicks.
+    for (const bank of banks) {
+      const steps = buildStockSteps(bank);
+      const tsTicks = getProcedure(bank.id)?.totalTicks;
+      expect(
+        tsTicks,
+        `${bank.id}: TS registry has no totalTicks for this bank`
+      ).toBeGreaterThan(0);
+      expect(
+        steps.length,
+        `${bank.id}: bank has ${steps.length} steps but TS registry totalTicks=${tsTicks} — every authored step must be playable`
+      ).toBe(tsTicks);
     }
   });
 });

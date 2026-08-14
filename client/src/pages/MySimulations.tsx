@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 import { getUserSessions, PersistedSession } from "../lib/leaderboard";
+import { API_BASE } from "../lib/api";
 
 export default function MySimulations() {
   const [, setLocation] = useLocation();
@@ -29,7 +30,7 @@ export default function MySimulations() {
   const fetchSaved = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/sim/list");
+      const res = await fetch(`${API_BASE}/api/sim/list`);
       if (!res.ok) throw new Error("Failed to fetch simulations");
       const data = await res.json();
       setSessions(Array.isArray(data) ? data : (data.saved || data.sessions || []));
@@ -61,7 +62,7 @@ export default function MySimulations() {
   const handleResume = async (sessionId: string) => {
     setActionLoadingId(`resume-${sessionId}`);
     try {
-      const res = await fetch("/api/sim/resume", {
+      const res = await fetch(`${API_BASE}/api/sim/resume`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_id: sessionId })
@@ -95,7 +96,7 @@ export default function MySimulations() {
     
     setActionLoadingId(`delete-${sessionId}`);
     try {
-      const res = await fetch(`/api/sim/${sessionId}`, {
+      const res = await fetch(`${API_BASE}/api/sim/${sessionId}`, {
         method: "DELETE"
       });
       if (!res.ok) throw new Error("Failed to delete simulation");

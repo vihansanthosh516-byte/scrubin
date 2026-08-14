@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { motion, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { API_BASE } from "@/lib/api";
 import { Activity, Heart, Target, Users, Scissors, BookOpen, ArrowRight, Play, Zap, Award, Trophy } from "lucide-react";
 
 const EASE = [0.25, 1, 0.5, 1] as const;
@@ -131,7 +132,7 @@ export default function Home() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/procedures/search");
+        const res = await fetch(`${API_BASE}/api/procedures/search`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.procedures || data.scenarios || []);
@@ -145,11 +146,13 @@ export default function Home() {
 
   // The 4 procedures unlocked below 500 XP — ids must match the core registry
   // so each card boots its own simulation (appendectomy/inguinal-hernia/thyroidectomy/carpal-tunnel-release).
+  // Decision counts mirror the engine's real totalTicks (each tick = one decision
+  // step); times are the engine's estimated durations, not a generic 6.
   const procedures = [
-    { id: "appendectomy", name: "Appendectomy", tag: "General Surgery", difficulty: "Beginner", color: "pill-sage", time: "30 min", decisions: 6 },
-    { id: "inguinal-hernia", name: "Inguinal Hernia Repair", tag: "General Surgery", difficulty: "Beginner", color: "pill-sage", time: "30 min", decisions: 6 },
-    { id: "thyroidectomy", name: "Thyroidectomy", tag: "ENT", difficulty: "Beginner", color: "pill-sage", time: "30 min", decisions: 6 },
-    { id: "carpal-tunnel-release", name: "Carpal Tunnel Release", tag: "Orthopedic", difficulty: "Beginner", color: "pill-sage", time: "25 min", decisions: 6 },
+    { id: "appendectomy", name: "Appendectomy", tag: "General Surgery", difficulty: "Beginner", color: "pill-sage", time: "34 min", decisions: 34 },
+    { id: "inguinal-hernia", name: "Inguinal Hernia Repair", tag: "General Surgery", difficulty: "Beginner", color: "pill-sage", time: "32 min", decisions: 32 },
+    { id: "thyroidectomy", name: "Thyroidectomy", tag: "ENT", difficulty: "Beginner", color: "pill-sage", time: "32 min", decisions: 32 },
+    { id: "carpal-tunnel-release", name: "Carpal Tunnel Release", tag: "Orthopedic", difficulty: "Beginner", color: "pill-sage", time: "30 min", decisions: 30 },
   ];
   const features = [
     { icon: Scissors, title: "Choose Your Procedure", description: "Browse real surgical cases from appendectomy to craniotomy." },

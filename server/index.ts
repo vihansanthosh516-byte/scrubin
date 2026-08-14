@@ -69,13 +69,45 @@ async function startServer() {
            defaultSrc: ["'self'"],
            scriptSrc: ["'self'"],
            styleSrc: ["'self'"],
-           imgSrc: ["'self'", "data:"],
-           connectSrc: ["'self'", "http://localhost:8001", "https://*.supabase.co", "https://github.com", "https://api.github.com", "https://*.groq.com"],
+           // Remote avatar URLs (DiceBear, GitHub, Google) must be loadable.
+           imgSrc: ["'self'", "data:", "https:"],
+           // The browser only talks to this origin (/api/*) and Supabase
+           // (leaderboard + auth). The Python engine and Groq/GitHub calls are
+           // server-side, so they are NOT in connect-src.
+           connectSrc: ["'self'", "https://*.supabase.co"],
         },
       },
       referrerPolicy: { policy: "no-referrer" },
     })
   );
+
+  // ── CORS for the Cloudflare Pages → Docker API split ──
+  // The built client is served from a different origin (e.g. scrubin.pages.dev)
+  // than this API (the Docker container), so cross-origin browser fetches need
+  // CORS headers. Origins are allow-listed via CORS_ORIGIN (comma-separated);
+  // dev origins are allowed by default. Requests without an Origin header
+  // (curl, same-origin) are unaffected.
+  const corsOrigins = (
+    process.env.CORS_ORIGIN ||
+    "http://localhost:3000,http://localhost:5173"
+  )
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && corsOrigins.includes(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.setHeader("Vary", "Origin");
+    }
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(204);
+    }
+    next();
+  });
   const server = createServer(app);
 
   // Serve static files from dist/public in production

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Lock, Clock, Search, ArrowRight, XCircle, Activity, Heart, Brain, Bone, Baby, Scissors, Stethoscope, Shield, Zap, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { API_BASE } from "@/lib/api";
 import { useProcedureStore } from "@/state/procedureStore";
 import { STOCK_STEP_BANKS } from "@/data/stockSteps";
 
@@ -182,7 +183,7 @@ export default function ProcedureLibrary() {
       if (difficulty && difficulty !== "All") params.append("difficulty", difficulty);
       if (category && category !== "All") params.append("category", category);
 
-      const res = await fetch(`/api/procedures/search?${params.toString()}`);
+      const res = await fetch(`${API_BASE}/api/procedures/search?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch procedures');
 
       const data = await res.json();
@@ -201,7 +202,9 @@ export default function ProcedureLibrary() {
           difficulty: displayDifficulty,
           category: p.specialty || p.category,
           time: p.estimated_time || `${p.totalTicks ?? 0} min`,
-          decisions: p.phases?.length ?? 0,
+          // Real decision count = the engine's totalTicks (each tick is one
+          // decision step). phases.length is the 6-phase arc, not the step count.
+          decisions: p.totalTicks ?? p.phases?.length ?? 0,
           description: p.description,
           thumbnail: p.thumbnail,
           anatomy_regions: p.anatomy_regions,

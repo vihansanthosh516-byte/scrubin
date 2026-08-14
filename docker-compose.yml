@@ -1,0 +1,52 @@
+# ScrubIn production stack: API (Express) + Python simulation engine.
+#
+#   docker compose up --build -d
+#
+# Topology: Cloudflare Pages serves the static client; this stack only serves
+# the API. The browser calls VITE_API_URL (set on the Pages build) which points
+# here, and CORS_ORIGIN must list the Pages domain so those calls are allowed.
+#
+# Prereq: the Scrubin-Core repo must sit next to this one so the engine image
+# can COPY it (docker-compose resolves ../Scrubin-Core relative to this file):
+#   git clone https://github.com/vihansanthosh516-byte/Scrubin-Core ../Scrubin-Core
+#
+# Secrets: set them in your shell or a .env file in this directory
+# (SUPABASE/GitHub/Google/Groq keys, CORS_ORIGIN). See .env.example.
+services:
+  engine:
+    build:
+      context: ../Scrubin-Core
+    restart: unless-stopped
+    environment:
+      - PORT=8001
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')"
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      engine:
+        condition: service_healthy
+    environment:
+      - PORT=5000
+      - SCRUBIN_CORE_URL=http://engine:8001
+      # Comma-separated browser origins allowed to call this API. Add your
+      # Cloudflare Pages domain, e.g. CORS_ORIGIN=https://scrubin.pages.dev
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000,http://localhost:5173}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - VITE_GITHUB_CLIENT_ID=${VITE_GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - SIM_SEED=${SIM_SEED:-42}
+    ports:
+      - "${API_PORT:-5000}:5000"

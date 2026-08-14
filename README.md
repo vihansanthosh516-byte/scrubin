@@ -76,11 +76,79 @@ npm run supabase:apply -- --help              # full usage
 - Apply requires the token; dry-run does not.
 - **Check whether the schema is applied** without a token:
   `npm run supabase:check` (probes the live project with the anon key).
-- The schema's RLS policies grant the anon key insert access, so once applied,
-  every finished simulation is recorded automatically and drives the
-  leaderboard — no further setup needed.
+- The schema's RLS policies scope **all writes to the authenticated user's own
+  rows** (`auth.uid()`), so once applied, every finished simulation from a
+  signed-in user is recorded automatically and drives the leaderboard. The
+  anon key can read (leaderboard/session history) but cannot insert or modify
+  anything — verified by the probes in `scripts/apply-supabase.mjs` and the
+  RLS checks in the security audit.
 - To wipe the demo data, uncomment the cleanup block at the bottom of
   `supabase_seed.sql`.
+
+## Deploying (Docker + Cloudflare Pages)
+
+> **Full step-by-step walkthrough: [`deploy/DEPLOY.md`](deploy/DEPLOY.md)** —
+> domain, Oracle Always Free VM, Cloudflare Pages, and DNS wiring.
+> **Server bootstrap script: [`deploy/vm-setup.sh`](deploy/vm-setup.sh)**.
+
+The production topology is: **Cloudflare Pages serves the static client**,
+**Docker runs the API + Python engine**.
+
+```
+Browser ──> Cloudflare Pages (static client, built by `npm run build`)
+              │  fetch /api/* with VITE_API_URL = https://api.yourdomain.com
+              ▼
+Docker host ──> api container (Express, :5000) ──> engine container (Python, :8001)
+                 │                                    └─ SCRUBIN_CORE_URL=http://engine:8001
+                 └─ CORS_ORIGIN=https://scrubin.pages.dev
+```
+
+### 1. The Docker stack (API + engine)
+
+Prereq: clone Scrubin-Core next to this repo, then bring the stack up:
+
+```bash
+git clone https://github.com/vihansanthosh516-byte/Scrubin-Core ../Scrubin-Core
+cp .env.example .env   # fill in the real values (see below)
+docker compose up --build -d
+```
+
+The compose file wires the API to the engine (`SCRUBIN_CORE_URL`), waits for the
+engine's `/health` before starting the API, and restarts both on crash. The API
+is published on `${API_PORT:-5000}`.
+
+### 2. Cloudflare Pages (the static client)
+
+1. New project → connect the `scrubin` repo → **Framework: Vite**.
+2. Build command: `npm ci --legacy-peer-deps && npm run build`
+3. Build output directory: `dist/public`
+4. Env vars (set in Pages → Settings → Environment variables):
+
+   | Var | Value |
+   |---|---|
+   | `VITE_API_URL` | `https://api.yourdomain.com` (the Docker API host) |
+   | `VITE_SUPABASE_URL` | your Supabase project URL |
+   | `VITE_SUPABASE_ANON_KEY` | your anon key |
+   | `VITE_GITHUB_CLIENT_ID` | your GitHub OAuth app client id |
+   | `VITE_GOOGLE_CLIENT_ID` | your Google OAuth client id |
+
+   `client/public/_redirects` is already committed, so client-side routes
+   (`/simulation`, `/procedures`, …) fall back to `index.html` automatically.
+
+### 3. Docker host env vars (the API)
+
+On the Docker host (shell or `.env` next to `docker-compose.yml`):
+
+| Var | Value |
+|---|---|
+| `CORS_ORIGIN` | comma-separated browser origins, e.g. `https://scrubin.pages.dev` |
+| `SCRUBIN_CORE_URL` | defaults to `http://engine:8001` inside compose |
+| `GROQ_API_KEY`, `VITE_GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `VITE_GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SIM_SEED` | server-side settings (see `.env.example`) |
+
+### 4. Supabase
+
+Apply the schema + seed once to the live project (section above), then re-run
+`npm run supabase:apply:run` after any schema change — it is idempotent.
 
 ## Security
 
