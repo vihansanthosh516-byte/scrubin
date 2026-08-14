@@ -11,7 +11,6 @@ import Simulation from "./pages/Simulation";
 import Leaderboard from "./pages/Leaderboard";
 import Profile from "./pages/Profile";
 import Signin from "./pages/Signin";
-import AnatomyExplorer from "./pages/AnatomyExplorer";
 import LearnHub from "./pages/LearnHub";
 import Onboarding from "./pages/Onboarding";
 import MySimulations from "./pages/MySimulations";
@@ -103,7 +102,6 @@ function Router() {
 
             <Route path="/leaderboard" component={Leaderboard} />
             <Route path="/learn" component={LearnHub} />
-            <Route path="/anatomy" component={AnatomyExplorer} />
             <Route path="/profile" component={Profile} />
             <Route component={NotFound} />
           </Switch>

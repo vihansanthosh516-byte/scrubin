@@ -328,7 +328,6 @@ export default function Home() {
           </div>
           <div className="flex flex-wrap justify-center gap-8 text-sm text-[#666059] dark:text-[#A89F95]">
             <Link href="/procedures"><span className="transition-colors hover:text-[#CC553D]">Procedures</span></Link>
-            <Link href="/anatomy"><span className="transition-colors hover:text-[#CC553D]">Anatomy</span></Link>
             <Link href="/learn"><span className="transition-colors hover:text-[#CC553D]">Learn Hub</span></Link>
             <Link href="/my-simulations"><span className="transition-colors hover:text-[#CC553D]">My Simulations</span></Link>
             <Link href="/leaderboard"><span className="transition-colors hover:text-[#CC553D]">Leaderboard</span></Link>
