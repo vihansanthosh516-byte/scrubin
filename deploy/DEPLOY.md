@@ -94,6 +94,24 @@ Verify:
 curl http://localhost:5000/api/health        # → {"core":"up",...}
 ```
 
+The API container reads Groq configuration from the `.env` beside
+`docker-compose.yml`; keep the key server-side and never add it to Cloudflare
+Pages:
+
+```dotenv
+GROQ_API_KEY=your_groq_key
+GROQ_BASE_URL=https://api.groq.com/openai/v1/chat/completions
+GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_TIMEOUT_MS=2500
+GROQ_MAX_FAILURES=3
+GROQ_CIRCUIT_OPEN_MS=60000
+```
+
+Groq is optional. If it is unavailable, the API falls back to the authored
+complication and the Python engine continues to own all physiology and terminal
+state. After changing the file, rerun `bash vm-setup.sh` (or
+`docker compose up -d --build`) to restart the API with the new environment.
+
 > If the clone fails with a permissions error, the repos aren't public yet
 > (Step 0).
 

@@ -17,6 +17,34 @@ The simulation engine is a separate process. From the Scrubin-Core checkout:
 python -m uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 ```
 
+## Hybrid LLM complication routing (Groq)
+
+ScrubIn uses Groq only for the clinical judgment layer: it evaluates the
+procedure phase, authored step, and chosen action, then returns a validated
+complication type and a short attending explanation. **Scrubin-Core remains the
+source of truth** for vitals, reserve, scoring, recovery, and death; the LLM
+cannot change physiological math.
+
+The Groq call runs server-side in Express. Keep `GROQ_API_KEY` out of the
+browser and Cloudflare Pages environment variables:
+
+```bash
+# in the server's local .env or the Docker host's environment
+GROQ_API_KEY=your_groq_key
+GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_TIMEOUT_MS=2500
+GROQ_MAX_FAILURES=3
+GROQ_CIRCUIT_OPEN_MS=60000
+```
+
+If the key is missing, Groq times out, returns invalid JSON, or fails schema /
+procedure validation, Express immediately keeps the authored complication and
+Scrubin-Core continues the case. The circuit breaker temporarily skips repeated
+failures, so **the game never crashes or waits indefinitely when Groq is down**.
+Docker Compose passes these variables to the API container; see
+[`docs/GROQ_HYBRID_PLAN.md`](docs/GROQ_HYBRID_PLAN.md) for the request schema and
+fallback contract.
+
 ## Supabase setup (one command)
 
 The app reads the leaderboard, profile ranks, and session history from a Supabase

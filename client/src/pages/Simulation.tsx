@@ -149,6 +149,10 @@ export default function Simulation() {
   // Unique per-run physiology (ASA class + presentation) rolled by the core at
   // /start. Kept separately because /next responses replace currentState.
   const [patientProfile, setPatientProfile] = useState<any>(null);
+  // Groq clinical explanation for the active complication. Kept separately
+  // from currentState because /tick and /next responses replace currentState
+  // and would otherwise wipe it mid-complication.
+  const [llmNarrative, setLlmNarrative] = useState<string | null>(null);
   const [completionTab, setCompletionTab] = useState<"summary" | "analytics" | "debrief">("summary");
   const stockSteps = useMemo(() => getStockStepsForProcedure(procId, scenario), [procId, scenario]);
 
@@ -439,7 +443,7 @@ export default function Simulation() {
                 ...(data.events || []),
                 "✅ Complication resolved!",
                 "🎉 Procedure completed!"
-              ]
+              ],
             });
             setTick(compData.tick);
           }
@@ -460,6 +464,9 @@ export default function Simulation() {
           });
           setTick(data.tick);
         }
+        // The complication is over — drop the Groq narrative so it can't
+        // linger onto a future complication.
+        setLlmNarrative(null);
       } else {
         // Still in branched mode — append the engine's events to the
         // cumulative log instead of replacing it.
@@ -578,6 +585,7 @@ export default function Simulation() {
     } else {
       // Incorrect choice -> trigger complication in Python Engine
       try {
+        const step = stockSteps[currentStockStepIndex];
         const res = await fetch(`${API_BASE}/api/sim/complicate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -586,7 +594,14 @@ export default function Simulation() {
             complication: choice.complication,
             // Report the failed step so the core's debrief evaluation records the mistake.
             step_index: currentStockStepIndex,
-            step_label: stockSteps[currentStockStepIndex]?.title,
+            step_label: step?.title,
+            // Hybrid Groq context — lets the LLM judge THIS step + THIS action
+            // instead of blindly trusting the authored complication.
+            chosen_action: choice.text,
+            step_description: step?.description,
+            procedure: procId,
+            procedure_phase: currentState?.procedure_phase ?? currentState?.procedurePhase ?? undefined,
+            patient_profile: patientProfile,
           })
         });
         if (!res.ok) {
@@ -595,13 +610,15 @@ export default function Simulation() {
         }
         setEngineReconnecting(false);
         const data = await res.json();
+        // Keep the Groq explanation visible for the whole complication.
+        if (data.narrative) setLlmNarrative(data.narrative);
         
         setState({
           ...data,
           events: [
             ...(currentState?.events || []),
             `❌ Incorrect Step: ${choice.feedback}`,
-            `⚠️ Complication triggered: ${choice.complication.toUpperCase()}`
+            `⚠️ Complication triggered: ${String(data.active_complication ?? choice.complication).replace(/_/g, ' ').toUpperCase()}`,
           ]
         });
         setTick(data.tick);
@@ -1020,6 +1037,12 @@ export default function Simulation() {
                         <div className="p-3 bg-black/25 border border-[#A32A2A]/40 rounded-sm">
                           <span className="text-[11px] font-black uppercase tracking-wider text-[#E08080]/80 block mb-1">Physiologic Cause</span>
                           <p className="text-xs text-[#EDEAE4]/85 leading-relaxed">{complicationCause}</p>
+                        </div>
+                      )}
+                      {llmNarrative && (
+                        <div className="mt-2 p-3 bg-[#2A1A08]/40 border border-[#D99B26]/40 rounded-sm">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-[#E0B060]/90 block mb-1">🧠 Attending Note</span>
+                          <p className="text-xs text-[#EDEAE4]/90 leading-relaxed">{llmNarrative}</p>
                         </div>
                       )}
                     </div>

@@ -17,6 +17,7 @@ import {
   type NextTickResponse,
   type DecideResponse,
 } from "./engine/index.js";
+import { classifyChoice } from "./llmClient.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -124,7 +125,7 @@ async function startServer() {
   // Proxy helper for ScrubIn Core (Python FastAPI engine)
   const CORE_URL = process.env.SCRUBIN_CORE_URL || "http://localhost:8001";
 
-  async function proxyToCore(req: express.Request, res: express.Response, targetPath: string, methodOverride?: string) {
+  async function proxyToCore(req: express.Request, res: express.Response, targetPath: string, methodOverride?: string, enrich?: (data: any) => any) {
     try {
       const method = methodOverride || req.method;
       const headers: Record<string, string> = {
@@ -154,6 +155,10 @@ async function startServer() {
         data = await coreRes.json();
       } else {
         data = await coreRes.text();
+      }
+
+      if (enrich && data && typeof data === "object") {
+        data = enrich(data);
       }
 
       res.status(coreRes.status).json(typeof data === "string" ? { message: data } : data);
@@ -354,8 +359,47 @@ async function startServer() {
     proxyToCore(req, res, "/reset");
   });
 
-  app.post("/api/sim/complicate", (req, res) => {
-    proxyToCore(req, res, "/complicate");
+  app.post("/api/sim/complicate", async (req, res) => {
+    const body = req.body || {};
+    // Hybrid complication routing: ask Groq which complication this wrong
+    // step actually caused, given the real step + the action the trainee chose.
+    // The verdict is validated against the engine's complication enum AND the
+    // procedure's allowlist. On ANY failure the fallback verdict is returned,
+    // and we keep the authored `body.complication` — exactly today's behavior,
+    // so the game never breaks when Groq is slow or down.
+    if (body.step_title || body.chosen_action || body.step_label) {
+      const procedureId = body.procedure || body.procedure_id;
+      const procedureAllowlist = procedureId && procedureExists(procedureId)
+        ? getProcedure(procedureId).allowedComplications
+        : undefined;
+      const verdict = await classifyChoice({
+        procedure: procedureId,
+        procedurePhase: body.procedure_phase,
+        stepTitle: body.step_label || body.step_title || "",
+        stepDescription: body.step_description,
+        chosenAction: body.chosen_action || "",
+        patientProfile: body.patient_profile,
+        allowedComplications: body.allowed_complications || procedureAllowlist,
+      });
+      if (verdict.source === "groq" && !verdict.isCorrect && verdict.complicationType) {
+        // Groq decided the complication — route the engine to the validated type.
+        body.complication = verdict.complicationType;
+      }
+      if (verdict.explanation) {
+        body.narrative = verdict.explanation;
+      }
+    }
+    // Enrich the proxied response with the Groq narrative so the client can
+    // render it in the complication panel. Scrubin-Core also echoes the
+    // narrative as an event; this enrichment keeps the direct `narrative`
+    // field available even when the core is an older deployment.
+    const narrative = body.narrative;
+    proxyToCore(req, res, "/complicate", undefined, (data) => {
+      if (narrative && data && typeof data === "object") {
+        return { ...data, narrative };
+      }
+      return data;
+    });
   });
 
   app.post("/api/sim/tick", (req, res) => {
