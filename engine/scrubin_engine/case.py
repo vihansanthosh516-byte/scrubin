@@ -123,6 +123,12 @@ class Case:
         self._comms_seq += 1
         self.comms.append({"id": self._comms_seq, "t": round(self.t, 1), "from": who, "name": TEAM_NAMES.get(who, who), "text": text, "kind": kind})
 
+    def record_say(self, who: str, text: str, kind: str = "speech") -> None:
+        """Speech that isn't produced by the deterministic engine (the trainee's words,
+        LLM replies). Logged so replays show the full conversation."""
+        self.log.append({"tick": self.tick, "comms": {"from": who, "text": text, "kind": kind}})
+        self.say(who, text, kind)
+
     def event(self, kind: str, **data) -> None:
         self.events.append({"t": round(self.t, 1), "kind": kind, **data})
 

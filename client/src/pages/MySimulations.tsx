@@ -1,301 +1,123 @@
-import { useState, useEffect, useMemo } from "react";
-import { useLocation } from "wouter";
-import { useSimulationStore } from "../state/simulationStore";
-import { 
-  ShieldCheck, Activity, Clock, Play, AlertTriangle, 
-  Search, Trash2, RotateCcw, CheckCircle, XCircle 
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useLocation } from "wouter";
+import { Film, Loader2, Play, Trash2 } from "lucide-react";
+import { ScrubinStaticPanel } from "@/components/ui/scrubin-card";
+import { useAuth } from "@/contexts/AuthContext";
+import { fmtTime } from "@/components/or/AnesthesiaStation";
+import { engineApi } from "@/engine/client";
+import type { SavedCase } from "@/engine/types";
+
+function when(ts: number) {
+  return new Date(ts * 1000).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
+function outcomeLabel(c: SavedCase) {
+  if (c.status !== "ended") return c.sim_t > 0 ? "In progress" : "Not started";
+  return c.outcome === "death" ? "Patient died" : c.outcome === "pacu" ? "Extubated → PACU" : "Ended";
+}
 
 export default function MySimulations() {
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const { setState, setTick, setSimId } = useSimulationStore();
-  
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [cases, setCases] = useState<SavedCase[] | null>(null);
+  const [error, setError] = useState(false);
 
-  // Filters and Sorting
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
-  const [sort, setSort] = useState<"newest" | "oldest">("newest");
+  const load = useCallback(() => {
+    if (!user) return;
+    engineApi
+      .listCases(user.id)
+      .then(setCases)
+      .catch(() => setError(true));
+  }, [user]);
 
-  const fetchSaved = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/sim/list");
-      if (!res.ok) throw new Error("Failed to fetch simulations");
-      const data = await res.json();
-      setSessions(Array.isArray(data) ? data : (data.sessions || []));
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(load, [load]);
+
+  const remove = async (id: string) => {
+    if (!window.confirm("Delete this case and its replay? This can't be undone.")) return;
+    await engineApi.deleteCase(id);
+    load();
   };
 
-  useEffect(() => {
-    fetchSaved();
-  }, []);
-
-  const handleResume = async (sessionId: string) => {
-    setActionLoadingId(`resume-${sessionId}`);
-    try {
-      const res = await fetch("/api/sim/resume", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId })
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.detail || "Failed to resume simulation");
-      }
-      const stateData = await res.json();
-      
-      setSimId(stateData.session_id || sessionId);
-      setState(stateData);
-      setTick(stateData.tick || 0);
-
-      const procedure = stateData.procedure || "appendectomy";
-      setLocation(`/simulation?proc=${procedure}`);
-    } catch (err: any) {
-      setError("Error resuming: " + err.message);
-    } finally {
-      setActionLoadingId(null);
-    }
-  };
-
-  const handleReplay = (sessionId: string) => {
-    setLocation(`/replay/${sessionId}`);
-  };
-
-  const handleDelete = async (sessionId: string) => {
-    // Confirm delete locally, but let backend be authoritative
-    if (!window.confirm("Are you sure you want to delete this simulation?")) return;
-    
-    setActionLoadingId(`delete-${sessionId}`);
-    try {
-      const res = await fetch(`/api/sim/${sessionId}`, {
-        method: "DELETE"
-      });
-      if (!res.ok) throw new Error("Failed to delete simulation");
-      
-      // Update local view by fetching or filtering
-      setSessions((prev) => prev.filter(s => s.session_id !== sessionId));
-    } catch (err: any) {
-      setError("Error deleting: " + err.message);
-    } finally {
-      setActionLoadingId(null);
-    }
-  };
-
-  // Filter and Sort Logic
-  const filteredAndSortedSessions = useMemo(() => {
-    let result = [...sessions];
-
-    // Search
-    if (search.trim() !== "") {
-      const q = search.toLowerCase();
-      result = result.filter(s => 
-        (s.procedure || "").toLowerCase().includes(q) || 
-        (s.session_id || "").toLowerCase().includes(q)
-      );
-    }
-
-    // Filter
-    if (filter !== "all") {
-      result = result.filter(s => {
-        const status = (s.status || s.patient_status || "active").toLowerCase();
-        const isCompleted = ["completed", "finished", "success", "failed"].includes(status) || s.is_completed;
-        if (filter === "completed") return isCompleted;
-        if (filter === "active") return !isCompleted;
-        return true;
-      });
-    }
-
-    // Sort
-    result.sort((a, b) => {
-      const timeA = a.last_saved ? new Date(a.last_saved).getTime() : 0;
-      const timeB = b.last_saved ? new Date(b.last_saved).getTime() : 0;
-      return sort === "newest" ? timeB - timeA : timeA - timeB;
-    });
-
-    return result;
-  }, [sessions, search, filter, sort]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
-        <div className="w-16 h-16 rounded-full border-t-2 border-primary animate-spin" />
-        <p className="text-foreground font-mono">Loading your simulations...</p>
-      </div>
-    );
-  }
+  const inProgress = (cases ?? []).filter((c) => c.status !== "ended" && c.sim_t > 0);
+  const finished = (cases ?? []).filter((c) => c.status === "ended");
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-8 font-mono">
-      <div className="max-w-5xl mx-auto pt-16">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-          <div className="flex items-center gap-4">
-            <ShieldCheck className="w-10 h-10 text-primary" />
-            <h1 className="text-3xl font-bold tracking-tight uppercase">My Simulations</h1>
+    <div className="min-h-screen pt-24 pb-12 px-4">
+      <div className="max-w-5xl mx-auto space-y-8">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <div className="text-xs uppercase tracking-[0.2em] text-[#7EC8E3]/80">Your OR history</div>
+            <h1 className="text-3xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>
+              My Simulations
+            </h1>
           </div>
-          <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90 hidden md:flex">
-            New Simulation
-          </Button>
+          <Link href="/simulation?proc=appendectomy" className="px-4 py-2 rounded-xl border border-[#7EC8E3]/40 hover:bg-[#7EC8E3]/10 text-sm">
+            New case
+          </Link>
         </div>
 
         {error && (
-          <div className="p-4 bg-red-950/50 border border-red-500/50 rounded-xl text-red-200 mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
-              {error}
-            </div>
-            <button onClick={() => setError(null)}><XCircle className="w-4 h-4 text-red-500 hover:text-red-300" /></button>
+          <div className="rounded-xl border border-amber-400/40 bg-amber-400/10 p-4 text-sm">
+            Can't reach the simulation engine. Start it with <code className="font-mono-data">npm run dev</code>.
           </div>
         )}
+        {!cases && !error && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+          </div>
+        )}
+        {cases && cases.length === 0 && <p className="text-muted-foreground">No cases yet — start one from the procedure library.</p>}
 
-        <div className="flex flex-col md:flex-row gap-4 mb-8 bg-muted p-4 border border-border rounded-2xl">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input 
-              type="text" 
-              placeholder="Search ID or procedure..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary text-foreground"
-            />
-          </div>
-          <div className="flex gap-2">
-            <select 
-              value={filter} 
-              onChange={(e) => setFilter(e.target.value as any)}
-              className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary text-foreground"
-            >
-              <option value="all">All States</option>
-              <option value="active">Active</option>
-              <option value="completed">Completed</option>
-            </select>
-            <select 
-              value={sort} 
-              onChange={(e) => setSort(e.target.value as any)}
-              className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary text-foreground"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-            </select>
-          </div>
-        </div>
+        {inProgress.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="text-sm uppercase tracking-[0.14em] text-[#7EC8E3]/80">Continue</h2>
+            {inProgress.map((c) => (
+              <CaseRow key={c.id} c={c} onDelete={remove}>
+                <button onClick={() => setLocation(`/simulation?proc=${c.scenario}&case=${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#5DCAA5]/50 text-[#5DCAA5] text-xs hover:bg-[#5DCAA5]/10">
+                  <Play className="w-3.5 h-3.5" /> Resume
+                </button>
+              </CaseRow>
+            ))}
+          </section>
+        )}
 
-        {sessions.length === 0 ? (
-          <div className="p-12 bg-muted border border-border rounded-3xl text-center flex flex-col items-center">
-            <Activity className="w-12 h-12 text-muted-foreground mb-4" />
-            <h2 className="text-xl font-bold text-foreground mb-2">No Simulations Found</h2>
-            <p className="text-muted-foreground mb-6">You have no simulation history available.</p>
-            <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90">
-              Start New Simulation
-            </Button>
-          </div>
-        ) : filteredAndSortedSessions.length === 0 ? (
-          <div className="p-12 bg-muted border border-border rounded-3xl text-center flex flex-col items-center">
-            <Search className="w-12 h-12 text-muted-foreground mb-4" />
-            <h2 className="text-xl font-bold text-foreground mb-2">No Matches</h2>
-            <p className="text-muted-foreground">No simulations match your current filters.</p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {filteredAndSortedSessions.map((sim: any) => {
-              const status = (sim.status || sim.patient_status || "active").toLowerCase();
-              const isCompleted = ["completed", "finished", "success", "failed"].includes(status) || sim.is_completed;
-              
-              return (
-                <div key={sim.session_id} className="p-6 bg-muted border border-border rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-primary/30 transition-colors">
-                  <div className="flex flex-col gap-3 flex-1">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-bold text-lg text-foreground uppercase">{sim.procedure || "Unknown Procedure"}</h3>
-                      <span className="text-[10px] font-mono bg-background px-2 py-1 rounded border border-border text-muted-foreground">
-                        ID: {sim.session_id}
-                      </span>
-                      {isCompleted ? (
-                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 flex items-center gap-1">
-                          <CheckCircle className="w-3 h-3" /> Completed
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-blue-500/30 bg-blue-500/10 text-blue-400 flex items-center gap-1">
-                          <Activity className="w-3 h-3" /> Active
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> 
-                        Saved: {sim.last_saved ? new Date(sim.last_saved).toLocaleString() : "Unknown"}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Activity className="w-3 h-3" /> 
-                        Tick: {sim.tick || 0}
-                      </span>
-                      <span>Status: {sim.patient_status || "Stable"}</span>
-                      {sim.progress !== undefined && (
-                        <span>Progress: {sim.progress}%</span>
-                      )}
-                    </div>
-
-                    {isCompleted && sim.outcome && (
-                      <div className="text-xs text-muted-foreground border-t border-border pt-2 mt-1">
-                        <span className="uppercase font-bold text-foreground/60 mr-2">Outcome:</span>
-                        {sim.outcome}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                    {!isCompleted && (
-                      <Button 
-                        onClick={() => handleResume(sim.session_id)} 
-                        disabled={!!actionLoadingId}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground flex-1 md:flex-none"
-                      >
-                        {actionLoadingId === `resume-${sim.session_id}` ? (
-                          <><div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin mr-2" /> Resuming...</>
-                        ) : (
-                          <><Play className="w-4 h-4 mr-2" /> Resume</>
-                        )}
-                      </Button>
-                    )}
-                    
-                    {isCompleted && (
-                      <Button 
-                        variant="outline"
-                        onClick={() => handleReplay(sim.session_id)} 
-                        disabled={!!actionLoadingId}
-                        className="border-border hover:bg-muted text-purple-400 hover:text-purple-300 flex-1 md:flex-none"
-                      >
-                        <RotateCcw className="w-4 h-4 mr-2" /> Replay
-                      </Button>
-                    )}
-
-                    <Button 
-                      variant="outline"
-                      onClick={() => handleDelete(sim.session_id)} 
-                      disabled={!!actionLoadingId}
-                      className="border-red-900/50 hover:bg-red-950/50 text-red-500 hover:text-red-400 flex-1 md:flex-none"
-                    >
-                      {actionLoadingId === `delete-${sim.session_id}` ? (
-                        <div className="w-4 h-4 border-2 border-red-500/50 border-t-red-500 rounded-full animate-spin" />
-                      ) : (
-                        <><Trash2 className="w-4 h-4" /> Delete</>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        {finished.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="text-sm uppercase tracking-[0.14em] text-[#7EC8E3]/80">Completed</h2>
+            {finished.map((c) => (
+              <CaseRow key={c.id} c={c} onDelete={remove}>
+                <button onClick={() => setLocation(`/replay/${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#7EC8E3]/40 text-xs hover:bg-[#7EC8E3]/10">
+                  <Film className="w-3.5 h-3.5" /> Replay & debrief
+                </button>
+              </CaseRow>
+            ))}
+          </section>
         )}
       </div>
     </div>
+  );
+}
+
+function CaseRow({ c, children, onDelete }: { c: SavedCase; children: React.ReactNode; onDelete: (id: string) => void }) {
+  return (
+    <ScrubinStaticPanel className="p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="font-semibold" style={{ fontFamily: "'Syne', sans-serif" }}>
+            {c.scenario_name} · {c.role === "anesthesia" ? "Anesthesiologist" : "Surgeon"}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {when(c.updated_at)} · {outcomeLabel(c)} · case time {fmtTime(c.sim_t)}
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {c.score != null && <div className="font-mono-data text-2xl text-[#7EC8E3]">{c.score}</div>}
+          {children}
+          <button onClick={() => onDelete(c.id)} className="p-2 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-300" aria-label="Delete case">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </ScrubinStaticPanel>
   );
 }

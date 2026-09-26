@@ -9,7 +9,9 @@ import { CommsLog } from "@/components/or/CommsLog";
 import { DebriefView } from "@/components/or/DebriefView";
 import { PatientMonitor } from "@/components/or/PatientMonitor";
 import { SurgeonStation } from "@/components/or/SurgeonStation";
+import { useAuth } from "@/contexts/AuthContext";
 import { engineApi, useOrConnection } from "@/engine/client";
+import { recordSession } from "@/lib/recordSession";
 import type { Catalog, CreateCaseResponse, Debrief, Role } from "@/engine/types";
 
 const SUPPORTED = new Set(["appendectomy"]);
@@ -18,7 +20,11 @@ const SPEEDS = [0.5, 1, 2, 5, 10];
 type Stage = "intro" | "or" | "debrief";
 
 export default function OperatingRoom() {
-  const procId = useMemo(() => new URLSearchParams(window.location.search).get("proc") || "appendectomy", []);
+  const params = useMemo(() => new URLSearchParams(window.location.search), []);
+  const procId = params.get("proc") || "appendectomy";
+  const resumeId = params.get("case");
+  const { user } = useAuth();
+  const [recorded, setRecorded] = useState(false);
   const [stage, setStage] = useState<Stage>("intro");
   const [engineUp, setEngineUp] = useState<boolean | null>(null);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
@@ -37,12 +43,22 @@ export default function OperatingRoom() {
       .then(() => setEngineUp(true))
       .catch(() => setEngineUp(false));
     engineApi.catalog().then(setCatalog).catch(() => {});
-  }, []);
+    if (resumeId) {
+      engineApi
+        .resumeCase(resumeId)
+        .then((c) => {
+          setCreated(c);
+          setStarted(true);
+          setStage("or");
+        })
+        .catch(() => setEngineUp(false));
+    }
+  }, [resumeId]);
 
   const begin = async (role: Role) => {
     setCreating(true);
     try {
-      const c = await engineApi.createCase(procId, role);
+      const c = await engineApi.createCase(procId, role, user?.id);
       setCreated(c);
       setStarted(false);
       setStage("or");
@@ -58,9 +74,13 @@ export default function OperatingRoom() {
     conn.control({ paused: true });
     const d = await engineApi.debrief(created.case_id);
     setDebrief(d);
+    if (user && !recorded && state?.status === "ended") {
+      setRecorded(true);
+      recordSession(user, created.scenario.id, created.scenario.name, d);
+    }
     setStage("debrief");
     window.speechSynthesis?.cancel();
-  }, [created, conn]);
+  }, [created, conn, user, recorded, state?.status]);
 
   if (!SUPPORTED.has(procId)) {
     return (

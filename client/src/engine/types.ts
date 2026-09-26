@@ -24,6 +24,43 @@ export interface CreateCaseResponse {
   role: Role;
   scenario: { id: string; name: string; specialty: string; summary: string };
   patient: PatientSummary;
+  t?: number;
+  status?: CaseState["status"];
+}
+
+export interface SavedCase {
+  id: string;
+  scenario: string;
+  scenario_name: string;
+  role: Role;
+  seed: number;
+  tick: number;
+  sim_t: number;
+  status: CaseState["status"];
+  outcome: string | null;
+  score: number | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface ReplayFrame {
+  t: number;
+  monitor: MonitorReadout;
+  alarms: string[];
+  comms: CommsMessage[];
+  airway: string;
+  status: string;
+  surgery: SurgeryState["running"] | null;
+  iap: number | null;
+}
+
+export interface ReplayData {
+  frames: ReplayFrame[];
+  every_s: number;
+  debrief: Debrief;
+  scenario: string;
+  role: Role;
+  seed: number;
 }
 
 export interface CommsMessage {

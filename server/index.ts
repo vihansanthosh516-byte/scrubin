@@ -4,60 +4,12 @@ import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 import "dotenv/config";
-import {
-  SessionManager,
-  DeterministicRNG,
-  getProcedure,
-  listProcedures,
-  procedureExists,
-  type TickDecision,
-  type DecisionOption,
-  type DecisionResultPublic,
-  type TickDecisionPublic,
-  type NextTickResponse,
-  type DecideResponse,
-} from "./engine/index.js";
+// Procedure catalog (metadata for the library). Simulation itself runs in the
+// Python engine (engine/), reached by the client at /engine.
+import { getProcedure, listProcedures } from "./engine/procedures/registry.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const sessionManager = new SessionManager();
-const seedRng = new DeterministicRNG(
-  parseInt(process.env.SIM_SEED || "42", 10)
-);
-
-function sanitizeOption(o: DecisionOption) {
-  return { id: o.id, label: o.label, archetype: o.archetype };
-}
-
-function sanitizeDecision(d: TickDecision): TickDecisionPublic {
-  return {
-    id: d.id,
-    tick: d.tick,
-    phase: d.phase,
-    phaseLabel: d.phaseLabel,
-    procedurePhase: d.procedurePhase,
-    archetype: d.archetype,
-    prompt: d.prompt,
-    context: d.context,
-    options: d.options.map(sanitizeOption),
-    urgency: d.urgency,
-  };
-}
-
-function sanitizeDecisionResult(r: {
-  wasCorrect: boolean;
-  feedback: string;
-  scoreDelta: number;
-  complicationTriggered: string | null;
-}): DecisionResultPublic {
-  return {
-    wasCorrect: r.wasCorrect,
-    feedback: r.feedback,
-    scoreDelta: r.scoreDelta,
-    complicationTriggered: r.complicationTriggered,
-  };
-}
 
 async function startServer() {
   const app = express();
@@ -271,113 +223,6 @@ async function startServer() {
     }
   });
 
-  // ── Simulation API ──
-
-  app.post("/api/sim/start", (req, res) => {
-    try {
-      const { seed, procedure } = req.body || {};
-      const procedureId = procedure || "appendectomy";
-      if (!procedureExists(procedureId)) {
-        res.status(400).json({ detail: `Unknown procedure: ${procedureId}` });
-        return;
-      }
-      const simSeed = typeof seed === "number" ? seed : seedRng.nextInt(1, 999999);
-      const session = sessionManager.create(simSeed, procedureId);
-      const state = session.state;
-      res.json({
-        session_id: session.id,
-        tick: state.tick,
-        procedure_id: state.procedureId,
-        procedure_name: state.procedureName,
-        patient: state.patient,
-        total_ticks: state.totalTicks,
-      });
-    } catch (e: any) {
-      res.status(500).json({ detail: e.message });
-    }
-  });
-
-  app.post("/api/sim/next", (req, res) => {
-    try {
-      const { session_id } = req.body || {};
-      const session = sessionManager.get(session_id);
-      if (!session) {
-        res.status(404).json({ detail: "Session not found" });
-        return;
-      }
-      const result = session.next();
-      const pending = result.pendingDecision
-        ? sanitizeDecision(result.pendingDecision)
-        : null;
-      const resp: NextTickResponse = {
-        tick: result.tick,
-        vitals: result.vitalsAfter,
-        escalation_phase: result.escalationPhase,
-        procedure_phase: result.procedurePhase,
-        active_complication: result.activeComplication,
-        pending_decision: pending!,
-        events: result.events,
-        score: result.score,
-        completed: session.state.completed,
-      };
-      res.json(resp);
-    } catch (e: any) {
-      if (e.message === "Cannot advance tick without decision") {
-        res.status(409).json({ detail: e.message });
-        return;
-      }
-      res.status(500).json({ detail: e.message });
-    }
-  });
-
-  app.post("/api/sim/decide", (req, res) => {
-    try {
-      const { session_id, decision_id, option_id } = req.body || {};
-      const session = sessionManager.get(session_id);
-      if (!session) {
-        res.status(404).json({ detail: "Session not found" });
-        return;
-      }
-      const result = session.submitDecision(decision_id, option_id);
-      const dr = result.decisionResult;
-      const state = session.state;
-      const resp: DecideResponse = {
-        tick: result.tick,
-        vitals: result.vitalsAfter,
-        escalation_phase: result.escalationPhase,
-        procedure_phase: result.procedurePhase,
-        active_complication: result.activeComplication,
-        decision_result: dr
-          ? sanitizeDecisionResult({
-              wasCorrect: dr.wasCorrect,
-              feedback: dr.feedback,
-              scoreDelta: dr.scoreDelta,
-              complicationTriggered: dr.complicationTriggered,
-            })
-          : { wasCorrect: false, feedback: "", scoreDelta: 0, complicationTriggered: null },
-        next_tick_ready: result.pendingDecisionState?.resolved === true,
-        events: result.events,
-        score: result.score,
-        completed: state.completed,
-        correct_decisions: state.correctDecisions,
-        total_decisions: state.totalDecisions,
-      };
-      res.json(resp);
-    } catch (e: any) {
-      res.status(400).json({ detail: e.message });
-    }
-  });
-
-  app.post("/api/sim/reset", (req, res) => {
-    try {
-      const { session_id } = req.body || {};
-      if (session_id) sessionManager.delete(session_id);
-      res.json({ ok: true });
-    } catch (e: any) {
-      res.status(500).json({ detail: e.message });
-    }
-  });
-
 app.get("/api/sim/procedures", (_req, res) => {
   const procs = listProcedures();
   res.json({
@@ -425,53 +270,11 @@ app.get("/api/scenarios", (_req, res) => {
   res.json({ scenarios: enriched });
 });
 
-// Dashboard endpoint – returns deterministic stats derived from SessionManager
-app.get("/api/dashboard", (_req, res) => {
-  // Deterministic dashboard data – currently only active session count
-  const activeSessions = sessionManager.size;
-  res.json({ activeSessions });
-});
-
 // Phase 10 - Dashboard Recommendations
 app.get("/api/dashboard/recommendations", (_req, res) => {
   const allProcs = listProcedures();
   const recommended = allProcs.slice(0, 3).map(enrichScenario);
   res.json({ recommendations: recommended });
-});
-
-// Phase 10 - Continue Simulation API
-app.get("/api/profile/saved-cases", (_req, res) => {
-  const saved = Array.from(sessionManager.entries()).map(([id, engine]) => {
-    return {
-      session_id: id,
-      procedure_name: engine.state.patient?.name ? `Procedure for ${engine.state.patient.name}` : "Unknown Procedure",
-      last_saved: new Date().toISOString(),
-      progress: Math.min(Math.floor((engine.state.tick / 20) * 100), 100), // simplified progress
-      patient_status: engine.state.vitals?.hr > 100 ? "Critical" : "Stable"
-    };
-  });
-  // Add a dummy session if none exist for demonstration purposes
-  if (saved.length === 0) {
-    saved.push({
-      session_id: "dummy-session-123",
-      procedure_name: "Appendectomy (Demo)",
-      last_saved: new Date().toISOString(),
-      progress: 45,
-      patient_status: "Stable"
-    });
-  }
-  res.json({ saved_cases: saved });
-});
-
-app.post("/api/sim/resume", (req, res) => {
-  const { session_id } = req.body;
-  if (!session_id) {
-    return res.status(400).json({ detail: "session_id required" });
-  }
-  if (session_id !== "dummy-session-123" && !sessionManager.has(session_id)) {
-    return res.status(404).json({ detail: "Session not found or inactive" });
-  }
-  res.json({ success: true, session_id });
 });
 
 // Phase 12 – SEO metadata endpoint (stub)

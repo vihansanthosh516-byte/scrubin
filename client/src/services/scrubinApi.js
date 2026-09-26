@@ -1,1 +1,0 @@
-// Deprecated legacy API wrapper – removed in favor of session API

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Action, CaseState, Catalog, CommsMessage, CreateCaseResponse, Debrief, Role } from "./types";
+import type { Action, CaseState, Catalog, CommsMessage, CreateCaseResponse, Debrief, ReplayData, Role, SavedCase } from "./types";
 
 // The Python engine is reached through the Vite proxy (/engine -> :8000) in
 // development. In production set VITE_ENGINE_URL to the engine's origin.
@@ -27,8 +27,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const engineApi = {
   health: () => request<{ ok: boolean; llm: boolean }>("/health"),
   catalog: () => request<Catalog>("/catalog"),
-  createCase: (scenario: string, role: Role, seed?: number) =>
-    request<CreateCaseResponse>("/cases", { method: "POST", body: JSON.stringify({ scenario, role, seed }) }),
+  createCase: (scenario: string, role: Role, userId?: string, seed?: number) =>
+    request<CreateCaseResponse>("/cases", { method: "POST", body: JSON.stringify({ scenario, role, seed, user_id: userId }) }),
+  resumeCase: (caseId: string) => request<CreateCaseResponse>(`/cases/${caseId}/resume`, { method: "POST" }),
+  listCases: (userId: string) => request<SavedCase[]>(`/users/${encodeURIComponent(userId)}/cases`),
+  deleteCase: (caseId: string) => request<{ ok: boolean }>(`/cases/${caseId}`, { method: "DELETE" }),
+  replay: (caseId: string, everyS = 5) => request<ReplayData>(`/cases/${caseId}/replay?every_s=${everyS}`),
   debrief: (caseId: string) => request<Debrief>(`/cases/${caseId}/debrief`),
   transcribe: async (audio: Blob): Promise<string> => {
     const form = new FormData();

@@ -5,6 +5,8 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, useScroll, useSpring, useInView, useMotionValue } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { engineApi } from "@/engine/client";
 import { Activity, Heart, Brain, Scissors, BookOpen, Trophy, Play, ArrowRight, Zap, Target, Award, Sparkles, Users, Star, Clock, AlertTriangle } from "lucide-react";
 
 function FloatingParticles() {
@@ -273,6 +275,7 @@ function ContinueSimulationWidget({ savedCases }: { savedCases: any[] }) {
 }
 
 export default function Home() {
+  const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [recommended, setRecommended] = useState<any[]>([]);
   const [savedCases, setSavedCases] = useState<any[]>([]);
@@ -289,17 +292,27 @@ export default function Home() {
           const data = await recRes.json();
           setRecommended(data.recommendations || []);
         }
-        const savedRes = await fetch("/api/profile/saved-cases");
-        if (savedRes.ok) {
-          const data = await savedRes.json();
-          setSavedCases(data.saved_cases || []);
+        if (user) {
+          const cases = await engineApi.listCases(user.id).catch(() => []);
+          setSavedCases(
+            cases
+              .filter((c) => c.status !== "ended" && c.sim_t > 0)
+              .slice(0, 3)
+              .map((c) => ({
+                session_id: c.id,
+                procedure_name: `${c.scenario_name} · ${c.role === "anesthesia" ? "Anesthesia" : "Surgeon"}`,
+                last_saved: new Date(c.updated_at * 1000).toISOString(),
+                progress: Math.min(99, Math.round((c.sim_t / 3600) * 100)),
+                patient_status: "Stable",
+              })),
+          );
         }
       } catch (err) {
         console.error("Failed to fetch dashboard data", err);
       }
     };
     fetchData();
-  }, []);
+  }, [user]);
 
   const features = [{ icon: Scissors, title: "Choose Your Procedure", description: "Browse real surgical cases from appendectomy to craniotomy.", color: "from-primary/20 to-teal-400/20" }, { icon: Target, title: "Make Every Decision", description: "From diagnosis to closing, every step is yours.", color: "from-teal-400/20 to-primary/20" }, { icon: BookOpen, title: "Learn From Everything", description: "Right or wrong, you'll know exactly why.", color: "from-primary/20 to-purple-400/20" }];
   return (

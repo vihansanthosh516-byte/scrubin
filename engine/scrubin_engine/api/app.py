@@ -3,6 +3,7 @@ proxy (and a production reverse proxy) can forward it without rewriting."""
 
 from __future__ import annotations
 
+import asyncio
 from typing import Literal, Optional
 
 from fastapi import APIRouter, FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
@@ -12,7 +13,8 @@ from pydantic import BaseModel
 from ..language.llm import api_key, transcribe
 from ..physiology.drugs import DRUGS, FLUIDS
 from ..scenarios import SCENARIOS
-from ..session import SPEEDS, SessionStore
+from ..session import SPEEDS, SessionStore, rebuild_case, replay_frames
+from ..scoring.debrief import build_debrief
 from ..surgery import load_spec
 
 app = FastAPI(title="ScrubIn Engine", version="0.1.0")
@@ -31,6 +33,7 @@ class CreateCase(BaseModel):
     scenario: str = "appendectomy"
     role: Literal["anesthesia", "surgeon"] = "anesthesia"
     seed: Optional[int] = None
+    user_id: Optional[str] = None
 
 
 class Utterance(BaseModel):
@@ -67,26 +70,83 @@ def catalog() -> dict:
 async def create_case(body: CreateCase) -> dict:
     if body.scenario not in SCENARIOS:
         raise HTTPException(404, "unknown scenario")
-    s = store.create(body.scenario, body.role, body.seed)
-    sc = SCENARIOS[body.scenario]
+    s = store.create(body.scenario, body.role, body.seed, body.user_id)
+    return _case_info(s)
+
+
+def _case_info(s) -> dict:
+    sc = SCENARIOS[s.scenario_id]
     return {
         "case_id": s.id,
         "seed": s.seed,
         "role": s.role,
         "scenario": {k: v for k, v in sc.items() if k != "build_patient"},
         "patient": s.case.patient.public_summary(),
+        "t": s.case.t,
+        "status": s.case.status,
     }
 
 
 def _session(case_id: str):
-    s = store.get(case_id)
+    s = store.resume(case_id)  # live, or rebuilt from the saved action log
     if s is None:
         raise HTTPException(404, "case not found")
     return s
 
 
+@router.get("/users/{user_id}/cases")
+def user_cases(user_id: str) -> list[dict]:
+    rows = store.db.list_for_user(user_id)
+    for r in rows:
+        sc = SCENARIOS.get(r["scenario"])
+        r["scenario_name"] = sc["name"] if sc else r["scenario"]
+        live = store.get(r["id"])
+        if live is not None:  # fresher than the last autosave
+            r.update(tick=live.case.tick, sim_t=live.case.t, status=live.case.status, outcome=live.case.outcome)
+    return rows
+
+
+@router.post("/cases/{case_id}/resume")
+async def resume(case_id: str) -> dict:
+    s = _session(case_id)
+    s.control(paused=True)
+    return _case_info(s)
+
+
+_replay_cache: dict[str, tuple[int, dict]] = {}
+
+
+@router.get("/cases/{case_id}/replay")
+async def replay_case(case_id: str, every_s: float = 5.0) -> dict:
+    live = store.get(case_id)
+    if live is not None:
+        live.persist()
+    rec = store.db.get(case_id)
+    if rec is None:
+        raise HTTPException(404, "case not found")
+    cached = _replay_cache.get(case_id)
+    if cached and cached[0] == rec["tick"]:
+        return cached[1]
+    data = await asyncio.to_thread(replay_frames, rec, max(1.0, min(30.0, every_s)))
+    data.update(scenario=rec["scenario"], role=rec["role"], seed=rec["seed"])
+    _replay_cache[case_id] = (rec["tick"], data)
+    if len(_replay_cache) > 20:
+        _replay_cache.pop(next(iter(_replay_cache)))
+    return data
+
+
+@router.delete("/cases/{case_id}")
+def delete_case(case_id: str) -> dict:
+    live = store.sessions.pop(case_id, None)
+    if live is not None and live.task:
+        live.task.cancel()
+    store.db.delete(case_id)
+    _replay_cache.pop(case_id, None)
+    return {"ok": True}
+
+
 @router.get("/cases/{case_id}/state")
-def state(case_id: str) -> dict:
+async def state(case_id: str) -> dict:
     s = _session(case_id)
     snap = s.case.snapshot()
     snap.update(speed=s.speed, paused=s.paused)
@@ -94,7 +154,7 @@ def state(case_id: str) -> dict:
 
 
 @router.post("/cases/{case_id}/action")
-def action(case_id: str, body: dict) -> dict:
+async def action(case_id: str, body: dict) -> dict:
     return _session(case_id).submit_action(body)
 
 
@@ -104,19 +164,27 @@ async def utterance(case_id: str, body: Utterance) -> dict:
 
 
 @router.post("/cases/{case_id}/control")
-def control(case_id: str, body: Control) -> dict:
+async def control(case_id: str, body: Control) -> dict:
     s = _session(case_id)
     s.control(body.speed, body.paused)
     return {"speed": s.speed, "paused": s.paused}
 
 
 @router.get("/cases/{case_id}/debrief")
-def debrief(case_id: str) -> dict:
-    return _session(case_id).debrief()
+async def debrief(case_id: str) -> dict:
+    live = store.get(case_id)
+    if live is not None:
+        return live.debrief()
+    rec = store.db.get(case_id)
+    if rec is None:
+        raise HTTPException(404, "case not found")
+    if rec["debrief"] and rec["status"] == "ended":
+        return rec["debrief"]
+    return build_debrief(await asyncio.to_thread(rebuild_case, rec))
 
 
 @router.get("/cases/{case_id}/log")
-def log(case_id: str) -> dict:
+async def log(case_id: str) -> dict:
     s = _session(case_id)
     return {"scenario": s.scenario_id, "role": s.role, "seed": s.seed, "tick": s.case.tick, "log": s.case.log}
 
@@ -134,7 +202,7 @@ async def stt(audio: UploadFile = File(...)) -> dict:
 
 @router.websocket("/cases/{case_id}/ws")
 async def ws(websocket: WebSocket, case_id: str) -> None:
-    s = store.get(case_id)
+    s = store.resume(case_id)
     await websocket.accept()
     if s is None:
         await websocket.send_json({"type": "error", "error": "case not found"})
@@ -159,6 +227,10 @@ async def ws(websocket: WebSocket, case_id: str) -> None:
         pass
     finally:
         s.clients.pop(websocket, None)
+        if not s.clients:
+            # Nobody watching: freeze the patient rather than let the case run unattended.
+            s.control(paused=True)
+            s.persist()
 
 
 app.include_router(router)

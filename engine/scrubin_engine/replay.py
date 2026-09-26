@@ -12,14 +12,22 @@ def replay(scenario: dict, role: str, seed: int, log: list[dict], until_tick: in
     c = Case(scenario, role, seed=seed, **case_kwargs)
     by_tick: dict[int, list[dict]] = {}
     for entry in log:
-        by_tick.setdefault(entry["tick"], []).append(entry["action"])
+        by_tick.setdefault(entry["tick"], []).append(entry)
+
+    def apply(entry: dict) -> None:
+        if "comms" in entry:
+            m = entry["comms"]
+            c.record_say(m["from"], m["text"], m.get("kind", "speech"))
+        else:
+            c.submit(entry["action"])
+
     while c.tick < until_tick:
-        for action in by_tick.get(c.tick, []):
-            c.submit(action)
+        for entry in by_tick.get(c.tick, []):
+            apply(entry)
         c.step()
         if on_tick:
             on_tick(c)
     # Actions logged at the final tick (after the last step) still apply.
-    for action in by_tick.get(c.tick, []):
-        c.submit(action)
+    for entry in by_tick.get(c.tick, []):
+        apply(entry)
     return c
