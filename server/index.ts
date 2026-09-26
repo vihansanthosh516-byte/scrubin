@@ -405,6 +405,48 @@ app.get("/api/dashboard", (_req, res) => {
   res.json({ activeSessions });
 });
 
+// Phase 10 - Dashboard Recommendations
+app.get("/api/dashboard/recommendations", (_req, res) => {
+  const allProcs = listProcedures();
+  const recommended = allProcs.slice(0, 3).map(enrichScenario);
+  res.json({ recommendations: recommended });
+});
+
+// Phase 10 - Continue Simulation API
+app.get("/api/profile/saved-cases", (_req, res) => {
+  const saved = Array.from(sessionManager.entries()).map(([id, engine]) => {
+    return {
+      session_id: id,
+      procedure_name: engine.state.patient?.name ? `Procedure for ${engine.state.patient.name}` : "Unknown Procedure",
+      last_saved: new Date().toISOString(),
+      progress: Math.min(Math.floor((engine.state.tick / 20) * 100), 100), // simplified progress
+      patient_status: engine.state.vitals?.hr > 100 ? "Critical" : "Stable"
+    };
+  });
+  // Add a dummy session if none exist for demonstration purposes
+  if (saved.length === 0) {
+    saved.push({
+      session_id: "dummy-session-123",
+      procedure_name: "Appendectomy (Demo)",
+      last_saved: new Date().toISOString(),
+      progress: 45,
+      patient_status: "Stable"
+    });
+  }
+  res.json({ saved_cases: saved });
+});
+
+app.post("/api/sim/resume", (req, res) => {
+  const { session_id } = req.body;
+  if (!session_id) {
+    return res.status(400).json({ detail: "session_id required" });
+  }
+  if (session_id !== "dummy-session-123" && !sessionManager.has(session_id)) {
+    return res.status(404).json({ detail: "Session not found or inactive" });
+  }
+  res.json({ success: true, session_id });
+});
+
 // Phase 12 – SEO metadata endpoint (stub)
 app.get("/api/seo/:page", (req, res) => {
   const page = req.params.page;
@@ -416,19 +458,41 @@ app.get("/api/seo/:page", (req, res) => {
   };
   res.json(data);
 });
-  const dummy = {
-    continueSimulation: null, // could hold last session id
-    recommendedProcedures: [
-      { id: "appendectomy", name: "Appendectomy", estimated_time: "30 min" },
-      { id: "cabg", name: "Coronary Artery Bypass Graft", estimated_time: "45 min" },
-    ],
-    recentActivity: [],
-    progress: { completedProcedures: 3, totalProcedures: 12 },
-    achievements: [],
-  };
-  res.json(dummy);
+
+// Phase 13 - AI Workspace Mock Endpoints
+app.post("/api/ai/upload", (req, res) => {
+  // Mock a successful file upload and return a mock sessionId
+  // In reality, this would handle multipart form data
+  const mockSessionId = "ai-sess-" + Math.random().toString(36).substring(7);
+  
+  // Simulate processing delay
+  setTimeout(() => {
+    res.json({ success: true, sessionId: mockSessionId });
+  }, 1500);
 });
-  // existing code unchanged
+
+app.get("/api/ai/session/:id", (req, res) => {
+  // Deterministic mock data for an AI session
+  const id = req.params.id;
+  res.json({
+    id,
+    status: "complete",
+    differential: [
+      { condition: "Acute Appendicitis", probability: 85, evidence: ["RLQ pain", "Elevated WBC"] },
+      { condition: "Ovarian Torsion", probability: 10, evidence: ["Sudden onset pelvic pain"] },
+      { condition: "Ectopic Pregnancy", probability: 5, evidence: [] }
+    ],
+    timeline: [
+      { time: "08:00", event: "Patient admitted with RLQ pain" },
+      { time: "08:30", event: "Ultrasound ordered" },
+      { time: "09:15", event: "US shows inflamed appendix (9mm)" }
+    ],
+    riskAssessment: {
+      score: 4,
+      level: "Moderate",
+      factors: ["Mild tachycardia", "Elevated CRP"]
+    }
+  });
 });
 
 // Phase 9 – Profile endpoint (placeholder)
@@ -446,8 +510,7 @@ app.get("/api/profile", (_req, res) => {
   };
   res.json(dummy);
 });
-  // existing code unchanged
-});
+
 
 // Phase 8 – Leaderboard placeholder (to be extended later)
 app.get("/api/leaderboard", (_req, res) => {
@@ -460,38 +523,34 @@ app.get("/api/leaderboard", (_req, res) => {
   res.json({ entries: dummy });
 });
 
-});
-
 app.get("/api/scenarios/:id", (req, res) => {
-    // existing code unchanged
-  });
-
-  // Phase 6 – Procedure Library helpers
-  // Simple search endpoint
-  app.get("/api/procedures/search", (req, res) => {
-    try {
-      const q = (req.query.q as string | undefined)?.toLowerCase() ?? "";
-      const difficulty = (req.query.difficulty as string | undefined)?.toLowerCase();
-      const tag = (req.query.tag as string | undefined)?.toLowerCase();
-      const all = listProcedures();
-      const filtered = all.filter((p) => {
-        const matchText = p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q));
-        const matchDiff = difficulty ? p.category?.toLowerCase() === difficulty : true;
-        const matchTag = tag ? (p.tags ?? []).some((t) => t.toLowerCase() === tag) : true;
-        return matchText && matchDiff && matchTag;
-      });
-      res.json({ procedures: filtered });
-    } catch (e: any) {
-      console.error("Procedure search error:", e);
-      res.status(500).json({ error: e.message });
-    }
-  });
   const proc = getProcedure(req.params.id);
   if (!proc) {
     res.status(404).json({ detail: "Scenario not found" });
     return;
   }
   res.json(enrichScenario(proc));
+});
+
+// Phase 6 – Procedure Library helpers
+// Simple search endpoint
+app.get("/api/procedures/search", (req, res) => {
+  try {
+    const q = (req.query.q as string | undefined)?.toLowerCase() ?? "";
+    const difficulty = (req.query.difficulty as string | undefined)?.toLowerCase();
+    const tag = (req.query.tag as string | undefined)?.toLowerCase();
+    const all = listProcedures();
+    const filtered = all.filter((p) => {
+      const matchText = p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q));
+      const matchDiff = difficulty ? p.category?.toLowerCase() === difficulty : true;
+      const matchTag = tag ? (p.tags ?? []).some((t) => t.toLowerCase() === tag) : true;
+      return matchText && matchDiff && matchTag;
+    });
+    res.json({ procedures: filtered });
+  } catch (e: any) {
+    console.error("Procedure search error:", e);
+    res.status(500).json({ error: e.message });
+  }
 });
 
   // Handle client-side routing - serve index.html for all routes

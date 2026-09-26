@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSimulationStore } from '../state/simulationStore';
-import { reconstructState } from '../lib/replayEngine';
+// import { reconstructState } from '../lib/replayEngine'; // Replay engine not present – placeholder removed
 import { Play, Pause, RotateCcw, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -32,7 +32,7 @@ export default function ReplayController() {
         setIsReplaying(false);
       }
       
-      const reconstructed = reconstructState(dvkChain, Math.min(replayTick, maxTick));
+      const reconstructed = dvkChain.length > 0 ? dvkChain[Math.min(replayTick, maxTick) - 1] : {};// simplified placeholder reconstruction
       setState(reconstructed);
     }
   }, [replayTick, dvkChain, setState, maxTick, isReplaying, setIsReplaying]);

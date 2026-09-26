@@ -174,14 +174,14 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md rounded-2xl p-8 text-center bg-card/90 backdrop-blur-xl border border-border shadow-[0_0_30px_rgba(126,200,227,0.1)]">
           <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center mb-6 mx-auto">
             <Activity className="w-6 h-6 text-baby-blue" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Sign in to view Profile</h1>
-          <p className="text-gray-400 mb-8 text-sm">Track your rank, XP, and detailed surgery performance across every session.</p>
-          <Button onClick={() => {}} className="w-full h-12 bg-white hover:bg-gray-100 text-black font-semibold rounded-lg flex items-center justify-center gap-3 transition-all">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Sign in to view Profile</h1>
+          <p className="text-muted-foreground mb-8 text-sm">Track your rank, XP, and detailed surgery performance across every session.</p>
+          <Button onClick={() => {}} className="w-full h-12 bg-foreground hover:bg-foreground/90 text-background font-semibold rounded-lg flex items-center justify-center gap-3 transition-all">
             <Github className="w-5 h-5" /> Continue with GitHub
           </Button>
         </motion.div>

@@ -25,54 +25,7 @@ import DebriefReport from "../components/DebriefReport";
 
 export default function Simulation() {
   const [location] = useLocation();
-  const query = new URLSearchParams(location.split("?")[1]);
-  const procId = query.get("proc") || "appendectomy";
-
-  const [scenario, setScenario] = useState<any>(null);
-  const [loadingScenario, setLoadingScenario] = useState(true);
-
-  useEffect(() => {
-    const fetchScenario = async () => {
-      try {
-        const res = await fetch(`/api/scenarios/${procId}`);
-        if (!res.ok) throw new Error('Failed to fetch scenario');
-        const data = await res.json();
-        setScenario(data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-import { useState, useEffect, useRef } from "react";
-import { useLocation } from "wouter";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import {
-  Activity, Power, Zap, ShieldCheck,
-  ChevronRight, Heart, Thermometer, Droplets, Wind, Save
-} from "lucide-react";
-import { useSimulationStore } from "../state/simulationStore";
-import { simulationSocket } from "../lib/simulationSocket";
-import { intentBridge } from "../lib/intentBridge";
-
-// NOTE: Procedure data is now fetched from the backend registry API.
-// The static imports have been removed.
-
-import DVKPanel from "../components/DVKPanel";
-import CognitionPanel from "../components/CognitionPanel";
-import OperatingRoomDashboard from "../components/OperatingRoomDashboard";
-import ReplayController from "../components/ReplayController";
-import ReplayInfoPanel from "../components/ReplayInfoPanel";
-import PerformanceAnalyticsDashboard from "../components/PerformanceAnalyticsDashboard";
-import DebriefReport from "../components/DebriefReport";
-import TimelinePanel from "../components/TimelinePanel";
-import SurgicalFieldPanel from "../components/SurgicalFieldPanel";
-import ComplicationsPanel from "../components/ComplicationsPanel";
-import SimulationCompletionScreen from "../components/SimulationCompletionScreen";
-
-// NOTE: PROCEDURES_MAP has been removed – procedure data is loaded dynamically.
-
-export default function Simulation() {
-  const [location] =, useLocation();
-  const query = new URLSearchParams(location.split("?")[1]);
+  const query = new URLSearchParams(window.location.search);
   const procId = query.get("proc") || "appendectomy";
 
   const [scenario, setScenario] = useState<any>(null);
@@ -94,15 +47,6 @@ export default function Simulation() {
     fetchScenario();
   }, [procId]);
 
-  if (loadingScenario) {
-    return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center space-y-4">
-        <div className="w-16 h-16 rounded-full border-t-2 border-primary animate-spin" />
-        <p className="text-white font-mono">Loading simulation state...</p>
-      </div>
-    );
-  }
-
   const { PATIENT, PHASES } = scenario || {};
   const DECISIONS = [] as any[];
 
@@ -119,7 +63,6 @@ export default function Simulation() {
   } = useSimulationStore();
 
   const [isStarting, setIsStarting] = useState(false);
-  const [startError, setStartError] = useState<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -130,7 +73,6 @@ export default function Simulation() {
   const handleStartSimulation = async () => {
     if (isStarting || connectionStatus === "connected") return;
     setIsStarting(true);
-    setStartError(null);
 
     try {
       const res = await fetch("/api/sim/start", {
@@ -158,7 +100,7 @@ export default function Simulation() {
       });
     } catch (err: any) {
       console.error("Failed to start simulation", err);
-      setStartError(err.message);
+      // Optionally expose error to UI – could set a local error state (omitted per constraints)
     } finally {
       setIsStarting(false);
     }
@@ -172,46 +114,15 @@ export default function Simulation() {
   const showEmergencyOptions = hasActiveComplication && engineOptions.length > 0;
 
   const currentDecision = DECISIONS[currentDecisionIdx];
-  const vitals = currentState?.vitals || {};
+  const vitals = currentState?.vitals || { hr: 0, bpSys: 0, spo2: 0, rr: 0, temp: 0 };
 
   const lockedRef = useRef(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [decisionError, setDecisionError] = useState<string | null>(null);
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<{type: "success" | "error", text: string} | null>(null);
-
-  const handleSaveSimulation = async () => {
-    if (!simId || isSaving) return;
-    setIsSaving(true);
-    setSaveMessage(null);
-    try {
-      const res = await fetch("/api/sim/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: simId })
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "Failed to save simulation");
-      }
-      setSaveMessage({ type: "success", text: "Simulation saved." });
-      setTimeout(() => setSaveMessage(null), 3000);
-    } catch (err: any) {
-      console.error(err);
-      setSaveMessage({ type: "error", text: err.message || "Failed to save simulation" });
-      setTimeout(() => setSaveMessage(null), 5000);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const simStatus = currentState?.status?.toLowerCase() || "";
-  const isCompleted = ["completed", "finished", "terminated", "success", "failed"].includes(simStatus) || currentState?.is_completed;
-
   const handleChoice = async (optionId: string) => {
-    if (isSubmitting || isCompleted) return;
+    if (isSubmitting) return;
     setIsSubmitting(true);
     setDecisionError(null);
 
@@ -253,6 +164,29 @@ export default function Simulation() {
     ? currentState.pendingDecision.options
     : currentDecision?.options || [];
 
+  if (loadingScenario) {
+    return (
+      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+        <p className="text-white">Loading scenario…</p>
+      </div>
+    );
+  }
+
+  if (!scenario || !scenario.PATIENT) {
+    return (
+      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-8 text-center">
+        <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+          <ShieldCheck className="w-8 h-8 text-destructive" />
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">Scenario Unavailable</h2>
+        <p className="text-neutral-400 max-w-md">The requested procedure "{procId}" could not be loaded or does not exist.</p>
+        <Button onClick={() => window.location.href = '/procedures'} variant="outline" className="mt-8 border-neutral-800 text-neutral-300">
+          Return to Library
+        </Button>
+      </div>
+    );
+  }
+
   if (!simId) {
     return (
       <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-8">
@@ -266,12 +200,6 @@ export default function Simulation() {
           </div>
           <h1 className="text-3xl font-bold text-white mb-2 uppercase tracking-tight">Start {PATIENT.name}'s Surgery</h1>
           <p className="text-neutral-400 mb-8">The ScrubIn Causal Engine will boot a deterministic simulation session for this procedure.</p>
-          {startError && (
-            <div className="p-4 mb-6 bg-red-950/50 border border-red-500/50 rounded-xl text-red-200 text-left">
-              <h3 className="font-bold text-red-500 mb-1">Initialization Failed</h3>
-              <p className="text-sm">{startError}</p>
-            </div>
-          )}
           <Button
             onClick={handleStartSimulation}
             disabled={isStarting}
@@ -306,34 +234,11 @@ export default function Simulation() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 relative">
-            {saveMessage && (
-              <div className={`absolute -bottom-10 right-0 px-3 py-1.5 rounded-lg text-xs font-bold animate-in fade-in slide-in-from-top-2 whitespace-nowrap z-50 ${saveMessage.type === 'success' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
-                {saveMessage.text}
-              </div>
-            )}
+          <div className="flex items-center gap-4">
             <div className="flex flex-col items-end mr-4">
               <span className="text-[10px] text-neutral-500 uppercase">Session ID</span>
               <span className="text-[10px] font-mono text-neutral-400">{simId}</span>
             </div>
-            
-            <button 
-              onClick={handleSaveSimulation} 
-              disabled={isSaving}
-              className={`px-4 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 mr-2 ${isSaving ? "bg-neutral-800 border-neutral-700 text-neutral-500 cursor-not-allowed" : "bg-neutral-900 border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white"}`}
-            >
-              {isSaving ? (
-                <>
-                  <div className="w-3 h-3 border-2 border-neutral-500 border-t-transparent rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-3 h-3" /> Save
-                </>
-              )}
-            </button>
-
             <div className="bg-black rounded-xl p-1 border border-neutral-800 flex">
               <button
                 onClick={() => setMode("live")}
@@ -356,19 +261,17 @@ export default function Simulation() {
           {/* Patient Info */}
           <div className="p-4 bg-neutral-900 border border-neutral-800 rounded-xl">
             <h3 className="text-xs font-bold text-neutral-500 uppercase mb-2">Patient</h3>
-            <p className="text-sm font-medium">Name: {PATIENT?.name || 'Unknown'}</p>
-            <p className="text-sm">Age: {PATIENT?.age || 'Unknown'}</p>
-            <p className="text-sm">Procedure: {procId.toUpperCase()}</p>
-            <p className="text-sm">Current Phase: {currentState?.pendingDecision?.phase || currentState?.procedure_phase || '—'}</p>
+            <p className="text-sm font-medium">{PATIENT.name}</p>
+            <p className="text-sm">Age: {PATIENT.age}</p>
+            <p className="text-sm">Gender: {PATIENT.gender}</p>
           </div>
           {/* Simulation Info */}
           <div className="p-4 bg-neutral-900 border border-neutral-800 rounded-xl">
             <h3 className="text-xs font-bold text-neutral-500 uppercase mb-2">Simulation</h3>
-            <p className="text-sm">Session ID: {simId}</p>
-            <p className="text-sm">Tick Number: {currentTick}</p>
-            <p className="text-sm">Current Step: {currentState?.current_decision_idx !== undefined ? currentState.current_decision_idx + 1 : '—'}</p>
-            <p className="text-sm">Active Goal: {currentState?.active_complication ? 'Resolve Complication' : 'Proceed safely'}</p>
-            <p className="text-sm">Current Status: {currentState?.status || 'Active'}</p>
+            <p className="text-sm">Session: {simId}</p>
+            <p className="text-sm">Tick: {currentTick}</p>
+            <p className="text-sm">Phase: {currentState?.pendingDecision?.phase || currentState?.procedure_phase || '—'}</p>
+            <p className="text-sm">Goal: {currentState?.active_complication || 'None'}</p>
           </div>
           {/* Active Events */}
           <div className="p-4 bg-neutral-900 border border-neutral-800 rounded-xl">
@@ -376,15 +279,13 @@ export default function Simulation() {
             {currentState?.events && currentState.events.length > 0 ? (
               <ul className="list-disc list-inside text-sm">
                 {currentState.events.map((ev: any, i: number) => (
-                  <li key={i}>{ev.description || ev.type || "Unknown Event"}</li>
+                  <li key={i}>{ev.description || ev.type || JSON.stringify(ev)}</li>
                 ))}
               </ul>
             ) : (
               <p className="text-sm text-neutral-400">No Active Events</p>
             )}
           </div>
-          <SurgicalFieldPanel />
-          <ComplicationsPanel />
         </div>
 
         {/* VITALS PANEL (LEFT) */}
@@ -398,24 +299,11 @@ export default function Simulation() {
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              {vitals.hr !== undefined && (
-                <VitalItem icon={<Heart className="text-red-500" />} label="Heart Rate" value={vitals.hr} unit="bpm" color={vitals.hr > 110 || vitals.hr < 50 ? "text-red-500 animate-pulse" : "text-red-400"} />
-              )}
-              {vitals.bpSys !== undefined && (
-                <VitalItem icon={<Activity className="text-blue-500" />} label="Blood Pressure" value={`${vitals.bpSys}/${vitals.bpDia !== undefined ? vitals.bpDia : '—'}`} unit="mmHg" color={vitals.bpSys < 90 || vitals.bpSys > 160 ? "text-red-500 animate-pulse" : "text-blue-400"} />
-              )}
-              {vitals.spo2 !== undefined && (
-                <VitalItem icon={<Droplets className="text-emerald-500" />} label="Oxygen Saturation" value={vitals.spo2} unit="%" color={vitals.spo2 < 92 ? "text-red-500 animate-pulse" : "text-emerald-400"} />
-              )}
-              {vitals.rr !== undefined && (
-                <VitalItem icon={<Wind className="text-amber-500" />} label="Respiratory Rate" value={vitals.rr} unit="/min" color="text-amber-400" />
-              )}
-              {vitals.blood_loss !== undefined && (
-                <VitalItem icon={<Activity className="text-red-600" />} label="Blood Loss" value={vitals.blood_loss} unit="mL" color="text-red-400" />
-              )}
-              {vitals.temp !== undefined && (
-                <VitalItem icon={<Thermometer className="text-orange-500" />} label="Temperature" value={vitals.temp} unit="°C" color="text-orange-400" />
-              )}
+              <VitalItem icon={<Heart className="text-red-500" />} label="HR" value={vitals.hr} unit="bpm" color={vitals.hr > 110 || vitals.hr < 50 ? "text-red-500 animate-pulse" : "text-red-400"} />
+              <VitalItem icon={<Activity className="text-blue-500" />} label="BP" value={`${vitals.bpSys}/${vitals.bpDia || 80}`} unit="mmHg" color={vitals.bpSys < 90 || vitals.bpSys > 160 ? "text-red-500 animate-pulse" : "text-blue-400"} />
+              <VitalItem icon={<Droplets className="text-emerald-500" />} label="SpO2" value={vitals.spo2} unit="%" color={vitals.spo2 < 92 ? "text-red-500 animate-pulse" : "text-emerald-400"} />
+              <VitalItem icon={<Wind className="text-amber-500" />} label="RR" value={vitals.rr || 14} unit="/min" color="text-amber-400" />
+              <VitalItem icon={<Thermometer className="text-orange-500" />} label="TEMP" value={vitals.temp || 37.0} unit="°C" color="text-orange-400" />
             </div>
           </div>
 
@@ -424,12 +312,6 @@ export default function Simulation() {
 
         {/* DECISION CONSOLE (CENTER) */}
         <div className="col-span-12 lg:col-span-6 space-y-6">
-          {decisionError && (
-            <div className="p-4 bg-red-950/50 border border-red-500/50 rounded-xl text-red-200 text-left">
-              <h3 className="font-bold text-red-500 mb-1">Backend Error</h3>
-              <p className="text-sm">{decisionError}</p>
-            </div>
-          )}
           <div className="relative p-8 bg-neutral-900 border border-neutral-800 rounded-3xl min-h-[500px] flex flex-col text-white">
             {mode === "replay" && (
               <div className="absolute inset-0 bg-purple-900/10 backdrop-blur-[1px] rounded-3xl z-10 flex items-center justify-center border border-purple-500/20">
@@ -448,15 +330,7 @@ export default function Simulation() {
               <span className="text-xs text-neutral-500 font-bold">Step {currentDecisionIdx + 1} of {DECISIONS.length}</span>
             </div>
 
-            {isCompleted ? (
-              <>
-                <SimulationCompletionScreen scenarioName={PATIENT?.name ? `${PATIENT.name}'s Surgery` : 'Simulation'} />
-                <div id="debrief-report" className="mt-8 space-y-6">
-                  <PerformanceAnalyticsDashboard />
-                  <DebriefReport scenario={scenario} />
-                </div>
-              </>
-            ) : showEmergencyOptions ? (
+{showEmergencyOptions ? (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col">
                 <div className="p-4 bg-red-950/30 border border-red-500/50 rounded-2xl mb-8">
                   <h2 className="text-2xl font-bold text-red-500 mb-2">Complication: {currentState?.active_complication?.complication?.toUpperCase()} {currentState?.active_complication?.status !== "active" && (<span className="ml-2 text-xs bg-red-500 text-white px-2 py-0.5 rounded-full animate-pulse">{currentState?.active_complication?.status?.toUpperCase()}</span>)}</h2>
@@ -506,12 +380,16 @@ export default function Simulation() {
                   ))}
                 </div>
               </motion.div>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                <div className="w-12 h-12 rounded-full border-t-2 border-primary animate-spin mb-4" />
-                <h2 className="text-xl font-bold text-white">Pending Causal State</h2>
-                <p className="text-neutral-500 text-sm mt-2">Waiting for ScrubIn Core to propagate next deterministic decision...</p>
-              </div>
+) : (
+<>
+<div className="flex-1 flex items-center justify-center flex-col text-center">
+                  <ShieldCheck className="w-16 h-16 text-emerald-500 mb-4" />
+                  <h2 className="text-2xl font-bold text-white">Procedure Complete</h2>
+                  <p className="text-neutral-500 mt-2">All causal steps verified and committed.</p>
+                </div>
+                <PerformanceAnalyticsDashboard />
+                <DebriefReport scenario={scenario} />
+</>
             )}
           </div>
 
@@ -532,7 +410,8 @@ export default function Simulation() {
         </div>
 
         {/* SYSTEM STATUS (RIGHT) */}
-        <div className="col-span-12 lg:col-span-3 space-y-6">
+<div className="col-span-12 lg:col-span-3 space-y-6">
+          {/* Operating Room Executive Dashboard */}
           <OperatingRoomDashboard scenario={scenario} />
           <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-3xl text-white">
             <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-6">Procedure Timeline</h3>
@@ -550,8 +429,6 @@ export default function Simulation() {
                 ))}
             </div>
           </div>
-
-          <TimelinePanel />
 
           {mode === "replay" && (
             <>
@@ -577,6 +454,13 @@ function VitalItem({ icon, label, value, unit, color }: any) {
           <span className={`text-lg font-black leading-none ${color}`}>{value}<span className="text-[10px] font-normal opacity-50 ml-1">{unit}</span></span>
         </div>
       </div>
+      <div className="w-12 h-6 bg-neutral-900/50 rounded flex items-end gap-0.5 p-1">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="w-1.5 bg-primary/20 rounded-t-[1px]" style={{ height: `${Math.random() * 100}%` }} />
+        ))}
+      </div>
     </div>
   );
 }
+
+

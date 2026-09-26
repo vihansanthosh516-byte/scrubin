@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axios from "axios";
-import { upsertUser } from "@/lib/leaderboard";
+
 
 interface User {
   id: string;
@@ -115,12 +115,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem("scrubin_last_user", JSON.stringify({ name: completeUser.name, login: completeUser.login }));
       }
 
-      await upsertUser({
-        id: userData.id,
-        name: userData.name,
-        login: userData.login,
-        avatar_url: userData.avatar_url,
-      });
 
       // Redirect directly to profile
       window.location.href = "/profile";
@@ -223,13 +217,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem("scrubin_last_user", JSON.stringify({ name: completeUser.name, login: completeUser.login }));
         }
 
-        await upsertUser({
-          id: userData.id,
-          name: userData.name,
-          login: userData.login,
-          avatar_url: userData.avatar_url,
-        });
-
         // Redirect to profile
         window.location.href = "/profile";
       }
@@ -282,13 +269,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setHasCompletedOnboarding(true);
         localStorage.setItem("scrubin_user", JSON.stringify(userData));
         localStorage.setItem("scrubin_last_user", JSON.stringify({ name: userData.name, login: userData.login }));
-
-        await upsertUser({
-          id: userData.id,
-          name: userData.name,
-          login: userData.login,
-          avatar_url: userData.avatar_url,
-        });
 
         // Redirect to profile
         window.location.href = "/profile";

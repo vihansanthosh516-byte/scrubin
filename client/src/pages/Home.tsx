@@ -2,10 +2,10 @@
  * ScrubIn Home Page - Premium Edition
  */
 import { useState, useEffect, useRef } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion, useScroll, useSpring, useInView, useMotionValue } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Activity, Heart, Brain, Scissors, BookOpen, Trophy, Play, ArrowRight, Zap, Target, Award, Sparkles, Users, Star } from "lucide-react";
+import { Activity, Heart, Brain, Scissors, BookOpen, Trophy, Play, ArrowRight, Zap, Target, Award, Sparkles, Users, Star, Clock, AlertTriangle } from "lucide-react";
 
 function FloatingParticles() {
   const particles = Array.from({ length: 30 });
@@ -95,13 +95,13 @@ function StatItem({ value, label, suffix = "", icon: Icon, delay = 0 }: any) {
       style={{ x, y }}
       className="group relative"
     >
-      <div className="relative p-6 md:p-8 rounded-[2rem] glass-card-pro border border-white/5 hover:border-primary/30 transition-colors duration-500 overflow-hidden bg-[#0D1628]/40 backdrop-blur-xl">
+      <div className="relative p-6 md:p-8 rounded-[2rem] glass-card-pro border border-black/5 dark:border-white/5 hover:border-primary/30 transition-colors duration-500 overflow-hidden bg-card/40 backdrop-blur-xl">
         {/* Animated background glow */}
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all duration-700" />
         
         <div className="flex flex-col h-full justify-between gap-4">
           <div className="flex items-start justify-between">
-            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 group-hover:bg-primary/20 group-hover:border-primary/40 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
+            <div className="p-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 group-hover:bg-primary/20 group-hover:border-primary/40 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
               <Icon className="w-5 h-5 text-primary" />
             </div>
             {suffix && (
@@ -113,7 +113,7 @@ function StatItem({ value, label, suffix = "", icon: Icon, delay = 0 }: any) {
 
           <div>
             <div 
-              className="flex items-baseline text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-white mb-1" 
+              className="flex items-baseline text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-foreground mb-1" 
               style={{ fontFamily: "'Syne', sans-serif" }}
             >
               <div className="flex">
@@ -159,6 +159,7 @@ function FeatureCard({ icon: Icon, title, description, index, color }: any) {
 
 function ProcedurePreview({ id, name, tag, difficulty, color, index }: any) {
   const ref = useRef<HTMLDivElement>(null);
+  const [, setLocation] = useLocation();
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const x = useSpring(mouseX, { damping: 25, stiffness: 150 });
@@ -177,9 +178,9 @@ function ProcedurePreview({ id, name, tag, difficulty, color, index }: any) {
   };
 
   return (
-    <Link href={`/simulation?proc=${id}`}>
       <motion.div 
         ref={ref}
+        onClick={() => setLocation(`/simulation?proc=${id}`)}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{ x, y }}
@@ -187,7 +188,7 @@ function ProcedurePreview({ id, name, tag, difficulty, color, index }: any) {
         whileInView={{ opacity: 1, y: 0, scale: 1 }} 
         viewport={{ once: true }} 
         transition={{ duration: 0.5, delay: index * 0.1, type: "spring" }} 
-        className="group p-6 rounded-2xl glass-card-pro cursor-pointer relative overflow-hidden bg-[#0D1628]/40 border border-white/5 hover:border-primary/30 transition-all duration-300"
+        className="group p-6 rounded-2xl glass-card-pro cursor-pointer relative overflow-hidden bg-card/40 border border-black/5 dark:border-white/5 hover:border-primary/30 transition-all duration-300"
       >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <div className="relative z-10">
@@ -195,52 +196,111 @@ function ProcedurePreview({ id, name, tag, difficulty, color, index }: any) {
             <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full ${color} backdrop-blur-sm uppercase tracking-widest`}>{difficulty}</span>
             <span className="text-[10px] text-muted-foreground font-mono-data uppercase tracking-widest">{tag}</span>
           </div>
-          <h4 className="text-xl font-bold text-white group-hover:text-primary transition-colors mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>{name}</h4>
-          <div className="flex items-center text-[10px] text-primary/60 font-mono-data uppercase tracking-widest gap-2">
+          <h4 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>{name}</h4>
+          <div className="flex items-center text-[10px] text-primary font-mono-data uppercase tracking-widest gap-2">
             <span>Start Training</span>
             <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
       </motion.div>
-    </Link>
+  );
+}
+
+function ContinueSimulationWidget({ savedCases }: { savedCases: any[] }) {
+  if (!savedCases || savedCases.length === 0) {
+    return (
+      <section className="py-20 relative max-w-6xl mx-auto px-4 z-20">
+        <div className="p-10 rounded-[2rem] glass-card-pro text-center border-dashed border-2 border-primary/20 bg-card/20">
+          <Activity className="w-12 h-12 text-primary/40 mx-auto mb-4" />
+          <h3 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>No Active Simulations</h3>
+          <p className="text-muted-foreground mb-6">Start your first procedure to see your progress here.</p>
+          <Link href="/procedures">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-4 rounded-xl">Browse Procedures</Button>
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="py-20 relative max-w-6xl mx-auto px-4 z-20">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-bold text-foreground" style={{ fontFamily: "'Syne', sans-serif" }}>Continue Simulation</h2>
+        <Link href="/my-simulations">
+          <Button variant="ghost" className="text-primary hover:text-primary/80">View All</Button>
+        </Link>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {savedCases.map((session: any) => (
+          <Link key={session.session_id} href={`/resume?sessionId=${session.session_id}`}>
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="p-6 rounded-2xl glass-card-pro bg-card/60 border border-primary/20 hover:border-primary/50 cursor-pointer transition-all focus-within:ring-2 focus-within:ring-primary focus-within:outline-none"
+              tabIndex={0}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-3 bg-primary/10 rounded-xl">
+                  <Activity className="w-6 h-6 text-primary" />
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] text-muted-foreground uppercase font-mono-data tracking-widest">Progress</div>
+                  <div className="text-lg font-bold text-foreground">{session.progress}%</div>
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">{session.procedure_name}</h3>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground font-mono-data uppercase">
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>{new Date(session.last_saved).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {session.patient_status === "Critical" ? (
+                    <AlertTriangle className="w-3 h-3 text-red-500" />
+                  ) : (
+                    <Heart className="w-3 h-3 text-emerald-500" />
+                  )}
+                  <span className={session.patient_status === "Critical" ? "text-red-500" : "text-emerald-500"}>
+                    {session.patient_status}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
+  const [recommended, setRecommended] = useState<any[]>([]);
+  const [savedCases, setSavedCases] = useState<any[]>([]);
+
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
-  useEffect(() => { setMounted(true); }, []);
-  const procedures = [
-    { 
-      id: "appendectomy",
-      name: "Appendectomy", 
-      tag: "General Surgery", 
-      difficulty: "Beginner", 
-      color: "text-emerald-400 bg-emerald-400/10 border border-emerald-400/20" 
-    }, 
-    { 
-      id: "hernia-repair",
-      name: "Hernia Repair", 
-      tag: "General Surgery", 
-      difficulty: "Beginner", 
-      color: "text-emerald-400 bg-emerald-400/10 border border-emerald-400/20" 
-    }, 
-    { 
-      id: "cholecystectomy",
-      name: "Cholecystectomy", 
-      tag: "Laparoscopic", 
-      difficulty: "Beginner", 
-      color: "text-emerald-400 bg-emerald-400/10 border border-emerald-400/20" 
-    }, 
-    { 
-      id: "wound-debridement",
-      name: "Wound Debridement", 
-      tag: "Trauma", 
-      difficulty: "Beginner", 
-      color: "text-emerald-400 bg-emerald-400/10 border border-emerald-400/20" 
-    }
-  ];
+  
+  useEffect(() => { 
+    setMounted(true); 
+    const fetchData = async () => {
+      try {
+        const recRes = await fetch("/api/dashboard/recommendations");
+        if (recRes.ok) {
+          const data = await recRes.json();
+          setRecommended(data.recommendations || []);
+        }
+        const savedRes = await fetch("/api/profile/saved-cases");
+        if (savedRes.ok) {
+          const data = await savedRes.json();
+          setSavedCases(data.saved_cases || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard data", err);
+      }
+    };
+    fetchData();
+  }, []);
+
   const features = [{ icon: Scissors, title: "Choose Your Procedure", description: "Browse real surgical cases from appendectomy to craniotomy.", color: "from-primary/20 to-teal-400/20" }, { icon: Target, title: "Make Every Decision", description: "From diagnosis to closing, every step is yours.", color: "from-teal-400/20 to-primary/20" }, { icon: BookOpen, title: "Learn From Everything", description: "Right or wrong, you'll know exactly why.", color: "from-primary/20 to-purple-400/20" }];
   return (
     <div className="min-h-screen bg-background overflow-x-hidden relative">
@@ -285,6 +345,8 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+
+      <ContinueSimulationWidget savedCases={savedCases} />
       <section className="py-32 relative"><div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" /><div className="max-w-6xl mx-auto px-4 relative z-10">
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="label-mono text-center mb-16 uppercase tracking-widest text-lg">Trusted by Medical Students Worldwide</motion.div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
@@ -307,7 +369,19 @@ export default function Home() {
           <h2 className="text-5xl md:text-7xl font-bold text-foreground mb-8" style={{ fontFamily: "'Syne', sans-serif" }}>Start Your <span className="text-gradient">Training</span></h2>
           <p className="text-muted-foreground text-xl max-w-2xl mx-auto">Choose from our growing library of surgical simulations</p>
         </motion.div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">{procedures.map((proc, i) => <ProcedurePreview key={proc.name} {...proc} index={i} />)}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          {recommended.map((proc, i) => (
+            <ProcedurePreview 
+              key={proc.name || proc.id} 
+              id={proc.id} 
+              name={proc.name} 
+              difficulty={proc.category || "Beginner"} 
+              tag={proc.tags?.[0] || "Surgery"} 
+              color="text-emerald-400 bg-emerald-400/10 border border-emerald-400/20" 
+              index={i} 
+            />
+          ))}
+        </div>
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center">
           <Link href="/procedures">
             <motion.div whileHover={{ scale: 1.05, y: -5 }} whileTap={{ scale: 0.95 }}>

@@ -4,12 +4,14 @@ import { useEffect } from "react";
 import { Route, Switch, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { RouteErrorBoundary } from "./components/RouteErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import ProcedureLibrary from "./pages/ProcedureLibrary";
 import Simulation from "./pages/Simulation";
 // import SimulationDashboard from "./pages/SimulationDashboard"; // Deprecated
 import Leaderboard from "./pages/Leaderboard";
+import LearnHub from "./pages/LearnHub";
 import Profile from "./pages/Profile";
 import Signin from "./pages/Signin";
 import AnatomyExplorer from "./pages/AnatomyExplorer";
@@ -17,14 +19,28 @@ import Onboarding from "./pages/Onboarding";
 import ResumeSimulation from "./pages/ResumeSimulation";
 import MySimulations from "./pages/MySimulations";
 import ReplayViewer from "./pages/ReplayViewer";
+import AIWorkspace from "./pages/AIWorkspace";
+import AISession from "./pages/AISession";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
+
+import { LoadingSkeleton } from "./components/ui/enhanced-ui";
 
 // Loading screen component
 function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center">
-      <div className="animate-spin w-8 h-8 border-2 border-baby-blue border-t-transparent rounded-full" />
+    <div className="min-h-screen bg-background p-8 flex flex-col gap-6 max-w-6xl mx-auto mt-16">
+      <div className="flex gap-4 items-center">
+        <LoadingSkeleton className="w-16 h-16 rounded-2xl" lines={1} />
+        <div className="flex-1 max-w-md">
+          <LoadingSkeleton lines={2} />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <LoadingSkeleton className="h-48 rounded-2xl" lines={1} />
+        <LoadingSkeleton className="h-48 rounded-2xl" lines={1} />
+        <LoadingSkeleton className="h-48 rounded-2xl" lines={1} />
+      </div>
     </div>
   );
 }
@@ -81,22 +97,26 @@ function Router() {
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="w-full min-h-screen"
         >
-          <Switch location={location}>
-            <Route path="/signin" component={Signin} />
-            <Route path="/" component={Home} />
-            <Route path="/procedures" component={ProcedureLibrary} />
-            <Route path="/simulation/:id" component={Simulation} />
-            <Route path="/simulation" component={Simulation} />
-            <Route path="/resume" component={ResumeSimulation} />
-            <Route path="/my-simulations" component={MySimulations} />
-            <Route path="/replay/:sessionId" component={ReplayViewer} />
+          <RouteErrorBoundary>
+            <Switch location={location}>
+              <Route path="/signin" component={Signin} />
+              <Route path="/" component={Home} />
+              <Route path="/procedures" component={ProcedureLibrary} />
+              <Route path="/simulation/:id" component={Simulation} />
+              <Route path="/simulation" component={Simulation} />
+              <Route path="/resume" component={ResumeSimulation} />
+              <Route path="/my-simulations" component={MySimulations} />
+              <Route path="/replay/:sessionId" component={ReplayViewer} />
 
-            <Route path="/leaderboard" component={Leaderboard} />
-            <Route path="/learn" component={LearnHub} />
-            <Route path="/anatomy" component={AnatomyExplorer} />
-            <Route path="/profile" component={Profile} />
-            <Route component={Signin} />
-          </Switch>
+              <Route path="/leaderboard" component={Leaderboard} />
+              <Route path="/learn" component={LearnHub} />
+              <Route path="/anatomy" component={AnatomyExplorer} />
+              <Route path="/profile" component={Profile} />
+              <Route path="/ai" component={AIWorkspace} />
+              <Route path="/ai/session/:sessionId" component={AISession} />
+              <Route component={Signin} />
+            </Switch>
+          </RouteErrorBoundary>
         </motion.div>
       </AnimatePresence>
     </>

@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Lock, Clock, Shuffle, Star, ArrowRight, Search, Activity, Heart, Brain, Bone, Baby, Scissors, Stethoscope, Shield, Zap, ChevronRight, Filter, Sparkles, XCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { useProcedureStore } from "@/state/procedureStore";
 
@@ -34,6 +35,7 @@ const ProcedureIcon = ({ category }: { category: string }) => {
 
 function ProcedureCard({ proc, unlocked, requiredXP, index, userXP }: any) {
   const isLocked = !unlocked;
+  const [, setLocation] = useLocation();
   
   return (
     <motion.div
@@ -41,11 +43,17 @@ function ProcedureCard({ proc, unlocked, requiredXP, index, userXP }: any) {
       whileInView={{ opacity: 1, y: 0, scale: 1, rotateY: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay: index * 0.08, type: "spring", stiffness: 100 }}
-      whileHover={{ y: -12, scale: 1.05, rotateY: -5 }}
-      className="group relative"
+      whileHover={!isLocked ? { y: -12, scale: 1.05, rotateY: -5 } : {}}
+      className="group relative cursor-pointer"
+      onClick={() => {
+        if (!isLocked) setLocation(`/simulation?proc=${proc.id}`);
+      }}
     >
-      <Link href={isLocked ? "#" : `/simulation?proc=${proc.id}`}>
-        <div className={`relative p-8 rounded-3xl glass-card transition-all duration-500 overflow-hidden ${isLocked ? 'opacity-60' : ''}`}>
+      <div className={`relative p-8 rounded-3xl glass-card transition-all duration-500 overflow-hidden ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+           role={isLocked ? 'button' : undefined}
+           aria-disabled={isLocked ? true : undefined}
+           aria-label={isLocked ? `${proc.name} — Locked. Requires ${proc.difficulty?.toLowerCase() === 'intermediate' ? '500' : '2000'} XP to unlock.` : proc.name}
+      >
           {/* Animated gradient background on hover */}
           <motion.div 
             className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-teal-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
@@ -126,7 +134,6 @@ function ProcedureCard({ proc, unlocked, requiredXP, index, userXP }: any) {
           {/* Glow effect on hover */}
           <div className="absolute inset-0 rounded-3xl border-2 border-primary/0 group-hover:border-primary/30 transition-colors duration-500 pointer-events-none" />
         </div>
-      </Link>
     </motion.div>
   );
 }
@@ -232,8 +239,9 @@ export default function ProcedureLibrary() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Animated background */}
+    <div className="min-h-screen bg-background relative selection:bg-primary/30">
+      
+      {/* Dynamic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute w-[800px] h-[800px] rounded-full opacity-10"
@@ -388,7 +396,7 @@ export default function ProcedureLibrary() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3, 4, 5, 6].map((idx) => (
-              <div key={idx} className="h-80 bg-neutral-900 border border-neutral-800 rounded-3xl animate-pulse" />
+              <div key={idx} className="h-80 bg-muted border border-border rounded-3xl animate-pulse" />
             ))}
           </div>
         ) : procedures.length > 0 ? (
