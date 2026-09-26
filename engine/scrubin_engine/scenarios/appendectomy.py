@@ -53,6 +53,19 @@ def build_patient(rng: random.Random) -> PatientSpec:
         comorbidities=("obesity (BMI 30)", "mild intermittent asthma (albuterol PRN)"),
         npo_hours=10.0,
         blood_type="O+",
+        interview={
+            "last_food": "Burger and fries about 10 hours ago; a few sips of water 4 hours ago.",
+            "vomiting": "Threw up twice, last time about 3 hours ago.",
+            "pain": "Sharp, right lower belly, 8 out of 10, worse when the car went over bumps.",
+            "teeth": "All my own teeth, nothing loose, no caps or dentures.",
+            "previous_anesthesia": "Tonsils out when I was 6 — no problems that I know of.",
+            "family_anesthesia_problems": "Not that I know of.",
+            "medications": "Albuterol inhaler when I need it — last used about three months ago.",
+            "allergy_reaction": "Penicillin gave me hives as a kid. No trouble breathing.",
+            "asthma": "Mild. Never been in hospital for it.",
+            "smoking_alcohol": "Don't smoke. A few beers on weekends.",
+            "other": "No heart or lung problems apart from the asthma. Never had a blood clot.",
+        },
         hidden=hidden,
     )
 

@@ -33,6 +33,8 @@ class PatientSpec:
     comorbidities: tuple[str, ...] = ()
     npo_hours: float = 8.0
     blood_type: str = "O+"
+    # Answers the patient gives if asked (pre-op interview); public.
+    interview: dict = field(default_factory=dict)
     # Hidden truths (never sent to the client until debrief).
     hidden: dict = field(default_factory=dict)
 
@@ -107,6 +109,7 @@ class PatientSpec:
             "comorbidities": list(self.comorbidities),
             "npo_hours": self.npo_hours,
             "blood_type": self.blood_type,
+            "interview": dict(self.interview),
             "baseline": {
                 "hr": self.hr,
                 "sbp": self.sbp,

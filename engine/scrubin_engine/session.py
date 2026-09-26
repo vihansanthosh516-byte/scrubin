@@ -133,6 +133,7 @@ class Session:
         return {
             "role": self.role,
             "airway": c.airway.device,
+            "consciousness": c.eff.consciousness,
             "vent": c.machine.mode,
             "patient": c.patient.public_summary(),
             "surgical_verbs": ", ".join(t["verbs"][0] for t in c.procedure.spec["tasks"]) if c.procedure else "none",

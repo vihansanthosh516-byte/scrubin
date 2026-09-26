@@ -427,5 +427,20 @@ def parse(text: str) -> ParseResult:
         if sub.clarification and not combined.clarification:
             combined.clarification = sub.clarification
     if combined.unparsed and whole.ok and not whole.unparsed:
+        # The grammar only understood part of a multi-clause utterance. Keep its best
+        # guess, but flag the leftovers so the LLM can read the whole sentence.
+        whole.unparsed = [u for u in combined.unparsed if _meaningful(u)]
+        if not whole.unparsed and combined.actions and len(combined.actions) > len(whole.actions):
+            return combined
         return whole
+    if combined.unparsed:
+        combined.unparsed = [u for u in combined.unparsed if _meaningful(u)]
     return combined
+
+
+_FILLER = {"please", "and", "the", "a", "an", "iv", "too", "now", "okay", "ok", "then", "thanks", "thank", "you", "him", "her", "at", "of", "to", "is", "it", "that", "go", "ahead"}
+
+
+def _meaningful(fragment: str) -> bool:
+    words = [w for w in re.findall(r"[a-z]+", fragment.lower()) if w not in _FILLER]
+    return len(words) >= 2

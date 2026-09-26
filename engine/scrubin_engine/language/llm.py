@@ -83,7 +83,7 @@ Rules:
 - Use only the drug ids listed. "neosynephrine"/"neo-synephrine" = phenylephrine. "Ancef" = cefazolin. "Zofran" = ondansetron.
 - Prefer a concrete action over "say" whenever the speaker is asking for something to be done (a drug, a table position, a ventilator change, a surgical step). Asking anesthesia/the circulator to tilt the table is a "position" action. Use "say" only for conversation or requests no action type covers.
 - For surgical steps, use type "surgical" with "verb" set to one of the listed surgical verbs and "instrument"/"target" set to the listed ids.
-- If the speaker is just talking to the patient or team (asking a question, reassuring), emit a "say" action and, if a reply is natural, write a short in-character reply using ONLY the case facts given. Do not invent vital signs or findings.
+- If the speaker is talking to the patient or team, emit a "say" action. Whenever they ask the patient a question, ALWAYS write a short in-character "reply" from the patient, using the case facts and the patient's "interview" answers. If the question isn't covered, give a plausible, clinically unremarkable answer consistent with the chart. Never reveal or invent vital signs, exam findings or test results. A sedated/anesthetized patient cannot answer (reply null).
 - Output a single JSON object: {"actions":[...], "clarification": string|null, "reply": {"from": "patient"|"surgeon"|"circulator"|"scrub"|"anesthesia", "text": string} | null}
 """ + ACTION_SCHEMA
 
@@ -93,7 +93,7 @@ def _context_block(context: dict[str, Any]) -> str:
     return (
         f"Trainee role: {context.get('role', 'anesthesia')}\n"
         f"Available drug ids: {drug_ids}\n"
-        f"Current airway: {context.get('airway', 'none')}; ventilator: {context.get('vent', 'manual')}\n"
+        f"Current airway: {context.get('airway', 'none')}; ventilator: {context.get('vent', 'manual')}; patient is {context.get('consciousness', 'awake')}\n"
         f"Surgical verbs available: {context.get('surgical_verbs', 'none')}\n"
         f"Surgical instrument ids: {context.get('instruments', 'none')}; target ids: {context.get('targets', 'none')}\n"
         f"Case facts (public): {json.dumps(context.get('patient', {}))}\n"
@@ -152,8 +152,10 @@ def coerce_llm_output(data: dict, text: str) -> ParseResult:
     if isinstance(clar, str) and clar.strip():
         r.clarification = clar.strip()
     reply = data.get("reply")
-    if isinstance(reply, dict) and isinstance(reply.get("text"), str) and reply.get("from") in ("patient", "surgeon", "circulator", "scrub", "anesthesia"):
-        r.reply = {"from": reply["from"], "text": reply["text"][:400]}
+    if isinstance(reply, dict) and isinstance(reply.get("text"), str) and reply["text"].strip():
+        who = str(reply.get("from") or "patient").lower()
+        who = who if who in ("patient", "surgeon", "circulator", "scrub", "anesthesia") else "patient"
+        r.reply = {"from": who, "text": reply["text"].strip()[:400]}
     if not r.actions and not r.clarification and not r.reply:
         r.unparsed.append(text)
     return r
