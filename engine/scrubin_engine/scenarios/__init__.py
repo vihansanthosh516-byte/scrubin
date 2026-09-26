@@ -1,0 +1,3 @@
+from .appendectomy import SCENARIO as APPENDECTOMY
+
+SCENARIOS = {APPENDECTOMY["id"]: APPENDECTOMY}
