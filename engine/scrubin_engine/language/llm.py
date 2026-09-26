@@ -41,12 +41,18 @@ _load_dotenv()
 
 API_URL = os.environ.get("SCRUBIN_LLM_URL", "https://api.groq.com/openai/v1/chat/completions")
 MODEL = os.environ.get("SCRUBIN_LLM_MODEL", "openai/gpt-oss-120b")
+# Free-tier friendly: Groq rate-limits each model separately (free plan: 8k tokens/min,
+# 1k requests/day per model), so on a 429 we fall through to the next free model.
+FALLBACK_MODELS = [m.strip() for m in os.environ.get("SCRUBIN_LLM_FALLBACKS", "openai/gpt-oss-20b,qwen/qwen3.8-27b").split(",") if m.strip()]
 STT_URL = os.environ.get("SCRUBIN_STT_URL", "https://api.groq.com/openai/v1/audio/transcriptions")
 STT_MODEL = os.environ.get("SCRUBIN_STT_MODEL", "whisper-large-v3-turbo")
 
 
 def api_key() -> Optional[str]:
-    return os.environ.get("SCRUBIN_LLM_API_KEY") or os.environ.get("GROQ_API_KEY")
+    key = os.environ.get("SCRUBIN_LLM_API_KEY") or os.environ.get("GROQ_API_KEY")
+    if not key and API_URL.startswith(("http://localhost", "http://127.0.0.1")):
+        return "local"  # e.g. Ollama: free, unlimited, no key needed
+    return key
 
 
 ACTION_SCHEMA = """
@@ -100,23 +106,28 @@ async def llm_parse(text: str, context: dict[str, Any], timeout_s: float = 8.0) 
     if not key:
         r.unparsed.append(text)
         return r
-    payload = {
-        "model": MODEL,
-        "temperature": 0,
-        "response_format": {"type": "json_object"},
-        **({"reasoning_effort": "low"} if "gpt-oss" in MODEL else {}),
-        "messages": [
-            {"role": "system", "content": SYSTEM},
-            {"role": "user", "content": _context_block(context) + f'\nUtterance: "{text}"'},
-        ],
-    }
-    try:
-        async with httpx.AsyncClient(timeout=timeout_s) as client:
-            resp = await client.post(API_URL, headers={"Authorization": f"Bearer {key}"}, json=payload)
-            resp.raise_for_status()
-            content = resp.json()["choices"][0]["message"]["content"]
-        data = json.loads(content)
-    except (httpx.HTTPError, KeyError, ValueError, json.JSONDecodeError):
+    messages = [
+        {"role": "system", "content": SYSTEM},
+        {"role": "user", "content": _context_block(context) + f'\nUtterance: "{text}"'},
+    ]
+    data = None
+    async with httpx.AsyncClient(timeout=timeout_s) as client:
+        for model in [MODEL, *[m for m in FALLBACK_MODELS if m != MODEL]]:
+            payload: dict[str, Any] = {"model": model, "temperature": 0, "response_format": {"type": "json_object"}, "messages": messages}
+            if "gpt-oss" in model:
+                payload["reasoning_effort"] = "low"
+            elif "qwen3" in model:
+                payload["reasoning_format"] = "hidden"
+            try:
+                resp = await client.post(API_URL, headers={"Authorization": f"Bearer {key}"}, json=payload)
+                if resp.status_code in (429, 500, 502, 503) or (resp.status_code == 400 and "json" in resp.text.lower()):
+                    continue  # rate-limited / flaky / bad JSON: try the next free model
+                resp.raise_for_status()
+                data = json.loads(resp.json()["choices"][0]["message"]["content"])
+                break
+            except (httpx.HTTPError, KeyError, ValueError, json.JSONDecodeError):
+                continue
+    if data is None:
         r.unparsed.append(text)
         return r
     return coerce_llm_output(data, text)
