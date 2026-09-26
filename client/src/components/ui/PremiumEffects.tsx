@@ -179,15 +179,15 @@ export function CustomCursor() {
       {/* Outer ring when hovering */}
       <motion.div
         className="fixed top-0 left-0 w-12 h-12 rounded-full border-2 border-primary/50 z-[9998] pointer-events-none"
+        transition={{
+          opacity: { duration: 0.2 },
+          scale: { duration: 0.3, damping: 20, stiffness: 300 }
+        }}
         style={{
           x: cursorXSpring,
           y: cursorYSpring,
           opacity: isHovering ? 1 : 0,
           scale: isHovering ? 1 : 0.8,
-          transition: {
-            opacity: { duration: 0.2 },
-            scale: { duration: 0.3, damping: 20, stiffness: 300 }
-          }
         }}
       />
     </>
@@ -239,7 +239,7 @@ export function TextReveal({ text, className = "", delay = 0 }: TextRevealProps)
 export function AnimatedGradientText({ 
   children, 
   className = "",
-  colors = ["#7EC8E3", "#5DCAA5", "#7EC8E3"]
+  colors = ["#CC553D", "#D99B26", "#CC553D"]
 }: { 
   children: ReactNode, 
   className?: string,

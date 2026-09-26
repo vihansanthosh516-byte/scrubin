@@ -1,123 +1,401 @@
-import { useCallback, useEffect, useState } from "react";
-import { Link, useLocation } from "wouter";
-import { Film, Loader2, Play, Trash2 } from "lucide-react";
-import { ScrubinStaticPanel } from "@/components/ui/scrubin-card";
-import { useAuth } from "@/contexts/AuthContext";
-import { fmtTime } from "@/components/or/AnesthesiaStation";
-import { engineApi } from "@/engine/client";
-import type { SavedCase } from "@/engine/types";
-
-function when(ts: number) {
-  return new Date(ts * 1000).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-}
-
-function outcomeLabel(c: SavedCase) {
-  if (c.status !== "ended") return c.sim_t > 0 ? "In progress" : "Not started";
-  return c.outcome === "death" ? "Patient died" : c.outcome === "pacu" ? "Extubated → PACU" : "Ended";
-}
+import { useState, useEffect, useMemo } from "react";
+import { useLocation } from "wouter";
+import { useSimulationStore } from "../state/simulationStore";
+import { 
+  ShieldCheck, Activity, Clock, Play, AlertTriangle, 
+  Search, Trash2, RotateCcw, CheckCircle, XCircle, Sparkles 
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { useAuth } from "../contexts/AuthContext";
+import { getUserSessions, PersistedSession } from "../lib/leaderboard";
+import { API_BASE } from "../lib/api";
 
 export default function MySimulations() {
-  const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [cases, setCases] = useState<SavedCase[] | null>(null);
-  const [error, setError] = useState(false);
+  const { setState, setTick, setSimId } = useSimulationStore();
+  const { user } = useAuth();
+  
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [completedCases, setCompletedCases] = useState<PersistedSession[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
-  const load = useCallback(() => {
-    if (!user) return;
-    engineApi
-      .listCases(user.id)
-      .then(setCases)
-      .catch(() => setError(true));
-  }, [user]);
+  // Filters and Sorting
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
+  const [sort, setSort] = useState<"newest" | "oldest">("newest");
 
-  useEffect(load, [load]);
-
-  const remove = async (id: string) => {
-    if (!window.confirm("Delete this case and its replay? This can't be undone.")) return;
-    await engineApi.deleteCase(id);
-    load();
+  const fetchSaved = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/sim/list`);
+      if (!res.ok) throw new Error("Failed to fetch simulations");
+      const data = await res.json();
+      setSessions(Array.isArray(data) ? data : (data.saved || data.sessions || []));
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const inProgress = (cases ?? []).filter((c) => c.status !== "ended" && c.sim_t > 0);
-  const finished = (cases ?? []).filter((c) => c.status === "ended");
+  useEffect(() => {
+    fetchSaved();
+  }, []);
+
+  // Completed cases live in Supabase (persisted by Simulation.tsx on
+  // completion); the in-memory /api/sim/list below only holds saves/resumes.
+  // Load both so the page is the single place to review a trainee's record.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    getUserSessions(user.id).then((rows) => {
+      if (!cancelled) setCompletedCases(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const handleResume = async (sessionId: string) => {
+    setActionLoadingId(`resume-${sessionId}`);
+    try {
+      const res = await fetch(`${API_BASE}/api/sim/resume`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId })
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.detail || "Failed to resume simulation");
+      }
+      const stateData = await res.json();
+      
+      setSimId(stateData.session_id || sessionId);
+      setState(stateData);
+      setTick(stateData.tick || 0);
+
+      const procedure = stateData.procedure || "appendectomy";
+      setLocation(`/simulation?proc=${procedure}`);
+    } catch (err: any) {
+      setError("Error resuming: " + err.message);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleReplay = (sessionId: string) => {
+    setLocation(`/replay/${sessionId}`);
+  };
+
+  const handleDelete = async (sessionId: string) => {
+    // Confirm delete locally, but let backend be authoritative
+    if (!window.confirm("Are you sure you want to delete this simulation?")) return;
+    
+    setActionLoadingId(`delete-${sessionId}`);
+    try {
+      const res = await fetch(`${API_BASE}/api/sim/${sessionId}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) throw new Error("Failed to delete simulation");
+      
+      // Update local view by fetching or filtering
+      setSessions((prev) => prev.filter(s => s.session_id !== sessionId));
+    } catch (err: any) {
+      setError("Error deleting: " + err.message);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Filter and Sort Logic
+  const filteredAndSortedSessions = useMemo(() => {
+    let result = [...sessions];
+
+    // Search
+    if (search.trim() !== "") {
+      const q = search.toLowerCase();
+      result = result.filter(s => 
+        (s.procedure || "").toLowerCase().includes(q) || 
+        (s.session_id || "").toLowerCase().includes(q)
+      );
+    }
+
+    // Filter
+    if (filter !== "all") {
+      result = result.filter(s => {
+        const status = (s.status || s.patient_status || "active").toLowerCase();
+        const isCompleted = ["completed", "finished", "success", "failed"].includes(status) || s.is_completed;
+        if (filter === "completed") return isCompleted;
+        if (filter === "active") return !isCompleted;
+        return true;
+      });
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      const timeA = a.last_saved ? new Date(a.last_saved).getTime() : 0;
+      const timeB = b.last_saved ? new Date(b.last_saved).getTime() : 0;
+      return sort === "newest" ? timeB - timeA : timeA - timeB;
+    });
+
+    return result;
+  }, [sessions, search, filter, sort]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
+        <div className="w-16 h-16 rounded-full border-t-2 border-primary animate-spin" />
+        <p className="text-muted-foreground font-mono-data">Loading your simulations...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4">
-      <div className="max-w-5xl mx-auto space-y-8">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-[#7EC8E3]/80">Your OR history</div>
-            <h1 className="text-3xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>
-              My Simulations
+    <div className="h-dvh bg-background text-foreground relative overflow-clip">
+      {/* Subtle warm editorial texture — no neon */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "radial-gradient(#8C827A 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+
+      {/* Fixed-height dashboard: header + filters pinned, list scrolls internally */}
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-5xl flex-col gap-3 px-4 pt-20 pb-3">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-4">
+            <motion.div
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card"
+              whileHover={{ scale: 1.05 }}
+            >
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-mono-data text-primary">Your Case Log</span>
+            </motion.div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
+              My <span className="text-[#CC553D] dark:text-[#D95338]">Simulations</span>
             </h1>
           </div>
-          <Link href="/simulation?proc=appendectomy" className="px-4 py-2 rounded-xl border border-[#7EC8E3]/40 hover:bg-[#7EC8E3]/10 text-sm">
-            New case
-          </Link>
+          <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            New Simulation
+          </Button>
         </div>
 
-        {error && (
-          <div className="rounded-xl border border-amber-400/40 bg-amber-400/10 p-4 text-sm">
-            Can't reach the simulation engine. Start it with <code className="font-mono-data">npm run dev</code>.
+        <div className="flex flex-col md:flex-row gap-3 shrink-0 glass-card p-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input 
+              type="text" 
+              placeholder="Search ID or procedure..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-background border border-border rounded-sm pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground transition-all"
+            />
+          </div>
+          <div className="flex gap-2">
+            <select 
+              value={filter} 
+              onChange={(e) => setFilter(e.target.value as any)}
+              className="bg-background border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground"
+            >
+              <option value="all">All States</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+            </select>
+            <select 
+              value={sort} 
+              onChange={(e) => setSort(e.target.value as any)}
+              className="bg-background border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Scrollable list area — the only part of the dashboard that scrolls */}
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-4">
+          {completedCases.length > 0 && (
+            <div className="glass-card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <ShieldCheck className="w-4 h-4 text-[#2E6B4B] dark:text-[#8FBF9A]" />
+                <h2 className="font-bold text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>Completed Cases</h2>
+                <span className="text-[10px] font-mono-data px-2 py-0.5 rounded-full bg-background/60 border border-border text-muted-foreground">
+                  {completedCases.length} on record
+                </span>
+              </div>
+              <div className="grid gap-2.5">
+                {completedCases.map((c) => {
+                  const xp =
+                    c.outcome === "Critical" ? 50 : 100 + Math.floor(Math.max(0, c.score) / 10);
+                  const outcomeColor =
+                    c.outcome === "Successful"
+                      ? "text-[#2E6B4B] dark:text-[#8FBF9A] border-[#2E6B4B]/40 bg-[#2E6B4B]/10"
+                      : c.outcome === "Complicated"
+                      ? "text-[#D99B26] dark:text-[#E0B060] border-[#D99B26]/40 bg-[#D99B26]/10"
+                      : "text-[#A32A2A] dark:text-[#E08080] border-[#A32A2A]/40 bg-[#A32A2A]/10";
+                  return (
+                    <div
+                      key={c.id}
+                      className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-sm bg-background/50 border border-border"
+                    >
+                      <div className="flex flex-wrap items-center gap-3 min-w-0">
+                        <span className="font-semibold text-sm text-foreground">{c.procedure_name || c.procedure_id}</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${outcomeColor}`}>
+                          {c.outcome}
+                        </span>
+                        <span className="text-xs text-muted-foreground font-mono-data">Score {c.score}%</span>
+                        <span className="text-xs text-muted-foreground font-mono-data">+{xp} XP</span>
+                        {c.complications_count > 0 && (
+                          <span className="text-[10px] font-mono-data px-2 py-0.5 rounded-full bg-[#A32A2A]/10 border border-[#A32A2A]/30 text-[#E08080]">
+                            {c.complications_count} complication{c.complications_count > 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        <Clock className="w-3 h-3 inline mr-1 -mt-0.5" />
+                        {c.created_at ? new Date(c.created_at).toLocaleString() : "Unknown"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="p-3 bg-[#A32A2A]/10 border border-[#A32A2A]/40 rounded-sm text-[#E08080] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-[#A32A2A] shrink-0" />
+                {error}
+              </div>
+              <button onClick={() => setError(null)}><XCircle className="w-4 h-4 text-[#A32A2A] hover:text-[#E08080]" /></button>
+            </div>
+          )}
+
+        {sessions.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-12 glass-card text-center flex flex-col items-center"
+          >
+            <motion.div
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            >
+              <Activity className="w-12 h-12 text-muted-foreground/40 mb-4" />
+            </motion.div>
+            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>No Simulations Found</h2>
+            <p className="text-muted-foreground mb-6">You have no simulation history available.</p>
+            <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              Start New Simulation
+            </Button>
+          </motion.div>
+        ) : filteredAndSortedSessions.length === 0 ? (
+          <div className="p-12 glass-card text-center flex flex-col items-center">
+            <Search className="w-12 h-12 text-muted-foreground/40 mb-4" />
+            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>No Matches</h2>
+            <p className="text-muted-foreground">No simulations match your current filters.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {filteredAndSortedSessions.map((sim: any, i: number) => {
+              const status = (sim.status || sim.patient_status || "active").toLowerCase();
+              const isCompleted = ["completed", "finished", "success", "failed"].includes(status) || sim.is_completed;
+              
+              return (
+                <motion.div
+                  // The backend can save the same session_id multiple times, so
+                  // session_id is NOT a unique key — colliding keys break React
+                  // reconciliation when the list switches between branches.
+                  key={sim.id || `${sim.session_id}-${i}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 glass-card flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+                >
+                  <div className="flex flex-col gap-3 flex-1">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="font-bold text-lg text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>{sim.procedure || "Unknown Procedure"}</h3>
+                      <span className="text-[10px] font-mono-data bg-background/60 px-2 py-1 rounded border border-border text-muted-foreground">
+                        ID: {sim.session_id}
+                      </span>
+                      {isCompleted ? (
+                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-[#2E6B4B]/40 bg-[#2E6B4B]/10 text-[#2E6B4B] flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" /> Completed
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-[#CC553D]/40 bg-[#CC553D]/10 text-[#CC553D] flex items-center gap-1">
+                          <Activity className="w-3 h-3" /> Active
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> 
+                        Saved: {sim.last_saved ? new Date(sim.last_saved).toLocaleString() : "Unknown"}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Activity className="w-3 h-3" /> 
+                        Tick: {sim.tick || 0}
+                      </span>
+                      <span>Status: {sim.patient_status || "Stable"}</span>
+                      {sim.progress !== undefined && (
+                        <span>Progress: {sim.progress}%</span>
+                      )}
+                    </div>
+
+                    {isCompleted && sim.outcome && (
+                      <div className="text-xs text-muted-foreground border-t border-border pt-2 mt-1">
+                        <span className="uppercase font-bold text-foreground/70 mr-2">Outcome:</span>
+                        {sim.outcome}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    {!isCompleted && (
+                      <Button 
+                        onClick={() => handleResume(sim.session_id)} 
+                        disabled={!!actionLoadingId}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground flex-1 md:flex-none"
+                      >
+                        {actionLoadingId === `resume-${sim.session_id}` ? (
+                          <><div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin mr-2" /> Resuming...</>
+                        ) : (
+                          <><Play className="w-4 h-4 mr-2" /> Resume</>
+                        )}
+                      </Button>
+                    )}
+                    
+                    {isCompleted && (
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleReplay(sim.session_id)} 
+                        disabled={!!actionLoadingId}
+                        className="text-[#CC553D] hover:text-[#CC553D] flex-1 md:flex-none"
+                      >
+                        <RotateCcw className="w-4 h-4 mr-2" /> Replay
+                      </Button>
+                    )}
+
+                    <Button 
+                      variant="outline"
+                      onClick={() => handleDelete(sim.session_id)} 
+                      disabled={!!actionLoadingId}
+                      className="border-[#A32A2A]/40 hover:bg-[#A32A2A]/10 text-[#A32A2A] hover:text-[#E08080] flex-1 md:flex-none"
+                    >
+                      {actionLoadingId === `delete-${sim.session_id}` ? (
+                        <div className="w-4 h-4 border-2 border-[#A32A2A]/50 border-t-[#A32A2A] rounded-full animate-spin" />
+                      ) : (
+                        <><Trash2 className="w-4 h-4" /> Delete</>
+                      )}
+                    </Button>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
-        {!cases && !error && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin" /> Loading…
-          </div>
-        )}
-        {cases && cases.length === 0 && <p className="text-muted-foreground">No cases yet — start one from the procedure library.</p>}
-
-        {inProgress.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="text-sm uppercase tracking-[0.14em] text-[#7EC8E3]/80">Continue</h2>
-            {inProgress.map((c) => (
-              <CaseRow key={c.id} c={c} onDelete={remove}>
-                <button onClick={() => setLocation(`/simulation?proc=${c.scenario}&case=${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#5DCAA5]/50 text-[#5DCAA5] text-xs hover:bg-[#5DCAA5]/10">
-                  <Play className="w-3.5 h-3.5" /> Resume
-                </button>
-              </CaseRow>
-            ))}
-          </section>
-        )}
-
-        {finished.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="text-sm uppercase tracking-[0.14em] text-[#7EC8E3]/80">Completed</h2>
-            {finished.map((c) => (
-              <CaseRow key={c.id} c={c} onDelete={remove}>
-                <button onClick={() => setLocation(`/replay/${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#7EC8E3]/40 text-xs hover:bg-[#7EC8E3]/10">
-                  <Film className="w-3.5 h-3.5" /> Replay & debrief
-                </button>
-              </CaseRow>
-            ))}
-          </section>
-        )}
+        </div>
       </div>
     </div>
-  );
-}
-
-function CaseRow({ c, children, onDelete }: { c: SavedCase; children: React.ReactNode; onDelete: (id: string) => void }) {
-  return (
-    <ScrubinStaticPanel className="p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="font-semibold" style={{ fontFamily: "'Syne', sans-serif" }}>
-            {c.scenario_name} · {c.role === "anesthesia" ? "Anesthesiologist" : "Surgeon"}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {when(c.updated_at)} · {outcomeLabel(c)} · case time {fmtTime(c.sim_t)}
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {c.score != null && <div className="font-mono-data text-2xl text-[#7EC8E3]">{c.score}</div>}
-          {children}
-          <button onClick={() => onDelete(c.id)} className="p-2 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-300" aria-label="Delete case">
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    </ScrubinStaticPanel>
   );
 }

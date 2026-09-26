@@ -17,7 +17,7 @@ function ScopeView({ state }: { state: CaseState }) {
   const appendixGone = done.has("specimen_out") || done.has("remove_specimen");
   const insufflating = s.iap > 1;
   return (
-    <div className="relative aspect-[16/9] rounded-2xl overflow-hidden border border-[#7EC8E3]/15 bg-black">
+    <div className="relative aspect-[16/9] rounded-sm overflow-hidden border border-border bg-black">
       {cameraIn ? (
         <svg viewBox="0 0 320 180" className="w-full h-full">
           <defs>
@@ -68,17 +68,17 @@ function ScopeView({ state }: { state: CaseState }) {
           {done.has("desufflate") ? "Camera out — closing." : insufflating ? "Insufflating…" : "No camera in."}
         </div>
       )}
-      <div className="absolute top-2 left-2 font-mono-data text-[11px] text-[#7EC8E3] bg-black/50 rounded px-2 py-0.5">
+      <div className="absolute top-2 left-2 font-mono-data text-[11px] text-primary bg-muted rounded px-2 py-0.5">
         IAP {s.iap.toFixed(0)} mmHg
       </div>
       {s.running && (
-        <div className="absolute bottom-0 inset-x-0 bg-black/60 px-3 py-2">
+        <div className="absolute bottom-0 inset-x-0 bg-muted px-3 py-2">
           <div className="flex justify-between text-xs">
             <span>{s.running.name}</span>
             <span className="font-mono-data">{Math.round(s.running.progress * 100)}%</span>
           </div>
-          <div className="h-1 rounded bg-white/10 mt-1">
-            <div className="h-1 rounded bg-[#5DCAA5]" style={{ width: `${s.running.progress * 100}%` }} />
+          <div className="h-1 rounded bg-muted mt-1">
+            <div className="h-1 rounded bg-sage" style={{ width: `${s.running.progress * 100}%` }} />
           </div>
         </div>
       )}
@@ -99,7 +99,7 @@ export function SurgeonStation({ state, act, say }: Props) {
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <div className="space-y-3">
         <ScopeView state={state} />
-        {s.findings.length > 0 && <div className="text-xs text-amber-200/90">{s.findings.join(" ")}</div>}
+        {s.findings.length > 0 && <div className="text-xs text-amber-warm">{s.findings.join(" ")}</div>}
         <Section title="Instrument (scrub hands you…)">
           <div className="flex flex-wrap gap-1">
             {Object.entries(s.instruments).map(([id, name]) => (
@@ -119,9 +119,9 @@ export function SurgeonStation({ state, act, say }: Props) {
                 type="button"
                 title={t.blocked ?? ""}
                 onClick={() => perform(t.id)}
-                className={`w-full flex items-center justify-between rounded-lg border px-3 py-1.5 text-left text-xs transition-colors ${
-                  t.available ? "border-[#5DCAA5]/30 hover:bg-[#5DCAA5]/10" : "border-white/5 text-muted-foreground"
-                } ${s.running?.task === t.id ? "bg-[#5DCAA5]/15" : ""}`}
+                className={`w-full flex items-center justify-between rounded-sm border px-3 py-1.5 text-left text-xs transition-colors ${
+                  t.available ? "border-sage/40 hover:bg-sage/10" : "border-border text-muted-foreground"
+                } ${s.running?.task === t.id ? "bg-sage/10" : ""}`}
               >
                 <span>{t.name}</span>
                 <span className="text-[10px]">{t.available ? "ready" : "blocked"}</span>

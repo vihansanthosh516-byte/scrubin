@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { Pause, Play, Volume2, VolumeX, MessageSquare, MessageSquareOff, Stethoscope, Syringe, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { ScrubinStaticPanel } from "@/components/ui/scrubin-card";
 import { AnesthesiaStation, fmtTime } from "@/components/or/AnesthesiaStation";
 import { CommandBar } from "@/components/or/CommandBar";
 import { CommsLog } from "@/components/or/CommsLog";
@@ -12,6 +11,7 @@ import { SurgeonStation } from "@/components/or/SurgeonStation";
 import { useAuth } from "@/contexts/AuthContext";
 import { engineApi, useOrConnection } from "@/engine/client";
 import { recordSession } from "@/lib/recordSession";
+import ClassicSimulation from "./Simulation";
 import type { Catalog, CreateCaseResponse, Debrief, Role } from "@/engine/types";
 
 const SUPPORTED = new Set(["appendectomy"]);
@@ -82,22 +82,9 @@ export default function OperatingRoom() {
     window.speechSynthesis?.cancel();
   }, [created, conn, user, recorded, state?.status]);
 
+  // Procedures the real-time engine doesn't model yet keep the classic simulation.
   if (!SUPPORTED.has(procId)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 pt-20">
-        <ScrubinStaticPanel className="p-8 max-w-lg text-center space-y-3">
-          <h1 className="text-2xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>
-            Not in the new OR yet
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            This procedure hasn't been rebuilt for the real-time simulator. Laparoscopic appendectomy is ready.
-          </p>
-          <Link href="/simulation?proc=appendectomy" className="inline-block px-4 py-2 rounded-xl border border-[#7EC8E3]/40 hover:bg-[#7EC8E3]/10 text-sm" onClick={() => setTimeout(() => window.location.reload(), 0)}>
-            Open appendectomy
-          </Link>
-        </ScrubinStaticPanel>
-      </div>
-    );
+    return <ClassicSimulation />;
   }
 
   if (stage === "debrief" && debrief) {
@@ -121,8 +108,8 @@ export default function OperatingRoom() {
       <div className="min-h-screen pt-24 pb-12 px-4">
         <div className="max-w-4xl mx-auto space-y-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="space-y-2">
-            <div className="text-xs uppercase tracking-[0.2em] text-[#7EC8E3]/80">Real-time operating room</div>
-            <h1 className="text-4xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>
+            <div className="text-xs uppercase tracking-[0.2em] text-primary">Real-time operating room</div>
+            <h1 className="text-4xl font-bold">
               Laparoscopic Appendectomy
             </h1>
             <p className="text-muted-foreground max-w-2xl">
@@ -131,7 +118,7 @@ export default function OperatingRoom() {
             </p>
           </motion.div>
           {engineUp === false && (
-            <div className="rounded-xl border border-amber-400/40 bg-amber-400/10 p-4 text-sm">
+            <div className="rounded-sm border border-amber-warm/40 bg-amber-warm/10 p-4 text-sm">
               The simulation engine isn't running. Start it with <code className="font-mono-data">npm run dev</code> (it launches the Python engine on port 8000),
               or on its own with <code className="font-mono-data">npm run engine</code>.
             </div>
@@ -152,6 +139,10 @@ export default function OperatingRoom() {
               onClick={() => begin("surgeon")}
             />
           </div>
+          <div className="flex gap-4 text-xs text-muted-foreground">
+            <Link href="/or/cases" className="hover:text-foreground underline underline-offset-4">My OR cases</Link>
+            <a href={`/simulation/classic?proc=${procId}`} className="hover:text-foreground underline underline-offset-4">Classic mode</a>
+          </div>
           {creating && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" /> Setting up the room…
@@ -167,21 +158,21 @@ export default function OperatingRoom() {
   const ended = state?.status === "ended";
 
   return (
-    <div className="min-h-screen pt-24 pb-6 px-3 lg:px-5 bg-[#0A1628]">
+    <div className="min-h-screen pt-24 pb-6 px-3 lg:px-5 bg-background">
       {/* top bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 py-3">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-[#7EC8E3]/80">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-primary">
             {role === "anesthesia" ? "You are the anesthesiologist" : "You are the surgeon"} · {conn.connected ? "live" : "reconnecting…"}
           </div>
-          <div className="text-lg font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <div className="text-lg font-bold">
             {p.name}, {p.age}{p.sex} · {p.weight_kg} kg · {created.scenario.name}
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="font-mono-data text-2xl tabular-nums text-[#7EC8E3] w-[88px] text-right">{fmtTime(state?.t ?? 0)}</div>
+          <div className="font-mono-data text-2xl tabular-nums text-primary w-[88px] text-right">{fmtTime(state?.t ?? 0)}</div>
           <button
-            className="w-9 h-9 rounded-lg border border-[#7EC8E3]/30 flex items-center justify-center hover:bg-[#7EC8E3]/10"
+            className="w-9 h-9 rounded-sm border border-border flex items-center justify-center hover:bg-primary/10"
             onClick={() => {
               conn.control({ paused: !state?.paused });
               setStarted(true);
@@ -190,18 +181,18 @@ export default function OperatingRoom() {
           >
             {state?.paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
           </button>
-          <div className="flex rounded-lg border border-[#7EC8E3]/20 overflow-hidden">
+          <div className="flex rounded-sm border border-border overflow-hidden">
             {SPEEDS.map((s) => (
-              <button key={s} onClick={() => conn.control({ speed: s })} className={`px-2 py-1.5 text-xs font-mono-data ${state?.speed === s ? "bg-[#7EC8E3]/25 text-[#7EC8E3]" : "hover:bg-white/5"}`}>
+              <button key={s} onClick={() => conn.control({ speed: s })} className={`px-2 py-1.5 text-xs font-mono-data ${state?.speed === s ? "bg-primary/10 text-primary" : "hover:bg-accent"}`}>
                 {s}×
               </button>
             ))}
           </div>
-          <button className="w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/5" onClick={() => setMuted((m) => !m)} aria-label="Toggle monitor sound" title="Monitor sound">
+          <button className="w-9 h-9 rounded-sm border border-border flex items-center justify-center hover:bg-accent" onClick={() => setMuted((m) => !m)} aria-label="Toggle monitor sound" title="Monitor sound">
             {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
           <button
-            className="w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/5"
+            className="w-9 h-9 rounded-sm border border-border flex items-center justify-center hover:bg-accent"
             onClick={() => {
               setVoices((v) => !v);
               window.speechSynthesis?.cancel();
@@ -211,7 +202,7 @@ export default function OperatingRoom() {
           >
             {voices ? <MessageSquare className="w-4 h-4" /> : <MessageSquareOff className="w-4 h-4" />}
           </button>
-          <button onClick={endCase} className="px-3 py-1.5 rounded-lg border border-amber-300/40 text-amber-200 text-xs hover:bg-amber-300/10">
+          <button onClick={endCase} className="px-3 py-1.5 rounded-sm border border-amber-warm/40 text-amber-warm text-xs hover:bg-amber-warm/10">
             End & debrief
           </button>
         </div>
@@ -219,10 +210,10 @@ export default function OperatingRoom() {
 
       {/* pre-brief */}
       {!started && (
-        <ScrubinStaticPanel className="p-5 mb-4">
+        <div className="glass-card p-5 mb-4">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
             <div className="space-y-2 text-sm">
-              <div className="text-xs uppercase tracking-wider text-[#7EC8E3]/80">Pre-op chart</div>
+              <div className="text-xs uppercase tracking-wider text-primary">Pre-op chart</div>
               <p>{p.history}</p>
               <div className="flex flex-wrap gap-x-6 gap-y-1 text-muted-foreground font-mono-data text-xs">
                 <span>HR {p.baseline.hr}</span>
@@ -236,10 +227,10 @@ export default function OperatingRoom() {
                 <span>{p.blood_type}</span>
               </div>
               <div>
-                <span className="text-red-300">Allergies:</span> {p.allergies.join(", ") || "NKDA"} · <span className="text-amber-200">PMH:</span> {p.comorbidities.join(", ")}
+                <span className="text-destructive">Allergies:</span> {p.allergies.join(", ") || "NKDA"} · <span className="text-amber-warm">PMH:</span> {p.comorbidities.join(", ")}
               </div>
               <div className="text-xs text-muted-foreground">
-                The clock is paused. The patient won't wait once you start — hold <kbd className="px-1 rounded bg-white/10">Space</kbd> to talk to your team at any time.
+                The clock is paused. The patient won't wait once you start — hold <kbd className="px-1 rounded bg-muted">Space</kbd> to talk to your team at any time.
               </div>
             </div>
             <button
@@ -247,25 +238,25 @@ export default function OperatingRoom() {
                 conn.control({ paused: false, speed: 1 });
                 setStarted(true);
               }}
-              className="px-5 py-3 rounded-xl bg-[#7EC8E3]/20 border border-[#7EC8E3]/60 text-[#7EC8E3] font-semibold hover:bg-[#7EC8E3]/30"
+              className="px-5 py-3 rounded-sm bg-primary/10 border border-primary text-primary font-semibold hover:bg-primary/10"
             >
               Start case
             </button>
           </div>
-        </ScrubinStaticPanel>
+        </div>
       )}
 
       {state?.pending && (
-        <div className="mb-3 rounded-xl border border-amber-300/50 bg-amber-300/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-3 rounded-sm border border-amber-warm/40 bg-amber-warm/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="text-sm">
-            <span className="font-semibold text-amber-200 mr-2">{state.pending.from === "circulator" ? "Circulator" : "Anesthesia"}:</span>
+            <span className="font-semibold text-amber-warm mr-2">{state.pending.from === "circulator" ? "Circulator" : "Anesthesia"}:</span>
             {state.pending.question}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => conn.act({ type: "confirm", accept: true })} className="px-3 py-1.5 rounded-lg border border-amber-300/60 text-amber-100 text-xs hover:bg-amber-300/15">
+            <button onClick={() => conn.act({ type: "confirm", accept: true })} className="px-3 py-1.5 rounded-sm border border-amber-warm/40 text-amber-warm text-xs hover:bg-amber-warm/10">
               Yes, proceed
             </button>
-            <button onClick={() => conn.act({ type: "confirm", accept: false })} className="px-3 py-1.5 rounded-lg border border-white/20 text-xs hover:bg-white/5">
+            <button onClick={() => conn.act({ type: "confirm", accept: false })} className="px-3 py-1.5 rounded-sm border border-border text-xs hover:bg-accent">
               Cancel
             </button>
           </div>
@@ -273,9 +264,9 @@ export default function OperatingRoom() {
       )}
 
       {ended && (
-        <div className="mb-3 rounded-xl border border-[#5DCAA5]/50 bg-[#5DCAA5]/10 px-4 py-3 flex items-center justify-between">
+        <div className="mb-3 rounded-sm border border-sage/40 bg-sage/10 px-4 py-3 flex items-center justify-between">
           <span className="text-sm">{state?.outcome === "death" ? "The patient has died." : "Case complete — patient to PACU."}</span>
-          <button onClick={endCase} className="px-3 py-1.5 rounded-lg border border-[#5DCAA5]/60 text-xs hover:bg-[#5DCAA5]/15">
+          <button onClick={endCase} className="px-3 py-1.5 rounded-sm border border-sage/40 text-xs hover:bg-sage/10">
             View debrief
           </button>
         </div>
@@ -286,7 +277,7 @@ export default function OperatingRoom() {
           <Loader2 className="w-4 h-4 animate-spin" /> Connecting to the engine…
         </div>
       ) : (
-        <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4">
           <div className="space-y-4">
             <PatientMonitor readout={state.monitor} alarms={state.alarms} paused={state.paused} muted={muted} />
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -301,13 +292,13 @@ export default function OperatingRoom() {
             <CommandBar onSubmit={conn.say} lastParse={conn.lastParse} role={role} />
           </div>
           <div className="space-y-4">
-            <ScrubinStaticPanel className="p-4">
+            <div className="glass-card p-4">
               {role === "anesthesia" ? (
                 <AnesthesiaStation state={state} drugs={catalog?.drugs ?? []} patient={p} act={conn.act} />
               ) : (
                 <SurgeonStation state={state} act={conn.act} say={conn.say} />
               )}
-            </ScrubinStaticPanel>
+            </div>
             <CommsLog comms={conn.comms} voices={voices} />
           </div>
         </div>
@@ -318,9 +309,9 @@ export default function OperatingRoom() {
 
 function Sign({ label, value, alert }: { label: string; value: string; alert?: boolean }) {
   return (
-    <span className={`px-2 py-1 rounded-lg border ${alert ? "border-red-400/40 text-red-300" : "border-white/10"}`}>
+    <span className={`px-2 py-1 rounded-sm border ${alert ? "border-destructive/40 text-destructive" : "border-border"}`}>
       {label && <span className="text-muted-foreground mr-1">{label}</span>}
-      <span className="text-foreground/90">{value}</span>
+      <span className="text-foreground">{value}</span>
     </span>
   );
 }
@@ -331,10 +322,10 @@ function RoleCard({ icon, title, text, onClick, disabled }: { icon: React.ReactN
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="text-left rounded-2xl border border-[#7EC8E3]/15 bg-[#0D1117]/80 p-6 hover:border-[#7EC8E3]/50 hover:shadow-[0_0_40px_rgba(126,200,227,0.12)] transition-all disabled:opacity-50"
+      className="text-left rounded-sm border border-border bg-card p-6 hover:border-primary/60 hover:shadow-sm transition-all disabled:opacity-50"
     >
-      <div className="w-11 h-11 rounded-xl bg-[#7EC8E3]/10 text-[#7EC8E3] flex items-center justify-center mb-4">{icon}</div>
-      <div className="text-xl font-bold mb-1" style={{ fontFamily: "'Syne', sans-serif" }}>
+      <div className="w-11 h-11 rounded-sm bg-primary/10 text-primary flex items-center justify-center mb-4">{icon}</div>
+      <div className="text-xl font-bold mb-1">
         {title}
       </div>
       <div className="text-sm text-muted-foreground">{text}</div>

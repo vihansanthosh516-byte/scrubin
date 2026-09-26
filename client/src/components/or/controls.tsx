@@ -6,7 +6,7 @@ export function Section({ title, children, right }: { title: string; children: R
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h4 className="text-[11px] uppercase tracking-[0.14em] text-[#7EC8E3]/80 font-semibold">{title}</h4>
+        <h4 className="text-[11px] uppercase tracking-[0.14em] text-primary font-semibold">{title}</h4>
         {right}
       </div>
       {children}
@@ -32,11 +32,11 @@ export function OrButton({
   className?: string;
 }) {
   const tones = {
-    blue: active ? "bg-[#7EC8E3]/20 border-[#7EC8E3]/60 text-[#7EC8E3]" : "border-[#7EC8E3]/15 hover:border-[#7EC8E3]/40 hover:bg-[#7EC8E3]/5",
-    teal: active ? "bg-[#5DCAA5]/20 border-[#5DCAA5]/60 text-[#5DCAA5]" : "border-[#5DCAA5]/20 hover:border-[#5DCAA5]/50 hover:bg-[#5DCAA5]/5",
-    red: active ? "bg-red-500/25 border-red-400/70 text-red-300" : "border-red-500/25 text-red-300 hover:bg-red-500/10",
-    amber: active ? "bg-amber-400/20 border-amber-300/60 text-amber-200" : "border-amber-400/25 text-amber-200 hover:bg-amber-400/10",
-    neutral: active ? "bg-white/10 border-white/40" : "border-white/10 hover:border-white/25 hover:bg-white/5",
+    blue: active ? "bg-primary/10 border-primary text-primary" : "border-border hover:border-primary/60 hover:bg-primary/10",
+    teal: active ? "bg-sage/10 border-sage/40 text-sage dark:text-[#5E8C74]" : "border-sage/40 hover:border-sage/40 hover:bg-sage/10",
+    red: active ? "bg-destructive/10 border-destructive/40 text-destructive" : "border-destructive/40 text-destructive hover:bg-destructive/10",
+    amber: active ? "bg-amber-warm/10 border-amber-warm/40 text-amber-warm" : "border-amber-warm/40 text-amber-warm hover:bg-amber-warm/10",
+    neutral: active ? "bg-muted border-border" : "border-border hover:border-border hover:bg-accent",
   } as const;
   return (
     <button
@@ -44,7 +44,7 @@ export function OrButton({
       title={title}
       disabled={disabled}
       onClick={onClick}
-      className={`px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-left ${tones[tone]} ${className}`}
+      className={`px-2.5 py-1.5 rounded-sm border text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-left ${tones[tone]} ${className}`}
     >
       {children}
     </button>
@@ -72,17 +72,17 @@ export function Stepper({
 }) {
   const clamp = (v: number) => Math.min(max, Math.max(min, Math.round(v / step) * step));
   return (
-    <div className="rounded-lg border border-[#7EC8E3]/10 bg-black/20 px-2 py-1.5">
+    <div className="rounded-sm border border-border bg-muted px-2 py-1.5">
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="flex items-center gap-1.5">
-        <button type="button" className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 text-sm" onClick={() => onChange(clamp(value - step))} aria-label={`decrease ${label}`}>
+        <button type="button" className="w-6 h-6 rounded bg-muted hover:bg-accent text-sm" onClick={() => onChange(clamp(value - step))} aria-label={`decrease ${label}`}>
           −
         </button>
         <div className="flex-1 text-center font-mono-data text-base tabular-nums">
           {value.toFixed(decimals)}
           {unit && <span className="text-[10px] text-muted-foreground ml-0.5">{unit}</span>}
         </div>
-        <button type="button" className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 text-sm" onClick={() => onChange(clamp(value + step))} aria-label={`increase ${label}`}>
+        <button type="button" className="w-6 h-6 rounded bg-muted hover:bg-accent text-sm" onClick={() => onChange(clamp(value + step))} aria-label={`increase ${label}`}>
           +
         </button>
       </div>

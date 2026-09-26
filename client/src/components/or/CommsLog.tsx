@@ -3,14 +3,14 @@ import type { CommsMessage } from "@/engine/types";
 import { fmtTime } from "./AnesthesiaStation";
 
 const SPEAKER_STYLE: Record<string, string> = {
-  surgeon: "text-amber-200",
-  anesthesia: "text-[#7EC8E3]",
-  attending: "text-[#7EC8E3]",
-  circulator: "text-[#5DCAA5]",
-  scrub: "text-emerald-300",
-  patient: "text-pink-200",
-  system: "text-slate-300",
-  trainee: "text-white",
+  surgeon: "text-amber-warm",
+  anesthesia: "text-primary",
+  attending: "text-primary",
+  circulator: "text-sage dark:text-[#5E8C74]",
+  scrub: "text-sage dark:text-[#5E8C74]",
+  patient: "text-[#9B4D6A] dark:text-pink-200",
+  system: "text-muted-foreground",
+  trainee: "text-foreground",
 };
 
 // Distinct synthetic voices per teammate so you can tell who's talking.
@@ -54,22 +54,22 @@ export function CommsLog({ comms, voices }: { comms: CommsMessage[]; voices: boo
   }, [comms, voices]);
 
   return (
-    <div className="rounded-2xl border border-[#7EC8E3]/15 bg-[#0D1117]/80 p-3 h-full min-h-[220px] max-h-[420px] overflow-y-auto text-sm space-y-1.5" aria-live="polite">
+    <div className="rounded-sm border border-border bg-card p-3 h-full min-h-[220px] max-h-[420px] overflow-y-auto text-sm space-y-1.5" aria-live="polite">
       {comms.map((m) =>
         m.kind === "trainee" ? (
           <div key={m.id} className="flex justify-end">
-            <div className="max-w-[85%] rounded-xl bg-[#7EC8E3]/15 border border-[#7EC8E3]/25 px-3 py-1.5">
+            <div className="max-w-[85%] rounded-sm bg-primary/10 border border-border px-3 py-1.5">
               <span className="text-[10px] font-mono-data text-muted-foreground mr-2">{fmtTime(m.t)}</span>
               {m.text}
             </div>
           </div>
         ) : (
-          <div key={m.id} className={`leading-snug ${m.kind === "alarm" ? "text-red-300" : ""}`}>
+          <div key={m.id} className={`leading-snug ${m.kind === "alarm" ? "text-destructive" : ""}`}>
             <span className="text-[10px] font-mono-data text-muted-foreground mr-2">{fmtTime(m.t)}</span>
             {m.kind !== "narration" && m.kind !== "finding" && m.kind !== "sign" && (
               <span className={`font-semibold mr-1.5 ${SPEAKER_STYLE[m.from] ?? ""}`}>{m.name}:</span>
             )}
-            <span className={m.kind === "finding" || m.kind === "sign" || m.kind === "narration" ? "italic text-slate-300" : m.kind === "question" ? "text-amber-100" : ""}>
+            <span className={m.kind === "finding" || m.kind === "sign" || m.kind === "narration" ? "italic text-muted-foreground" : m.kind === "question" ? "text-amber-warm" : ""}>
               {m.text}
             </span>
           </div>

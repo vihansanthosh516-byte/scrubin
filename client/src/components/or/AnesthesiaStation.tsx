@@ -92,11 +92,11 @@ function DrugCart({ state, drugs, patient, act }: Props) {
           ) : null,
         )}
       </div>
-      <div className="rounded-xl border border-[#7EC8E3]/15 bg-black/20 p-3 space-y-3">
+      <div className="rounded-sm border border-border bg-muted p-3 space-y-3">
         {selected ? (
           <>
             <div>
-              <div className="font-semibold" style={{ fontFamily: "'Syne', sans-serif" }}>
+              <div className="font-semibold">
                 {selected.name}
               </div>
               <div className="text-[11px] text-muted-foreground">{selected.notes || selected.concentration}</div>
@@ -109,7 +109,7 @@ function DrugCart({ state, drugs, patient, act }: Props) {
                   onChange={(e) => setDose(e.target.value.replace(/[^\d.]/g, ""))}
                   onKeyDown={(e) => e.key === "Enter" && push()}
                   inputMode="decimal"
-                  className="flex-1 bg-black/30 border border-[#7EC8E3]/20 rounded-lg px-2 py-1.5 font-mono-data text-sm outline-none focus:border-[#7EC8E3]/60"
+                  className="flex-1 bg-muted border border-border rounded-sm px-2 py-1.5 font-mono-data text-sm outline-none focus:border-primary"
                   placeholder="dose"
                 />
                 <OrButton onClick={push} tone="teal" disabled={!dose}>
@@ -131,7 +131,7 @@ function DrugCart({ state, drugs, patient, act }: Props) {
                     onChange={(e) => setRate(e.target.value.replace(/[^\d.]/g, ""))}
                     onKeyDown={(e) => e.key === "Enter" && startInfusion()}
                     inputMode="decimal"
-                    className="flex-1 bg-black/30 border border-[#7EC8E3]/20 rounded-lg px-2 py-1.5 font-mono-data text-sm outline-none focus:border-[#7EC8E3]/60"
+                    className="flex-1 bg-muted border border-border rounded-sm px-2 py-1.5 font-mono-data text-sm outline-none focus:border-primary"
                     placeholder="rate"
                   />
                   <OrButton onClick={startInfusion} disabled={!rate}>
@@ -151,7 +151,7 @@ function DrugCart({ state, drugs, patient, act }: Props) {
                 <span>
                   {id} {inf.rate} {inf.unit}
                 </span>
-                <button className="text-red-300 hover:underline" onClick={() => act({ type: "infusion", drug: id, stop: true })}>
+                <button className="text-destructive hover:underline" onClick={() => act({ type: "infusion", drug: id, stop: true })}>
                   stop
                 </button>
               </div>
@@ -197,7 +197,7 @@ function AirwayPanel({ state, act }: { state: CaseState; act: (a: Action) => voi
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Section title="Basic airway" right={<span className="text-[11px] text-[#7EC8E3]">{aw.intubating ? `Laryngoscopy… ${Math.ceil(aw.intubation_remaining_s)}s` : deviceLabel}</span>}>
+      <Section title="Basic airway" right={<span className="text-[11px] text-primary">{aw.intubating ? `Laryngoscopy… ${Math.ceil(aw.intubation_remaining_s)}s` : deviceLabel}</span>}>
         <div className="flex flex-wrap gap-1.5">
           <OrButton active={aw.device === "face_mask"} onClick={() => air(aw.device === "face_mask" ? "mask_off" : "mask_on")}>Face mask</OrButton>
           <OrButton active={aw.jaw_thrust} onClick={() => air(aw.jaw_thrust ? "jaw_thrust_off" : "jaw_thrust_on")}>Jaw thrust</OrButton>
@@ -216,7 +216,7 @@ function AirwayPanel({ state, act }: { state: CaseState; act: (a: Action) => voi
       </Section>
       <Section title="Intubation">
         <div className="grid grid-cols-2 gap-2">
-          <select value={scope} onChange={(e) => setScope(e.target.value)} className="bg-black/30 border border-[#7EC8E3]/20 rounded-lg px-2 py-1.5 text-xs">
+          <select value={scope} onChange={(e) => setScope(e.target.value)} className="bg-muted border border-border rounded-sm px-2 py-1.5 text-xs">
             <option value="mac3">Mac 3</option>
             <option value="mac4">Mac 4</option>
             <option value="miller2">Miller 2</option>
@@ -340,7 +340,7 @@ function FluidsMonitorsPanel({ state, act }: { state: CaseState; act: (a: Action
             Cycle NIBP now
           </OrButton>
           <select
-            className="bg-black/30 border border-[#7EC8E3]/20 rounded-lg px-2 py-1.5 text-xs"
+            className="bg-muted border border-border rounded-sm px-2 py-1.5 text-xs"
             value={state.monitor.nibp_interval_s ?? 180}
             onChange={(e) => act({ type: "monitor", nibp_interval_s: Number(e.target.value) })}
           >

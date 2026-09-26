@@ -4,12 +4,61 @@ import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 import "dotenv/config";
-// Procedure catalog (metadata for the library). Simulation itself runs in the
-// Python engine (engine/), reached by the client at /engine.
-import { getProcedure, listProcedures } from "./engine/procedures/registry.js";
+import {
+  SessionManager,
+  DeterministicRNG,
+  getProcedure,
+  listProcedures,
+  procedureExists,
+  type TickDecision,
+  type DecisionOption,
+  type DecisionResultPublic,
+  type TickDecisionPublic,
+  type NextTickResponse,
+  type DecideResponse,
+} from "./engine/index.js";
+import { classifyChoice } from "./llmClient.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const sessionManager = new SessionManager();
+const seedRng = new DeterministicRNG(
+  parseInt(process.env.SIM_SEED || "42", 10)
+);
+
+function sanitizeOption(o: DecisionOption) {
+  return { id: o.id, label: o.label, archetype: o.archetype };
+}
+
+function sanitizeDecision(d: TickDecision): TickDecisionPublic {
+  return {
+    id: d.id,
+    tick: d.tick,
+    phase: d.phase,
+    phaseLabel: d.phaseLabel,
+    procedurePhase: d.procedurePhase,
+    archetype: d.archetype,
+    prompt: d.prompt,
+    context: d.context,
+    options: d.options.map(sanitizeOption),
+    urgency: d.urgency,
+  };
+}
+
+function sanitizeDecisionResult(r: {
+  wasCorrect: boolean;
+  feedback: string;
+  scoreDelta: number;
+  complicationTriggered: string | null;
+}): DecisionResultPublic {
+  return {
+    wasCorrect: r.wasCorrect,
+    feedback: r.feedback,
+    scoreDelta: r.scoreDelta,
+    complicationTriggered: r.complicationTriggered,
+  };
+}
 
 async function startServer() {
   const app = express();
@@ -18,16 +67,48 @@ async function startServer() {
     helmet({
       contentSecurityPolicy: {
         directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", "data:"],
-          connectSrc: ["'self'", "https://*.supabase.co", "https://github.com", "https://api.github.com", "https://*.groq.com"],
+           defaultSrc: ["'self'"],
+           scriptSrc: ["'self'"],
+           styleSrc: ["'self'"],
+           // Remote avatar URLs (DiceBear, GitHub, Google) must be loadable.
+           imgSrc: ["'self'", "data:", "https:"],
+           // The browser only talks to this origin (/api/*) and Supabase
+           // (leaderboard + auth). The Python engine and Groq/GitHub calls are
+           // server-side, so they are NOT in connect-src.
+           connectSrc: ["'self'", "https://*.supabase.co"],
         },
       },
       referrerPolicy: { policy: "no-referrer" },
     })
   );
+
+  // ── CORS for the Cloudflare Pages → Docker API split ──
+  // The built client is served from a different origin (e.g. scrubin.pages.dev)
+  // than this API (the Docker container), so cross-origin browser fetches need
+  // CORS headers. Origins are allow-listed via CORS_ORIGIN (comma-separated);
+  // dev origins are allowed by default. Requests without an Origin header
+  // (curl, same-origin) are unaffected.
+  const corsOrigins = (
+    process.env.CORS_ORIGIN ||
+    "http://localhost:3000,http://localhost:5173"
+  )
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && corsOrigins.includes(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.setHeader("Vary", "Origin");
+    }
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(204);
+    }
+    next();
+  });
   const server = createServer(app);
 
   // Serve static files from dist/public in production
@@ -41,72 +122,134 @@ async function startServer() {
   // JSON Body Parser for API
   app.use(express.json());
 
-  // Groq LLM API Endpoint — AI Attending Notes
-  app.post("/api/evaluate", async (req, res) => {
+  // Proxy helper for ScrubIn Core (Python FastAPI engine)
+  const CORE_URL = process.env.SCRUBIN_CORE_URL || "http://localhost:8001";
+
+  async function proxyToCore(req: express.Request, res: express.Response, targetPath: string, methodOverride?: string, enrich?: (data: any) => any) {
     try {
-      const payload = req.body;
-      const Groq = (await import("groq-sdk")).default;
-      const groq = new Groq({
-        apiKey: process.env.GROQ_API_KEY,
-      });
+      const method = methodOverride || req.method;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
 
-      const procedureName = payload.procedureName || "Unknown Procedure";
-
-      // Free-form OR simulator debrief (engine/scrubin_engine/scoring/debrief.py).
-      if (payload.debrief) {
-        const d = payload.debrief;
-        const role = d.role === "surgeon" ? "surgeon" : "anesthesiologist";
-        const items = (d.items || [])
-          .map((i: any) => `- [${i.grade}] ${i.domain} / ${i.title}: ${i.detail}`)
-          .join("\n");
-        const completion = await groq.chat.completions.create({
-          model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-          max_tokens: 2000, // reasoning models spend tokens thinking before answering
-          temperature: 0.5,
-          messages: [
-            {
-              role: "system",
-              content: `You are a senior attending ${role} debriefing a trainee after a simulated ${procedureName}. There were no multiple-choice answers: the trainee managed a physiologically modelled patient in real time. Be specific, reference the findings and timings you are given, explain the physiology and the evidence behind each point, and end with the two most important things to do differently. Do not invent events that are not in the data. Under 220 words.`,
-            },
-            {
-              role: "user",
-              content: `Outcome: ${d.outcome}. Duration ${d.duration_min} min. Blood loss ${d.blood_loss_ml} mL.\nHidden case facts (revealed now): ${JSON.stringify(d.hidden)}\nFindings:\n${items}\nSurgical notes: ${(d.surgery?.notes || []).join("; ")}\nUnrecognised complications: ${(d.surgery?.occult || []).join("; ") || "none"}`,
-            },
-          ],
-        });
-        res.json({ notes: completion.choices[0]?.message?.content || "Attending notes unavailable." });
-        return;
+      let url = `${CORE_URL}${targetPath}`;
+      const queryIndex = req.url.indexOf("?");
+      if (method === "GET" && queryIndex !== -1) {
+        url += req.url.slice(queryIndex);
       }
 
-      const totalDecisions = payload.totalDecisions || payload.history?.length || "unknown number of";
+      const options: RequestInit = {
+        method,
+        headers,
+      };
 
-      const systemPrompt = `You are a senior attending surgeon giving post-operative feedback to a medical student after a ${procedureName} simulation. You are direct, specific, and educational. You reference exact decisions by number and phase. You never give generic feedback — every note must be specific to ${procedureName} anatomy, technique, and decision-making. You always explain the medical reasoning behind what went wrong and what the correct approach should have been. Your tone is like a real attending — firm but constructive. Keep your notes under 200 words.`;
+      if (method !== "GET" && method !== "HEAD") {
+        options.body = JSON.stringify(req.body || {});
+      }
 
-      const userPrompt = `Please evaluate this ${procedureName} case:
-      Patient: ${JSON.stringify(payload.patient)}
-      Outcome: ${payload.outcomeBadge} (${payload.outcomeSummary})
-      Total Decisions in Case: ${totalDecisions}
-      
-      Decisions Log:
-      ${payload.history.map((h: any) => `Decision ${h.decisionNumber}: ${h.decisionTitle} -> ${h.isCorrect ? 'Correct' : 'Incorrect'}. Complication Triggered: ${h.complication || 'None'}. Vitals at time: HR ${h.vitals.hr}, BP ${h.vitals.bpSys}`).join("\n")}
-      `;
+      const coreRes = await fetch(url, options);
+      const contentType = coreRes.headers.get("content-type");
+      let data: any;
 
-      const completion = await groq.chat.completions.create({
-        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-        max_tokens: 2000,
-        temperature: 0.7,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      });
+      if (contentType && contentType.includes("application/json")) {
+        data = await coreRes.json();
+      } else {
+        data = await coreRes.text();
+      }
 
-      const notes = completion.choices[0]?.message?.content || "Attending notes unavailable.";
-      res.json({ notes });
+      if (enrich && data && typeof data === "object") {
+        data = enrich(data);
+      }
+
+      res.status(coreRes.status).json(typeof data === "string" ? { message: data } : data);
     } catch (error: any) {
-      console.error("Groq API Error:", error);
-      res.status(500).json({ error: error.message });
+      console.error(`Proxy to core error (${targetPath}):`, error.message);
+      res.status(503).json({ error: "ScrubIn Core service is unavailable", detail: error.message });
     }
+  }
+
+  // Health check endpoint
+  app.get("/api/health", async (req, res) => {
+    try {
+      const coreRes = await fetch(`${CORE_URL}/health`);
+      if (coreRes.ok) {
+        const data = await coreRes.json();
+        res.json({ core: "up", ...data });
+      } else {
+        res.json({ core: "down" });
+      }
+    } catch {
+      res.json({ core: "down" });
+    }
+  });
+
+  // Groq LLM API Endpoint — AI Attending Notes (with Core proxy fallback)
+  app.post("/api/evaluate", async (req, res) => {
+    if (process.env.GROQ_API_KEY) {
+      try {
+        const payload = req.body;
+        const Groq = (await import("groq-sdk")).default;
+        const groq = new Groq({
+          apiKey: process.env.GROQ_API_KEY,
+        });
+
+        const procedureName = payload.procedureName || "Unknown Procedure";
+
+        // Real-time OR debrief (engine/scrubin_engine/scoring/debrief.py).
+        if (payload.debrief) {
+          const d = payload.debrief;
+          const role = d.role === "surgeon" ? "surgeon" : "anesthesiologist";
+          const items = (d.items || []).map((i: any) => `- [${i.grade}] ${i.domain} / ${i.title}: ${i.detail}`).join("\n");
+          const completion = await groq.chat.completions.create({
+            model: process.env.GROQ_EVAL_MODEL || "openai/gpt-oss-120b",
+            max_tokens: 2000,
+            temperature: 0.5,
+            messages: [
+              {
+                role: "system",
+                content: `You are a senior attending ${role} debriefing a trainee after a simulated ${procedureName}. There were no multiple-choice answers: the trainee managed a physiologically modelled patient in real time. Be specific, reference the findings and timings you are given, explain the physiology and evidence behind each point, and end with the two most important things to do differently. Do not invent events that are not in the data. Under 220 words.`,
+              },
+              {
+                role: "user",
+                content: `Outcome: ${d.outcome}. Duration ${d.duration_min} min. Blood loss ${d.blood_loss_ml} mL.\nHidden case facts (revealed now): ${JSON.stringify(d.hidden)}\nFindings:\n${items}\nSurgical notes: ${(d.surgery?.notes || []).join("; ")}\nUnrecognised complications: ${(d.surgery?.occult || []).join("; ") || "none"}`,
+              },
+            ],
+          });
+          res.json({ notes: completion.choices[0]?.message?.content || "Attending notes unavailable." });
+          return;
+        }
+
+        const totalDecisions = payload.totalDecisions || payload.history?.length || "unknown number of";
+
+        const systemPrompt = `You are a senior attending surgeon giving post-operative feedback to a medical student after a ${procedureName} simulation. You are direct, specific, and educational. You reference exact decisions by number and phase. You never give generic feedback — every note must be specific to ${procedureName} anatomy, technique, and decision-making. You always explain the medical reasoning behind what went wrong and what the correct approach should have been. Your tone is like a real attending — firm but constructive. Keep your notes under 200 words.`;
+
+        const userPrompt = `Please evaluate this ${procedureName} case:
+        Patient: ${JSON.stringify(payload.patient)}
+        Outcome: ${payload.outcomeBadge} (${payload.outcomeSummary})
+        Total Decisions in Case: ${totalDecisions}
+        
+        Decisions Log:
+        ${payload.history ? payload.history.map((h: any) => `Decision ${h.decisionNumber}: ${h.decisionTitle} -> ${h.isCorrect ? 'Correct' : 'Incorrect'}. Complication Triggered: ${h.complication || 'None'}. Vitals at time: HR ${h.vitals?.hr}, BP ${h.vitals?.bpSys}`).join("\n") : ""}
+        `;
+
+        const completion = await groq.chat.completions.create({
+          model: process.env.GROQ_EVAL_MODEL || "openai/gpt-oss-120b",
+          max_tokens: 2000, // reasoning models spend tokens thinking before answering
+          temperature: 0.7,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+        });
+
+        const notes = completion.choices[0]?.message?.content || "Attending notes unavailable.";
+        res.json({ notes });
+        return;
+      } catch (error: any) {
+        console.error("Groq API Error, falling back to core proxy:", error.message);
+      }
+    }
+    proxyToCore(req, res, "/evaluate");
   });
 
   // GitHub OAuth Proxy Endpoint
@@ -223,58 +366,88 @@ async function startServer() {
     }
   });
 
-app.get("/api/sim/procedures", (_req, res) => {
-  const procs = listProcedures();
-  res.json({
-    procedures: procs.map((p) => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      specialty: p.specialty,
-      description: p.description,
-      patient: p.patient,
-      totalTicks: p.totalTicks,
-      phases: p.phases,
-    })),
+  // ── Simulation API (Proxied to ScrubIn-Core) ──
+
+  app.post("/api/sim/start", (req, res) => {
+    proxyToCore(req, res, "/start");
   });
-});
 
-// New scenario endpoints for the website UI
-// Helper to enrich a ProcedureDefinition with UI‑only metadata (ignored by the engine)
-function enrichScenario(p) {
-  return {
-    id: p.id,
-    name: p.name,
-    specialty: p.specialty,
-    difficulty: p.category,
-    // UI‑only fields – provide sensible defaults or placeholders
-    thumbnail: `/thumbnails/${p.id}.png`, // client can fallback if missing
-    tags: [],
-    estimated_time: `${p.totalTicks ?? 0} min`,
-    anatomy_regions: [],
-    learning_objectives: [],
-    required_instruments: [],
-    // Preserve existing fields needed elsewhere
-    category: p.category,
-    description: p.description,
-    patient: p.patient,
-    totalTicks: p.totalTicks,
-    phases: p.phases,
-  };
-}
+  app.post("/api/sim/next", (req, res) => {
+    proxyToCore(req, res, "/next");
+  });
 
-app.get("/api/scenarios", (_req, res) => {
-  // Return all procedures enriched as UI scenarios
-  const procs = listProcedures();
-  const enriched = procs.map(enrichScenario);
-  res.json({ scenarios: enriched });
-});
+  app.post("/api/sim/decide", (req, res) => {
+    proxyToCore(req, res, "/decide");
+  });
 
-// Phase 10 - Dashboard Recommendations
-app.get("/api/dashboard/recommendations", (_req, res) => {
-  const allProcs = listProcedures();
-  const recommended = allProcs.slice(0, 3).map(enrichScenario);
-  res.json({ recommendations: recommended });
+  app.post("/api/sim/reset", (req, res) => {
+    proxyToCore(req, res, "/reset");
+  });
+
+  app.post("/api/sim/complicate", async (req, res) => {
+    const body = req.body || {};
+    // Hybrid complication routing: ask Groq which complication this wrong
+    // step actually caused, given the real step + the action the trainee chose.
+    // The verdict is validated against the engine's complication enum AND the
+    // procedure's allowlist. On ANY failure the fallback verdict is returned,
+    // and we keep the authored `body.complication` — exactly today's behavior,
+    // so the game never breaks when Groq is slow or down.
+    if (body.step_title || body.chosen_action || body.step_label) {
+      const procedureId = body.procedure || body.procedure_id;
+      const procedureAllowlist = procedureId && procedureExists(procedureId)
+        ? getProcedure(procedureId).allowedComplications
+        : undefined;
+      const verdict = await classifyChoice({
+        procedure: procedureId,
+        procedurePhase: body.procedure_phase,
+        stepTitle: body.step_label || body.step_title || "",
+        stepDescription: body.step_description,
+        chosenAction: body.chosen_action || "",
+        patientProfile: body.patient_profile,
+        allowedComplications: body.allowed_complications || procedureAllowlist,
+      });
+      if (verdict.source === "groq" && !verdict.isCorrect && verdict.complicationType) {
+        // Groq decided the complication — route the engine to the validated type.
+        body.complication = verdict.complicationType;
+      }
+      if (verdict.explanation) {
+        body.narrative = verdict.explanation;
+      }
+    }
+    // Enrich the proxied response with the Groq narrative so the client can
+    // render it in the complication panel. Scrubin-Core also echoes the
+    // narrative as an event; this enrichment keeps the direct `narrative`
+    // field available even when the core is an older deployment.
+    const narrative = body.narrative;
+    proxyToCore(req, res, "/complicate", undefined, (data) => {
+      if (narrative && data && typeof data === "object") {
+        return { ...data, narrative };
+      }
+      return data;
+    });
+  });
+
+  app.post("/api/sim/tick", (req, res) => {
+    proxyToCore(req, res, "/tick");
+  });
+
+  app.post("/api/sim/complete", (req, res) => {
+    proxyToCore(req, res, "/complete");
+  });
+
+  app.get("/api/sim/procedures", (req, res) => {
+    proxyToCore(req, res, "/procedures");
+  });
+
+  app.get("/api/scenarios", (req, res) => {
+    proxyToCore(req, res, "/scenarios");
+  });
+
+// Dashboard endpoint – returns deterministic stats derived from SessionManager
+app.get("/api/dashboard", (_req, res) => {
+  // Deterministic dashboard data – currently only active session count
+  const activeSessions = sessionManager.size;
+  res.json({ activeSessions });
 });
 
 // Phase 12 – SEO metadata endpoint (stub)
@@ -286,43 +459,24 @@ app.get("/api/seo/:page", (req, res) => {
     ogImage: `/og/${page}.png`,
     keywords: `${page}, scrubin, surgery, simulation, learning`,
   };
-  res.json(data);
+    res.json(data);
 });
 
-// Phase 13 - AI Workspace Mock Endpoints
-app.post("/api/ai/upload", (req, res) => {
-  // Mock a successful file upload and return a mock sessionId
-  // In reality, this would handle multipart form data
-  const mockSessionId = "ai-sess-" + Math.random().toString(36).substring(7);
-  
-  // Simulate processing delay
-  setTimeout(() => {
-    res.json({ success: true, sessionId: mockSessionId });
-  }, 1500);
-});
+/* Begin comment – disable broken routes
 
-app.get("/api/ai/session/:id", (req, res) => {
-  // Deterministic mock data for an AI session
-  const id = req.params.id;
-  res.json({
-    id,
-    status: "complete",
-    differential: [
-      { condition: "Acute Appendicitis", probability: 85, evidence: ["RLQ pain", "Elevated WBC"] },
-      { condition: "Ovarian Torsion", probability: 10, evidence: ["Sudden onset pelvic pain"] },
-      { condition: "Ectopic Pregnancy", probability: 5, evidence: [] }
+  const dummy = {
+    continueSimulation: null, // could hold last session id
+    recommendedProcedures: [
+      { id: "appendectomy", name: "Appendectomy", estimated_time: "30 min" },
+      { id: "cabg", name: "Coronary Artery Bypass Graft", estimated_time: "45 min" },
     ],
-    timeline: [
-      { time: "08:00", event: "Patient admitted with RLQ pain" },
-      { time: "08:30", event: "Ultrasound ordered" },
-      { time: "09:15", event: "US shows inflamed appendix (9mm)" }
-    ],
-    riskAssessment: {
-      score: 4,
-      level: "Moderate",
-      factors: ["Mild tachycardia", "Elevated CRP"]
-    }
-  });
+    recentActivity: [],
+    progress: { completedProcedures: 3, totalProcedures: 12 },
+    achievements: [],
+  };
+  res.json(dummy);
+});
+  // existing code unchanged
 });
 
 // Phase 9 – Profile endpoint (placeholder)
@@ -340,20 +494,35 @@ app.get("/api/profile", (_req, res) => {
   };
   res.json(dummy);
 });
+  // existing code unchanged
+});
 
-
-// Phase 8 – Leaderboard placeholder (to be extended later)
-app.get("/api/leaderboard", (_req, res) => {
-  // Simple static leaderboard for now – can be replaced with DB later
-  const dummy = [
-    { id: "1", name: "Alice", login: "alice", avatar_url: "https://i.pravatar.cc/150?u=alice", score: 1200 },
-    { id: "2", name: "Bob", login: "bob", avatar_url: "https://i.pravatar.cc/150?u=bob", score: 1150 },
-    { id: "3", name: "Carol", login: "carol", avatar_url: "https://i.pravatar.cc/150?u=carol", score: 1100 },
-  ];
-  res.json({ entries: dummy });
 });
 
 app.get("/api/scenarios/:id", (req, res) => {
+    // existing code unchanged
+  });
+
+  // Phase 6 – Procedure Library helpers
+  // Simple search endpoint
+  app.get("/api/procedures/search", (req, res) => {
+    try {
+      const q = (req.query.q as string | undefined)?.toLowerCase() ?? "";
+      const difficulty = (req.query.difficulty as string | undefined)?.toLowerCase();
+      const tag = (req.query.tag as string | undefined)?.toLowerCase();
+      const all = listProcedures();
+      const filtered = all.filter((p) => {
+        const matchText = p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q));
+        const matchDiff = difficulty ? p.category?.toLowerCase() === difficulty : true;
+        const matchTag = tag ? (p.tags ?? []).some((t) => t.toLowerCase() === tag) : true;
+        return matchText && matchDiff && matchTag;
+      });
+      res.json({ procedures: filtered });
+    } catch (e: any) {
+      console.error("Procedure search error:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
   const proc = getProcedure(req.params.id);
   if (!proc) {
     res.status(404).json({ detail: "Scenario not found" });
@@ -362,25 +531,122 @@ app.get("/api/scenarios/:id", (req, res) => {
   res.json(enrichScenario(proc));
 });
 
-// Phase 6 – Procedure Library helpers
-// Simple search endpoint
-app.get("/api/procedures/search", (req, res) => {
-  try {
-    const q = (req.query.q as string | undefined)?.toLowerCase() ?? "";
-    const difficulty = (req.query.difficulty as string | undefined)?.toLowerCase();
-    const tag = (req.query.tag as string | undefined)?.toLowerCase();
-    const all = listProcedures();
-    const filtered = all.filter((p) => {
-      const matchText = p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q));
-      const matchDiff = difficulty ? p.category?.toLowerCase() === difficulty : true;
-      const matchTag = tag ? (p.tags ?? []).some((t) => t.toLowerCase() === tag) : true;
-      return matchText && matchDiff && matchTag;
-    });
-    res.json({ procedures: filtered });
-  } catch (e: any) {
-    console.error("Procedure search error:", e);
-    res.status(500).json({ error: e.message });
+*/
+// New routes – save, list, resume, replay, profile, leaderboard, scenario, search
+
+const savedSimulations = new Map<string, any>();
+
+app.post("/api/sim/save", (req, res) => {
+  const { session_id, procedure } = req.body || {};
+  const id = `save_${Date.now()}`;
+  const savedAt = new Date().toISOString();
+  savedSimulations.set(id, {
+    id,
+    savedAt,
+    session_id,
+    procedure: procedure || "appendectomy",
+    tick: 1,
+    status: "active",
+    state: { session_id, procedureId: procedure || "appendectomy", tick: 1 },
+  });
+  res.json({ id, savedAt });
+});
+
+app.get("/api/sim/list", (_req, res) => {
+  const list = Array.from(savedSimulations.values()).map((s) => ({
+    id: s.id,
+    session_id: s.session_id,
+    procedure: s.procedure,
+    last_saved: s.savedAt,
+    tick: s.tick,
+    status: s.status,
+  }));
+  res.json({ saved: list });
+});
+
+app.post("/api/sim/resume", async (req, res) => {
+  const { id, session_id } = req.body || {};
+  const saved = id
+    ? savedSimulations.get(id)
+    : Array.from(savedSimulations.values()).find((s) => s.session_id === session_id);
+  if (!saved) {
+    res.status(404).json({ detail: "Saved simulation not found" });
+    return;
   }
+  try {
+    const coreRes = await fetch(`${CORE_URL}/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ procedure: saved.state?.procedureId || "appendectomy" }),
+    });
+    if (coreRes.ok) {
+      const data = await coreRes.json();
+      res.json({
+        ...saved.state,
+        session_id: data.session_id,
+        procedure: saved.procedure || saved.state?.procedureId || "appendectomy",
+      });
+      return;
+    }
+  } catch {}
+  res.json({
+    session_id: saved.session_id || id,
+    procedure: saved.procedure || saved.state?.procedureId || "appendectomy",
+    ...saved.state,
+  });
+});
+
+app.delete("/api/sim/:sessionId", (req, res) => {
+  const { sessionId } = req.params;
+  let removed = false;
+  savedSimulations.forEach((s, saveId) => {
+    if (s.session_id === sessionId || saveId === sessionId) {
+      savedSimulations.delete(saveId);
+      removed = true;
+    }
+  });
+  if (!removed) {
+    res.status(404).json({ detail: "Saved simulation not found" });
+    return;
+  }
+  res.json({ success: true });
+});
+
+app.get("/api/replay/:id", (req, res) => {
+  const { id } = req.params;
+  const saved = savedSimulations.get(id);
+  if (!saved) {
+    res.json({ replay: { id, status: "placeholder" } });
+    return;
+  }
+  res.json({ replay: saved.state });
+});
+
+app.get("/api/profile", (_req, res) => {
+  const dummy = {
+    id: "user-1",
+    name: "Demo User",
+    login: "demo",
+    avatar_url: "https://i.pravatar.cc/150?u=demo",
+    email: null,
+    profession: "Surgeon",
+    xp: 0,
+    badges: [],
+  };
+  res.json(dummy);
+});
+
+app.get("/api/scenarios/:id", (req, res) => {
+  proxyToCore(req, res, `/scenarios/${req.params.id}`);
+});
+
+app.get("/api/procedures/search", (req, res) => {
+  proxyToCore(req, res, "/procedures/search");
+});
+
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error("Error:", err);
+  res.status(err.status || 500).json({ error: "Internal server error" });
 });
 
   // Handle client-side routing - serve index.html for all routes

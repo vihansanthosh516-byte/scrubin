@@ -79,7 +79,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["infection", 5], ["hemorrhage", 2], ["hypoxia", 1]]),
   allowedComplications: ["infection", "hemorrhage", "hypoxia"],
   decisionArchetypes: ["AIRWAY_STABILITY", "BLEEDING_CONTROL", "INFECTION_MANAGEMENT"],
-  escalationCurve: buildEscalation(30, "moderate"),
+  escalationCurve: buildEscalation(34, "moderate"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op Planning", icon: "📋", short: "Pre-Op" },
@@ -88,7 +88,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 30,
+  totalTicks: 34,
 },
 {
   id: "inguinal-hernia",
@@ -109,7 +109,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 3], ["nerve_injury", 2], ["infection", 1]]),
   allowedComplications: ["hemorrhage", "nerve_injury", "infection"],
   decisionArchetypes: ["SURGICAL_DECISION", "BLEEDING_CONTROL"],
-  escalationCurve: buildEscalation(30, "mild"),
+  escalationCurve: buildEscalation(32, "mild"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op Planning", icon: "📋", short: "Pre-Op" },
@@ -118,7 +118,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closure", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 30,
+  totalTicks: 32,
 },
 {
   id: "thyroidectomy",
@@ -139,7 +139,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hypoxia", 4], ["nerve_injury", 3], ["hemorrhage", 2]]),
   allowedComplications: ["hypoxia", "nerve_injury", "hemorrhage"],
   decisionArchetypes: ["AIRWAY_STABILITY", "DIAGNOSTIC_STEP"],
-  escalationCurve: buildEscalation(30, "mild"),
+  escalationCurve: buildEscalation(32, "mild"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op Planning", icon: "📋", short: "Pre-Op" },
@@ -148,7 +148,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 30,
+  totalTicks: 32,
 },
 {
   id: "carpal-tunnel-release",
@@ -169,7 +169,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["nerve_injury", 3], ["infection", 1]]),
   allowedComplications: ["nerve_injury", "infection"],
   decisionArchetypes: ["SURGICAL_DECISION", "PAIN_MANAGEMENT"],
-  escalationCurve: buildEscalation(25, "mild"),
+  escalationCurve: buildEscalation(30, "mild"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op", icon: "📋", short: "Pre-Op" },
@@ -178,7 +178,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 25,
+  totalTicks: 30,
 },
 
 // ── INTERMEDIATE (14) ──
@@ -198,7 +198,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["infection", 4], ["hemorrhage", 3], ["hypoxia", 2]]),
   allowedComplications: ["infection", "hemorrhage", "hypoxia"],
   decisionArchetypes: ["INFECTION_MANAGEMENT", "DIAGNOSTIC_STEP"],
-  escalationCurve: buildEscalation(35, "moderate"),
+  escalationCurve: buildEscalation(33, "moderate"),
   phases: [
     { id: 1, name: "Evaluation", icon: "🩺", short: "Intake" },
     { id: 2, name: "Stabilization", icon: "📋", short: "Pre-Op" },
@@ -207,7 +207,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Hemostasis & Closure", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op Debrief", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 35,
+  totalTicks: 33,
 },
 {
   id: "acl-reconstruction",
@@ -225,7 +225,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 3], ["nerve_injury", 2], ["infection", 2]]),
   allowedComplications: ["hemorrhage", "nerve_injury", "infection"],
   decisionArchetypes: ["SURGICAL_DECISION", "PAIN_MANAGEMENT"],
-  escalationCurve: buildEscalation(30, "moderate"),
+  escalationCurve: buildEscalation(32, "moderate"),
   phases: [
     { id: 1, name: "Evaluation", icon: "🦵", short: "Exam" },
     { id: 2, name: "Access", icon: "🎥", short: "Arthroscopy" },
@@ -234,7 +234,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Fixation", icon: "🔩", short: "Fixation" },
     { id: 6, name: "Recovery", icon: "🏆", short: "Rehab" },
   ],
-  totalTicks: 30,
+  totalTicks: 32,
 },
 {
   id: "c-section",
@@ -252,7 +252,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 5], ["hypoxia", 3], ["cardiac_arrhythmia", 2]]),
   allowedComplications: ["hemorrhage", "hypoxia", "cardiac_arrhythmia"],
   decisionArchetypes: ["HEMODYNAMIC_CONTROL", "AIRWAY_STABILITY"],
-  escalationCurve: buildEscalation(30, "moderate"),
+  escalationCurve: buildEscalation(33, "moderate"),
   phases: [
     { id: 1, name: "Evaluation", icon: "🤰", short: "Labor" },
     { id: 2, name: "Intake", icon: "💉", short: "Epidural" },
@@ -261,7 +261,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closure", icon: "🪡", short: "Repair" },
     { id: 6, name: "Post-Partum", icon: "👩‍🍼", short: "Recovery" },
   ],
-  totalTicks: 30,
+  totalTicks: 33,
 },
 {
   id: "total-knee-replacement",
@@ -279,7 +279,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["thrombosis", 5], ["infection", 3], ["nerve_injury", 2]]),
   allowedComplications: ["thrombosis", "infection", "nerve_injury"],
   decisionArchetypes: ["PAIN_MANAGEMENT", "POST_OP_MONITORING"],
-  escalationCurve: buildEscalation(35, "moderate"),
+  escalationCurve: buildEscalation(33, "moderate"),
   phases: [
     { id: 1, name: "Consultation", icon: "📐", short: "Template" },
     { id: 2, name: "Approach", icon: "🔪", short: "Entry" },
@@ -288,7 +288,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Fixation", icon: "🧱", short: "Cement" },
     { id: 6, name: "Closure", icon: "🪡", short: "Closing" },
   ],
-  totalTicks: 35,
+  totalTicks: 33,
 },
 {
   id: "total-hysterectomy",
@@ -306,7 +306,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 5], ["infection", 3], ["nerve_injury", 2]]),
   allowedComplications: ["hemorrhage", "infection", "nerve_injury"],
   decisionArchetypes: ["HEMODYNAMIC_CONTROL", "INFECTION_MANAGEMENT"],
-  escalationCurve: buildEscalation(30, "moderate"),
+  escalationCurve: buildEscalation(33, "moderate"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op", icon: "📋", short: "Pre-Op" },
@@ -315,7 +315,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 30,
+  totalTicks: 33,
 },
 {
   id: "sigmoid-colectomy",
@@ -333,7 +333,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["infection", 5], ["hemorrhage", 2], ["nerve_injury", 1]]),
   allowedComplications: ["infection", "hemorrhage", "nerve_injury"],
   decisionArchetypes: ["INFECTION_MANAGEMENT", "DIAGNOSTIC_STEP"],
-  escalationCurve: buildEscalation(30, "moderate"),
+  escalationCurve: buildEscalation(32, "moderate"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op Planning", icon: "📋", short: "Pre-Op" },
@@ -342,7 +342,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 30,
+  totalTicks: 32,
 },
 {
   id: "lap-cholecystectomy",
@@ -360,7 +360,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 3], ["infection", 2], ["nerve_injury", 2]]),
   allowedComplications: ["hemorrhage", "infection", "nerve_injury"],
   decisionArchetypes: ["DIAGNOSTIC_STEP", "SURGICAL_DECISION"],
-  escalationCurve: buildEscalation(35, "moderate"),
+  escalationCurve: buildEscalation(33, "moderate"),
   phases: [
     { id: 1, name: "Evaluation", icon: "🩺", short: "Intake" },
     { id: 2, name: "Stabilization", icon: "📋", short: "Pre-Op" },
@@ -369,7 +369,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Hemostasis & Closure", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op Debrief", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 35,
+  totalTicks: 33,
 },
 {
   id: "radical-nephrectomy",
@@ -387,7 +387,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 6], ["cardiac_arrhythmia", 2], ["infection", 2]]),
   allowedComplications: ["hemorrhage", "cardiac_arrhythmia", "infection"],
   decisionArchetypes: ["HEMODYNAMIC_CONTROL"],
-  escalationCurve: buildEscalation(35, "moderate"),
+  escalationCurve: buildEscalation(33, "moderate"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op", icon: "📋", short: "Pre-Op" },
@@ -396,7 +396,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 35,
+  totalTicks: 33,
 },
 {
   id: "hip-replacement",
@@ -414,7 +414,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["thrombosis", 4], ["hemorrhage", 3], ["hypoxia", 3], ["nerve_injury", 2]]),
   allowedComplications: ["thrombosis", "hemorrhage", "hypoxia", "nerve_injury"],
   decisionArchetypes: ["POST_OP_MONITORING"],
-  escalationCurve: buildEscalation(35, "moderate"),
+  escalationCurve: buildEscalation(33, "moderate"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op Planning", icon: "📋", short: "Pre-Op" },
@@ -423,7 +423,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 35,
+  totalTicks: 33,
 },
 {
   id: "breast-lumpectomy",
@@ -441,7 +441,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 3], ["infection", 3]]),
   allowedComplications: ["hemorrhage", "infection"],
   decisionArchetypes: ["INFECTION_MANAGEMENT"],
-  escalationCurve: buildEscalation(25, "mild"),
+  escalationCurve: buildEscalation(32, "mild"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op", icon: "📋", short: "Pre-Op" },
@@ -450,7 +450,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 25,
+  totalTicks: 32,
 },
 {
   id: "tympanoplasty",
@@ -468,7 +468,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["infection", 4], ["nerve_injury", 3]]),
   allowedComplications: ["infection", "nerve_injury"],
   decisionArchetypes: ["DIAGNOSTIC_STEP"],
-  escalationCurve: buildEscalation(25, "mild"),
+  escalationCurve: buildEscalation(32, "mild"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op", icon: "📋", short: "Pre-Op" },
@@ -477,7 +477,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 25,
+  totalTicks: 32,
 },
 {
   id: "femoral-nail-fixation",
@@ -495,7 +495,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 5], ["hypoxia", 4], ["fat_embolism" as ComplicationType, 3] as any].filter(x => x) as [ComplicationType, number][]),
   allowedComplications: ["hemorrhage", "hypoxia"],
   decisionArchetypes: ["HEMODYNAMIC_CONTROL"],
-  escalationCurve: buildEscalation(30, "aggressive"),
+  escalationCurve: buildEscalation(33, "aggressive"),
   phases: [
     { id: 1, name: "Resuscitation", icon: "🩸", short: "Resus" },
     { id: 2, name: "Pre-Op", icon: "📋", short: "Pre-Op" },
@@ -504,7 +504,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 30,
+  totalTicks: 33,
 },
 {
   id: "rotator-cuff-repair",
@@ -522,7 +522,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["nerve_injury", 3], ["infection", 2]]),
   allowedComplications: ["nerve_injury", "infection"],
   decisionArchetypes: ["PAIN_MANAGEMENT"],
-  escalationCurve: buildEscalation(25, "mild"),
+  escalationCurve: buildEscalation(32, "mild"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op", icon: "📋", short: "Pre-Op" },
@@ -531,7 +531,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 25,
+  totalTicks: 32,
 },
 {
   id: "rhinoplasty",
@@ -549,7 +549,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hypoxia", 4], ["hemorrhage", 3]]),
   allowedComplications: ["hypoxia", "hemorrhage"],
   decisionArchetypes: ["AIRWAY_STABILITY"],
-  escalationCurve: buildEscalation(25, "mild"),
+  escalationCurve: buildEscalation(32, "mild"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op", icon: "📋", short: "Pre-Op" },
@@ -558,7 +558,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 25,
+  totalTicks: 32,
 },
 {
   id: "parathyroidectomy",
@@ -576,7 +576,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["nerve_injury", 4], ["hemorrhage", 2], ["hypoxia", 2]]),
   allowedComplications: ["nerve_injury", "hemorrhage", "hypoxia"],
   decisionArchetypes: ["DIAGNOSTIC_STEP"],
-  escalationCurve: buildEscalation(25, "mild"),
+  escalationCurve: buildEscalation(32, "mild"),
   phases: [
     { id: 1, name: "Patient Intake", icon: "🩺", short: "Intake" },
     { id: 2, name: "Pre-Op", icon: "📋", short: "Pre-Op" },
@@ -585,7 +585,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 25,
+  totalTicks: 32,
 },
 
 // ── ADVANCED (12) ──
@@ -605,7 +605,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["cardiac_arrhythmia", 5], ["hemorrhage", 4], ["hypoxia", 3], ["thrombosis", 2]]),
   allowedComplications: ["cardiac_arrhythmia", "hemorrhage", "hypoxia", "thrombosis"],
   decisionArchetypes: ["HEMODYNAMIC_CONTROL", "AIRWAY_STABILITY"],
-  escalationCurve: buildEscalation(45, "aggressive"),
+  escalationCurve: buildEscalation(35, "aggressive"),
   phases: [
     { id: 1, name: "Pre-Op Evaluation", icon: "🩺", short: "Pre-Op" },
     { id: 2, name: "Anesthesia & Induction", icon: "💉", short: "Induction" },
@@ -616,7 +616,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 7, name: "Closure", icon: "🪢", short: "Close" },
     { id: 8, name: "ICU & Recovery", icon: "🏥", short: "ICU" },
   ],
-  totalTicks: 45,
+  totalTicks: 35,
 },
 {
   id: "craniotomy",
@@ -634,7 +634,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 5], ["hypoxia", 3], ["nerve_injury", 4], ["cardiac_arrhythmia", 2]]),
   allowedComplications: ["hemorrhage", "hypoxia", "nerve_injury", "cardiac_arrhythmia"],
   decisionArchetypes: ["DIAGNOSTIC_STEP", "AIRWAY_STABILITY"],
-  escalationCurve: buildEscalation(40, "aggressive"),
+  escalationCurve: buildEscalation(34, "aggressive"),
   phases: [
     { id: 1, name: "Pre-Op Evaluation", icon: "🩺", short: "Pre-Op" },
     { id: 2, name: "Anesthesia & Positioning", icon: "💉", short: "Setup" },
@@ -644,7 +644,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 6, name: "Closure", icon: "🪡", short: "Closure" },
     { id: 7, name: "Post-Op Care", icon: "🏥", short: "Recovery" },
   ],
-  totalTicks: 40,
+  totalTicks: 34,
 },
 {
   id: "spinal-fusion",
@@ -662,7 +662,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["nerve_injury", 5], ["hemorrhage", 4], ["infection", 3], ["thrombosis", 2]]),
   allowedComplications: ["nerve_injury", "hemorrhage", "infection", "thrombosis"],
   decisionArchetypes: ["SURGICAL_DECISION"],
-  escalationCurve: buildEscalation(40, "aggressive"),
+  escalationCurve: buildEscalation(34, "aggressive"),
   phases: [
     { id: 1, name: "Consultation", icon: "🧠", short: "Neuro Exam" },
     { id: 2, name: "Positioning", icon: "🛌", short: "Prone" },
@@ -671,7 +671,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Fusion", icon: "🔩", short: "Screw/Cage" },
     { id: 6, name: "Verification", icon: "📸", short: "Final X-ray" },
   ],
-  totalTicks: 40,
+  totalTicks: 34,
 },
 {
   id: "exploratory-laparotomy",
@@ -689,7 +689,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 8], ["cardiac_arrhythmia", 3], ["infection", 3], ["hypoxia", 2]]),
   allowedComplications: ["hemorrhage", "cardiac_arrhythmia", "infection", "hypoxia"],
   decisionArchetypes: ["HEMODYNAMIC_CONTROL", "INFECTION_MANAGEMENT"],
-  escalationCurve: buildEscalation(35, "aggressive"),
+  escalationCurve: buildEscalation(33, "aggressive"),
   phases: [
     { id: 1, name: "Resuscitation", icon: "🩸", short: "MTP/FAST" },
     { id: 2, name: "Control", icon: "🔪", short: "Laparotomy" },
@@ -698,7 +698,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Damage Control", icon: "🩹", short: "Packing" },
     { id: 6, name: "Stabilization", icon: "🚑", short: "ICU Handoff" },
   ],
-  totalTicks: 35,
+  totalTicks: 33,
 },
 {
   id: "pulmonary-lobectomy",
@@ -716,7 +716,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hypoxia", 6], ["hemorrhage", 3], ["cardiac_arrhythmia", 3], ["infection", 2]]),
   allowedComplications: ["hypoxia", "hemorrhage", "cardiac_arrhythmia", "infection"],
   decisionArchetypes: ["AIRWAY_STABILITY"],
-  escalationCurve: buildEscalation(40, "aggressive"),
+  escalationCurve: buildEscalation(33, "aggressive"),
   phases: [
     { id: 1, name: "Pre-Op", icon: "🩺", short: "Pre-Op" },
     { id: 2, name: "Positioning", icon: "🛌", short: "Lateral" },
@@ -725,7 +725,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closure", icon: "🪡", short: "Closing" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 40,
+  totalTicks: 33,
 },
 {
   id: "whipple",
@@ -743,7 +743,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["infection", 6], ["hemorrhage", 5], ["cardiac_arrhythmia", 3], ["hypoxia", 3], ["thrombosis", 2]]),
   allowedComplications: ["infection", "hemorrhage", "cardiac_arrhythmia", "hypoxia", "thrombosis"],
   decisionArchetypes: ["INFECTION_MANAGEMENT", "HEMODYNAMIC_CONTROL"],
-  escalationCurve: buildEscalation(50, "aggressive"),
+  escalationCurve: buildEscalation(34, "aggressive"),
   phases: [
     { id: 1, name: "Pre-Op", icon: "🩺", short: "Pre-Op" },
     { id: 2, name: "Exploration", icon: "🔍", short: "Explore" },
@@ -752,7 +752,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪢", short: "Close" },
     { id: 6, name: "Post-Op", icon: "🏥", short: "ICU" },
   ],
-  totalTicks: 50,
+  totalTicks: 34,
 },
 {
   id: "aaa-repair",
@@ -770,7 +770,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 8], ["cardiac_arrhythmia", 4], ["hypoxia", 3], ["thrombosis", 3]]),
   allowedComplications: ["hemorrhage", "cardiac_arrhythmia", "hypoxia", "thrombosis"],
   decisionArchetypes: ["HEMODYNAMIC_CONTROL"],
-  escalationCurve: buildEscalation(45, "aggressive"),
+  escalationCurve: buildEscalation(34, "aggressive"),
   phases: [
     { id: 1, name: "Pre-Op", icon: "🩺", short: "Pre-Op" },
     { id: 2, name: "Exposure", icon: "🔪", short: "Open" },
@@ -779,7 +779,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Close" },
     { id: 6, name: "Post-Op", icon: "🏥", short: "ICU" },
   ],
-  totalTicks: 45,
+  totalTicks: 34,
 },
 {
   id: "radical-prostatectomy",
@@ -797,7 +797,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 5], ["nerve_injury", 4], ["infection", 2]]),
   allowedComplications: ["hemorrhage", "nerve_injury", "infection"],
   decisionArchetypes: ["SURGICAL_DECISION"],
-  escalationCurve: buildEscalation(35, "moderate"),
+  escalationCurve: buildEscalation(33, "moderate"),
   phases: [
     { id: 1, name: "Pre-Op", icon: "🩺", short: "Pre-Op" },
     { id: 2, name: "Exposure", icon: "🔪", short: "Open" },
@@ -806,7 +806,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Anastomosis", icon: "🪡", short: "Anastomosis" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 35,
+  totalTicks: 33,
 },
 {
   id: "esophagectomy",
@@ -824,7 +824,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hypoxia", 5], ["infection", 5], ["hemorrhage", 3], ["cardiac_arrhythmia", 2]]),
   allowedComplications: ["hypoxia", "infection", "hemorrhage", "cardiac_arrhythmia"],
   decisionArchetypes: ["AIRWAY_STABILITY", "INFECTION_MANAGEMENT"],
-  escalationCurve: buildEscalation(45, "aggressive"),
+  escalationCurve: buildEscalation(34, "aggressive"),
   phases: [
     { id: 1, name: "Pre-Op", icon: "🩺", short: "Pre-Op" },
     { id: 2, name: "Abdominal Phase", icon: "🔪", short: "Abdominal" },
@@ -833,7 +833,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪢", short: "Close" },
     { id: 6, name: "Post-Op", icon: "🏥", short: "ICU" },
   ],
-  totalTicks: 45,
+  totalTicks: 34,
 },
 {
   id: "hepatic-lobectomy",
@@ -851,7 +851,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["hemorrhage", 7], ["cardiac_arrhythmia", 3], ["infection", 2], ["hypoxia", 2]]),
   allowedComplications: ["hemorrhage", "cardiac_arrhythmia", "infection", "hypoxia"],
   decisionArchetypes: ["HEMODYNAMIC_CONTROL"],
-  escalationCurve: buildEscalation(40, "aggressive"),
+  escalationCurve: buildEscalation(33, "aggressive"),
   phases: [
     { id: 1, name: "Pre-Op", icon: "🩺", short: "Pre-Op" },
     { id: 2, name: "Exposure", icon: "🔪", short: "Open" },
@@ -860,7 +860,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Hemostasis", icon: "🩸", short: "Hemostasis" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 40,
+  totalTicks: 33,
 },
 {
   id: "lumbar-microdiscectomy",
@@ -878,7 +878,7 @@ const ALL_30: ProcedureDefinition[] = [
   complicationWeights: cw([["nerve_injury", 5], ["hemorrhage", 2], ["infection", 2]]),
   allowedComplications: ["nerve_injury", "hemorrhage", "infection"],
   decisionArchetypes: ["PAIN_MANAGEMENT"],
-  escalationCurve: buildEscalation(30, "moderate"),
+  escalationCurve: buildEscalation(33, "moderate"),
   phases: [
     { id: 1, name: "Pre-Op", icon: "🩺", short: "Pre-Op" },
     { id: 2, name: "Positioning", icon: "🛌", short: "Prone" },
@@ -887,7 +887,7 @@ const ALL_30: ProcedureDefinition[] = [
     { id: 5, name: "Closing", icon: "🪡", short: "Close" },
     { id: 6, name: "Post-Op", icon: "📊", short: "Post-Op" },
   ],
-  totalTicks: 30,
+  totalTicks: 33,
   },
   {
     id: "cabg-offpump",
@@ -905,7 +905,7 @@ const ALL_30: ProcedureDefinition[] = [
     complicationWeights: cw([["cardiac_arrhythmia", 6], ["hemorrhage", 4], ["hypoxia", 5], ["thrombosis", 3]]),
     allowedComplications: ["cardiac_arrhythmia", "hemorrhage", "hypoxia", "thrombosis"],
     decisionArchetypes: ["HEMODYNAMIC_CONTROL", "AIRWAY_STABILITY"],
-    escalationCurve: buildEscalation(45, "aggressive"),
+    escalationCurve: buildEscalation(34, "aggressive"),
     phases: [
       { id: 1, name: "Pre-Op Evaluation", icon: "🩺", short: "Pre-Op" },
       { id: 2, name: "Anesthesia & Induction", icon: "💉", short: "Induction" },
@@ -916,7 +916,7 @@ const ALL_30: ProcedureDefinition[] = [
       { id: 7, name: "Closure", icon: "🪢", short: "Close" },
       { id: 8, name: "ICU & Recovery", icon: "🏥", short: "ICU" },
     ],
-    totalTicks: 45,
+    totalTicks: 34,
   },
 ];
 

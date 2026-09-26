@@ -156,7 +156,7 @@ export function CommandBar({ onSubmit, lastParse, role }: Props) {
       : ["prep and drape", "time out", "incision at the umbilicus", "hasson entry", "insufflate", "camera in", "divide the mesoappendix with the ligasure", "clip the bleeder"];
 
   return (
-    <div className="rounded-2xl border border-[#7EC8E3]/15 bg-[#0D1117]/80 p-3 space-y-2">
+    <div className="rounded-sm border border-border bg-card p-3 space-y-2">
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -167,12 +167,12 @@ export function CommandBar({ onSubmit, lastParse, role }: Props) {
           onPointerUp={stop}
           onPointerLeave={() => listening && stop()}
           className={`shrink-0 w-11 h-11 rounded-full flex items-center justify-center border transition-all ${
-            listening ? "bg-red-500/30 border-red-400 scale-110 shadow-[0_0_24px_rgba(248,113,113,0.5)]" : "border-[#7EC8E3]/30 hover:bg-[#7EC8E3]/10"
+            listening ? "bg-destructive/10 border-destructive scale-110 shadow-[0_0_24px_rgba(248,113,113,0.5)]" : "border-border hover:bg-primary/10"
           }`}
           aria-label="Hold to talk"
           title="Hold to talk (or hold Space)"
         >
-          {listening ? <Mic className="w-5 h-5 text-red-300" /> : <MicOff className="w-5 h-5 text-[#7EC8E3]" />}
+          {listening ? <Mic className="w-5 h-5 text-destructive" /> : <MicOff className="w-5 h-5 text-primary" />}
         </button>
         <input
           ref={inputRef}
@@ -183,25 +183,25 @@ export function CommandBar({ onSubmit, lastParse, role }: Props) {
             if (e.key === "Escape") inputRef.current?.blur();
           }}
           placeholder={listening ? "Listening…" : "Say or type an order — e.g. “push 150 of propofol”"}
-          className="flex-1 bg-black/30 border border-[#7EC8E3]/20 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#7EC8E3]/60"
+          className="flex-1 bg-muted border border-border rounded-sm px-3 py-2.5 text-sm outline-none focus:border-primary"
         />
-        <button type="button" onClick={() => submit(text)} className="shrink-0 w-11 h-11 rounded-xl border border-[#7EC8E3]/30 flex items-center justify-center hover:bg-[#7EC8E3]/10" aria-label="Send">
-          <Send className="w-4 h-4 text-[#7EC8E3]" />
+        <button type="button" onClick={() => submit(text)} className="shrink-0 w-11 h-11 rounded-sm border border-border flex items-center justify-center hover:bg-primary/10" aria-label="Send">
+          <Send className="w-4 h-4 text-primary" />
         </button>
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-        <span>Hold <kbd className="px-1 rounded bg-white/10">Space</kbd> to talk.</span>
+        <span>Hold <kbd className="px-1 rounded bg-muted">Space</kbd> to talk.</span>
         {lastParse && (
-          <span className={lastParse.ok ? "text-[#5DCAA5]" : "text-amber-300"}>
+          <span className={lastParse.ok ? "text-sage dark:text-[#5E8C74]" : "text-amber-warm"}>
             {lastParse.ok ? `✓ “${lastParse.text}”` : `? “${lastParse.text}”`}
             {lastParse.source === "llm" ? " (AI)" : ""}
           </span>
         )}
-        {voiceError && <span className="text-red-300">{voiceError}</span>}
+        {voiceError && <span className="text-destructive">{voiceError}</span>}
       </div>
       <div className="flex flex-wrap gap-1">
         {examples.map((ex) => (
-          <button key={ex} type="button" onClick={() => setText(ex)} className="text-[10px] px-2 py-0.5 rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/25">
+          <button key={ex} type="button" onClick={() => setText(ex)} className="text-[10px] px-2 py-0.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-border">
             {ex}
           </button>
         ))}

@@ -3,11 +3,11 @@ import type { MonitorReadout } from "@/engine/types";
 
 // Real monitor colour conventions, tuned to the ScrubIn palette.
 const COLORS = {
-  ecg: "#5DCAA5",
-  spo2: "#7EC8E3",
+  ecg: "#4ADE80",
+  spo2: "#22D3EE",
   art: "#F87171",
   co2: "#F5C451",
-  grid: "rgba(126,200,227,0.06)",
+  grid: "rgba(255,255,255,0.05)",
   bis: "#C4B5FD",
 };
 
@@ -243,17 +243,17 @@ export function PatientMonitor({ readout, alarms, paused, muted }: Props) {
 
   return (
     <div
-      className={`relative rounded-2xl border bg-[#050B14] overflow-hidden transition-colors ${
+      className={`relative rounded-sm border bg-[#050B14] overflow-hidden transition-colors ${
         alarms.some((x) => ["asystole", "vf", "pea", "spo2_low", "apnea"].includes(x) || x.startsWith("spo2_low"))
-          ? "border-red-500/60 shadow-[0_0_40px_rgba(248,113,113,0.25)]"
+          ? "border-destructive/40 shadow-[0_0_40px_rgba(248,113,113,0.25)]"
           : alarms.length
-            ? "border-amber-400/40"
-            : "border-[#7EC8E3]/15"
+            ? "border-amber-warm/40"
+            : "border-border"
       }`}
     >
       <div className="grid grid-cols-[1fr_190px] min-h-[340px]">
         <canvas ref={canvasRef} className="w-full h-full min-h-[340px]" aria-label="Patient monitor waveforms" />
-        <div className="border-l border-[#7EC8E3]/10 flex flex-col divide-y divide-[#7EC8E3]/10 font-mono-data">
+        <div className="border-l border-white/10 flex flex-col divide-y divide-white/10 font-mono-data">
           <Numeric label="HR" unit="bpm" color={COLORS.ecg} value={a.has("ecg") ? r?.hr : undefined} alarm={alarm("hr")} sub={r?.rhythm && a.has("ecg") ? r.rhythm.replace("_", " ") : undefined} big />
           <Numeric label="SpO₂" unit="%" color={COLORS.spo2} value={a.has("spo2") ? (r?.spo2 ?? "?") : undefined} alarm={alarm("spo2")} big />
           <div className="px-3 py-2">
@@ -265,7 +265,7 @@ export function PatientMonitor({ readout, alarms, paused, muted }: Props) {
                 </span>
               )}
             </div>
-            <div className={`text-2xl font-semibold tabular-nums ${alarm("map") || alarm("sbp") ? "text-red-400 animate-pulse" : ""}`} style={{ color: alarm("map") ? undefined : COLORS.art }}>
+            <div className={`text-2xl font-semibold tabular-nums ${alarm("map") || alarm("sbp") ? "text-destructive animate-pulse" : ""}`} style={{ color: alarm("map") ? undefined : COLORS.art }}>
               {a.has("nibp") || a.has("art_line") ? (bp && bp.sbp != null ? `${bp.sbp}/${bp.dbp}` : "---/---") : "—"}
             </div>
             <div className="text-xs" style={{ color: COLORS.art }}>
@@ -273,16 +273,16 @@ export function PatientMonitor({ readout, alarms, paused, muted }: Props) {
             </div>
           </div>
           <Numeric label="EtCO₂" unit="mmHg" color={COLORS.co2} value={a.has("etco2") ? (r?.etco2 ?? "—") : undefined} alarm={alarm("etco2") || alarm("apnea")} sub={a.has("etco2") && r?.rr != null ? `RR ${r.rr}` : undefined} />
-          <div className="grid grid-cols-2 divide-x divide-[#7EC8E3]/10">
+          <div className="grid grid-cols-2 divide-x divide-white/10">
             <Numeric small label="Temp" unit="°C" color="#E2E8F0" value={a.has("temp") ? r?.temp : undefined} alarm={alarm("temp")} />
             <Numeric small label="BIS" unit="" color={COLORS.bis} value={a.has("bis") ? r?.bis : undefined} />
           </div>
-          <div className="grid grid-cols-2 divide-x divide-[#7EC8E3]/10">
+          <div className="grid grid-cols-2 divide-x divide-white/10">
             <Numeric small label="Ppeak" unit="cmH₂O" color="#E2E8F0" value={r?.peak_pressure ?? undefined} alarm={alarm("peak_pressure")} />
             <Numeric small label="FiO₂" unit="%" color="#E2E8F0" value={r?.fio2} />
           </div>
           {r?.tof && (
-            <div className="px-3 py-1.5 text-[11px] text-slate-300">
+            <div className="px-3 py-1.5 text-[11px] text-muted-foreground">
               TOF {r.tof.count}/4{r.tof.ratio != null ? ` · ratio ${r.tof.ratio.toFixed(2)}` : ""}
             </div>
           )}
@@ -291,7 +291,7 @@ export function PatientMonitor({ readout, alarms, paused, muted }: Props) {
       {alarms.length > 0 && (
         <div className="absolute top-2 left-2 flex flex-wrap gap-1.5">
           {alarms.map((al) => (
-            <span key={al} className="px-2 py-0.5 rounded text-[10px] font-mono-data uppercase tracking-wide bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse">
+            <span key={al} className="px-2 py-0.5 rounded text-[10px] font-mono-data uppercase tracking-wide bg-destructive/10 text-destructive border border-destructive/40 animate-pulse">
               {al.replace(/_/g, " ")}
             </span>
           ))}
@@ -328,7 +328,7 @@ function Numeric({
         <span className="opacity-60 normal-case">{unit}</span>
       </div>
       <div
-        className={`${big ? "text-4xl" : small ? "text-lg" : "text-2xl"} font-semibold tabular-nums leading-tight ${alarm ? "text-red-400 animate-pulse" : ""}`}
+        className={`${big ? "text-4xl" : small ? "text-lg" : "text-2xl"} font-semibold tabular-nums leading-tight ${alarm ? "text-destructive animate-pulse" : ""}`}
         style={{ color: alarm ? undefined : color }}
       >
         {shown}

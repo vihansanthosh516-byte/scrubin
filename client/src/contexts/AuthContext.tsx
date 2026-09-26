@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axios from "axios";
-
+import { upsertUser } from "@/lib/leaderboard";
+import { API_BASE } from "@/lib/api";
 
 interface User {
   id: string;
@@ -25,7 +26,7 @@ interface AuthContextType {
   isReturningUser: boolean;
   confirmReturningUser: () => void;
   restartOnboarding: () => void;
-  completeOnboarding: (data: { displayName: string; username: string }) => void;
+  completeOnboarding: (data: { displayName: string; username?: string; profession?: string }) => void;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string, profession: string) => Promise<{ error: any }>;
 }
@@ -53,13 +54,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const existingProfile = localStorage.getItem(`scrubin_user_profile_${parsedUser.id}`);
         if (existingProfile) {
           const profileData = JSON.parse(existingProfile);
+          // The stored profile is the source of truth for onboarding state
+          // (completeOnboarding/signUp write true, restartOnboarding writes
+          // false). Default to true only for legacy profiles written before
+          // the flag existed.
+          const onboarded = profileData.hasCompletedOnboarding ?? parsedUser.hasCompletedOnboarding ?? true;
           const completeUser = {
             ...parsedUser,
             ...profileData,
-            hasCompletedOnboarding: true,
+            hasCompletedOnboarding: onboarded,
           };
           setUser(completeUser);
-          setHasCompletedOnboarding(true);
+          setHasCompletedOnboarding(onboarded);
         } else {
           setUser(parsedUser);
           setHasCompletedOnboarding(!!parsedUser.hasCompletedOnboarding);
@@ -70,6 +76,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     setLoading(false);
+
+    // Check for Supabase OAuth session (handles redirect back from Supabase OAuth flow)
+    (async () => {
+      try {
+        const { supabase } = await import("../lib/supabase");
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) {
+          const u = data.session.user;
+          const nameToUse = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "User";
+          // Honor the stored profile's onboarding flag when one exists;
+          // OAuth sessions without a profile keep the legacy default (true).
+          let onboarded = true;
+          try {
+            const existingProfile = localStorage.getItem(`scrubin_user_profile_${u.id}`);
+            if (existingProfile) {
+              onboarded = JSON.parse(existingProfile).hasCompletedOnboarding ?? true;
+            }
+          } catch {
+            /* ignore malformed profile */
+          }
+          const userData: User = {
+            id: u.id,
+            name: nameToUse,
+            login: u.user_metadata?.user_name || u.user_metadata?.preferred_username || (u.email ? u.email.split("@")[0] : "user"),
+            avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(nameToUse)}&backgroundColor=CC553D&textColor=FFFFFF`,
+            email: u.email || null,
+            hasCompletedOnboarding: onboarded,
+          };
+          setUser(userData);
+          setHasCompletedOnboarding(onboarded);
+          localStorage.setItem("scrubin_user", JSON.stringify(userData));
+          localStorage.setItem("scrubin_last_user", JSON.stringify({ name: userData.name, login: userData.login }));
+        }
+      } catch (e) {
+        console.error("Supabase session check failed", e);
+      }
+    })();
 
     // Check for OAuth code in URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -87,7 +130,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     setError(null);
     try {
-      const endpoint = provider === "google" ? "/api/auth/google" : "/api/auth/github";
+      const endpoint =
+        provider === "google" ? `${API_BASE}/api/auth/google` : `${API_BASE}/api/auth/github`;
       const response = await axios.post(endpoint, { code, redirect_uri: REDIRECT_URI });
       const userData = response.data.user;
 
@@ -96,13 +140,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (existingUserData) {
         const existingProfile = JSON.parse(existingUserData);
+        const onboarded = existingProfile.hasCompletedOnboarding ?? true;
         const completeUser = {
           ...userData,
           ...existingProfile,
-          hasCompletedOnboarding: true,
+          hasCompletedOnboarding: onboarded,
         };
         setUser(completeUser);
-        setHasCompletedOnboarding(true);
+        setHasCompletedOnboarding(onboarded);
         setIsReturningUser(true); // Show welcome back screen
         localStorage.setItem("scrubin_user", JSON.stringify(completeUser));
         localStorage.setItem("scrubin_last_user", JSON.stringify({ name: completeUser.name, login: completeUser.login }));
@@ -115,6 +160,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem("scrubin_last_user", JSON.stringify({ name: completeUser.name, login: completeUser.login }));
       }
 
+      await upsertUser({
+        id: userData.id,
+        name: userData.name,
+        login: userData.login,
+        avatar_url: userData.avatar_url,
+      });
 
       // Redirect directly to profile
       window.location.href = "/profile";
@@ -126,19 +177,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginWithGitHub = () => {
-    const scope = "read:user user:email";
-    sessionStorage.setItem("oauth_provider", "github");
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${scope}`;
+  const loginWithGitHub = async () => {
+    const { supabase } = await import("../lib/supabase");
+    await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: { redirectTo: window.location.origin },
+    });
   };
 
-  const loginWithGoogle = () => {
-    const scope = "openid email profile";
-    sessionStorage.setItem("oauth_provider", "google");
-    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`;
+  const loginWithGoogle = async () => {
+    const { supabase } = await import("../lib/supabase");
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
   };
 
-  const completeOnboarding = async (data: { displayName: string; profession: string }) => {
+  const completeOnboarding = async (data: { displayName: string; username?: string; profession?: string }) => {
     if (!user) return;
 
     const updatedUser = {
@@ -169,6 +224,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const restartOnboarding = () => {
     setIsReturningUser(false);
     setHasCompletedOnboarding(false);
+    // Persist the flag so a reload doesn't restore the old "onboarded" state
+    // from the stored profile (the profile is the source of truth).
+    if (user) {
+      const profileKey = `scrubin_user_profile_${user.id}`;
+      let profile: Record<string, unknown> = {};
+      try {
+        const existing = localStorage.getItem(profileKey);
+        if (existing) profile = JSON.parse(existing);
+      } catch {
+        /* ignore malformed profile */
+      }
+      localStorage.setItem(profileKey, JSON.stringify({ ...profile, hasCompletedOnboarding: false }));
+      localStorage.setItem("scrubin_user", JSON.stringify({ ...user, hasCompletedOnboarding: false }));
+    }
     // Keep user data but allow them to re-enter name/username
     window.location.href = "/onboarding";
   };
@@ -195,7 +264,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id,
           name: nameToUse,
           login: data.user.user_metadata?.user_name || email.split("@")[0],
-          avatar_url: data.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(nameToUse)}&backgroundColor=7EC8E3&textColor=000000`,
+          avatar_url: data.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(nameToUse)}&backgroundColor=CC553D&textColor=FFFFFF`,
           email: data.user.email || null,
         };
 
@@ -204,9 +273,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const existingUserData = localStorage.getItem(profileKey);
         if (existingUserData) {
           const existingProfile = JSON.parse(existingUserData);
-          const completeUser = { ...userData, ...existingProfile, hasCompletedOnboarding: true };
+          const onboarded = existingProfile.hasCompletedOnboarding ?? true;
+          const completeUser = { ...userData, ...existingProfile, hasCompletedOnboarding: onboarded };
           setUser(completeUser);
-          setHasCompletedOnboarding(true);
+          setHasCompletedOnboarding(onboarded);
           localStorage.setItem("scrubin_user", JSON.stringify(completeUser));
           localStorage.setItem("scrubin_last_user", JSON.stringify({ name: completeUser.name, login: completeUser.login }));
         } else {
@@ -216,6 +286,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem("scrubin_user", JSON.stringify(completeUser));
           localStorage.setItem("scrubin_last_user", JSON.stringify({ name: completeUser.name, login: completeUser.login }));
         }
+
+        await upsertUser({
+          id: userData.id,
+          name: userData.name,
+          login: userData.login,
+          avatar_url: userData.avatar_url,
+        });
 
         // Redirect to profile
         window.location.href = "/profile";
@@ -252,7 +329,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id,
           name: name,
           login: email.split("@")[0],
-          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=7EC8E3&textColor=000000`,
+          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=CC553D&textColor=FFFFFF`,
           email: data.user.email || null,
           profession: profession,
           hasCompletedOnboarding: true,
@@ -269,6 +346,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setHasCompletedOnboarding(true);
         localStorage.setItem("scrubin_user", JSON.stringify(userData));
         localStorage.setItem("scrubin_last_user", JSON.stringify({ name: userData.name, login: userData.login }));
+
+        await upsertUser({
+          id: userData.id,
+          name: userData.name,
+          login: userData.login,
+          avatar_url: userData.avatar_url,
+        });
 
         // Redirect to profile
         window.location.href = "/profile";

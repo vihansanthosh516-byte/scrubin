@@ -1,0 +1,92 @@
+name: Engine tests (offline + live Python core)
+
+# Runs the full vitest suite with the Python simulation engine (Scrubin-Core)
+# booted locally, so the live tier of server/engine/__tests__/deathPacing.test.ts
+# runs instead of skipping. The live tier asserts death-pacing floors, correct
+# recovery resolution, and the sys > dia vitals invariant against the real engine.
+#
+# NOTE: the live tier's sys > dia assertion requires the clamp_vitals fix in
+# Scrubin-Core (scrubin_core_procedures.py) to be committed to that repo's
+# default branch — until then this job fails on that one assertion.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Real Postgres for the schema/seed integration tier
+    # (client/src/lib/supabasePostgres.test.ts) — applies supabase_schema.sql
+    # + supabase_seed.sql, simulates the app's recordSession insert, and
+    # asserts the leaderboard view's totals. Skipped locally when DATABASE_URL
+    # is unset.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: scrubin_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/scrubin_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout Scrubin-Core (Python engine)
+        uses: actions/checkout@v4
+        with:
+          repository: vihansanthosh516-byte/Scrubin-Core
+          path: Scrubin-Core
+
+      # Node is pinned exactly (22.22.3) against the jsdom 26.1.0 devDependency
+      # pin: jsdom 26 requires node >= 18, and versions were validated against it
+      # (Node 18 ESM-require failure, Node 20.19 undici CacheStorage crash with
+      # jsdom 30; jsdom 26.1.0 is green on 20.19, 22.22, and 24). A floating
+      # `20`/`22` range could drift into a jsdom-incompatible combo, so keep the
+      # two pins in lockstep when either changes.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.3
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci --legacy-peer-deps
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install engine runtime deps
+        run: pip install fastapi "uvicorn[standard]" pydantic
+
+      - name: Start the Python simulation engine
+        run: |
+          cd Scrubin-Core
+          nohup python server.py > engine.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -sf http://127.0.0.1:8001/health > /dev/null; then
+              echo "engine healthy after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "engine failed to start; tail of engine.log:"
+          tail -40 engine.log
+          exit 1
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Vitest (offline tiers + live engine tier)
+        run: npx vitest run

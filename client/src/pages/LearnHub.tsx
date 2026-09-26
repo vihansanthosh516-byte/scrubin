@@ -19,28 +19,21 @@ const ARTICLES = [
 ];
 
 export default function LearnHub() {
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [mounted, setMounted] = useState(true);
+  const params = new URLSearchParams(window.location.search);
+  const procFilter = params.get("procedure");
+  const catFilter = params.get("category");
+  const initialCategory = catFilter && CATEGORIES.includes(catFilter) ? catFilter : "All";
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
 
-  const filtered = ARTICLES.filter(a => activeCategory === "All" || a.category === activeCategory);
+  const filtered = ARTICLES.filter(a =>
+    (activeCategory === "All" || a.category === activeCategory) &&
+    (!procFilter || a.title.toLowerCase().includes(procFilter.toLowerCase()))
+  );
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Animated background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute w-[900px] h-[900px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #5DCAA5 0%, transparent 70%)", top: "-20%", right: "-10%" }}
-          animate={{ x: [0, 80, 0], y: [0, 60, 0], scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
-          transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute w-[800px] h-[800px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #7EC8E3 0%, transparent 70%)", bottom: "-10%", left: "-5%" }}
-          animate={{ x: [0, -60, 0], y: [0, 80, 0], scale: [1, 1.3, 1], rotate: [360, 180, 0] }}
-          transition={{ duration: 32, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
+      {/* Subtle warm editorial texture — no neon */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "radial-gradient(#8C827A 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
 
       <div className="pt-32 pb-16 relative z-10">
         {/* Header */}
@@ -63,11 +56,11 @@ export default function LearnHub() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-6"
               whileHover={{ scale: 1.05 }}
             >
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-mono-data text-primary">Knowledge Base</span>
+              <Sparkles className="w-4 h-4 text-[#CC553D]" />
+              <span className="text-sm font-mono-data text-[#CC553D]">Knowledge Base</span>
             </motion.div>
-            <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-4" style={{ fontFamily: "'Syne', sans-serif" }}>
-              Learn <span className="text-gradient">Hub</span>
+            <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-4" style={{ fontFamily: "'Inter', sans-serif" }}>
+              Learn <span className="text-[#CC553D] dark:text-[#D95338]">Hub</span>
             </h1>
             <p className="text-muted-foreground text-xl">Comprehensive surgical education</p>
           </motion.div>
@@ -87,10 +80,10 @@ export default function LearnHub() {
                 onClick={() => setActiveCategory(cat)}
                 whileHover={{ scale: 1.08, y: -3 }}
                 whileTap={{ scale: 0.95 }}
-                className={`px-5 py-3 rounded-2xl text-sm font-semibold transition-all font-mono-data uppercase tracking-wide ${
+                className={`px-5 py-3 rounded-sm text-sm font-semibold transition-all font-mono-data uppercase tracking-wide ${
                   activeCategory === cat
-                    ? "bg-primary text-primary-foreground shadow-[0_0_30px_rgba(126,200,227,0.5)]"
-                    : "bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:border-primary/30 border border-border"
+                    ? "bg-[#CC553D] text-white shadow-[0_0_30px_rgba(204,85,61,0.25)]"
+                    : "bg-muted/50 text-muted-foreground hover:bg-[#CC553D]/10 hover:border-[#CC553D]/30 border border-border"
                 }`}
               >
                 {cat}
@@ -109,30 +102,26 @@ export default function LearnHub() {
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: i * 0.1, type: "spring", stiffness: 100 }}
-                whileHover={{ y: -12, scale: 1.05 }}
                 className="group"
               >
-                <div className="p-8 rounded-3xl glass-card cursor-pointer relative overflow-hidden h-full border-primary/20 hover:border-primary/40 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/30 transition-colors" tabIndex={0}>
-                  {/* Hover gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-500" />
-                  
+                <div className="p-8 rounded-sm glass-card relative overflow-hidden h-full border-border/60">
                   <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-4">
                       <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
-                        article.difficulty === "Beginner" ? "bg-emerald-400/10 text-emerald-400 border border-emerald-400/20" :
-                        article.difficulty === "Intermediate" ? "bg-amber-400/10 text-amber-400 border border-amber-400/20" :
-                        "bg-red-400/10 text-red-400 border border-red-400/20"
+                        article.difficulty === "Beginner" ? "bg-[#2E6B4B]/10 text-[#2E6B4B] border border-[#2E6B4B]/20" :
+                        article.difficulty === "Intermediate" ? "bg-[#C27820]/10 text-[#C27820] border border-[#C27820]/20" :
+                        "bg-[#A32A2A]/10 text-[#A32A2A] border border-[#A32A2A]/20"
                       }`}>
                         {article.difficulty}
                       </span>
                       <span className="label-mono text-muted-foreground text-xs">{article.category}</span>
                     </div>
 
-                    <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary group-focus-within:text-primary transition-colors" style={{ fontFamily: "'Syne', sans-serif" }}>
+                    <h3 className="text-xl font-bold text-foreground mb-3" style={{ fontFamily: "'Inter', sans-serif" }}>
                       {article.title}
                     </h3>
 
-                    <p className="text-muted-foreground text-sm mb-6 italic border-l-2 border-primary/30 pl-4">
+                    <p className="text-muted-foreground text-sm mb-6 italic border-l-2 border-[#CC553D]/30 pl-4">
                       {article.excerpt}
                     </p>
 
@@ -140,12 +129,7 @@ export default function LearnHub() {
                       <span className="flex items-center gap-2 text-xs text-muted-foreground font-mono-data">
                         <Clock className="w-4 h-4" /> {article.readTime} read
                       </span>
-                      <motion.div
-                        animate={{ x: [0, 5, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      >
-                        <ChevronRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity" />
-                      </motion.div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground/40" />
                     </div>
                   </div>
                 </div>

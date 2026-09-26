@@ -27,7 +27,7 @@ export const VITAL_RANGES: Record<keyof Vitals, [number, number]> = {
 };
 
 export function clampVitals(v: Vitals): Vitals {
-  return {
+  const result: Vitals = {
     spo2: Math.max(VITAL_RANGES.spo2[0], Math.min(VITAL_RANGES.spo2[1], v.spo2)),
     heart_rate: Math.max(VITAL_RANGES.heart_rate[0], Math.min(VITAL_RANGES.heart_rate[1], v.heart_rate)),
     bp_systolic: Math.max(VITAL_RANGES.bp_systolic[0], Math.min(VITAL_RANGES.bp_systolic[1], v.bp_systolic)),
@@ -35,6 +35,12 @@ export function clampVitals(v: Vitals): Vitals {
     temperature: Math.max(VITAL_RANGES.temperature[0], Math.min(VITAL_RANGES.temperature[1], v.temperature)),
     respiratory_rate: Math.max(VITAL_RANGES.respiratory_rate[0], Math.min(VITAL_RANGES.respiratory_rate[1], v.respiratory_rate)),
   };
+  // Physiologic invariant mirroring the Python clamp_vitals: diastolic can never
+  // reach or exceed systolic. Anchor on systolic (the BP < 40 mortality driver).
+  if (result.bp_diastolic >= result.bp_systolic) {
+    result.bp_diastolic = result.bp_systolic - 1;
+  }
+  return result;
 }
 
 // ── Complication Types ──
@@ -79,13 +85,62 @@ export type DecisionArchetypeType = (typeof DECISION_ARCHETYPES)[number];
 // ── Archetype→Complication mapping ──
 export const ARCHETYPE_COMPLICATION_MAP: Record<DecisionArchetypeType, ComplicationType[]> = {
   AIRWAY_STABILITY:     ["hypoxia", "anaphylaxis"],
-  HEMODYNAMIC_CONTROL:  ["hemorrhage", "cardiac_arrhythmia", "fluid_overload"],
+  HEMODYNAMIC_CONTROL:  ["hemorrhage", "cardiac_arrhythmia", "fluid_overload", "anaphylaxis"],
   BLEEDING_CONTROL:     ["hemorrhage"],
   INFECTION_MANAGEMENT: ["infection"],
   PAIN_MANAGEMENT:      ["nerve_injury"],
   DIAGNOSTIC_STEP:      ["infection", "thrombosis", "nerve_injury"],
   SURGICAL_DECISION:    ["hemorrhage", "nerve_injury", "thrombosis"],
   POST_OP_MONITORING:   ["infection", "thrombosis", "fluid_overload"],
+};
+
+// ── Procedure-phase awareness ──
+// Mirrors scrubin_core_procedures.py: each procedure phase falls into one of
+// three buckets (pre-op / intra-op / post-op), and each archetype is only
+// offered in the buckets where its interventions make clinical sense (e.g.
+// BLEEDING_CONTROL — cautery/ligation — only while the patient is in the OR).
+// The engine prefers phase-eligible archetypes so decisions match where the
+// surgery actually is, falling back so a complication is always resolvable.
+export type PhaseBucket = "pre_op" | "intra_op" | "post_op";
+
+const PHASE_PRE_KEYWORDS = [
+  "intake", "pre-op", "preop", "evaluation", "positioning",
+  "stabilization", "induction", "anesthesia", "consult", "planning", "template",
+];
+const PHASE_POST_KEYWORDS = ["post-op", "postop", "debrief", "icu", "recovery"];
+
+/** Map a procedure phase NAME to a bucket. Phases that aren't recognizably
+ *  pre- or post-op are treated as intra-op (the default operating-room state). */
+export function classifyPhaseBucket(name: string): PhaseBucket {
+  const n = (name ?? "").toLowerCase();
+  for (const kw of PHASE_POST_KEYWORDS) {
+    if (n.includes(kw)) return "post_op";
+  }
+  for (const kw of PHASE_PRE_KEYWORDS) {
+    if (n.includes(kw)) return "pre_op";
+  }
+  return "intra_op";
+}
+
+export const ARCHETYPE_PHASE_BUCKETS: Record<DecisionArchetypeType, PhaseBucket[]> = {
+  AIRWAY_STABILITY:     ["pre_op", "intra_op", "post_op"],
+  HEMODYNAMIC_CONTROL:  ["intra_op", "post_op"],
+  BLEEDING_CONTROL:     ["intra_op"],
+  INFECTION_MANAGEMENT: ["intra_op", "post_op"],
+  PAIN_MANAGEMENT:      ["intra_op", "post_op"],
+  DIAGNOSTIC_STEP:      ["pre_op", "intra_op", "post_op"],
+  SURGICAL_DECISION:    ["intra_op"],
+  POST_OP_MONITORING:   ["post_op"],
+};
+
+// Per-OPTION phase overrides on top of the archetype's buckets. Options not
+// listed inherit their archetype's buckets. Treating options are NEVER filtered
+// (a complication must always stay resolvable) — this governs the DECOY pool
+// only, so e.g. "Surgical exploration" never appears as a decoy during Post-Op
+// and "CT imaging" is not offered mid-case.
+export const OPTION_PHASE_OVERRIDES: Partial<Record<string, PhaseBucket[]>> = {
+  exploration: ["intra_op"], // surgical exploration only in the OR
+  imaging: ["pre_op", "post_op"], // no intra-operative imaging
 };
 
 // ── Escalation Phases ──
@@ -223,7 +278,7 @@ export interface NextTickResponse {
   escalation_phase: EscalationPhase;
   procedure_phase: string;
   active_complication: ComplicationType | null;
-  pending_decision: TickDecisionPublic;
+  pending_decision: TickDecisionPublic | null;
   events: string[];
   score: number;
   completed: boolean;
@@ -235,6 +290,11 @@ export interface DecideResponse {
   escalation_phase: EscalationPhase;
   procedure_phase: string;
   active_complication: ComplicationType | null;
+  // Same shape as NextTickResponse: null after a decision resolves (the engine
+  // clears the pending decision on submit and the client fetches the next one
+  // via /next), an object while a decision is outstanding. Mirrors the Python
+  // core's /decide contract.
+  pending_decision: TickDecisionPublic | null;
   decision_result: DecisionResultPublic;
   next_tick_ready: boolean;
   events: string[];

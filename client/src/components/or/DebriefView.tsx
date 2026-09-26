@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ScrubinStaticPanel } from "@/components/ui/scrubin-card";
 import type { Debrief } from "@/engine/types";
 import { fmtTime } from "./AnesthesiaStation";
 
 const GRADE_STYLE = {
-  good: "text-[#5DCAA5] border-[#5DCAA5]/40 bg-[#5DCAA5]/10",
-  fair: "text-amber-200 border-amber-300/40 bg-amber-300/10",
-  poor: "text-red-300 border-red-400/40 bg-red-400/10",
-  "n/a": "text-muted-foreground border-white/10",
+  good: "text-sage dark:text-[#5E8C74] border-sage/40 bg-sage/10",
+  fair: "text-amber-warm border-amber-warm/40 bg-amber-warm/10",
+  poor: "text-destructive border-destructive/40 bg-destructive/10",
+  "n/a": "text-muted-foreground border-border",
 } as const;
 
 const HIDDEN_LABELS: Record<string, (v: any) => string> = {
@@ -49,8 +48,8 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="text-xs uppercase tracking-[0.2em] text-[#7EC8E3]/80">Debrief · {debrief.role === "anesthesia" ? "Anesthesiologist" : "Surgeon"}</div>
-          <h1 className="text-3xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <div className="text-xs uppercase tracking-[0.2em] text-primary">Debrief · {debrief.role === "anesthesia" ? "Anesthesiologist" : "Surgeon"}</div>
+          <h1 className="text-3xl font-bold">
             {procedureName}
           </h1>
           <div className="text-sm text-muted-foreground">
@@ -60,52 +59,52 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
         <div className="flex items-center gap-4">
           {debrief.score != null && (
             <div className="text-right">
-              <div className="text-5xl font-bold font-mono-data text-[#7EC8E3]">{debrief.score}</div>
+              <div className="text-5xl font-bold font-mono-data text-primary">{debrief.score}</div>
               <div className="text-[11px] text-muted-foreground">process & outcome score</div>
             </div>
           )}
-          <button onClick={onRestart} className="px-4 py-2 rounded-xl border border-[#7EC8E3]/40 hover:bg-[#7EC8E3]/10 text-sm">
+          <button onClick={onRestart} className="px-4 py-2 rounded-sm border border-border hover:bg-primary/10 text-sm">
             New case
           </button>
         </div>
       </div>
 
-      <ScrubinStaticPanel glowColor="blue" className="p-4">
+      <div className="glass-card p-4">
         <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">What the patient did</div>
         <div className="h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={trend}>
-              <CartesianGrid stroke="rgba(126,200,227,0.08)" />
+              <CartesianGrid stroke="var(--border)" />
               <XAxis dataKey="min" type="number" domain={[0, "dataMax"]} tickFormatter={(m: number) => `${Math.round(m)}m`} tick={{ fill: "#94a3b8", fontSize: 11 }} />
               <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} domain={[0, 180]} />
-              <Tooltip contentStyle={{ background: "#0D1117", border: "1px solid rgba(126,200,227,0.2)", fontSize: 12 }} />
+              <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: 12 }} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <ReferenceLine y={65} stroke="#F87171" strokeDasharray="4 4" />
-              <ReferenceLine y={90} stroke="#7EC8E3" strokeDasharray="4 4" />
-              <Line dataKey="hr" name="HR" stroke="#5DCAA5" dot={false} strokeWidth={1.5} />
-              <Line dataKey="map" name="MAP" stroke="#F87171" dot={false} strokeWidth={1.5} />
-              <Line dataKey="spo2" name="SpO₂" stroke="#7EC8E3" dot={false} strokeWidth={1.5} />
-              <Line dataKey="etco2" name="EtCO₂" stroke="#F5C451" dot={false} strokeWidth={1.5} />
-              <Line dataKey="bis" name="BIS" stroke="#C4B5FD" dot={false} strokeWidth={1} />
+              <ReferenceLine y={65} stroke="#A32A2A" strokeDasharray="4 4" />
+              <ReferenceLine y={90} stroke="#2E6B4B" strokeDasharray="4 4" />
+              <Line dataKey="hr" name="HR" stroke="#2E6B4B" dot={false} strokeWidth={1.5} />
+              <Line dataKey="map" name="MAP" stroke="#CC553D" dot={false} strokeWidth={1.5} />
+              <Line dataKey="spo2" name="SpO₂" stroke="#2F7FA3" dot={false} strokeWidth={1.5} />
+              <Line dataKey="etco2" name="EtCO₂" stroke="#D99B26" dot={false} strokeWidth={1.5} />
+              <Line dataKey="bis" name="BIS" stroke="#8C827A" dot={false} strokeWidth={1} />
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </ScrubinStaticPanel>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
         <div className="space-y-5">
           {domains.map((domain) => (
             <div key={domain} className="space-y-2">
-              <h3 className="text-sm uppercase tracking-[0.14em] text-[#7EC8E3]/80">{domain}</h3>
+              <h3 className="text-sm uppercase tracking-[0.14em] text-primary">{domain}</h3>
               {debrief.items
                 .filter((i) => i.domain === domain)
                 .map((i, idx) => (
-                  <div key={idx} className={`rounded-xl border p-3 ${GRADE_STYLE[i.grade]}`}>
+                  <div key={idx} className={`rounded-sm border p-3 ${GRADE_STYLE[i.grade]}`}>
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-foreground">{i.title}</span>
                       <span className="text-[10px] uppercase tracking-wider">{i.grade}</span>
                     </div>
-                    <div className="text-sm text-foreground/90 mt-0.5">{i.detail}</div>
+                    <div className="text-sm text-foreground mt-0.5">{i.detail}</div>
                     {i.teaching && <div className="text-xs text-muted-foreground mt-1">{i.teaching}</div>}
                   </div>
                 ))}
@@ -113,8 +112,8 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
           ))}
         </div>
         <div className="space-y-5">
-          <ScrubinStaticPanel glowColor="teal" className="p-4">
-            <div className="text-xs uppercase tracking-wider text-[#5DCAA5] mb-2">Attending notes</div>
+          <div className="glass-card p-4">
+            <div className="text-xs uppercase tracking-wider text-sage dark:text-[#5E8C74] mb-2">Attending notes</div>
             {notes ? (
               <p className="text-sm whitespace-pre-line leading-relaxed">{notes}</p>
             ) : notesError ? (
@@ -122,21 +121,21 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
             ) : (
               <p className="text-xs text-muted-foreground">Writing notes…</p>
             )}
-          </ScrubinStaticPanel>
-          <ScrubinStaticPanel glowColor="blue" className="p-4">
+          </div>
+          <div className="glass-card p-4">
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">What you couldn't see</div>
             <ul className="text-sm space-y-1">
               {Object.entries(debrief.hidden).map(([k, v]) => (
                 <li key={k}>{HIDDEN_LABELS[k]?.(v) ?? `${k}: ${String(v)}`}</li>
               ))}
               {debrief.surgery.occult.map((o, i) => (
-                <li key={`o${i}`} className="text-red-300">
+                <li key={`o${i}`} className="text-destructive">
                   {o}
                 </li>
               ))}
             </ul>
-          </ScrubinStaticPanel>
-          <ScrubinStaticPanel glowColor="blue" className="p-4">
+          </div>
+          <div className="glass-card p-4">
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Timeline</div>
             <div className="max-h-[360px] overflow-y-auto space-y-0.5 text-xs font-mono-data">
               {debrief.timeline
@@ -147,7 +146,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
                   </div>
                 ))}
             </div>
-          </ScrubinStaticPanel>
+          </div>
         </div>
       </div>
     </div>
