@@ -108,8 +108,8 @@ async function startServer() {
           .map((i: any) => `- [${i.grade}] ${i.domain} / ${i.title}: ${i.detail}`)
           .join("\n");
         const completion = await groq.chat.completions.create({
-          model: "llama-3.3-70b-versatile",
-          max_tokens: 450,
+          model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
+          max_tokens: 2000, // reasoning models spend tokens thinking before answering
           temperature: 0.5,
           messages: [
             {
@@ -140,8 +140,8 @@ async function startServer() {
       `;
 
       const completion = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
-        max_tokens: 400,
+        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
+        max_tokens: 2000,
         temperature: 0.7,
         messages: [
           { role: "system", content: systemPrompt },

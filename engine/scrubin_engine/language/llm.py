@@ -6,7 +6,7 @@ writes for teammates or the patient are limited to conversation grounded in
 the public case facts passed in the prompt.
 
 Provider: any OpenAI-compatible chat endpoint. Defaults to Groq
-(llama-3.3-70b-versatile) because the project already has GROQ_API_KEY.
+(openai/gpt-oss-120b) because the project already has GROQ_API_KEY.
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ def _load_dotenv() -> None:
 _load_dotenv()
 
 API_URL = os.environ.get("SCRUBIN_LLM_URL", "https://api.groq.com/openai/v1/chat/completions")
-MODEL = os.environ.get("SCRUBIN_LLM_MODEL", "llama-3.3-70b-versatile")
+MODEL = os.environ.get("SCRUBIN_LLM_MODEL", "openai/gpt-oss-120b")
 STT_URL = os.environ.get("SCRUBIN_STT_URL", "https://api.groq.com/openai/v1/audio/transcriptions")
 STT_MODEL = os.environ.get("SCRUBIN_STT_MODEL", "whisper-large-v3-turbo")
 
@@ -75,6 +75,8 @@ Rules:
 - NEVER invent a dose, rate or number the speaker did not say. If a required number is missing, set it to null (the team will ask).
 - If the words are ambiguous between two drugs (e.g. "neo" = neostigmine or neosynephrine/phenylephrine), do not guess: return a clarification question.
 - Use only the drug ids listed. "neosynephrine"/"neo-synephrine" = phenylephrine. "Ancef" = cefazolin. "Zofran" = ondansetron.
+- Prefer a concrete action over "say" whenever the speaker is asking for something to be done (a drug, a table position, a ventilator change, a surgical step). Asking anesthesia/the circulator to tilt the table is a "position" action. Use "say" only for conversation or requests no action type covers.
+- For surgical steps, use type "surgical" with "verb" set to one of the listed surgical verbs and "instrument"/"target" set to the listed ids.
 - If the speaker is just talking to the patient or team (asking a question, reassuring), emit a "say" action and, if a reply is natural, write a short in-character reply using ONLY the case facts given. Do not invent vital signs or findings.
 - Output a single JSON object: {"actions":[...], "clarification": string|null, "reply": {"from": "patient"|"surgeon"|"circulator"|"scrub"|"anesthesia", "text": string} | null}
 """ + ACTION_SCHEMA
@@ -87,6 +89,7 @@ def _context_block(context: dict[str, Any]) -> str:
         f"Available drug ids: {drug_ids}\n"
         f"Current airway: {context.get('airway', 'none')}; ventilator: {context.get('vent', 'manual')}\n"
         f"Surgical verbs available: {context.get('surgical_verbs', 'none')}\n"
+        f"Surgical instrument ids: {context.get('instruments', 'none')}; target ids: {context.get('targets', 'none')}\n"
         f"Case facts (public): {json.dumps(context.get('patient', {}))}\n"
     )
 
@@ -101,6 +104,7 @@ async def llm_parse(text: str, context: dict[str, Any], timeout_s: float = 8.0) 
         "model": MODEL,
         "temperature": 0,
         "response_format": {"type": "json_object"},
+        **({"reasoning_effort": "low"} if "gpt-oss" in MODEL else {}),
         "messages": [
             {"role": "system", "content": SYSTEM},
             {"role": "user", "content": _context_block(context) + f'\nUtterance: "{text}"'},

@@ -136,6 +136,8 @@ class Session:
             "vent": c.machine.mode,
             "patient": c.patient.public_summary(),
             "surgical_verbs": ", ".join(t["verbs"][0] for t in c.procedure.spec["tasks"]) if c.procedure else "none",
+            "instruments": ", ".join(c.procedure.spec["instruments"]) if c.procedure else "none",
+            "targets": ", ".join(c.procedure.spec["targets"]) if c.procedure else "none",
         }
 
     def debrief(self) -> dict:
