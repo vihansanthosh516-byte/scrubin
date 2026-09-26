@@ -110,10 +110,11 @@ class Session:
         reply = None
         source = "grammar"
         if self.role == "surgeon" and c.procedure is not None:
-            a = parse_surgical(text, c.procedure.spec, c.procedure)
-            if a is not None:
-                actions = [a]
+            actions, leftover = self._surgeon_parse(text)
+            if actions and not leftover:
                 source = "surgical"
+            else:
+                actions = []  # partly understood: let the LLM read the whole sentence
         if not actions:
             result = await interpret(text, self._context())
             actions, clarification, reply, source = result.actions, result.clarification, result.reply, result.source
@@ -127,6 +128,29 @@ class Session:
             c.say(responder, "Sorry — say that again?", kind="question")
         return {"ok": bool(actions) or bool(clarification) or bool(reply), "actions": actions, "results": results,
                 "clarification": clarification, "source": source}
+
+    def _surgeon_parse(self, text: str) -> tuple[list[dict], list[str]]:
+        """Split 'insufflate, then camera in' into steps; surgical vocabulary first,
+        then the general grammar (table position, drugs for anesthesia, ...)."""
+        from .language.grammar import _SPLIT, _meaningful, parse_clause
+
+        proc = self.case.procedure
+        parts = [p for p in _SPLIT.split(text) if p and p.strip()] or [text]
+        actions: list[dict] = []
+        leftover: list[str] = []
+        for part in parts:
+            general = parse_clause(part)
+            if general.actions and general.actions[0]["type"] in ("position", "say", "confirm", "assess"):
+                actions.extend(general.actions)
+                continue
+            a = parse_surgical(part, proc.spec, proc)
+            if a is not None:
+                actions.append(a)
+            elif general.actions:
+                actions.extend(general.actions)
+            elif _meaningful(part):
+                leftover.append(part)
+        return actions, leftover
 
     def _context(self) -> dict[str, Any]:
         c = self.case

@@ -162,7 +162,9 @@ class Case:
 
     def _do_confirm(self, act: A.Confirm) -> dict:
         if not self.pending:
-            return {"ok": False, "error": "nothing to confirm"}
+            if not act.accept:
+                self.say("circulator", "Okay.")
+            return {"ok": True, "nothing_pending": True}
         pending = self.pending
         self.pending = None
         if not act.accept:
@@ -195,7 +197,8 @@ class Case:
         lo, hi = d.usual_range(self.patient)
         if hi > 0 and amount > 1.6 * hi:
             per_kg = amount / self.patient.weight_kg
-            return self._ask_confirm(act, who, f"{self._fmt(amount, d.unit)} of {d.name.lower()}? That's {per_kg:.2g} {d.unit}/kg — well above the usual {self._fmt(lo, d.unit)}–{self._fmt(hi, d.unit)}. Are you sure?")
+            per_kg_s = f"{per_kg:.0f}" if per_kg >= 10 else f"{per_kg:.2g}"
+            return self._ask_confirm(act, who, f"{self._fmt(amount, d.unit)} of {d.name.lower()}? That's {per_kg_s} {d.unit}/kg — well above the usual {self._fmt(lo, d.unit)}–{self._fmt(hi, d.unit)}. Are you sure?")
         if lo > 0 and amount < 0.2 * lo:
             return self._ask_confirm(act, who, f"Just {self._fmt(amount, d.unit)} of {d.name.lower()}? Usual is {self._fmt(lo, d.unit)}–{self._fmt(hi, d.unit)}. Confirm?")
         if "penicillin" in d.tags and any("penicillin" in a for a in self.patient.allergies):
@@ -409,6 +412,10 @@ class Case:
             txt = f"Train-of-four: {r['count']} twitch{'es' if r['count'] != 1 else ''}" + (f", ratio {r['ratio']:.2f}" if r["ratio"] is not None else "")
             self.say("system", txt, kind="finding")
             return {"ok": True, "finding": r}
+        if w == "check_capnogram" and not self._flags.get("capno_now"):
+            # Watch a few breaths before calling it, like a real anesthetist.
+            self._flags["capno_check_at"] = self.t + 8.0
+            return {"ok": True, "pending_s": 8}
         if w == "check_capnogram":
             shape = aw.capno_shape
             txt = {
@@ -471,9 +478,9 @@ class Case:
 
     def _do_position(self, act: A.Position, performer: str) -> dict:
         self.position = act.position
-        self.load.trendelenburg_deg = {"trendelenburg": 15.0, "reverse_trendelenburg": -15.0}.get(act.position, self.load.trendelenburg_deg if act.position in ("left_tilt", "right_tilt", "left_side_down") else 0.0)
+        self.load.trendelenburg_deg = {"trendelenburg": 15.0, "left_side_down": 15.0, "reverse_trendelenburg": -15.0}.get(act.position, self.load.trendelenburg_deg if act.position in ("left_tilt", "right_tilt") else 0.0)
         self.event("position", position=act.position)
-        self.say("circulator", f"Table {act.position.replace('_', ' ')}.")
+        self.say("circulator", "Table Trendelenburg, left side down." if act.position == "left_side_down" else f"Table {act.position.replace('_', ' ')}.")
         return {"ok": True}
 
     def _do_warming(self, act: A.Warming, performer: str) -> dict:
@@ -625,6 +632,13 @@ class Case:
         if self.aspirated > 0:
             self.aspirated = min(0.8, self.aspirated + dt / 600.0)
             aw.bronchospasm = max(aw.bronchospasm, 0.3)
+
+        capno_at = self._flags.get("capno_check_at")
+        if capno_at is not None and self.t >= capno_at:
+            self._flags["capno_check_at"] = None
+            self._flags["capno_now"] = True
+            self._do_assess(A.Assess(what="check_capnogram"), "system")
+            self._flags["capno_now"] = False
 
         abg = self._flags.get("abg_pending")
         if abg and self.t >= abg[0]:

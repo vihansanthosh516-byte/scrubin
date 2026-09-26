@@ -353,7 +353,7 @@ tasks:
 
   - id: close_fascia
     name: Close umbilical fascia
-    verbs: [close the fascia, fascial closure, close the port site]
+    verbs: [close the fascia, close fascia, fascial closure, close the port site, suture the fascia]
     targets: [fascia]
     instruments: [needle_driver]
     requires: [specimen_out]

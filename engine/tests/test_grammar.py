@@ -88,3 +88,15 @@ def test_multiple_orders():
 def test_unparsed_is_reported():
     r = parse("what do you think about the weather")
     assert not r.actions and r.unparsed
+
+
+def test_playtest_regressions():
+    from scrubin_engine.language.grammar import parse
+
+    a = parse("never mind, cancel that").actions[0]
+    assert a["type"] == "confirm" and a["accept"] is False
+    r = parse("purple elephants dance sideways under the gas machine")
+    assert not r.actions and r.clarification is None
+    assert [a["type"] for a in parse("let's preoxygenate him by mask at 10 liters").actions] == ["gas", "airway"]
+    assert parse("trendelenburg with the left side down").actions[0]["position"] == "left_side_down"
+    assert all(a["type"] != "bag" for a in parse("deliver the bagged specimen").actions)

@@ -128,7 +128,9 @@ def parse_clause(raw: str) -> ParseResult:
     if re.fullmatch(r"(yes|yeah|yep|confirm(ed)?|i'?m sure|correct|affirmative|do it|go ahead|that'?s right|yes,? (i'?m )?sure)\.?", t):
         add(type="confirm", accept=True)
         return r
-    if re.fullmatch(r"(no|nope|cancel|hold( that| off)?|never ?mind|don'?t|stop that|negative)\.?", t):
+    if re.fullmatch(r"(no|nope|cancel|hold( that| off)?|never ?mind|don'?t|stop that|negative)\.?", t) or (
+        re.match(r"^(no|nope|cancel|never ?mind|forget (it|that)|scratch that|hold that)\b", t) and len(t.split()) <= 5
+    ):
         add(type="confirm", accept=False)
         return r
 
@@ -201,11 +203,11 @@ def parse_clause(raw: str) -> ParseResult:
     if _has(t, "reverse trendelenburg", "reverse trend", "head up"):
         add(type="position", position="reverse_trendelenburg")
         return r
+    if _has(t, "left side down", "left tilt", "tilt left", "roll left", "roll him to the left", "roll her to the left", "left side down"):
+        add(type="position", position="left_side_down")
+        return r
     if _has(t, "trendelenburg", "head down"):
         add(type="position", position="trendelenburg")
-        return r
-    if _has(t, "left side down", "left tilt", "tilt left", "roll left"):
-        add(type="position", position="left_side_down")
         return r
     if re.search(r"(table|bed) (flat|level)|level the table|flatten|back to flat|supine", t):
         add(type="position", position="level")
@@ -215,7 +217,8 @@ def parse_clause(raw: str) -> ParseResult:
         return r
 
     # --- volatile ------------------------------------------------------
-    if _has(t, "sevo", "sevoflurane", "sevoflourane", "volatile", "vaporizer", "vapouriser", "gas") and not _has(t, "blood gas", "abg"):
+    gas_as_volatile = _has(t, "gas") and re.search(r"\d|\boff\b|\bup\b|\bdown\b|\bon\b", t) and not re.search(r"liter|litre|flow|fresh gas|gas machine", t)
+    if (_has(t, "sevo", "sevoflurane", "sevoflourane", "volatile", "vaporizer", "vapouriser") or gas_as_volatile) and not _has(t, "blood gas", "abg"):
         if re.search(r"\boff\b|turn (it |the \w+ )?off|close", t):
             add(type="volatile", percent=0.0)
             return r
@@ -226,6 +229,12 @@ def parse_clause(raw: str) -> ParseResult:
         if not re.search(r"liter|litre|flow|oxygen|o2|air", t):
             r.clarification = "What percent sevo?"
             return r
+
+    if re.search(r"preoxygenat|pre-oxygenat|denitrogenat", t):
+        m = re.search(NUM + r"\s*(?:l|liters?|litres?|lpm)", t)
+        add(type="gas", o2_flow=float(m.group(1)) if m else 10.0, air_flow=0.0)
+        add(type="airway", maneuver="mask_on")
+        return r
 
     # --- fresh gas flows -----------------------------------------------
     if re.search(r"\b(o2|oxygen|flows?|fgf|fresh gas|air)\b", t) and not _has(t, "nasal cannula", "high flow", "hfno", "airway", "oral airway") and not re.search(r"airway", t):
@@ -298,7 +307,7 @@ def parse_clause(raw: str) -> ParseResult:
     if re.search(r"\bsuction\b", t):
         add(type="airway", maneuver="suction")
         return r
-    if re.search(r"(bag|mask ventilat|bag.?mask|ventilate by hand|hand ventilat|squeeze the bag|start bagging|assist (his|her|their)? ?breath)", t):
+    if re.search(r"(\bbag\b|mask ventilat|bag.?mask|ventilate by hand|hand ventilat|squeeze the bag|start bagging|assist (his|her|their)? ?breath)", t) and not re.search(r"specimen|endobag|retrieval", t):
         if re.search(r"stop|hold|quit", t):
             add(type="bag", on=False)
             return r

@@ -66,6 +66,7 @@ class Procedure:
     occult: list = field(default_factory=list)  # hidden injuries for debrief
     notes: list = field(default_factory=list)  # teaching notes for debrief
     instruments_used: set = field(default_factory=set)
+    queue: list = field(default_factory=list)  # trainee steps said in one breath
     _cool: dict = field(default_factory=dict)
     _wait: dict = field(default_factory=dict)
     _vagal_s: float = 0.0
@@ -192,8 +193,13 @@ class Procedure:
             c.say("scrub", "Sorry, which step do you want to do?")
             return {"ok": False, "error": "unknown surgical step"}
         if self.running is not None and not task.get("priority"):
-            c.say("scrub", f"You're still in the middle of: {self.running.task['name'].lower()}.")
-            return {"ok": False, "error": "busy"}
+            if len(self.queue) >= 3:
+                c.say("scrub", f"One thing at a time — still on: {self.running.task['name'].lower()}.")
+                return {"ok": False, "error": "busy"}
+            act_q = act.model_copy(update={"params": {**(act.params or {}), "task_id": task["id"]}})
+            self.queue.append((act_q, confirmed))
+            c.say("system", f"Next up after {self.running.task['name'].lower()}: {task['name'].lower()}.", kind="narration")
+            return {"ok": True, "queued": task["id"]}
         ok, why = self.can_start(task)
         if not ok:
             c.say("scrub", why)
@@ -292,6 +298,9 @@ class Procedure:
         if self.mode == "auto":
             self._auto(dt)
 
+        if self.running is None and self.queue and not self.paused and self.mode == "trainee":
+            act_q, conf = self.queue.pop(0)
+            self.perform(act_q, conf)
         if self.running is None or self.paused:
             return
         # Progress: stalls if the patient moves or the field is bleeding.
@@ -426,19 +435,32 @@ class Procedure:
         }
 
 
+def _verb_regex(phrase: str) -> str:
+    """Words of a verb phrase in order, allowing a few words in between
+    ("close the fascia" matches "close the umbilical fascia")."""
+    words = [re.escape(w) for w in phrase.lower().split()]
+    return r"(?<![a-z])" + r"(?:\W+\w+){0,3}?\W+".join(words) + r"(?![a-z])"
+
+
 def match_task_text(spec: dict, text: str, proc: Optional[Procedure] = None) -> Optional[dict]:
     t = text.lower()
     best, best_score = None, 0.0
     for task in spec["tasks"]:
         score = 0.0
+        span = (0, 0)
         for v in task.get("verbs", []):
-            if re.search(rf"(?<![a-z]){re.escape(v)}(?![a-z])", t):
-                score = max(score, 2.0 + len(v) / 40.0)
+            m = re.search(_verb_regex(v), t)
+            if m:
+                exact = v.lower() in t
+                sc = 2.0 + len(v) / 40.0 + (0.3 if exact else 0.0) + (0.4 if m.start() < 3 else 0.0)
+                if sc > score:
+                    score, span = sc, m.span()
         if score == 0:
             continue
         for tg in task.get("targets", []):
             for alias in spec["targets"].get(tg, [tg]):
-                if re.search(rf"(?<![a-z]){re.escape(alias)}(?![a-z])", t):
+                hit = re.search(rf"(?<![a-z]){re.escape(alias)}(?![a-z])", t)
+                if hit and not (span[0] <= hit.start() < span[1]):  # don't double count the verb's own words
                     score += 1.5
                     break
         for ins in task.get("instruments", []):
@@ -447,9 +469,11 @@ def match_task_text(spec: dict, text: str, proc: Optional[Procedure] = None) -> 
         if proc is not None:
             ok, _ = proc.can_start(task)
             if ok:
-                score += 0.75
-            if task["id"] in proc.done:
-                score -= 1.0
+                score += 2.0
+            elif any(ex in proc.done for ex in task.get("exclusive_with", [])):
+                score -= 3.0  # impossible on this path (e.g. Veress step after open entry)
+            if task["id"] in proc.done and task["id"] != "control_bleeding":
+                score -= 3.0
         if score > best_score:
             best, best_score = task, score
     return best

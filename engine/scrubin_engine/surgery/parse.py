@@ -27,10 +27,21 @@ INSTRUMENT_ALIASES = {
 
 
 def _find(text: str, table: dict[str, str]) -> Optional[str]:
-    for alias in sorted(table, key=len, reverse=True):
-        if re.search(rf"(?<![a-z]){re.escape(alias)}(?![a-z])", text):
-            return table[alias]
-    return None
+    """The instrument the speaker means: the first one named after "with"/"using",
+    otherwise the earliest one mentioned."""
+    hits: list[tuple[int, int, str]] = []
+    for alias, value in table.items():
+        for m in re.finditer(rf"(?<![a-z]){re.escape(alias)}s?(?![a-z])", text):
+            hits.append((m.start(), -len(alias), value))
+    if not hits:
+        return None
+    hits.sort()
+    cue = [m.end() for m in re.finditer(r"\b(with|using|use)\b", text)]
+    if cue:
+        after = [h for h in hits if h[0] >= cue[-1]] or [h for h in hits if h[0] >= cue[0]]
+        if after:
+            return after[0][2]
+    return hits[0][2]
 
 
 def parse_surgical(text: str, spec: dict, proc: Optional[Procedure] = None) -> Optional[dict]:

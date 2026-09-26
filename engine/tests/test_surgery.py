@@ -121,3 +121,30 @@ def test_ai_surgeon_waits_then_circulator_runs_time_out():
     assert c.metrics.incision_t is not None
     notes = " ".join(c.procedure.notes)
     assert "time-out" in notes and "antibiotics" in notes
+
+
+def test_playtest_routing_and_queue():
+    import asyncio
+
+    from scrubin_engine.session import Session
+
+    s = Session("t", "appendectomy", "surgeon", 3, surgeon_case())
+    c = s.case
+    c.submit({"type": "say", "intent": "time_out", "text": "time out"})
+    for text in ["prep", "incision at the umbilicus", "hasson"]:
+        do(c, text)
+    r = asyncio.run(s.utterance("Insufflate CO2 to 15, then camera in through the umbilical port"))
+    assert [a["params"]["task_id"] for a in r["actions"]] == ["insufflate", "camera_in"]
+    while (c.procedure.running or c.procedure.queue) and c.t < 20000:
+        c.step()
+    assert "camera_in" in c.procedure.done
+    a = parse_surgical("Cut the appendix with the scissors distal to the endoloops", SPEC)
+    assert a["instrument"] == "scissors"
+
+
+def test_capnogram_check_waits_for_breaths():
+    c = surgeon_case()  # AI anesthesia has intubated and ventilated
+    r = c.submit({"type": "assess", "what": "check_capnogram"})
+    assert r.get("pending_s")
+    c.run(10)
+    assert "capnogram" in c.comms[-1]["text"].lower() or "co2" in c.comms[-1]["text"].lower()
