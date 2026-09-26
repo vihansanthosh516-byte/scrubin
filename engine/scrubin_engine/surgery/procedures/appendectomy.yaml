@@ -1,0 +1,383 @@
+# Laparoscopic appendectomy as a task graph.
+#
+# There is no single "correct" path. Each task has requirements (hard blocks
+# with an explanation), soft requirements (the team pushes back and asks you
+# to confirm), a duration, a noxious-stimulus intensity felt by the patient,
+# and optional risk hooks implemented in Python (surgery/hooks.py).
+#
+# Flags come from two places:
+#   - computed from the case (anesthetized, relaxed, antibiotics_given, ...)
+#   - set/cleared by tasks (incised, insufflated, camera_in, ...)
+
+id: appendectomy
+name: Laparoscopic Appendectomy
+
+instruments:
+  scalpel:            {name: "#11 scalpel"}
+  veress:             {name: Veress needle}
+  hasson:             {name: Hasson trocar (open entry)}
+  trocar_12:          {name: 12 mm trocar}
+  trocar_5:           {name: 5 mm trocar}
+  camera:             {name: 30° laparoscope}
+  grasper:            {name: Atraumatic grasper}
+  maryland:           {name: Maryland dissector}
+  hook_cautery:       {name: Hook electrocautery, hemostatic: true, thermal: true}
+  harmonic:           {name: Harmonic scalpel, hemostatic: true, thermal: true}
+  ligasure:           {name: LigaSure, hemostatic: true, thermal: true}
+  scissors:           {name: Laparoscopic scissors}
+  clip_applier:       {name: Clip applier, hemostatic: true}
+  endoloop:           {name: Endoloop}
+  stapler:            {name: Endo GIA stapler, hemostatic: true}
+  endobag:            {name: Specimen retrieval bag}
+  suction_irrigator:  {name: Suction-irrigator}
+  needle_driver:      {name: Needle driver}
+  sponge:             {name: Raytec sponge, counted: true}
+
+targets:
+  umbilicus: [umbilicus, umbilical, belly button, navel]
+  llq: [left lower quadrant, llq, left lower]
+  suprapubic: [suprapubic, above the pubis, lower midline]
+  abdomen: [abdomen, peritoneum, abdominal cavity]
+  appendix: [appendix]
+  cecum: [cecum, caecum, lateral attachments, white line, line of toldt]
+  mesoappendix: [mesoappendix, meso, mesentery, appendiceal artery]
+  base: [base, appendiceal base, stump]
+  adhesions: [adhesions, adhesion, omentum]
+  bleeder: [bleeder, bleeding, bleeding vessel, bleeding point]
+  fascia: [fascia, fascial defect, port site]
+  skin: [skin, incisions, wounds]
+
+tasks:
+  - id: prep
+    name: Prep and drape
+    verbs: [prep, drape, prep and drape, prepping]
+    requires: [anesthetized]
+    blocked: "The patient isn't asleep with a secured airway yet."
+    duration_s: 300
+    stimulus: 0.05
+    sets: [prepped]
+    start: "Prepping with chlorhexidine and draping."
+    auto_order: 1
+
+  - id: incision
+    name: Umbilical skin incision
+    verbs: [incise, incision, cut, make an incision, skin incision]
+    targets: [umbilicus]
+    instruments: [scalpel]
+    requires: [prepped]
+    blocked: "We haven't prepped and draped."
+    soft_requires:
+      time_out_done: "We haven't done a time-out."
+      antibiotics_given: "Antibiotics aren't in yet — the guidelines say within 60 minutes before incision."
+      anesthesia_ready: "Anesthesia hasn't said we're okay to start."
+    duration_s: 40
+    stimulus: 0.85
+    sets: [incised]
+    start: "Knife to skin — umbilical incision."
+    hooks: [record_incision]
+    auto_order: 3
+
+  - id: open_access
+    name: Open (Hasson) entry
+    verbs: [hasson, open entry, open access, enter the abdomen, get into the abdomen, access]
+    instruments: [hasson]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [veress_access]
+    duration_s: 180
+    stimulus: 0.6
+    sets: [access, camera_port]
+    start: "Dissecting down to fascia, opening the peritoneum under vision. Hasson in."
+    auto_order: 4
+
+  - id: veress_access
+    name: Veress needle entry
+    verbs: [veress, insert the veress, needle entry]
+    instruments: [veress]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [open_access]
+    duration_s: 45
+    stimulus: 0.5
+    sets: [access, veress_in]
+    hooks: [veress_placement]
+    start: "Veress in — drop test."
+
+  - id: insufflate
+    name: Insufflate CO2
+    verbs: [insufflate, gas on, pneumoperitoneum, start the gas, co2 on, insufflation]
+    requires: [access]
+    blocked: "No access to the peritoneum yet."
+    duration_s: 90
+    stimulus: 0.5
+    vagal: 0.6
+    iap: 15
+    sets: [insufflated]
+    hooks: [insufflation_checks]
+    start: "Insufflating to 15."
+    auto_order: 5
+
+  - id: umbilical_trocar
+    name: 12 mm umbilical trocar (after Veress)
+    verbs: [umbilical port, camera port, 12 mm port, place the umbilical trocar]
+    targets: [umbilicus]
+    instruments: [trocar_12]
+    requires: [insufflated, veress_in]
+    blocked: "Insufflate through the Veress first (or use open entry)."
+    duration_s: 45
+    stimulus: 0.6
+    sets: [camera_port]
+    hooks: [blind_trocar_risk]
+    start: "12 mm trocar at the umbilicus."
+
+  - id: camera_in
+    name: Camera in
+    verbs: [camera in, scope in, look inside, insert the camera, laparoscope in]
+    instruments: [camera]
+    requires: [camera_port, insufflated]
+    blocked: "Need a camera port and pneumoperitoneum first."
+    duration_s: 20
+    stimulus: 0.1
+    sets: [camera_in]
+    start: "Camera in."
+    auto_order: 6
+
+  - id: working_ports
+    name: Working ports (LLQ 5 mm + suprapubic 5 mm)
+    verbs: [working ports, place ports, 5 mm ports, ports, place the trocars, trocars]
+    targets: [llq, suprapubic]
+    instruments: [trocar_5]
+    requires: [camera_in]
+    blocked: "Place working ports under direct vision — camera first."
+    duration_s: 120
+    stimulus: 0.6
+    sets: [working_ports]
+    start: "Two 5 mm ports under direct vision — left lower quadrant and suprapubic."
+    auto_order: 7
+
+  - id: explore
+    name: Diagnostic laparoscopy
+    verbs: [explore, look around, survey, diagnostic laparoscopy, inspect the abdomen, find the appendix]
+    requires: [camera_in]
+    blocked: "Can't see anything without the camera."
+    duration_s: 120
+    stimulus: 0.2
+    sets: [explored]
+    hooks: [reveal_findings, exposure_check]
+    start: "Surveying the abdomen."
+    auto_order: 8
+
+  - id: lyse_adhesions
+    name: Lyse adhesions
+    verbs: [lyse adhesions, take down adhesions, adhesiolysis, free the omentum]
+    targets: [adhesions]
+    instruments: [scissors, hook_cautery, harmonic, maryland]
+    requires: [explored, working_ports, adhesions]
+    blocked: "No adhesions to take down (or you haven't explored / placed ports)."
+    duration_s: 300
+    stimulus: 0.35
+    clears: [adhesions]
+    hooks: [thermal_bowel_risk]
+    start: "Taking down omental adhesions to the cecum."
+    auto_order: 9
+    auto_if: [adhesions]
+
+  - id: mobilize_cecum
+    name: Mobilize cecum (retrocecal appendix)
+    verbs: [mobilize the cecum, take down the lateral attachments, incise the white line, mobilize cecum]
+    targets: [cecum]
+    instruments: [hook_cautery, harmonic, scissors, maryland]
+    requires: [explored, working_ports]
+    blocked: "Explore and place working ports first."
+    duration_s: 360
+    stimulus: 0.4
+    sets: [cecum_mobilized]
+    hooks: [thermal_bowel_risk]
+    start: "Retrocecal — mobilizing the cecum along the white line."
+    auto_order: 10
+    auto_if: [retrocecal]
+
+  - id: grasp_appendix
+    name: Grasp and elevate appendix
+    verbs: [grasp, elevate, retract, lift, hold up, grab]
+    targets: [appendix]
+    instruments: [grasper, maryland]
+    requires: [explored, working_ports, no_adhesions, appendix_accessible]
+    blocked: "You can't reach the appendix yet — it's hidden (retrocecal) or stuck. Mobilize or take down adhesions first."
+    duration_s: 60
+    stimulus: 0.3
+    sets: [appendix_elevated]
+    hooks: [exposure_check, grasp_perforated]
+    start: "Elevating the tip of the appendix."
+    auto_order: 11
+
+  - id: window
+    name: Create window at the base
+    verbs: [create a window, window, dissect the base, make a window]
+    targets: [base, mesoappendix]
+    instruments: [maryland]
+    requires: [appendix_elevated]
+    blocked: "Elevate the appendix first."
+    duration_s: 120
+    stimulus: 0.35
+    sets: [window]
+    start: "Creating a window in the mesoappendix at the base."
+    auto_order: 12
+
+  - id: divide_meso
+    name: Divide mesoappendix
+    verbs: [divide, take, transect, seal, coagulate, staple, clip]
+    targets: [mesoappendix]
+    instruments: [harmonic, ligasure, stapler, clip_applier, hook_cautery, scissors]
+    requires: [window]
+    blocked: "Create a window at the base first so you know where the base is."
+    duration_s: 240
+    stimulus: 0.4
+    sets: [meso_divided]
+    hooks: [mesoappendix_bleed]
+    start: "Dividing the mesoappendix."
+    auto_order: 13
+
+  - id: secure_base
+    name: Secure the appendiceal base
+    verbs: [secure, ligate, endoloop, loop, staple, place loops, fire the stapler]
+    targets: [base]
+    instruments: [endoloop, stapler]
+    requires: [meso_divided]
+    blocked: "Divide the mesoappendix down to the base first."
+    duration_s: 180
+    stimulus: 0.35
+    sets: [base_secured]
+    hooks: [base_technique]
+    start: "Securing the base."
+    auto_order: 14
+
+  - id: divide_appendix
+    name: Divide the appendix
+    verbs: [cut the appendix, divide the appendix, transect the appendix, amputate]
+    targets: [appendix]
+    instruments: [scissors, stapler]
+    requires: [base_secured]
+    blocked: "Secure the base before you cut."
+    duration_s: 30
+    stimulus: 0.3
+    sets: [appendix_free]
+    start: "Appendix divided."
+    auto_order: 15
+
+  - id: bag
+    name: Bag the specimen
+    verbs: [bag, endobag, put it in a bag, specimen bag]
+    instruments: [endobag]
+    requires: [appendix_free]
+    blocked: "The appendix is still attached."
+    duration_s: 90
+    stimulus: 0.2
+    sets: [bagged]
+    start: "Specimen in the bag."
+    auto_order: 16
+
+  - id: remove_specimen
+    name: Remove specimen
+    verbs: [remove the specimen, extract, take it out, remove the appendix, deliver the specimen]
+    requires: [appendix_free]
+    blocked: "Nothing to remove yet."
+    duration_s: 90
+    stimulus: 0.55
+    sets: [specimen_out]
+    hooks: [specimen_contamination]
+    start: "Delivering the specimen through the umbilical port."
+    auto_order: 17
+
+  - id: irrigate
+    name: Irrigate and suction
+    verbs: [irrigate, wash out, suction, lavage]
+    instruments: [suction_irrigator]
+    requires: [camera_in]
+    blocked: "Need the camera in."
+    duration_s: 240
+    stimulus: 0.2
+    sets: [irrigated]
+    hooks: [irrigation_effect]
+    start: "Irrigating the right lower quadrant and pelvis."
+    auto_order: 18
+    auto_if: [perforated]
+
+  - id: inspect_hemostasis
+    name: Inspect hemostasis
+    verbs: [check hemostasis, inspect, look for bleeding, check the stump, hemostasis]
+    requires: [camera_in]
+    blocked: "Need the camera in."
+    duration_s: 60
+    stimulus: 0.1
+    sets: [hemostasis_checked]
+    hooks: [reveal_occult]
+    start: "Checking the stump and mesoappendix under reduced pressure."
+    auto_order: 19
+
+  - id: control_bleeding
+    name: Control bleeding
+    verbs: [control, cauterize, clip the bleeder, stop the bleeding, get control, hemostasis on the bleeder, apply pressure]
+    targets: [bleeder]
+    instruments: [clip_applier, hook_cautery, harmonic, ligasure, grasper, sponge]
+    requires: [bleeding]
+    blocked: "There's no active bleeding."
+    duration_s: 60
+    stimulus: 0.3
+    hooks: [control_bleeder]
+    start: "Getting control of the bleeder."
+    priority: true
+
+  - id: desufflate
+    name: Desufflate
+    verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
+    requires: [insufflated]
+    blocked: "The abdomen isn't insufflated."
+    duration_s: 60
+    stimulus: 0.2
+    iap: 0
+    clears: [insufflated, camera_in]
+    start: "Ports out under vision, letting the gas out."
+    auto_order: 20
+
+  - id: count
+    name: Sponge / needle / instrument count
+    verbs: [count, sponge count, do the count, counts]
+    requires: []
+    duration_s: 60
+    stimulus: 0.0
+    sets: [counted]
+    hooks: [count_result]
+    start: "Counting."
+    auto_order: 21
+
+  - id: close_fascia
+    name: Close umbilical fascia
+    verbs: [close the fascia, fascial closure, close the port site]
+    targets: [fascia]
+    instruments: [needle_driver]
+    requires: [specimen_out]
+    blocked: "Get the specimen out first."
+    soft_requires:
+      not_insufflated: "We're still insufflated."
+      counted: "Count isn't done yet."
+    duration_s: 300
+    stimulus: 0.5
+    sets: [fascia_closed]
+    start: "Closing the umbilical fascia with 0 Vicryl."
+    hooks: [closing_cue]
+    auto_order: 22
+
+  - id: close_skin
+    name: Close skin
+    verbs: [close skin, close the skin, skin closure, subcuticular, close]
+    targets: [skin]
+    instruments: [needle_driver]
+    requires: [fascia_closed]
+    blocked: "Close the fascia first."
+    duration_s: 360
+    stimulus: 0.35
+    sets: [skin_closed]
+    hooks: [finish]
+    start: "Subcuticular 4-0 Monocryl, then dressings."
+    auto_order: 23

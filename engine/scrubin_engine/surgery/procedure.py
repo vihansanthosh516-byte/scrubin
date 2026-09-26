@@ -1,0 +1,455 @@
+"""Procedure engine: runs a YAML task graph against a live case.
+
+Two modes share the same definition:
+  auto     - the AI surgeon performs tasks in canonical order, reacting to the
+             anesthesia trainee (time-out, "okay to cut", table position,
+             relaxation, a moving patient, bleeding).
+  trainee  - the trainee surgeon triggers tasks with surgical actions; the
+             scrub/circulator explain blocked steps and push back on unsafe
+             ones, exactly like a real team.
+"""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Optional
+
+import yaml
+
+from .. import actions as A
+from . import hooks as H
+
+PROC_DIR = Path(__file__).parent / "procedures"
+
+
+def load_spec(proc_id: str) -> dict:
+    with open(PROC_DIR / f"{proc_id}.yaml", encoding="utf-8") as f:
+        spec = yaml.safe_load(f)
+    spec["task_by_id"] = {t["id"]: t for t in spec["tasks"]}
+    return spec
+
+
+@dataclass
+class Running:
+    task: dict
+    remaining_s: float
+    total_s: float
+    instrument: Optional[str]
+    target: Optional[str]
+    started_t: float
+    moved: bool = False
+
+
+@dataclass
+class Bleeder:
+    source: str
+    rate_ml_min: float
+    since_t: float
+
+
+@dataclass
+class Procedure:
+    case: Any
+    spec: dict
+    mode: str  # "auto" | "trainee"
+    flags: set = field(default_factory=set)
+    done: list = field(default_factory=list)
+    running: Optional[Running] = None
+    bleeders: list = field(default_factory=list)
+    iap: float = 0.0
+    iap_target: float = 0.0
+    co2_abs: float = 0.0
+    paused: bool = False
+    findings: list = field(default_factory=list)
+    occult: list = field(default_factory=list)  # hidden injuries for debrief
+    notes: list = field(default_factory=list)  # teaching notes for debrief
+    instruments_used: set = field(default_factory=set)
+    _cool: dict = field(default_factory=dict)
+    _wait: dict = field(default_factory=dict)
+    _vagal_s: float = 0.0
+    finished: bool = False
+
+    # ------------------------------------------------------------------
+    # flags
+    # ------------------------------------------------------------------
+    def flag(self, name: str) -> bool:
+        c = self.case
+        h = c.patient.hidden
+        if name == "anesthetized":
+            return c.eff.bis < 65 and c.airway.device in ("ett", "lma")
+        if name == "relaxed":
+            return c.eff.tof_count <= 2
+        if name == "antibiotics_given":
+            return c.metrics.antibiotic_t is not None
+        if name == "time_out_done":
+            return c.metrics.time_out_t is not None
+        if name == "anesthesia_ready":
+            return "anesthesia_ready" in self.flags
+        if name == "not_insufflated":
+            return "insufflated" not in self.flags
+        if name == "adhesions":
+            return bool(h.get("adhesions")) and "explored" in self.flags and "lyse_adhesions" not in self.done
+        if name == "no_adhesions":
+            return not h.get("adhesions") or "lyse_adhesions" in self.done
+        if name == "retrocecal":
+            return h.get("appendix_position") == "retrocecal" and "explored" in self.flags
+        if name == "perforated":
+            return bool(h.get("perforated")) and "explored" in self.flags
+        if name == "appendix_accessible":
+            return h.get("appendix_position") != "retrocecal" or "mobilize_cecum" in self.done
+        if name == "bleeding":
+            return bool(self.bleeders)
+        if name == "positioned":
+            return c.position in ("trendelenburg", "left_side_down")
+        return name in self.flags
+
+    # ------------------------------------------------------------------
+    # talking
+    # ------------------------------------------------------------------
+    def surgeon_says(self, text: str, key: Optional[str] = None, every_s: float = 0.0) -> None:
+        if key is not None:
+            last = self._cool.get(key)
+            if last is not None and (every_s <= 0 or self.case.t - last < every_s):
+                return
+            self._cool[key] = self.case.t
+        if self.mode == "auto":
+            self.case.say("surgeon", text)
+        else:
+            self.case.say("system", text, kind="narration")
+
+    def team_says(self, who: str, text: str, key: Optional[str] = None, every_s: float = 0.0) -> None:
+        if key is not None:
+            last = self._cool.get(key)
+            if last is not None and (every_s <= 0 or self.case.t - last < every_s):
+                return
+            self._cool[key] = self.case.t
+        self.case.say(who, text)
+
+    # ------------------------------------------------------------------
+    # starting tasks
+    # ------------------------------------------------------------------
+    def can_start(self, task: dict) -> tuple[bool, str]:
+        if task["id"] in self.done and task["id"] != "control_bleeding":
+            return False, f"{task['name']} is already done."
+        for ex in task.get("exclusive_with", []):
+            if ex in self.done:
+                return False, f"We already have access ({self.spec['task_by_id'][ex]['name']})."
+        for req in task.get("requires", []):
+            if not self.flag(req):
+                return False, task.get("blocked", f"Not yet — {req.replace('_', ' ')} first.")
+        return True, ""
+
+    def start(self, task: dict, instrument: Optional[str] = None, target: Optional[str] = None) -> None:
+        dur = float(task.get("duration_s", 60))
+        dur *= H.duration_factor(self, task)
+        self.running = Running(task, dur, dur, instrument, target, self.case.t)
+        if instrument:
+            self.instruments_used.add(instrument)
+        if task.get("start"):
+            self.surgeon_says(task["start"])
+        if "iap" in task:
+            self.iap_target = float(task["iap"])
+        if task.get("vagal"):
+            self._vagal_s = 30.0
+        for hook in task.get("hooks", []):
+            fn = getattr(H, f"start_{hook}", None)
+            if fn:
+                fn(self, task)
+        self.case.event("surgery_task_start", task=task["id"], instrument=instrument)
+
+    def _finish_running(self) -> None:
+        r = self.running
+        assert r is not None
+        task = r.task
+        self.running = None
+        if task["id"] != "control_bleeding":
+            self.done.append(task["id"])
+        for f in task.get("sets", []):
+            self.flags.add(f)
+        for f in task.get("clears", []):
+            self.flags.discard(f)
+        for hook in task.get("hooks", []):
+            fn = getattr(H, f"end_{hook}", None)
+            if fn:
+                fn(self, task, r)
+        self.case.event("surgery_task_done", task=task["id"])
+
+    # ------------------------------------------------------------------
+    # trainee actions
+    # ------------------------------------------------------------------
+    def match_task(self, act: A.Surgical) -> Optional[dict]:
+        tid = act.params.get("task_id") if act.params else None
+        if tid and tid in self.spec["task_by_id"]:
+            return self.spec["task_by_id"][tid]
+        return match_task_text(self.spec, f"{act.verb} {act.target or ''} {act.instrument or ''}", self)
+
+    def perform(self, act: A.Surgical, confirmed: bool = False) -> dict:
+        c = self.case
+        task = self.match_task(act)
+        if task is None:
+            c.say("scrub", "Sorry, which step do you want to do?")
+            return {"ok": False, "error": "unknown surgical step"}
+        if self.running is not None and not task.get("priority"):
+            c.say("scrub", f"You're still in the middle of: {self.running.task['name'].lower()}.")
+            return {"ok": False, "error": "busy"}
+        ok, why = self.can_start(task)
+        if not ok:
+            c.say("scrub", why)
+            return {"ok": False, "error": why}
+        allowed = task.get("instruments")
+        instrument = act.instrument
+        if instrument and allowed and instrument not in allowed:
+            names = ", ".join(self.spec["instruments"][i]["name"] for i in allowed[:3])
+            c.say("scrub", f"The {self.spec['instruments'].get(instrument, {}).get('name', instrument)} isn't right for that. Try: {names}.")
+            return {"ok": False, "error": "wrong instrument"}
+        if not instrument and allowed:
+            instrument = allowed[0]
+        if not confirmed:
+            for flag, warning in (task.get("soft_requires") or {}).items():
+                if not self.flag(flag):
+                    who = "circulator" if flag in ("time_out_done", "antibiotics_given", "counted") else "anesthesia"
+                    act2 = act.model_copy(update={"params": {**(act.params or {}), "task_id": task["id"]}, "instrument": instrument})
+                    return c._ask_confirm(act2, who, warning + " Do you want to proceed anyway?")
+        if task.get("priority") and self.running is not None:
+            self.running = None  # drop what you're doing to deal with bleeding
+        self.start(task, instrument, act.target)
+        return {"ok": True, "task": task["id"], "duration_s": round(self.running.total_s) if self.running else 0}
+
+    def hear(self, act: A.Say) -> bool:
+        """React to things the trainee says to the team. Returns True if handled."""
+        c = self.case
+        if act.intent == "time_out":
+            abx = "Antibiotics are in." if self.flag("antibiotics_given") else "Antibiotics are NOT in."
+            c.say("circulator", f"Time-out: {c.patient.name}, 28, laparoscopic appendectomy. Allergy: penicillin, hives. {abx} Everyone agree?")
+            if self.mode == "auto":
+                self.surgeon_says("Agree. Expected duration about an hour, minimal blood loss expected.")
+            return True
+        if act.intent == "ready_for_incision":
+            self.flags.add("anesthesia_ready")
+            if self.mode == "auto":
+                self.surgeon_says("Thanks.", key="thanks_ready")
+            return True
+        if act.intent == "stop_surgery":
+            self.paused = True
+            if self.mode == "auto":
+                self.surgeon_says("Okay, holding. Tell me when we can go on.")
+            return True
+        if act.intent in ("resume", "continue") or (act.text and re.search(r"(carry on|continue|go ahead|resume|you can go on)", act.text.lower())):
+            if self.paused:
+                self.paused = False
+                self.surgeon_says("Carrying on.")
+                return True
+        return False
+
+    def status_report(self) -> None:
+        c = self.case
+        if self.running:
+            left = self.running.remaining_s
+            nxt = f"{self.running.task['name']} — about {max(1, round(left / 60))} min for this step."
+        else:
+            nxt = "Between steps."
+        remaining = [t for t in self.spec["tasks"] if t.get("auto_order") and t["id"] not in self.done]
+        mins = sum(t.get("duration_s", 60) for t in remaining) / 60
+        bleed = f" Blood loss so far about {c.body.blood_loss_ml:.0f} mL." if c.body.blood_loss_ml > 20 else ""
+        who = "surgeon" if self.mode == "auto" else "scrub"
+        c.say(who, f"{nxt} Maybe {mins:.0f} minutes to closing.{bleed}")
+
+    # ------------------------------------------------------------------
+    # time
+    # ------------------------------------------------------------------
+    def step(self, dt: float) -> None:
+        c = self.case
+        # Pneumoperitoneum pressure ramps; CO2 absorption follows pressure.
+        target = self.iap_target
+        if target > 12 and not self.flag("relaxed"):
+            target = 11.0  # tight abdomen: can't reach set pressure
+        rate = 5.0 / 20.0 * dt
+        self.iap += max(-rate * 3, min(rate, target - self.iap))
+        co2_target = 2.4 * self.iap * (3.0 if "subq_emphysema" in self.flags else 1.0)
+        self.co2_abs += (co2_target - self.co2_abs) * dt / 300.0
+
+        # Bleeding
+        bleed = sum(b.rate_ml_min for b in self.bleeders)
+
+        load = c.load
+        load.iap_mmhg = self.iap
+        load.co2_absorption_ml_min = self.co2_abs
+        load.bleeding_ml_min = bleed
+        load.vagal_stimulus = 0.0
+        if self._vagal_s > 0:
+            self._vagal_s -= dt
+            load.vagal_stimulus = 0.6 if self.iap < 12 else 0.3
+
+        stim = 0.0
+        if self.running and not self.paused:
+            stim = float(self.running.task.get("stimulus", 0.0))
+        elif "incised" in self.flags and "skin_closed" not in self.flags:
+            stim = 0.08
+        load.stimulus = stim
+
+        if self.mode == "auto":
+            self._auto(dt)
+
+        if self.running is None or self.paused:
+            return
+        # Progress: stalls if the patient moves or the field is bleeding.
+        r = self.running
+        if c.body.movement > 0.3:
+            r.moved = True
+            return
+        if self.bleeders and not r.task.get("priority"):
+            self.surgeon_says("Can't see anything — there's bleeding.", key="cant_see", every_s=45)
+            return
+        r.remaining_s -= dt
+        if r.remaining_s <= 0:
+            self._finish_running()
+
+    # ------------------------------------------------------------------
+    # AI surgeon
+    # ------------------------------------------------------------------
+    def _waited(self, key: str, seconds: float) -> bool:
+        start = self._wait.setdefault(key, self.case.t)
+        return self.case.t - start >= seconds
+
+    def _auto(self, dt: float) -> None:
+        c = self.case
+        if self.finished or self.paused:
+            return
+        if c.t > 45 and "greeted" not in self.flags:
+            self.flags.add("greeted")
+            self.surgeon_says("Morning everyone. Laparoscopic appendectomy — let me know when he's asleep and the airway's secure.")
+        if self.bleeders and (self.running is None or not self.running.task.get("priority")):
+            if self._waited("react_bleed", 15):
+                self._wait.pop("react_bleed", None)
+                self.running = None
+                self.start(self.spec["task_by_id"]["control_bleeding"], "clip_applier", "bleeder")
+            return
+        if self.running is not None:
+            if not self.flag("relaxed") and self.iap > 5 and self.running.task.get("stimulus", 0) >= 0.2:
+                self.surgeon_says("The abdomen's tight and he's pushing against the gas — can I get more relaxation?", key="relax", every_s=180)
+            return
+        nxt = self._next_auto_task()
+        if nxt is None:
+            return
+        tid = nxt["id"]
+        # Anesthesia-facing checkpoints.
+        if tid == "incision":
+            if not self.flag("time_out_done"):
+                self.surgeon_says("Can we do a time-out please?", key="ask_timeout")
+                if not self._waited("timeout", 75):
+                    return
+                c.metrics.time_out_t = c.t
+                self.notes.append("Circulator had to lead the time-out; anesthesia didn't respond.")
+                c.say("circulator", "I'll run it: Marcus T., laparoscopic appendectomy, penicillin allergy. " + ("Antibiotics in." if self.flag("antibiotics_given") else "Antibiotics are NOT in."))
+            if not self.flag("antibiotics_given"):
+                self.surgeon_says("Have antibiotics gone in? I'd like them in before I cut.", key="ask_abx")
+                if not self._waited("abx", 120):
+                    return
+                if "abx_skipped" not in self.flags:
+                    self.flags.add("abx_skipped")
+                    self.notes.append("Incision made without prophylactic antibiotics.")
+            if not self.flag("anesthesia_ready"):
+                self.surgeon_says("Okay to start?", key="ask_ready")
+                if not self._waited("ready", 60):
+                    return
+                self.flags.add("anesthesia_ready")
+                self.notes.append("Surgeon started without a clear 'go ahead' from anesthesia.")
+        if tid in ("explore", "grasp_appendix", "mobilize_cecum") and not self.flag("positioned"):
+            self.surgeon_says("Can we get Trendelenburg and left side down, please?", key="ask_position")
+            if not self._waited("position", 50):
+                return
+            c.say("circulator", "I've got the table — Trendelenburg, left side down.")
+            c._do_position(A.Position(position="left_side_down"), "circulator")
+            c.load.trendelenburg_deg = 15.0
+            self.notes.append("Table position request went unanswered; circulator positioned the patient.")
+        if tid == "count" and c.position != "level":
+            c._do_position(A.Position(position="level"), "circulator")
+        ok, _ = self.can_start(nxt)
+        if not ok:
+            return
+        instr = (nxt.get("instruments") or [None])[0]
+        if tid == "divide_meso":
+            instr = "harmonic"
+        if tid == "secure_base":
+            instr = "endoloop" if not c.patient.hidden.get("perforated") else "stapler"
+        self.start(nxt, instr, None)
+
+    def _next_auto_task(self) -> Optional[dict]:
+        tasks = sorted((t for t in self.spec["tasks"] if t.get("auto_order")), key=lambda t: t["auto_order"])
+        for t in tasks:
+            if t["id"] in self.done:
+                continue
+            if t.get("auto_if") and not all(self.flag(f) for f in t["auto_if"]):
+                if "explored" in self.flags or t["auto_order"] < 8:
+                    continue
+                return None  # wait until exploration tells us
+            ok, _ = self.can_start(t)
+            if ok:
+                return t
+            if t["id"] == "prep" and not self.flag("anesthetized"):
+                return None
+            return t  # blocked on a checkpoint the auto logic handles
+        return None
+
+    # ------------------------------------------------------------------
+    def snapshot(self) -> dict:
+        tasks = []
+        for t in self.spec["tasks"]:
+            ok, why = self.can_start(t)
+            tasks.append({
+                "id": t["id"],
+                "name": t["name"],
+                "done": t["id"] in self.done,
+                "available": ok,
+                "blocked": None if ok else why,
+                "instruments": t.get("instruments", []),
+                "optional": not bool(t.get("auto_order")),
+            })
+        return {
+            "mode": self.mode,
+            "running": {
+                "task": self.running.task["id"],
+                "name": self.running.task["name"],
+                "progress": round(1 - self.running.remaining_s / max(1e-6, self.running.total_s), 3),
+                "instrument": self.running.instrument,
+            } if self.running else None,
+            "done": list(self.done),
+            "iap": round(self.iap, 1),
+            "bleeding": bool(self.bleeders),
+            "findings": list(self.findings),
+            "paused": self.paused,
+            "finished": self.finished,
+            "tasks": tasks,
+            "instruments": {k: v["name"] for k, v in self.spec["instruments"].items()},
+        }
+
+
+def match_task_text(spec: dict, text: str, proc: Optional[Procedure] = None) -> Optional[dict]:
+    t = text.lower()
+    best, best_score = None, 0.0
+    for task in spec["tasks"]:
+        score = 0.0
+        for v in task.get("verbs", []):
+            if re.search(rf"(?<![a-z]){re.escape(v)}(?![a-z])", t):
+                score = max(score, 2.0 + len(v) / 40.0)
+        if score == 0:
+            continue
+        for tg in task.get("targets", []):
+            for alias in spec["targets"].get(tg, [tg]):
+                if re.search(rf"(?<![a-z]){re.escape(alias)}(?![a-z])", t):
+                    score += 1.5
+                    break
+        for ins in task.get("instruments", []):
+            if ins.replace("_", " ") in t or spec["instruments"][ins]["name"].lower() in t:
+                score += 0.5
+        if proc is not None:
+            ok, _ = proc.can_start(task)
+            if ok:
+                score += 0.75
+            if task["id"] in proc.done:
+                score -= 1.0
+        if score > best_score:
+            best, best_score = task, score
+    return best

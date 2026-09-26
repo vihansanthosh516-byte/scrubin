@@ -102,6 +102,7 @@ class Case:
         self.status = "pre_induction"
         self.outcome: Optional[str] = None
         self.metrics = Metrics()
+        self.trend: list[dict] = []
         self.load = SurgicalLoad()
         self.anaphylaxis = 0.0
         self.aspirated = 0.0
@@ -139,7 +140,7 @@ class Case:
     def _apply(self, act, confirmed: bool = False) -> dict:
         kind = act.type
         # Role routing: a surgeon's anesthesia orders go to the anesthesia agent.
-        performer = "trainee"
+        performer = act.actor
         if self.role == "surgeon" and kind in ANESTHESIA_ACTIONS and act.actor == "trainee":
             performer = "anesthesia"
         handler = getattr(self, f"_do_{kind}")
@@ -149,6 +150,8 @@ class Case:
             check = self._check_drug(act)
             if check:
                 return check
+        if kind == "surgical":
+            return handler(act, performer, confirmed) or {"ok": True}
         result = handler(act, performer) if kind != "say" else handler(act)
         return result or {"ok": True}
 
@@ -212,6 +215,9 @@ class Case:
     def _do_drug(self, act: A.GiveDrug, performer: str) -> dict:
         d = DRUGS[act.drug]
         amount = self._resolve_dose(d, act.dose or 0.0, act.unit)
+        if d.drug_class == "hypnotic" and d.id == "propofol" and "induction" not in self._flags:
+            self._flags["induction"] = {"t": self.t, "fao2": round(self.body.lung_o2_ml / max(300.0, self.body.frc), 3),
+                                        "monitors": sorted(self.monitors.attached), "stomach_air_ml": round(self.body.stomach_air_ml)}
         self.pharm.give(d.id, amount)
         self.event("drug", drug=d.id, amount=round(amount, 3), unit=d.unit, by=performer)
         if performer != "trainee":
@@ -382,6 +388,7 @@ class Case:
     def _do_assess(self, act: A.Assess, performer: str) -> dict:
         w = act.what
         aw, b, eff = self.airway, self.body, self.eff
+        self.event("assess", what=w, by=performer)
         if w == "auscultate":
             txt = {
                 "absent_bilaterally_gurgling_over_stomach": "No breath sounds on either side. Gurgling over the epigastrium.",
@@ -488,13 +495,13 @@ class Case:
             self.say("circulator", f"Time-out: {self.patient.name}, laparoscopic appendectomy, right side. Allergy: penicillin. {abx}")
         return {"ok": True}
 
-    def _do_surgical(self, act: A.Surgical, performer: str) -> dict:
+    def _do_surgical(self, act: A.Surgical, performer: str, confirmed: bool = False) -> dict:
         if self.role != "surgeon":
             self.say("surgeon", "I've got the field — you focus on the patient.")
             return {"ok": False, "error": "surgical actions belong to the surgeon role"}
         if self.procedure is None:
             return {"ok": False, "error": "no procedure loaded"}
-        return self.procedure.perform(act)
+        return self.procedure.perform(act, confirmed)
 
     # ------------------------------------------------------------------
     # time
@@ -555,8 +562,21 @@ class Case:
         if self.autopilot is not None:
             self.autopilot.step(dt)
 
+        if self.tick % 10 == 0:
+            self._record_trend(eff)
         self.t += dt
         self.tick += 1
+
+    def _record_trend(self, eff) -> None:
+        b = self.body
+        self.trend.append({
+            "t": round(self.t),
+            "hr": round(b.hr), "sbp": round(b.sbp), "dbp": round(b.dbp), "map": round(b.map),
+            "spo2": round(b.sao2 * 100, 1), "etco2": round(b.etco2, 1), "paco2": round(b.paco2, 1),
+            "bis": round(eff.bis), "mac": round(self.pharm.volatile.et_mac, 2), "tof": eff.tof_count,
+            "rr": round(self.airway.delivered_rr), "temp": round(b.temp, 2), "iap": round(self.load.iap_mmhg, 1),
+            "stim": round(self.load.stimulus, 2), "blood_loss": round(b.blood_loss_ml),
+        })
 
     def run(self, seconds: float) -> None:
         for _ in range(int(round(seconds / DT))):
@@ -678,6 +698,16 @@ class Case:
                 self.metrics.patient_movements += 1
                 self.event("patient_moved")
                 self.say("surgeon", "He's moving! Can we get him deeper?")
+
+        # Emergence complete: extubated, awake, breathing, oxygenating.
+        if self.status == "emergence" and self.outcome is None:
+            ok = aw.device in ("none", "nasal_cannula", "face_mask") and eff.bis > 80 and b.spont_ve > 0.4 * b.ve0 and b.sao2 > 0.92
+            self._flags["pacu_s"] = self._flags.get("pacu_s", 0.0) + dt if ok else 0.0
+            if self._flags["pacu_s"] >= 60:
+                self.outcome = "pacu"
+                self.status = "ended"
+                self.event("case_complete", outcome="pacu")
+                self.say("circulator", "Let's head to PACU. Nice work, everyone.")
 
         # Death / outcome.
         if b.rhythm in ("asystole", "pea") and not b.cpr and b.ischemia > 1.6 and self.outcome is None:
