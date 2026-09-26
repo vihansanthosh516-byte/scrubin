@@ -188,7 +188,13 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
-      }
+      },
+      // Python simulation engine (engine/), HTTP + WebSocket.
+      '/engine': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        ws: true,
+      },
     }
   },
 });

@@ -4,7 +4,10 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "concurrently -k -p \"[{name}]\" -n \"client,server\" -c \"cyan,magenta\" \"vite --host\" \"tsx watch server/index.ts\"",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"client,server,engine\" -c \"cyan,magenta,yellow\" \"vite --host\" \"tsx watch server/index.ts\" \"npm run engine\"",
+    "engine": "cd engine && .venv/bin/python -m uvicorn scrubin_engine.api.app:app --port 8000 --reload",
+    "engine:setup": "cd engine && uv venv .venv && uv pip install -p .venv -e \".[dev]\"",
+    "engine:test": "cd engine && .venv/bin/python -m pytest -q",
     "dev:client": "vite --host",
     "dev:server": "tsx watch server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",

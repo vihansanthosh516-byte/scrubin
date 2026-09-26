@@ -2,7 +2,8 @@
 
 ## Tech Stack
 - **Frontend:** React + TypeScript + Vite + Tailwind CSS
-- **Backend:** Express.js
+- **Backend:** Express.js (auth, profiles, leaderboard, AI attending notes)
+- **Simulation engine:** Python (FastAPI + WebSocket) in `engine/` — all physiology, pharmacology, airway, surgery and scoring live here
 - **Routing:** wouter
 - **Animations:** Framer Motion
 - **UI Components:** shadcn/ui pattern
@@ -13,29 +14,36 @@
 client/
   src/
     components/
-      ui/
-        scrubin-card.tsx    # Card components
-        button.tsx          # shadcn button
-        ...
+      ui/scrubin-card.tsx   # Card components (shadcn pattern in ui/)
+      or/                   # Operating room UI: PatientMonitor (canvas waveforms),
+                            # AnesthesiaStation, SurgeonStation, CommandBar (voice),
+                            # CommsLog (team voices), DebriefView
+    engine/
+      client.ts             # HTTP + WebSocket client for the Python engine
+      types.ts              # Mirrors the engine snapshot
     pages/
-      Simulation.tsx        # Main OR simulation
+      OperatingRoom.tsx     # Real-time OR simulator (routes /simulation?proc=...)
       ProcedureLibrary.tsx  # Procedure cards
       LearnHub.tsx          # Learning content
-      ...
-    data/
-      appendectomy.ts       # Procedure data files
-      cabg.ts
-      ...
-    contexts/
-      AuthContext.tsx       # GitHub OAuth
-      ThemeContext.tsx      # Light/dark mode
-    lib/
-      vitals.ts             # Vitals engine
-      score.ts              # Scoring logic
-      audio.ts              # Sound effects
+    contexts/               # AuthContext (GitHub OAuth), ThemeContext
+    lib/audio.ts            # Sound effects
 server/
-  index.ts                  # Express backend
+  index.ts                  # Express backend (also POST /api/evaluate for attending notes)
+  engine/                   # LEGACY multiple-choice engine, still used by My Simulations / Resume
+engine/                     # Python simulation engine (package scrubin_engine)
+  scrubin_engine/
+    physiology/             # PK/PD (Schnider, Minto, Shafer...), cardio/resp body model
+    anesthesia/             # airway, anesthesia machine, AI anesthesiologist (autopilot)
+    surgery/                # task-graph engine, risk hooks, procedures/*.yaml
+    language/               # grammar parser, LLM fallback, speech-to-text
+    scoring/debrief.py      # process & outcome debrief
+    case.py                 # one deterministic case (tick = 0.5 s sim time)
+    session.py, api/app.py  # real-time runner + FastAPI (/engine/...)
+  tests/                    # physiology validation, grammar, surgery, determinism, API
 ```
+
+Core rule: the LLM only translates speech into typed actions (`engine/scrubin_engine/actions.py`);
+the deterministic engine decides what happens. Same seed + same action log = identical case.
 
 ## Color Palette
 - **Primary/Baby Blue:** #7EC8E3
@@ -54,67 +62,18 @@ server/
 
 ## SKILL 1 — Adding a new procedure to ScrubIn
 
-**Exact steps:**
-
-1. Create a new data file in `client/src/data/` following the exact same structure as `appendectomy.ts`:
-   - `PATIENT` object with: `name`, `age`, `sex`, `procedureCategory`, `baselineVitals`
-   - `COMPLICATION_PROFILES` object with vital shifts for each complication type
-   - `PHASES` array with 6 phases: `id`, `name`, `decisionRange`
-   - `DECISIONS` array with all decisions for the procedure
-
-2. Each decision needs:
-   ```typescript
-   {
-     id: number,
-     phase: number,
-     question: string,
-     context: string,
-     options: [
-       {
-         id: string,
-         label: string,
-         correct: boolean,
-         complicationType?: "NONE" | "CARDIAC_INJURY" | "PNEUMOTHORAX" | etc,
-         rescueOptions?: [...], // If this is a complication that needs rescue
-         nextDecisionIfCorrect?: number,
-         consequenceDecisionId?: number
-       }
-     ]
-   }
-   ```
-
-3. Register the procedure in the `REGISTRY` object in `Simulation.tsx`:
-   ```typescript
-   const REGISTRY: Record<string, any> = {
-     "new-procedure": newProcedureData,
-     // ... existing procedures
-   };
-   ```
-
-4. Add import at the top of `Simulation.tsx`:
-   ```typescript
-   import { newProcedureData } from "../data/new_procedure";
-   ```
-
-5. Add the procedure card to `ProcedureLibrary.tsx`:
-   ```typescript
-   {
-     id: "new-procedure",
-     name: "New Procedure Name",
-     tag: "Specialty",
-     difficulty: "Beginner" | "Intermediate" | "Advanced",
-     diffColor: "text-emerald-400" | "text-amber-400" | "text-red-400",
-     diffBg: "bg-emerald-400/10 border-emerald-400/20" | etc,
-     icon: "🩺",
-     time: "30 min",
-     decisions: 42,
-     description: "Procedure description here.",
-     unlocked: true,
-     bestScore: null,
-   }
-   ```
-
-6. Update the `PROC_ID_MAP` in `LearnHub.tsx` if the procedure should appear as a related simulation link.
+1. Write the task graph: `engine/scrubin_engine/surgery/procedures/<id>.yaml` (copy `appendectomy.yaml`).
+   Each task has `verbs`, `targets`, `instruments`, `requires` (hard blocks + `blocked` explanation),
+   `soft_requires` (team pushes back and asks to confirm), `duration_s`, `stimulus` (0..1 noxious
+   intensity felt by the patient), optional `iap`, `vagal`, `sets`/`clears` flags, `hooks`, `auto_order`.
+   There is no "correct answer" field — outcomes come from physiology and risk hooks.
+2. Add risk hooks (if any) to `engine/scrubin_engine/surgery/hooks.py` as `start_<name>` / `end_<name>`,
+   using `proc.case.rng` for randomness (keeps replays deterministic).
+3. Add a scenario (patient + hidden variants) in `engine/scrubin_engine/scenarios/<id>.py` and register it
+   in `scenarios/__init__.py`.
+4. Add the id to `SUPPORTED` in `client/src/pages/OperatingRoom.tsx` and the card to `ProcedureLibrary.tsx`
+   (cards link to `/simulation?proc=<id>`).
+5. Add tests in `engine/tests/` and run `npm run engine:test`.
 
 ---
 
@@ -144,38 +103,17 @@ server/
 
 6. Add the component to the correct page with appropriate import
 
-7. **CRITICAL:** Never use the Update tool on `Simulation.tsx` — always use a PowerShell script instead to avoid formatting issues
 
 ---
 
 ## SKILL 3 — Fixing a routing bug in ScrubIn
 
-**Exact steps:**
-
-1. Check the procedure card link in `ProcedureLibrary.tsx`:
-   ```typescript
-   href={`/simulation?proc=${proc.id}`}
-   ```
-
-2. Check `Simulation.tsx` reads the proc parameter:
-   ```typescript
-   const [procId] = useState(() => new URLSearchParams(window.location.search).get("proc") || "appendectomy");
-   ```
-
-3. Check the `REGISTRY` object has the correct key matching the proc ID:
-   ```typescript
-   const REGISTRY: Record<string, any> = {
-     "appendectomy": appendectomyData,
-     "new-procedure": newProcedureData, // Must match exactly
-   };
-   ```
-
-4. Check the data file is imported at the top of `Simulation.tsx`
-
-5. Verify by clicking each procedure card and checking:
-   - URL contains correct `proc` parameter
-   - Correct patient name appears in intro screen
-   - Correct decisions load during simulation
+1. Procedure cards in `ProcedureLibrary.tsx` link to `/simulation?proc=${proc.id}`.
+2. `App.tsx` routes `/simulation` to `pages/OperatingRoom.tsx`, which reads `proc` from the URL.
+3. The id must be in `SUPPORTED` (OperatingRoom.tsx) and in the engine's `SCENARIOS`
+   (`engine/scrubin_engine/scenarios/__init__.py`) with a matching `surgery/procedures/<id>.yaml`.
+4. The browser reaches the engine through the Vite proxy: `/engine` -> `http://localhost:8000` (HTTP + WebSocket).
+   Check `curl localhost:3000/engine/health`.
 
 ---
 
@@ -210,7 +148,6 @@ server/
    </ScrubinStaticPanel>
    ```
 
-5. **CRITICAL:** Never try to edit `Simulation.tsx` with the Update tool — it always fails due to formatting. Use a PowerShell script instead.
 
 ---
 
@@ -265,7 +202,7 @@ server/
 
 1. Always cd to project folder first:
    ```bash
-   cd C:\Users\vihan\Downloads\scrubin-main\scrubin-main
+   cd ~/repos/scrubin
    ```
 
 2. Stage and commit:
@@ -298,12 +235,12 @@ server/
 
 1. Kill existing processes:
    ```bash
-   npx kill-port 3000 5000
+   npx kill-port 3000 5000 8000
    ```
 
 2. Navigate to project:
    ```bash
-   cd C:\Users\vihan\Downloads\scrubin-main\scrubin-main
+   cd ~/repos/scrubin
    ```
 
 3. Start dev server:
@@ -314,6 +251,7 @@ server/
 4. **Ports:**
    - Frontend: 3000
    - Backend: 5000
+   - Simulation engine (Python): 8000 — first time only: `npm run engine:setup` (needs `uv`)
 
 5. **If port 3000 is taken:**
    - Vite automatically tries 3001, then 3002
@@ -372,7 +310,6 @@ server/
    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
    ```
 
-6. **CRITICAL:** Never add animations to `Simulation.tsx` decision cards using the Update tool — use a PowerShell script instead.
 
 ---
 
@@ -380,7 +317,7 @@ server/
 
 ```bash
 # Kill processes and restart
-npx kill-port 3000 5000 && cd C:\Users\vihan\Downloads\scrubin-main\scrubin-main && npm run dev
+npx kill-port 3000 5000 8000 && cd ~/repos/scrubin && npm run dev
 
 # Quick commit and push
 git add . && git commit -m "Message" && git push
@@ -391,15 +328,4 @@ git revert HEAD --no-edit && git push
 # Check current changes
 git status
 git diff
-```
-
-## PowerShell Script Pattern for Simulation.tsx
-
-When the Update tool fails on `Simulation.tsx`, use this PowerShell pattern:
-
-```powershell
-$file = "C:\Users\vihan\Downloads\scrubin-main\scrubin-main\client\src\pages\Simulation.tsx"
-$content = Get-Content $file -Raw
-$content = $content.Replace("old text", "new text")
-Set-Content $file $content -NoNewline
 ```

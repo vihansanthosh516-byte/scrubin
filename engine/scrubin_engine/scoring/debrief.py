@@ -144,7 +144,12 @@ _COMPLICATION_TEACHING = {
 
 
 def build_debrief(case) -> dict[str, Any]:
-    items = anesthesia_items(case) if case.role == "anesthesia" else surgeon_items(case)
+    started = ("induction" in case._flags) if case.role == "anesthesia" else (case.metrics.incision_t is not None)
+    if started:
+        items = anesthesia_items(case) if case.role == "anesthesia" else surgeon_items(case)
+    else:
+        what = "induction" if case.role == "anesthesia" else "the incision"
+        items = [_item("Case", "Case ended early", NA, f"The case ended before {what}, so there is nothing to evaluate yet.")]
     weights = {GOOD: 1.0, FAIR: 0.5, POOR: 0.0}
     graded = [i for i in items if i["grade"] in weights]
     score = round(100 * sum(weights[i["grade"]] for i in graded) / len(graded)) if graded else None

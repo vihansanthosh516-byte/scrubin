@@ -8,7 +8,7 @@ import { RouteErrorBoundary } from "./components/RouteErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import ProcedureLibrary from "./pages/ProcedureLibrary";
-import Simulation from "./pages/Simulation";
+import OperatingRoom from "./pages/OperatingRoom";
 // import SimulationDashboard from "./pages/SimulationDashboard"; // Deprecated
 import Leaderboard from "./pages/Leaderboard";
 import LearnHub from "./pages/LearnHub";
@@ -102,8 +102,8 @@ function Router() {
               <Route path="/signin" component={Signin} />
               <Route path="/" component={Home} />
               <Route path="/procedures" component={ProcedureLibrary} />
-              <Route path="/simulation/:id" component={Simulation} />
-              <Route path="/simulation" component={Simulation} />
+              <Route path="/simulation/:id" component={OperatingRoom} />
+              <Route path="/simulation" component={OperatingRoom} />
               <Route path="/resume" component={ResumeSimulation} />
               <Route path="/my-simulations" component={MySimulations} />
               <Route path="/replay/:sessionId" component={ReplayViewer} />

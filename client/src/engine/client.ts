@@ -1,0 +1,117 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Action, CaseState, Catalog, CommsMessage, CreateCaseResponse, Debrief, Role } from "./types";
+
+// The Python engine is reached through the Vite proxy (/engine -> :8000) in
+// development. In production set VITE_ENGINE_URL to the engine's origin.
+const ENGINE_ORIGIN = (import.meta.env.VITE_ENGINE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+
+function httpUrl(path: string) {
+  return `${ENGINE_ORIGIN}/engine${path}`;
+}
+
+function wsUrl(path: string) {
+  if (ENGINE_ORIGIN) return `${ENGINE_ORIGIN.replace(/^http/, "ws")}/engine${path}`;
+  const proto = window.location.protocol === "https:" ? "wss" : "ws";
+  return `${proto}://${window.location.host}/engine${path}`;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(httpUrl(path), {
+    ...init,
+    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
+  });
+  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  return res.json() as Promise<T>;
+}
+
+export const engineApi = {
+  health: () => request<{ ok: boolean; llm: boolean }>("/health"),
+  catalog: () => request<Catalog>("/catalog"),
+  createCase: (scenario: string, role: Role, seed?: number) =>
+    request<CreateCaseResponse>("/cases", { method: "POST", body: JSON.stringify({ scenario, role, seed }) }),
+  debrief: (caseId: string) => request<Debrief>(`/cases/${caseId}/debrief`),
+  transcribe: async (audio: Blob): Promise<string> => {
+    const form = new FormData();
+    form.append("audio", audio, "speech.webm");
+    const res = await fetch(httpUrl("/stt"), { method: "POST", body: form });
+    if (!res.ok) throw new Error(await res.text());
+    return (await res.json()).text as string;
+  },
+};
+
+export interface OrConnection {
+  state: CaseState | null;
+  comms: CommsMessage[];
+  connected: boolean;
+  lastParse: { text: string; ok: boolean; source: string; clarification: string | null } | null;
+  act: (action: Action) => void;
+  say: (text: string) => void;
+  control: (c: { speed?: number; paused?: boolean }) => void;
+}
+
+/** Live connection to one engine case over WebSocket, with reconnect. */
+export function useOrConnection(caseId: string | null): OrConnection {
+  const [state, setState] = useState<CaseState | null>(null);
+  const [comms, setComms] = useState<CommsMessage[]>([]);
+  const [connected, setConnected] = useState(false);
+  const [lastParse, setLastParse] = useState<OrConnection["lastParse"]>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const pendingText = useRef<Map<number, string>>(new Map());
+  const refCounter = useRef(1);
+
+  useEffect(() => {
+    if (!caseId) return;
+    let closed = false;
+    let retry: number | undefined;
+    const seen = new Set<number>();
+
+    const connect = () => {
+      const ws = new WebSocket(wsUrl(`/cases/${caseId}/ws`));
+      wsRef.current = ws;
+      ws.onopen = () => setConnected(true);
+      ws.onclose = () => {
+        setConnected(false);
+        if (!closed) retry = window.setTimeout(connect, 1500);
+      };
+      ws.onmessage = (ev) => {
+        const msg = JSON.parse(ev.data);
+        if (msg.type === "state") {
+          setState(msg as CaseState);
+          const fresh = (msg.comms as CommsMessage[]).filter((c) => !seen.has(c.id));
+          if (fresh.length) {
+            fresh.forEach((c) => seen.add(c.id));
+            setComms((prev) => [...prev, ...fresh].slice(-300));
+          }
+        } else if (msg.type === "parsed") {
+          const text = pendingText.current.get(msg.ref) ?? "";
+          pendingText.current.delete(msg.ref);
+          setLastParse({ text, ok: !!msg.result?.ok, source: msg.result?.source ?? "", clarification: msg.result?.clarification ?? null });
+        }
+      };
+    };
+    connect();
+    return () => {
+      closed = true;
+      window.clearTimeout(retry);
+      wsRef.current?.close();
+    };
+  }, [caseId]);
+
+  const send = useCallback((payload: unknown) => {
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload));
+  }, []);
+
+  const act = useCallback((action: Action) => send({ type: "action", action }), [send]);
+  const say = useCallback(
+    (text: string) => {
+      const ref = refCounter.current++;
+      pendingText.current.set(ref, text);
+      send({ type: "utterance", text, ref });
+    },
+    [send],
+  );
+  const control = useCallback((c: { speed?: number; paused?: boolean }) => send({ type: "control", ...c }), [send]);
+
+  return { state, comms, connected, lastParse, act, say, control };
+}

@@ -99,6 +99,33 @@ async function startServer() {
       });
 
       const procedureName = payload.procedureName || "Unknown Procedure";
+
+      // Free-form OR simulator debrief (engine/scrubin_engine/scoring/debrief.py).
+      if (payload.debrief) {
+        const d = payload.debrief;
+        const role = d.role === "surgeon" ? "surgeon" : "anesthesiologist";
+        const items = (d.items || [])
+          .map((i: any) => `- [${i.grade}] ${i.domain} / ${i.title}: ${i.detail}`)
+          .join("\n");
+        const completion = await groq.chat.completions.create({
+          model: "llama-3.3-70b-versatile",
+          max_tokens: 450,
+          temperature: 0.5,
+          messages: [
+            {
+              role: "system",
+              content: `You are a senior attending ${role} debriefing a trainee after a simulated ${procedureName}. There were no multiple-choice answers: the trainee managed a physiologically modelled patient in real time. Be specific, reference the findings and timings you are given, explain the physiology and the evidence behind each point, and end with the two most important things to do differently. Do not invent events that are not in the data. Under 220 words.`,
+            },
+            {
+              role: "user",
+              content: `Outcome: ${d.outcome}. Duration ${d.duration_min} min. Blood loss ${d.blood_loss_ml} mL.\nHidden case facts (revealed now): ${JSON.stringify(d.hidden)}\nFindings:\n${items}\nSurgical notes: ${(d.surgery?.notes || []).join("; ")}\nUnrecognised complications: ${(d.surgery?.occult || []).join("; ") || "none"}`,
+            },
+          ],
+        });
+        res.json({ notes: completion.choices[0]?.message?.content || "Attending notes unavailable." });
+        return;
+      }
+
       const totalDecisions = payload.totalDecisions || payload.history?.length || "unknown number of";
 
       const systemPrompt = `You are a senior attending surgeon giving post-operative feedback to a medical student after a ${procedureName} simulation. You are direct, specific, and educational. You reference exact decisions by number and phase. You never give generic feedback — every note must be specific to ${procedureName} anatomy, technique, and decision-making. You always explain the medical reasoning behind what went wrong and what the correct approach should have been. Your tone is like a real attending — firm but constructive. Keep your notes under 200 words.`;
