@@ -44,3 +44,19 @@ services:
         sync: false
       - key: CORS_ORIGIN       # your frontend origin, e.g. https://scrubin.vercel.app
         sync: false
+      - key: SCRUBIN_CORE_URL  # classic simulation engine (service below)
+        value: https://scrubin-core.onrender.com
+
+  # Scrubin-Core: classic simulation engine + procedure library (separate public repo).
+  - type: web
+    name: scrubin-core
+    runtime: docker
+    plan: free
+    repo: https://github.com/vihansanthosh516-byte/Scrubin-Core
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: SCRUBIN_CORE_PORT
+        value: "10000"
