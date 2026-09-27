@@ -19,7 +19,7 @@ from .case import DT, Case
 from .factory import build_case, case_kwargs
 from .replay import replay
 from .scenarios import SCENARIOS
-from .store import CaseStore
+from .store import CaseStore, make_store
 from .language import interpret
 from .scoring.debrief import build_debrief
 from .surgery.parse import parse_surgical
@@ -233,7 +233,7 @@ def replay_frames(record: dict, every_s: float = 5.0) -> dict:
 class SessionStore:
     def __init__(self, db: Optional[CaseStore] = None) -> None:
         self.sessions: dict[str, Session] = {}
-        self.db = db or CaseStore()
+        self.db = db or make_store()
 
     def _start(self, s: Session) -> Session:
         s.store = self.db

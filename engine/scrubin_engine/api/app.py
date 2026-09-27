@@ -4,9 +4,12 @@ proxy (and a production reverse proxy) can forward it without rewriting."""
 from __future__ import annotations
 
 import asyncio
+import os
+import time
+from collections import defaultdict, deque
 from typing import Literal, Optional
 
-from fastapi import APIRouter, FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, FastAPI, File, HTTPException, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -20,13 +23,37 @@ from ..surgery import load_spec
 app = FastAPI(title="ScrubIn Engine", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"],
+    # Production: ALLOWED_ORIGINS="https://scrubin.pages.dev,https://your-domain"
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"]
+    + [o.strip().rstrip("/") for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 router = APIRouter(prefix="/engine")
 store = SessionStore()
+
+# Abuse limits (protect the free host and the free LLM quota). All per client IP.
+MAX_LIVE_SESSIONS = int(os.environ.get("MAX_LIVE_SESSIONS", "25"))
+CASES_PER_HOUR = int(os.environ.get("CASES_PER_HOUR", "20"))
+UTTERANCES_PER_MIN = int(os.environ.get("UTTERANCES_PER_MIN", "30"))
+STT_PER_MIN = int(os.environ.get("STT_PER_MIN", "15"))
+_hits: dict[tuple[str, str], deque] = defaultdict(deque)
+
+
+def _client_ip(request: Request) -> str:
+    fwd = request.headers.get("x-forwarded-for")
+    return fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else "?")
+
+
+def _limit(request: Request, bucket: str, limit: int, window_s: float) -> None:
+    now = time.monotonic()
+    q = _hits[(bucket, _client_ip(request))]
+    while q and now - q[0] > window_s:
+        q.popleft()
+    if len(q) >= limit:
+        raise HTTPException(429, "Too many requests — slow down a little.")
+    q.append(now)
 
 
 class CreateCase(BaseModel):
@@ -67,9 +94,12 @@ def catalog() -> dict:
 
 
 @router.post("/cases")
-async def create_case(body: CreateCase) -> dict:
+async def create_case(body: CreateCase, request: Request) -> dict:
     if body.scenario not in SCENARIOS:
         raise HTTPException(404, "unknown scenario")
+    _limit(request, "create", CASES_PER_HOUR, 3600)
+    if sum(1 for x in store.sessions.values() if x.task and not x.task.done()) >= MAX_LIVE_SESSIONS:
+        raise HTTPException(503, "The OR is full right now — try again in a few minutes.")
     s = store.create(body.scenario, body.role, body.seed, body.user_id)
     return _case_info(s)
 
@@ -159,7 +189,10 @@ async def action(case_id: str, body: dict) -> dict:
 
 
 @router.post("/cases/{case_id}/utterance")
-async def utterance(case_id: str, body: Utterance) -> dict:
+async def utterance(case_id: str, body: Utterance, request: Request) -> dict:
+    if len(body.text) > 500:
+        raise HTTPException(413, "utterance too long")
+    _limit(request, "say", UTTERANCES_PER_MIN, 60)
     return await _session(case_id).utterance(body.text)
 
 
@@ -190,7 +223,8 @@ async def log(case_id: str) -> dict:
 
 
 @router.post("/stt")
-async def stt(audio: UploadFile = File(...)) -> dict:
+async def stt(request: Request, audio: UploadFile = File(...)) -> dict:
+    _limit(request, "stt", STT_PER_MIN, 60)
     data = await audio.read()
     if len(data) > 5_000_000:
         raise HTTPException(413, "audio too long")

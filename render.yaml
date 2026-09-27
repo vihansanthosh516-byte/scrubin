@@ -1,0 +1,24 @@
+# Render Blueprint — free hosting for the real-time OR engine.
+# Render dashboard → New → Blueprint → pick this repo. Fill in the secret values when asked.
+# Free plan: no card needed; the service sleeps after 15 min idle and wakes in ~1 min
+# (the OR page shows "Waking up the OR…" meanwhile).
+services:
+  - type: web
+    name: scrubin-or-engine
+    runtime: docker
+    plan: free
+    rootDir: engine
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /engine/health
+    autoDeploy: true
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        value: https://ewtwxcjshdejwpxeroeg.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS   # your frontend origin(s), comma-separated
+        sync: false

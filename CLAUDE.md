@@ -421,3 +421,5 @@ Procedures the engine doesn't model yet automatically fall back to the classic s
   proxied at `/engine`). Tests: `npm run engine:test`.
 - LLM: Groq free tier. Engine uses `openai/gpt-oss-120b` with free fallbacks; `server/llmClient.ts` defaults to
   `openai/gpt-oss-20b` (`GROQ_MODEL` overrides). Add a procedure: see `engine/README.md`.
+- Deploy: engine on Render free tier (`render.yaml`, `engine/Dockerfile`), cases in Supabase `or_cases`
+  (`supabase_or_cases.sql`), frontend needs `VITE_ENGINE_URL`. Steps in `engine/README.md`.

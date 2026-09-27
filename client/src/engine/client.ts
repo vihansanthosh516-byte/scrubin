@@ -24,6 +24,26 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/** The free production host sleeps when idle; keep pinging /health for up to
+ *  `timeoutMs` while it wakes. Resolves true once it answers. */
+export async function wakeEngine(timeoutMs = 90_000): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 10_000);
+      const res = await fetch(httpUrl("/health"), { signal: ctrl.signal });
+      clearTimeout(t);
+      if (res.ok) return true;
+    } catch {
+      // still waking
+    }
+    if (!ENGINE_ORIGIN) return false; // local dev: no cold starts, fail fast
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+  return false;
+}
+
 export const engineApi = {
   health: () => request<{ ok: boolean; llm: boolean }>("/health"),
   catalog: () => request<Catalog>("/catalog"),

@@ -35,3 +35,20 @@ npm run engine:test    # physiology validation + grammar + surgery + API tests
 Other env: `SCRUBIN_LLM_API_KEY` (any OpenAI-compatible provider), `SCRUBIN_STT_URL` / `SCRUBIN_STT_MODEL`.
 Frontend in production: set `VITE_ENGINE_URL` to the engine origin (Vercel can't host the
 long-lived WebSocket; deploy the engine to Fly.io / Railway / Render).
+
+## Deploying (free)
+
+The engine runs on **Render's free tier** (`render.yaml` at the repo root, `engine/Dockerfile`).
+Free services sleep after 15 min idle and wake in about a minute; the OR page shows
+"Waking up the OR…" while it does. The host has no disk, so saved cases go to Supabase.
+
+1. **Supabase** → SQL editor → run `supabase_or_cases.sql` (creates `or_cases`, RLS on, no public access).
+   Copy the **service_role** key (Project settings → API).
+2. **Render** → New → Blueprint → pick this GitHub repo. Fill in `GROQ_API_KEY`, `OPENROUTER_API_KEY`,
+   `SUPABASE_SERVICE_ROLE_KEY`, and `ALLOWED_ORIGINS` (your frontend URL, e.g. `https://scrubin.pages.dev`).
+   Every push to `main` redeploys.
+3. **Frontend** (Cloudflare Pages / Vercel) → add `VITE_ENGINE_URL=https://<your-service>.onrender.com`, redeploy.
+4. Check `https://<your-service>.onrender.com/engine/health` → `{"ok":true,...,"llm":true}`.
+
+Abuse limits (env-tunable, per client IP): `CASES_PER_HOUR=20`, `UTTERANCES_PER_MIN=30`,
+`STT_PER_MIN=15`, and `MAX_LIVE_SESSIONS=25` overall. Without `SUPABASE_*` the engine uses local SQLite.

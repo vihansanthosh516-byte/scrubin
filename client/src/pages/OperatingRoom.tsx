@@ -9,7 +9,7 @@ import { DebriefView } from "@/components/or/DebriefView";
 import { PatientMonitor } from "@/components/or/PatientMonitor";
 import { SurgeonStation } from "@/components/or/SurgeonStation";
 import { useAuth } from "@/contexts/AuthContext";
-import { engineApi, useOrConnection } from "@/engine/client";
+import { engineApi, useOrConnection, wakeEngine } from "@/engine/client";
 import { recordSession } from "@/lib/recordSession";
 import ClassicSimulation from "./Simulation";
 import type { Catalog, CreateCaseResponse, Debrief, Role } from "@/engine/types";
@@ -27,6 +27,7 @@ export default function OperatingRoom() {
   const [recorded, setRecorded] = useState(false);
   const [stage, setStage] = useState<Stage>("intro");
   const [engineUp, setEngineUp] = useState<boolean | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [created, setCreated] = useState<CreateCaseResponse | null>(null);
   const [creating, setCreating] = useState(false);
@@ -38,32 +39,41 @@ export default function OperatingRoom() {
   const { state } = conn;
 
   useEffect(() => {
-    engineApi
-      .health()
-      .then(() => setEngineUp(true))
-      .catch(() => setEngineUp(false));
-    engineApi.catalog().then(setCatalog).catch(() => {});
-    if (resumeId) {
-      engineApi
-        .resumeCase(resumeId)
-        .then((c) => {
-          setCreated(c);
-          setStarted(true);
-          setStage("or");
-        })
-        .catch(() => setEngineUp(false));
-    }
+    let cancelled = false;
+    wakeEngine().then((up) => {
+      if (cancelled) return;
+      setEngineUp(up);
+      if (!up) return;
+      engineApi.catalog().then(setCatalog).catch(() => {});
+      if (resumeId) {
+        engineApi
+          .resumeCase(resumeId)
+          .then((c) => {
+            setCreated(c);
+            setStarted(true);
+            setStage("or");
+          })
+          .catch(() => setStartError("Couldn't reopen that case."));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [resumeId]);
 
   const begin = async (role: Role) => {
     setCreating(true);
+    setStartError(null);
     try {
       const c = await engineApi.createCase(procId, role, user?.id);
       setCreated(c);
       setStarted(false);
       setStage("or");
-    } catch {
-      setEngineUp(false);
+    } catch (e) {
+      const msg = String(e);
+      if (msg.startsWith("Error: 429")) setStartError("You've started a lot of cases — wait a bit and try again.");
+      else if (msg.startsWith("Error: 503")) setStartError("The OR is full right now — try again in a few minutes.");
+      else setEngineUp(false);
     } finally {
       setCreating(false);
     }
@@ -117,25 +127,39 @@ export default function OperatingRoom() {
               work with your team. Everything you do — and don't do — changes what happens.
             </p>
           </motion.div>
+          {engineUp === null && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" /> Waking up the OR… this can take up to a minute the first time.
+            </div>
+          )}
           {engineUp === false && (
             <div className="rounded-sm border border-amber-warm/40 bg-amber-warm/10 p-4 text-sm">
-              The simulation engine isn't running. Start it with <code className="font-mono-data">npm run dev</code> (it launches the Python engine on port 8000),
-              or on its own with <code className="font-mono-data">npm run engine</code>.
+              {import.meta.env.VITE_ENGINE_URL ? (
+                <>The simulation engine isn't reachable right now. Please try again in a minute.</>
+              ) : (
+                <>
+                  The simulation engine isn't running. Start it with <code className="font-mono-data">npm run dev</code> (it launches the Python engine on
+                  port 8000), or on its own with <code className="font-mono-data">npm run engine</code>.
+                </>
+              )}
             </div>
+          )}
+          {startError && (
+            <div className="rounded-sm border border-amber-warm/40 bg-amber-warm/10 p-4 text-sm">{startError}</div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <RoleCard
               icon={<Syringe className="w-6 h-6" />}
               title="Anesthesiologist"
               text="Induce, secure the airway, keep him asleep and stable while the AI surgeon operates, then wake him up safely."
-              disabled={creating || engineUp === false}
+              disabled={creating || engineUp !== true}
               onClick={() => begin("anesthesia")}
             />
             <RoleCard
               icon={<Stethoscope className="w-6 h-6" />}
               title="Surgeon"
               text="Run the operation step by step — access, exposure, dissection, hemostasis, closure — with an AI anesthesiologist keeping him alive."
-              disabled={creating || engineUp === false}
+              disabled={creating || engineUp !== true}
               onClick={() => begin("surgeon")}
             />
           </div>

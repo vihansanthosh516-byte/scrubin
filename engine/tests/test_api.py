@@ -63,3 +63,17 @@ def test_cases_persist_resume_and_replay_exactly():
 
         assert client.delete(f"/engine/cases/{cid}").json()["ok"]
         assert client.get("/engine/users/u1/cases").json() == []
+
+
+def test_rate_limit_on_case_creation(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from scrubin_engine.api import app as api
+
+    monkeypatch.setattr(api, "CASES_PER_HOUR", 2)
+    api._hits.clear()
+    with TestClient(api.app) as client:
+        codes = [client.post("/engine/cases", json={"role": "surgeon"}, headers={"x-forwarded-for": "9.9.9.9"}).status_code
+                 for _ in range(3)]
+    api._hits.clear()
+    assert codes == [200, 200, 429]
