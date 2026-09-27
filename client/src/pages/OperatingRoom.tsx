@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Pause, Play, Volume2, VolumeX, MessageSquare, MessageSquareOff, Stethoscope, Syringe, Loader2 } from "lucide-react";
+import { Pause, Play, Volume2, VolumeX, MessageSquare, MessageSquareOff, Stethoscope, Syringe, Loader2, ListChecks } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { AnesthesiaStation, fmtTime } from "@/components/or/AnesthesiaStation";
@@ -147,7 +147,7 @@ export default function OperatingRoom() {
           {startError && (
             <div className="rounded-sm border border-amber-warm/40 bg-amber-warm/10 p-4 text-sm">{startError}</div>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <RoleCard
               icon={<Syringe className="w-6 h-6" />}
               title="Anesthesiologist"
@@ -162,10 +162,15 @@ export default function OperatingRoom() {
               disabled={creating || engineUp !== true}
               onClick={() => begin("surgeon")}
             />
+            <RoleCard
+              icon={<ListChecks className="w-6 h-6" />}
+              title="Multiple choice"
+              text="The classic case: pick one of three moves at each step. Mistakes cause real complications and repair operations."
+              onClick={() => (window.location.href = `/simulation/classic?proc=${procId}`)}
+            />
           </div>
           <div className="flex gap-4 text-xs text-muted-foreground">
             <Link href="/or/cases" className="hover:text-foreground underline underline-offset-4">My OR cases</Link>
-            <a href={`/simulation/classic?proc=${procId}`} className="hover:text-foreground underline underline-offset-4">Classic mode</a>
           </div>
           {creating && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
