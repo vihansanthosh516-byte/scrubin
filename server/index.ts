@@ -18,6 +18,7 @@ import {
   type DecideResponse,
 } from "./engine/index.js";
 import { classifyChoice } from "./llmClient.js";
+import { supabaseAdmin } from "./supabaseAdmin.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -366,6 +367,50 @@ async function startServer() {
     }
   });
 
+  // Email/password sign-up: creates the Supabase auth user pre-confirmed via
+  // the service-role admin API, so the client can sign in immediately with a
+  // real session instead of waiting on a confirmation email. Without this,
+  // the client-side supabase.auth.signUp() call leaves the account
+  // unconfirmed (this project requires email confirmation), the browser
+  // never gets a session, and every subsequent write (profile sync, saved
+  // scores) is silently rejected by RLS.
+  app.post("/api/auth/signup", async (req, res) => {
+    if (!supabaseAdmin) {
+      res.status(500).json({ error: "Signup is not configured on the server." });
+      return;
+    }
+
+    const { email, password, name, profession } = req.body || {};
+    if (!email || !password || !name) {
+      res.status(400).json({ error: "Missing required fields." });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: name, profession },
+      });
+
+      if (error) {
+        const message = error.message || "";
+        if (error.status === 422 || /already.*(registered|exists)/i.test(message)) {
+          res.status(409).json({ error: "Email is already registered. Please sign in." });
+          return;
+        }
+        res.status(400).json({ error: message || "Could not create account." });
+        return;
+      }
+
+      res.json({ user: { id: data.user.id, email: data.user.email } });
+    } catch (error: any) {
+      console.error("Signup error:", error.message);
+      res.status(500).json({ error: "Could not create account." });
+    }
+  });
+
   // ── Simulation API (Proxied to ScrubIn-Core) ──
 
   app.post("/api/sim/start", (req, res) => {
@@ -386,12 +431,11 @@ async function startServer() {
 
   app.post("/api/sim/complicate", async (req, res) => {
     const body = req.body || {};
-    // Hybrid complication routing: ask Groq which complication this wrong
-    // step actually caused, given the real step + the action the trainee chose.
-    // The verdict is validated against the engine's complication enum AND the
-    // procedure's allowlist. On ANY failure the fallback verdict is returned,
-    // and we keep the authored `body.complication` — exactly today's behavior,
-    // so the game never breaks when Groq is slow or down.
+    // The authored complication is authoritative: it is written to follow from
+    // the chosen action and matches the consequence the trainee is shown. Groq
+    // only writes the attending note explaining the mechanism. With no authored
+    // complication, Groq picks one from the procedure's allowlist. On ANY Groq
+    // failure the authored complication stands and the game carries on.
     if (body.step_title || body.chosen_action || body.step_label) {
       const procedureId = body.procedure || body.procedure_id;
       const procedureAllowlist = procedureId && procedureExists(procedureId)
@@ -405,9 +449,9 @@ async function startServer() {
         chosenAction: body.chosen_action || "",
         patientProfile: body.patient_profile,
         allowedComplications: body.allowed_complications || procedureAllowlist,
+        fixedComplication: body.complication || undefined,
       });
-      if (verdict.source === "groq" && !verdict.isCorrect && verdict.complicationType) {
-        // Groq decided the complication — route the engine to the validated type.
+      if (!body.complication && verdict.source === "groq" && !verdict.isCorrect && verdict.complicationType) {
         body.complication = verdict.complicationType;
       }
       if (verdict.explanation) {

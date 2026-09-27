@@ -265,6 +265,29 @@ function GitHubIcon({ className }: { className?: string }) {
   );
 }
 
+// Supabase/auth errors come back as raw API messages. Map the ones users can
+// actually hit to plain language; anything unrecognized falls back to the
+// caller's default rather than showing a raw error string.
+function friendlyAuthError(message: string | undefined, fallback: string): string {
+  if (!message) return fallback;
+  if (/email rate limit exceeded/i.test(message)) {
+    return "Too many sign-ups right now. Please try again in a few minutes, or continue with GitHub or Google instead.";
+  }
+  if (/invalid login credentials/i.test(message)) {
+    return "Incorrect email or password.";
+  }
+  if (/already.*(registered|exists)/i.test(message)) {
+    return "That email is already registered. Try signing in instead.";
+  }
+  if (/email not confirmed/i.test(message)) {
+    return "Please confirm your email before signing in.";
+  }
+  if (/password.*(at least|should be)/i.test(message)) {
+    return message;
+  }
+  return fallback;
+}
+
 export const SignInPage = ({
   className,
   onGoogleSignIn,
@@ -301,7 +324,7 @@ export const SignInPage = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
-    
+
     if (mode === "signin") {
       if (!email || !password) {
         setFormError("Please fill in all fields");
@@ -310,7 +333,7 @@ export const SignInPage = ({
       if (onSignIn) {
         const result = await (onSignIn(email, password) as any);
         if (result?.error) {
-          setFormError(result.error.message || "Invalid credentials");
+          setFormError(friendlyAuthError(result.error.message, "Invalid credentials"));
         }
       }
     } else {
@@ -321,7 +344,7 @@ export const SignInPage = ({
       if (onSignUp) {
         const result = await (onSignUp(email, password, name, profession) as any);
         if (result?.error) {
-          setFormError(result.error.message || "Could not create account");
+          setFormError(friendlyAuthError(result.error.message, "Could not create account"));
         }
       }
     }

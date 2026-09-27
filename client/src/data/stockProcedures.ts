@@ -1,4 +1,4 @@
-import { STOCK_STEP_BANKS, buildStockSteps } from "./stockSteps";
+import { STOCK_STEP_BANKS, buildStockSteps, type ProcedureBank, type StepDef } from "./stockSteps";
 
 export interface StockChoice {
   id: string;
@@ -6,6 +6,12 @@ export interface StockChoice {
   isCorrect: boolean;
   complication: string; // Complication to trigger if incorrect choice selected
   feedback: string;
+  /** What the team sees right after this wrong choice (tailored banks only). */
+  consequence?: string;
+  /** Rescue bank key for this mistake when it differs from the complication id. */
+  rescueKey?: string;
+  /** How this choice changes the case state (flags, repair branch). */
+  effect?: import("./stockSteps/stepBuilder").ChoiceEffect;
 }
 
 export interface StockStep {
@@ -33,6 +39,35 @@ export function getStockStepsForProcedure(procId: string, scenario: any): StockS
   const phases = scenario?.phases || [];
   const generated = phases.length === 0 ? fallbackSteps(procId) : phaseSteps(procId, phases);
   return generated.map((step) => ({ ...step, choices: shuffleChoices(step.choices) }));
+}
+
+/**
+ * The bank the case runner plays for a procedure: the authored bank, or for an
+ * unregistered procedure a linear bank derived from the generic fallback steps.
+ */
+export function getCaseBankForProcedure(procId: string, scenario: any): ProcedureBank {
+  const bank = STOCK_STEP_BANKS[procId];
+  if (bank) return bank;
+  const phases = scenario?.phases || [];
+  const generated = phases.length === 0 ? fallbackSteps(procId) : phaseSteps(procId, phases);
+  const steps: StepDef[] = generated.map((g) => {
+    const correct = g.choices.find((c) => c.isCorrect)!;
+    const wrongs = g.choices.filter((c) => !c.isCorrect);
+    const w2 = wrongs[1] ?? {
+      text: "Hand this step to the most junior team member and leave the room.",
+      complication: wrongs[0].complication,
+      feedback: "An unsupervised junior at a critical step invites the same error.",
+    };
+    return {
+      kind: "core",
+      title: g.title,
+      description: g.description,
+      choices: [correct.text, wrongs[0].text, w2.text],
+      feedback: [correct.feedback, wrongs[0].feedback, w2.feedback],
+      wrongComps: [wrongs[0].complication, w2.complication],
+    };
+  });
+  return { ...STOCK_STEP_BANKS.appendectomy, id: procId, steps, repairs: undefined };
 }
 
 function fallbackSteps(procId: string): StockStep[] {

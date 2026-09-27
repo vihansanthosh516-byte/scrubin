@@ -22,6 +22,12 @@ export interface ChoiceContext {
   patientProfile?: unknown;
   /** Per-procedure allowlist from the registry; defaults to the full enum. */
   allowedComplications?: readonly string[];
+  /**
+   * The authored complication this wrong choice causes. When set, Groq may not
+   * pick a different one — it only explains how the action produced it, so the
+   * attending note matches the consequence the trainee sees.
+   */
+  fixedComplication?: string;
 }
 
 export interface ChoiceVerdict {
@@ -113,6 +119,21 @@ Rules:
 
 /** Builds the user payload exactly per the hybrid plan §2.3. */
 export function buildUserMessage(context: ChoiceContext): string {
+  if (context.fixedComplication) {
+    return JSON.stringify({
+      procedure: context.procedure || "unknown",
+      procedure_phase: context.procedurePhase || "",
+      step_title: context.stepTitle,
+      step_description: context.stepDescription || "",
+      chosen_action: context.chosenAction,
+      patient_profile: context.patientProfile ?? null,
+      allowed_complications: [context.fixedComplication],
+      task:
+        `This action was wrong and it caused ${context.fixedComplication}. ` +
+        `Respond with is_correct false, complication_type "${context.fixedComplication}", ` +
+        "and an explanation of the mechanism by which this action caused it.",
+    });
+  }
   return JSON.stringify({
     procedure: context.procedure || "unknown",
     procedure_phase: context.procedurePhase || "",
@@ -216,9 +237,13 @@ const FALLBACK_VERDICT: ChoiceVerdict = {
 export async function classifyChoice(context: ChoiceContext): Promise<ChoiceVerdict> {
   try {
     const raw = await callGroq(LLM_SYSTEM_PROMPT, buildUserMessage(context));
-    const verdict = validateVerdict(raw, context.allowedComplications);
+    const allowed = context.fixedComplication ? [context.fixedComplication] : context.allowedComplications;
+    const verdict = validateVerdict(raw, allowed);
     if (!verdict) {
       throw new Error("Groq response failed schema validation");
+    }
+    if (context.fixedComplication && verdict.isCorrect) {
+      throw new Error("Groq contradicted the authored complication");
     }
     recordSuccess();
     return { ...verdict, source: "groq" };

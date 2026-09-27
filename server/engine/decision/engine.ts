@@ -51,7 +51,7 @@ const ARCHETYPE_PROMPTS: Record<DecisionArchetypeType, { prompt: string; context
   },
 };
 
-interface ArchetypeIntervention {
+export interface ArchetypeIntervention {
   id: string;
   label: string;
   treats: ComplicationType[];
@@ -61,7 +61,7 @@ interface ArchetypeIntervention {
   wrongFeedback: string;
 }
 
-const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeIntervention[]> = {
+export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeIntervention[]> = {
   AIRWAY_STABILITY: [
     {
       id: "intubate",

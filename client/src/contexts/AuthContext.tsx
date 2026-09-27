@@ -306,61 +306,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, name: string, profession: string) => {
     try {
-      const { data, error } = await (await import("../lib/supabase")).supabase.auth.signUp({
+      // Create the account pre-confirmed via the server (service-role admin
+      // API) instead of calling supabase.auth.signUp() directly from the
+      // browser. This project requires email confirmation, so a client-side
+      // signUp() never yields a session until the confirmation link is
+      // clicked - every write until then (profile sync, saved scores) is
+      // silently rejected by RLS. Signing in right after the server call
+      // gets a real session immediately.
+      await axios.post(`${API_BASE}/api/auth/signup`, { email, password, name, profession });
+
+      const { data, error } = await (await import("../lib/supabase")).supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          data: {
-            full_name: name,
-            profession: profession,
-          }
-        }
+      });
+      if (error) throw error;
+      if (!data.user) throw new Error("Could not create account.");
+
+      const userData: User = {
+        id: data.user.id,
+        name: name,
+        login: email.split("@")[0],
+        avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=CC553D&textColor=FFFFFF`,
+        email: data.user.email || null,
+        profession: profession,
+        hasCompletedOnboarding: true,
+      };
+
+      // Save profile data for future logins
+      localStorage.setItem(`scrubin_user_profile_${userData.id}`, JSON.stringify({
+        name: userData.name,
+        profession: userData.profession,
+        hasCompletedOnboarding: true,
+      }));
+
+      setUser(userData);
+      setHasCompletedOnboarding(true);
+      localStorage.setItem("scrubin_user", JSON.stringify(userData));
+      localStorage.setItem("scrubin_last_user", JSON.stringify({ name: userData.name, login: userData.login }));
+
+      await upsertUser({
+        id: userData.id,
+        name: userData.name,
+        login: userData.login,
+        avatar_url: userData.avatar_url,
       });
 
-      if (error) throw error;
-
-      // Detect if user already exists (Supabase security feature returns empty identities)
-      if (data.user && data.user.identities && data.user.identities.length === 0) {
-        throw new Error("Email is already registered. Please sign in.");
-      }
-
-      if (data.user) {
-        const userData: User = {
-          id: data.user.id,
-          name: name,
-          login: email.split("@")[0],
-          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=CC553D&textColor=FFFFFF`,
-          email: data.user.email || null,
-          profession: profession,
-          hasCompletedOnboarding: true,
-        };
-
-        // Save profile data for future logins
-        localStorage.setItem(`scrubin_user_profile_${userData.id}`, JSON.stringify({
-          name: userData.name,
-          profession: userData.profession,
-          hasCompletedOnboarding: true,
-        }));
-
-        setUser(userData);
-        setHasCompletedOnboarding(true);
-        localStorage.setItem("scrubin_user", JSON.stringify(userData));
-        localStorage.setItem("scrubin_last_user", JSON.stringify({ name: userData.name, login: userData.login }));
-
-        await upsertUser({
-          id: userData.id,
-          name: userData.name,
-          login: userData.login,
-          avatar_url: userData.avatar_url,
-        });
-
-        // Redirect to profile
-        window.location.href = "/profile";
-      }
+      // Redirect to profile
+      window.location.href = "/profile";
       return { error: null };
     } catch (err: any) {
       console.error("SignUp Error:", err);
-      return { error: err };
+      const message = err?.response?.data?.error || err?.message;
+      return { error: { message } };
     }
   };
 

@@ -22,7 +22,9 @@ import PerformanceAnalyticsDashboard from "../components/PerformanceAnalyticsDas
 import DebriefReport from "../components/DebriefReport";
 import TimelinePanel from "../components/TimelinePanel";
 import SimulationCompletionScreen from "../components/SimulationCompletionScreen";
-import { getStockStepsForProcedure } from "../data/stockProcedures";
+import { getCaseBankForProcedure } from "../data/stockProcedures";
+import { startCase, currentStep as runnerStep, chooseCorrect, chooseWrong, afterRescue, projectedLength, type CaseState, type CurrentStep } from "../data/caseRunner";
+import { RESCUE_BANKS, tailorRescue, CORE_GENERIC_FEEDBACK } from "../data/rescue";
 
 // NOTE: PROCEDURES_MAP has been removed – procedure data is loaded dynamically.
 
@@ -145,7 +147,8 @@ export default function Simulation() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{type: "success" | "error", text: string} | null>(null);
 
-  const [currentStockStepIndex, setCurrentStockStepIndex] = useState(0);
+  // Where the trainee is in the case: main operation or a repair, plus the case flags.
+  const [caseState, setCaseState] = useState<CaseState | null>(null);
   // Unique per-run physiology (ASA class + presentation) rolled by the core at
   // /start. Kept separately because /next responses replace currentState.
   const [patientProfile, setPatientProfile] = useState<any>(null);
@@ -153,8 +156,15 @@ export default function Simulation() {
   // from currentState because /tick and /next responses replace currentState
   // and would otherwise wipe it mid-complication.
   const [llmNarrative, setLlmNarrative] = useState<string | null>(null);
+  // The wrong stock choice behind the active complication, for its authored consequence.
+  const [lastMistake, setLastMistake] = useState<{ consequence?: string; rescueKey?: string } | null>(null);
+  // Core decision ids seen during the current rescue, in order: the index is the rescue round.
+  const [rescueDecisionIds, setRescueDecisionIds] = useState<string[]>([]);
   const [completionTab, setCompletionTab] = useState<"summary" | "analytics" | "debrief">("summary");
-  const stockSteps = useMemo(() => getStockStepsForProcedure(procId, scenario), [procId, scenario]);
+  const caseBank = useMemo(() => getCaseBankForProcedure(procId, scenario), [procId, scenario]);
+  // Label sent to Core's debrief: repair steps are prefixed with their repair.
+  const stepLabel = (cur: CurrentStep | null) =>
+    cur ? (cur.repairTitle ? `${cur.repairTitle} — ${cur.step.title}` : cur.step.title) : undefined;
 
   // Rolling vitals history (last ~40 observations) for the trend sparklines.
   const [vitalsHistory, setVitalsHistory] = useState<any[]>([]);
@@ -292,6 +302,19 @@ export default function Simulation() {
     );
   }, [simId, isCompleted, user, currentState, procId, scenario, startedAt, recordedSessionId]);
 
+  const rescueMode = (currentState?.mode || "").toLowerCase();
+  const rescueDecisionId: string | null = (currentState?.pending_decision ?? currentState?.pendingDecision)?.id ?? null;
+  useEffect(() => {
+    if (rescueMode !== "branched") {
+      setRescueDecisionIds((ids) => (ids.length ? [] : ids));
+      if (rescueMode === "stock") setLastMistake(null);
+      return;
+    }
+    if (rescueDecisionId) {
+      setRescueDecisionIds((ids) => (ids.includes(rescueDecisionId) ? ids : [...ids, rescueDecisionId]));
+    }
+  }, [rescueMode, rescueDecisionId]);
+
   if (loadingScenario) {
     return (
       <div className="min-h-screen bg-[#FBF9F5] flex flex-col items-center justify-center space-y-4">
@@ -343,7 +366,7 @@ export default function Simulation() {
     if (isStarting || simId) return;
     setIsStarting(true);
     setStartError(null);
-    setCurrentStockStepIndex(0);
+    setCaseState(startCase(caseBank, `${Date.now()}-${Math.random()}`));
     setConnectionStatus("connecting");
 
     try {
@@ -389,7 +412,7 @@ export default function Simulation() {
     }
   };
 
-  const handleChoice = async (optionId: string) => {
+  const handleChoice = async (optionId: string, picked?: { feedback?: string }) => {
     if (isSubmitting || isCompleted) return;
     setIsSubmitting(true);
     setDecisionError(null);
@@ -417,15 +440,21 @@ export default function Simulation() {
       }
       setEngineReconnecting(false);
       const data = await res.json();
+      // A tailored rescue option replaces Core's generic feedback line with its own.
+      const decisionEvents: string[] = [
+        ...(data.events || []).filter((e: string) => !(picked?.feedback && CORE_GENERIC_FEEDBACK.has(e))),
+        ...(picked?.feedback ? [`${data.decision_result?.wasCorrect ? "✅" : "❌"} ${picked.feedback}`] : []),
+      ];
 
       // If we recovered and returned to stock:
       if (data.mode === "stock" || data.mode === "STOCK") {
-        // A spontaneous deterioration complication did not fail the current
-        // step — return to it instead of skipping ahead. Mistake complications
-        // still advance past the failed step.
-        const advance = data.complication_source !== "spontaneous";
-        const nextIndex = currentStockStepIndex + (advance ? 1 : 0);
-        if (nextIndex >= stockSteps.length) {
+        // A spontaneous deterioration did not fail the current step, so the
+        // trainee returns to it. A mistake either opens the repair operation it
+        // demands or moves past the failed step (see caseRunner.afterRescue).
+        const resumed = caseState
+          ? afterRescue(caseBank, caseState, { spontaneous: data.complication_source === "spontaneous" })
+          : null;
+        if (!resumed || resumed.finished) {
           // Complete simulation
           const compRes = await fetch(`${API_BASE}/api/sim/complete`, {
             method: 'POST',
@@ -440,15 +469,16 @@ export default function Simulation() {
               ...completion,
               events: [
                 ...(useSimulationStore.getState().currentState?.events || []),
-                ...(data.events || []),
+                ...decisionEvents,
                 "✅ Complication resolved!",
+                ...(resumed?.notes ?? []),
                 "🎉 Procedure completed!"
               ],
             });
             setTick(compData.tick);
           }
         } else {
-          setCurrentStockStepIndex(nextIndex);
+          setCaseState(resumed);
           setState({
             ...data,
             // A spontaneous complication resolved on the final tick can leave
@@ -458,8 +488,9 @@ export default function Simulation() {
             ...(data.completed || data.is_completed ? deriveCompletionState(data) : {}),
             events: [
               ...(useSimulationStore.getState().currentState?.events || []),
-              ...(data.events || []),
-              "✅ Complication resolved! Returning to surgical procedure."
+              ...decisionEvents,
+              resumed.notes.length ? "✅ Complication resolved." : "✅ Complication resolved! Returning to surgical procedure.",
+              ...resumed.notes,
             ]
           });
           setTick(data.tick);
@@ -474,7 +505,7 @@ export default function Simulation() {
           ...data,
           events: [
             ...(useSimulationStore.getState().currentState?.events || []),
-            ...(data.events || [])
+            ...decisionEvents
           ]
         });
         setTick(data.tick);
@@ -513,14 +544,16 @@ export default function Simulation() {
     setIsSubmitting(true);
     setDecisionError(null);
 
+    const stepNow = caseState ? runnerStep(caseBank, caseState) : null;
     if (choice.isCorrect) {
-      const nextIndex = currentStockStepIndex + 1;
+      const next = caseState ? chooseCorrect(caseBank, caseState, choice) : null;
       const updatedEvents = [
         ...(currentState?.events || []),
-        `✅ Correct Step: ${choice.feedback}`
+        `✅ Correct Step: ${choice.feedback}`,
+        ...(next?.notes ?? []),
       ];
 
-      if (nextIndex >= stockSteps.length) {
+      if (!next || next.finished) {
         // Complete the simulation
         try {
           const res = await fetch(`${API_BASE}/api/sim/complete`, {
@@ -548,7 +581,7 @@ export default function Simulation() {
           setEngineReconnecting(true);
         }
       } else {
-        setCurrentStockStepIndex(nextIndex);
+        setCaseState(next);
         // Let the backend know we completed a stock step by advancing the tick!
         try {
           const res = await fetch(`${API_BASE}/api/sim/next`, {
@@ -557,9 +590,9 @@ export default function Simulation() {
             body: JSON.stringify({
               session_id: simId,
               // Report the completed step so the core's debrief evaluation sees the case.
-              step_index: currentStockStepIndex,
+              step_index: caseState?.played ?? 0,
               step_correct: true,
-              step_label: stockSteps[currentStockStepIndex]?.title,
+              step_label: stepLabel(stepNow),
             })
           });
           if (res.ok) {
@@ -584,8 +617,10 @@ export default function Simulation() {
       setIsSubmitting(false);
     } else {
       // Incorrect choice -> trigger complication in Python Engine
+      setLastMistake({ consequence: choice.consequence, rescueKey: choice.rescueKey });
+      if (caseState) setCaseState(chooseWrong(caseBank, caseState, choice));
       try {
-        const step = stockSteps[currentStockStepIndex];
+        const step = stepNow?.step;
         const res = await fetch(`${API_BASE}/api/sim/complicate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -593,8 +628,8 @@ export default function Simulation() {
             session_id: simId,
             complication: choice.complication,
             // Report the failed step so the core's debrief evaluation records the mistake.
-            step_index: currentStockStepIndex,
-            step_label: step?.title,
+            step_index: caseState?.played ?? 0,
+            step_label: stepLabel(stepNow),
             // Hybrid Groq context — lets the LLM judge THIS step + THIS action
             // instead of blindly trusting the authored complication.
             chosen_action: choice.text,
@@ -660,17 +695,36 @@ export default function Simulation() {
     }
   };
 
-  const runtimeOptions = options.length ? options : [];
+  const activeComplication: string | null = currentState?.active_complication ?? currentState?.activeComplication ?? null;
+  const rescueIdx = pendingDecision?.id ? rescueDecisionIds.indexOf(pendingDecision.id) : -1;
+  const rescueRound = rescueIdx >= 0 ? rescueIdx : rescueDecisionIds.length;
+  const tailored = tailorRescue(
+    RESCUE_BANKS,
+    procId,
+    activeComplication,
+    rescueRound,
+    options,
+    pendingDecision?.id ?? "",
+    complicationSource === "spontaneous" ? null : lastMistake?.rescueKey
+  );
+  const runtimeOptions = tailored ? tailored.options : options;
   const currentMode = (currentState?.mode || "stock").toLowerCase();
-  // Real case length = the engine's totalTicks (each tick is one decision step).
+  // Case length. A branching case has no fixed length: repairs add steps and the
+  // case state removes others, so the runner projects it from where we are now.
+  // Without a runner case, fall back to the engine's totalTicks.
   // The authored stock bank can drift from it, so the OR header always reflects
   // the engine's authoritative numbers.
-  const totalTicks = currentState?.total_ticks ?? scenario?.totalTicks ?? stockSteps.length;
-  const stepNow = Math.min(Math.max(currentTick, 1), Math.max(totalTicks, 1));
+  // Plain call, not a hook: this sits below an early return. It walks ~40 pure steps.
+  const caseLength = caseState ? projectedLength(caseBank, caseState) : null;
+  const totalTicks = caseLength ?? currentState?.total_ticks ?? scenario?.totalTicks ?? caseBank.steps.length;
+  const stepNow = caseState
+    ? Math.min(caseState.played + 1, Math.max(totalTicks, 1))
+    : Math.min(Math.max(currentTick, 1), Math.max(totalTicks, 1));
   const isDeceased = currentMode === "deceased";
   const isBranched = currentMode === "branched";
   const isStock = currentMode === "stock";
-  const currentStockStep = stockSteps[currentStockStepIndex] || null;
+  const runnerCurrent = caseState ? runnerStep(caseBank, caseState) : null;
+  const currentStockStep = runnerCurrent?.step ?? null;
 
   // Status badge for the patient card
   const statusBadge = isDeceased
@@ -848,7 +902,7 @@ export default function Simulation() {
                 </div>
                 <div className="min-w-0">
                   <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Tick</span>
-                  <span className="font-bold text-[#2E6B4B]">{currentTick} / {totalTicks}</span>
+                  <span className="font-bold text-[#2E6B4B]">{currentTick}</span>
                 </div>
               </div>
 
@@ -952,7 +1006,7 @@ export default function Simulation() {
                    isBranched ? (complicationSource === "spontaneous" ? "PATIENT DETERIORATING" : "CRITICAL: Complication Active") :
                    `Step ${stepNow} of ${totalTicks}`}
                 </span>
-                <span className="text-xs text-[#8C827A] dark:text-[#C2BBB0] font-bold">Tick {currentTick} / {totalTicks}</span>
+                <span className="text-xs text-[#8C827A] dark:text-[#C2BBB0] font-bold">Tick {currentTick}</span>
               </div>
 
               {(isDeceased || isCompleted) ? (
@@ -1031,9 +1085,15 @@ export default function Simulation() {
                       <p className="text-[#EDEAE4]/80 text-sm italic mb-3">
                         {complicationSource === "spontaneous"
                           ? "The patient is deteriorating — vitals are declining and complications are developing on their own. Select the correct intervention to stabilize them."
-                          : "A complication has occurred due to an incorrect decision. Select the correct intervention to recover the patient."}
+                          : lastMistake?.consequence || "A complication has occurred due to an incorrect decision. Select the correct intervention to recover the patient."}
                       </p>
-                      {complicationCause && (
+                      {tailored && (
+                        <div className="mb-3 p-3 bg-black/25 border border-[#A32A2A]/40 rounded-sm">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-[#E08080]/80 block mb-1">Right now</span>
+                          <p className="text-xs text-[#EDEAE4]/90 leading-relaxed">{tailored.situation}</p>
+                        </div>
+                      )}
+                      {complicationCause && !tailored && (
                         <div className="p-3 bg-black/25 border border-[#A32A2A]/40 rounded-sm">
                           <span className="text-[11px] font-black uppercase tracking-wider text-[#E08080]/80 block mb-1">Physiologic Cause</span>
                           <p className="text-xs text-[#EDEAE4]/85 leading-relaxed">{complicationCause}</p>
@@ -1056,6 +1116,11 @@ export default function Simulation() {
                     animate={{ opacity: 1, x: 0 }}
                     className="flex flex-col"
                   >
+                    {runnerCurrent?.repairTitle && (
+                      <div className="mb-3 self-start inline-flex items-center gap-2 px-2.5 py-1 rounded-sm border border-[#D99B26]/60 bg-[#D99B26]/10 text-[11px] font-black uppercase tracking-wider text-[#9A6A12] dark:text-[#E0B060]">
+                        {runnerCurrent.repairLabel}{runnerCurrent.depth > 1 ? ` (level ${runnerCurrent.depth})` : ""} · {runnerCurrent.repairTitle} · step {runnerCurrent.repairStep} of {runnerCurrent.repairLength}
+                      </div>
+                    )}
                     <h2 className="text-2xl font-bold leading-tight mb-3 text-[#191919] dark:text-[#EDEAE4]">{currentStockStep.title}</h2>
                     <div className="p-4 bg-[#F4F0E8] border border-[#E2DDD1] rounded-sm mb-4 dark:bg-[#26211B] dark:border-[#3A342C]">
                       <p className="text-[#666059] dark:text-[#C2BBB0] text-sm leading-relaxed dark:text-[#A89F95]">{currentStockStep.description}</p>
@@ -1077,13 +1142,12 @@ export default function Simulation() {
                   {runtimeOptions.map((opt: any) => (
                     <button
                       key={opt.id}
-                      onClick={() => handleChoice(opt.id)}
+                      onClick={() => handleChoice(opt.id, opt)}
                       disabled={isSubmitting}
                       className="group w-full text-left p-4 bg-[#A32A2A]/5 border border-[#A32A2A]/30 hover:border-[#A32A2A] hover:bg-[#A32A2A]/10 transition-all rounded-sm flex items-center justify-between disabled:opacity-50"
                     >
                       <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-bold text-[#8B2323] truncate">{opt.label}</span>
-                        <span className="text-[10px] text-[#A32A2A]/70 uppercase font-black">{opt.archetype || 'INTERVENTION'}</span>
+                        <span className="text-sm font-bold text-[#8B2323]">{opt.label}</span>
                       </div>
                       <Zap className="w-5 h-5 text-[#A32A2A] group-hover:scale-110 transition-transform shrink-0" />
                     </button>
@@ -1100,7 +1164,7 @@ export default function Simulation() {
                       disabled={isSubmitting}
                       className={`group w-full text-left p-4 bg-white border border-[#E2DDD1] rounded-sm flex items-center justify-between hover:bg-[#FBF9F5] hover:border-primary/40 transition dark:bg-[#1E1A16] dark:border-[#3A342C] dark:hover:bg-[#26211B] ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      <span className="text-sm font-bold text-[#191919] truncate dark:text-[#EDEAE4]">
+                      <span className="text-sm font-bold leading-snug pr-3 text-[#191919] dark:text-[#EDEAE4]">
                         {choice.text}
                       </span>
                       <ChevronRight className="w-5 h-5 text-[#8C827A] dark:text-[#C2BBB0] group-hover:text-primary transition-colors shrink-0" />
@@ -1121,7 +1185,7 @@ export default function Simulation() {
               </div>
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground uppercase" title="Advances with each surgical step or decision, not per poll — vitals keep decaying between them">Causal Clock</span>
-                <span className="text-base font-bold text-[#2E6B4B]">{currentTick}t / {totalTicks}t</span>
+                <span className="text-base font-bold text-[#2E6B4B]">{currentTick}t</span>
               </div>
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground uppercase">Consistency</span>
@@ -1132,7 +1196,7 @@ export default function Simulation() {
 
           {/* RIGHT COLUMN: OR STATUS + TIMELINE */}
           <div className="order-3 col-span-12 lg:order-none lg:col-span-3 flex min-h-0 flex-col gap-3 lg:overflow-y-auto lg:pr-1.5">
-            <OperatingRoomDashboard scenario={scenario} />
+            <OperatingRoomDashboard scenario={scenario} steps={caseState && caseLength ? { done: caseState.played, total: caseLength } : undefined} />
 
             <div className="shrink-0 glass-card p-4">
               <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Procedure Timeline</h3>

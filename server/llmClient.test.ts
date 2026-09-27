@@ -116,6 +116,39 @@ describe("classifyChoice — success path", () => {
   });
 });
 
+describe("classifyChoice — authored complication locked", () => {
+  const FIXED = { ...CTX, fixedComplication: "anaphylaxis" };
+
+  it("asks Groq only to explain the authored complication", async () => {
+    const fetchMock = vi.fn(async (_url: string, _init: RequestInit) =>
+      new Response(
+        JSON.stringify(groqContent({ is_correct: false, complication_type: "anaphylaxis", explanation: "The penicillin triggered it." })),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const verdict = await classifyChoice(FIXED);
+    const user = JSON.parse(JSON.parse(fetchMock.mock.calls[0][1].body as string).messages[1].content);
+    expect(user.allowed_complications).toEqual(["anaphylaxis"]);
+    expect(user.task).toContain("anaphylaxis");
+    expect(verdict.source).toBe("groq");
+    expect(verdict.complicationType).toBe("anaphylaxis");
+  });
+
+  it("falls back when Groq picks a different complication", async () => {
+    mockFetchResponse(groqContent({ is_correct: false, complication_type: "hypoxia", explanation: "x" }));
+    const verdict = await classifyChoice(FIXED);
+    expect(verdict.source).toBe("fallback");
+  });
+
+  it("falls back when Groq calls the authored mistake correct", async () => {
+    mockFetchResponse(groqContent({ is_correct: true, complication_type: "", explanation: "Fine." }));
+    const verdict = await classifyChoice(FIXED);
+    expect(verdict.source).toBe("fallback");
+  });
+});
+
 describe("classifyChoice — fallback paths (game never crashes)", () => {
   it("falls back when complication_type is not in the engine enum", async () => {
     mockFetchResponse(

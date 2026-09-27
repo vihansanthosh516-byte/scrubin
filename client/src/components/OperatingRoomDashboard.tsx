@@ -3,6 +3,8 @@ import { useSimulationStore } from "../state/simulationStore";
 
 interface DashboardProps {
   scenario: any;
+  /** Steps answered and projected case length, for branching stock cases. */
+  steps?: { done: number; total: number };
 }
 
 // Simple UI‑only stability calculation – does not affect engine state
@@ -32,7 +34,7 @@ function computeStability(vitals: any, baseline: any) {
   return "critical";
 }
 
-export default function OperatingRoomDashboard({ scenario }: DashboardProps) {
+export default function OperatingRoomDashboard({ scenario, steps }: DashboardProps) {
   const { currentTick, currentState, cognition } = useSimulationStore();
 
   const vitals = currentState?.vitals || {};
@@ -85,8 +87,17 @@ export default function OperatingRoomDashboard({ scenario }: DashboardProps) {
       <div className="grid grid-cols-2 gap-2">
         <Card label="Procedure" value={scenario?.name ?? "-"} />
         <Card label="Current Phase" value={(scenario?.phases || scenario?.PHASES || [])?.find((p: any) => p.id === (currentState?.pending_decision?.phase || currentState?.pendingDecision?.phase))?.name ?? "-"} />
-        <Card label="Tick" value={currentTick} />
-        <Card label="Remaining" value={remainingTicks !== null ? `${remainingTicks} ticks` : "Unknown"} />
+        {steps ? (
+          <>
+            <Card label="Steps Done" value={steps.done} />
+            <Card label="Remaining" value={`${Math.max(steps.total - steps.done, 0)} steps`} />
+          </>
+        ) : (
+          <>
+            <Card label="Tick" value={currentTick} />
+            <Card label="Remaining" value={remainingTicks !== null ? `${remainingTicks} ticks` : "Unknown"} />
+          </>
+        )}
         <Card label="Active Complication" value={activeComplication ?? "None"} highlight={!!activeComplication} valueClass={activeComplication ? "text-[#A32A2A]" : "text-[#2E6B4B]"} />
         <Card label="Patient Stability" value={stability.charAt(0).toUpperCase() + stability.slice(1)} valueClass={stabilityColor} />
         <Card label="Executive Goal" value={executiveGoal ?? "-"} />

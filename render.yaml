@@ -46,6 +46,10 @@ services:
         sync: false
       - key: SCRUBIN_CORE_URL  # classic simulation engine (service below)
         value: https://scrubin-core.onrender.com
+      - key: SUPABASE_URL      # sign-up creates accounts server-side
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
 
   # Scrubin-Core: classic simulation engine + procedure library (separate public repo).
   - type: web

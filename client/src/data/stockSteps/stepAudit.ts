@@ -20,7 +20,7 @@
 //     the template-mismatch check via the allowlist in stepAudit.test.ts; the
 //     other detectors are strict.
 
-import { ProcedureBank, buildStockSteps } from "./stepBuilder";
+import { ProcedureBank, StepDef, buildStockSteps } from "./stepBuilder";
 import { STOCK_STEP_BANKS } from "./index";
 
 const STOP = new Set(
@@ -80,11 +80,162 @@ export interface AuditFlag {
   reason:
     | "template_mismatch"
     | "duplicate_option"
+    | "duplicate_title"
     | "complication_invalid"
     | "complication_not_in_risks"
     | "complication_duplicate"
-    | "phase_descent";
+    | "phase_descent"
+    | "not_authored"
+    | "length_tell"
+    | "tell_phrase"
+    | "complication_kind_mismatch"
+    | "repair_missing"
+    | "repair_unreachable"
+    | "repair_too_short"
+    | "flag_unreachable";
   detail: string;
+}
+
+// Banks rewritten so every step is hand-authored with causal complications,
+// visible consequences, and no giveaway wording. auditTailoredBank() holds
+// these to the stricter bar; the set grows until it covers every bank.
+export const TAILORED_BANKS = new Set<string>(["appendectomy", "cholecystectomy"]);
+
+// Coarse sanity net: which complications a mistake at each kind of step can
+// plausibly cause. Real causality comes from authoring; this only catches
+// pairings that cannot be right (e.g. a DVT-prophylaxis mistake → nerve injury).
+export const KIND_COMPLICATIONS: Record<string, string[]> = {
+  preop: ["anaphylaxis", "hypoxia", "infection", "thrombosis", "hemorrhage", "cardiac_arrhythmia", "fluid_overload"],
+  antibiotic: ["infection", "anaphylaxis"],
+  position: ["nerve_injury", "hypoxia", "thrombosis"],
+  access: ["hemorrhage", "infection", "hypoxia", "nerve_injury", "cardiac_arrhythmia"],
+  exposure: ["hemorrhage", "infection", "hypoxia", "nerve_injury", "cardiac_arrhythmia"],
+  landmark: ["hemorrhage", "nerve_injury", "infection"],
+  dissect: ["hemorrhage", "nerve_injury", "infection"],
+  core: ["hemorrhage", "infection", "nerve_injury", "thrombosis"],
+  vessel: ["hemorrhage", "thrombosis"],
+  nerve: ["nerve_injury"],
+  bleed: ["hemorrhage", "fluid_overload", "infection", "cardiac_arrhythmia"],
+  verify: ["infection", "hemorrhage", "nerve_injury", "thrombosis"],
+  vitals: ["hypoxia", "cardiac_arrhythmia", "fluid_overload", "anaphylaxis", "hemorrhage"],
+  closure: ["infection", "hemorrhage", "nerve_injury"],
+  postop: ["infection", "hypoxia", "fluid_overload", "cardiac_arrhythmia", "thrombosis", "hemorrhage", "anaphylaxis"],
+  dvt: ["thrombosis", "hemorrhage"],
+};
+
+// Wording that marks an option as the "obviously wrong" shortcut.
+export const DISTRACTOR_TELLS: RegExp[] = [
+  /\bskip(s|ping|ped)?\b/i,
+  /\bblind(ly)?\b/i,
+  /\bproceed straight\b/i,
+  /\btrust the\b/i,
+  /\bimprovis/i,
+  /\bsave time\b/i,
+  /\bimmediately\b/i,
+  /\bjust\b/i,
+  /\bquickly\b/i,
+  /\bspeed (up|the)\b/i,
+  /\baggressive(ly)?\b/i,
+  /\bforceful(ly)?\b/i,
+  /\bmaximum force\b/i,
+  /\bwithout (checking|confirming|testing|verifying|looking)\b/i,
+  /\bno need to\b/i,
+];
+
+// Wording that marks an option as the "obviously right" careful one.
+export const CORRECT_TELLS: RegExp[] = [/\b(safely|carefully|gently|precisely|appropriately|properly|correctly)\b/i];
+
+export const TELL_MIN_RATIO = 0.75;
+export const TELL_MAX_RATIO = 1.3;
+export const MAX_CORRECT_LONGEST_SHARE = 0.4;
+// A bank where the correct option is almost never longest has the reverse tell.
+export const MIN_CORRECT_LONGEST_SHARE = 0.15;
+
+/** Stricter audit for tailored banks: fully authored, causal, and giveaway-free. */
+export function auditTailoredBank(bank: ProcedureBank): AuditFlag[] {
+  const flags: AuditFlag[] = [];
+  const risks: string[] = (bank.spec as any).risks || [];
+  const repairs = bank.repairs ?? {};
+  // Main-line steps plus every repair operation's steps, audited to the same bar.
+  const all: { step: StepDef; at: number; where: string }[] = [
+    ...bank.steps.map((step, i) => ({ step, at: i + 1, where: "" })),
+    ...Object.entries(repairs).flatMap(([id, r]) => r.steps.map((step, i) => ({ step, at: i + 1, where: `[repair ${id}] ` }))),
+  ];
+  let correctLongest = 0;
+  const titleCount = new Map<string, number>();
+  for (const { step } of all) titleCount.set(step.title, (titleCount.get(step.title) ?? 0) + 1);
+  all.forEach(({ step, at, where }) => {
+    const flag = (reason: AuditFlag["reason"], detail: string) =>
+      flags.push({ bankId: bank.id, stepIndex: at, kind: step.kind, title: `${where}${step.title}`, reason, detail });
+
+    // The timeline and repair badge identify steps by title, so each must be unique.
+    if (titleCount.get(step.title)! > 1) flag("duplicate_title", "another step in this bank has the same title");
+
+    if (!step.choices || !step.feedback || !step.wrongComps || !step.consequences) {
+      flag("not_authored", "tailored steps need choices, feedback, wrongComps and consequences");
+      return;
+    }
+    const [correct, ...wrongs] = step.choices;
+    const meanWrong = (wrongs[0].length + wrongs[1].length) / 2;
+    const ratio = correct.length / meanWrong;
+    if (ratio < TELL_MIN_RATIO || ratio > TELL_MAX_RATIO) {
+      flag("length_tell", `correct option is ${ratio.toFixed(2)}× the distractor length (allowed ${TELL_MIN_RATIO}–${TELL_MAX_RATIO})`);
+    }
+    if (correct.length > wrongs[0].length && correct.length > wrongs[1].length) correctLongest++;
+
+    wrongs.forEach((w, j) => {
+      const hit = DISTRACTOR_TELLS.find((re) => re.test(w));
+      if (hit) flag("tell_phrase", `distractor ${j + 1} contains giveaway wording ${hit}: "${w.slice(0, 80)}"`);
+    });
+    const correctHit = CORRECT_TELLS.find((re) => re.test(correct));
+    if (correctHit) flag("tell_phrase", `correct option contains giveaway wording ${correctHit}: "${correct.slice(0, 80)}"`);
+    if (new Set(step.choices.map((c) => c.trim())).size !== 3) flag("duplicate_option", "two options are identical");
+
+    const allowed = KIND_COMPLICATIONS[step.kind] || [];
+    step.wrongComps.forEach((c) => {
+      if (!VALID_COMPLICATIONS.has(c)) flag("complication_invalid", `unknown complication "${c}"`);
+      else if (!risks.includes(c)) flag("complication_not_in_risks", `"${c}" is not in the bank's risks`);
+      if (!allowed.includes(c)) {
+        flag("complication_kind_mismatch", `a "${step.kind}" mistake cannot plausibly cause "${c}" (allowed: ${allowed.join(", ")})`);
+      }
+    });
+    if (step.wrongComps[0] === step.wrongComps[1]) flag("complication_duplicate", "both wrong choices trigger the same complication");
+
+    step.effects?.forEach((e) => {
+      if (e?.repair && !repairs[e.repair]) flag("repair_missing", `a choice demands repair "${e.repair}", which does not exist`);
+    });
+  });
+
+  // Every flag a step waits on must be settable by some choice or finished repair.
+  const settable = new Set<string>([
+    ...all.flatMap(({ step }) => (step.effects ?? []).flatMap((e) => e?.set ?? [])),
+    ...Object.values(repairs).flatMap((r) => r.done?.set ?? []),
+  ]);
+  all.forEach(({ step, at, where }) => {
+    const used = [...(step.when?.all ?? []), ...(step.when?.any ?? []), ...(step.when?.none ?? [])];
+    used.filter((f) => !settable.has(f)).forEach((f) =>
+      flags.push({ bankId: bank.id, stepIndex: at, kind: step.kind, title: `${where}${step.title}`, reason: "flag_unreachable", detail: `condition uses flag "${f}", which nothing ever sets` })
+    );
+  });
+  // Every repair operation must be reachable and a real operation.
+  const demanded = new Set(all.flatMap(({ step }) => (step.effects ?? []).map((e) => e?.repair).filter(Boolean) as string[]));
+  for (const [id, r] of Object.entries(repairs)) {
+    if (!demanded.has(id)) flags.push({ bankId: bank.id, stepIndex: 0, kind: "repair", title: r.title, reason: "repair_unreachable", detail: `no mistake leads to repair "${id}"` });
+    if (r.steps.length < 2) flags.push({ bankId: bank.id, stepIndex: 0, kind: "repair", title: r.title, reason: "repair_too_short", detail: "a repair needs at least two steps" });
+  }
+
+  const share = correctLongest / Math.max(all.length, 1);
+  if (share > MAX_CORRECT_LONGEST_SHARE || share < MIN_CORRECT_LONGEST_SHARE) {
+    flags.push({
+      bankId: bank.id,
+      stepIndex: 0,
+      kind: "bank",
+      title: "(whole bank)",
+      reason: "length_tell",
+      detail: `the correct option is the longest in ${(share * 100).toFixed(0)}% of steps (allowed ${MIN_CORRECT_LONGEST_SHARE * 100}–${MAX_CORRECT_LONGEST_SHARE * 100}%)`,
+    });
+  }
+  return flags;
 }
 
 export function auditBank(bank: ProcedureBank): AuditFlag[] {
@@ -214,4 +365,10 @@ export function auditBank(bank: ProcedureBank): AuditFlag[] {
 
 export function auditAllBanks(): AuditFlag[] {
   return Object.values(STOCK_STEP_BANKS).flatMap((bank) => auditBank(bank as ProcedureBank));
+}
+
+export function auditAllTailoredBanks(): AuditFlag[] {
+  return Object.values(STOCK_STEP_BANKS)
+    .filter((bank) => TAILORED_BANKS.has(bank.id))
+    .flatMap((bank) => auditTailoredBank(bank as ProcedureBank));
 }

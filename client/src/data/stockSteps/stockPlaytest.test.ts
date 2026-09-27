@@ -26,6 +26,7 @@ import { STOCK_STEP_BANKS } from "./index";
 import { buildStockSteps, ProcedureBank } from "./stepBuilder";
 import { VALID_COMPLICATIONS } from "./stepAudit";
 import { getProcedure } from "../../../../server/engine/procedures/registry";
+import { defaultPath } from "../caseRunner";
 
 const banks = Object.values(STOCK_STEP_BANKS) as ProcedureBank[];
 
@@ -135,7 +136,9 @@ describe("every bank plays start-to-finish", () => {
     // distorts the efficiency score's case-length denominator (bank shorter).
     // Both the TS mirror and the Python core must carry the same totalTicks.
     for (const bank of banks) {
-      const steps = buildStockSteps(bank);
+      // Tailored banks can hold alternative steps for different case states and
+      // repair operations; the mistake-free path is what must match the engine.
+      const steps = defaultPath(bank);
       const tsTicks = getProcedure(bank.id)?.totalTicks;
       expect(
         tsTicks,

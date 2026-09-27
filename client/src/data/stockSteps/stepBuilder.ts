@@ -75,12 +75,57 @@ export interface StepDef {
   feedback?: [string, string, string];
   /** Complications triggered by wrong1/wrong2 */
   wrongComps?: [string, string];
+  /** What the team sees right after wrong1/wrong2 — shown on the complication banner */
+  consequences?: [string, string];
+  /**
+   * Rescue scenario for wrong1/wrong2 when the general one for that complication
+   * would not fit — e.g. "arterial" turns thrombosis into bowel ischemia instead
+   * of a DVT. Resolves to the rescue bank key `${complication}:${variant}`.
+   */
+  rescueVariants?: [string | null, string | null];
+  /** Only play this step when the case state matches (see caseRunner). */
+  when?: Cond;
+  /** Case-state effects of [correct, wrong1, wrong2]. */
+  effects?: [ChoiceEffect | null, ChoiceEffect | null, ChoiceEffect | null];
+}
+
+/** A condition on the case's flags. Every listed clause must hold. */
+export interface Cond {
+  all?: string[];
+  any?: string[];
+  none?: string[];
+}
+
+export interface ChoiceEffect {
+  /** Flags this choice adds to the case state. */
+  set?: string[];
+  /** Flags this choice removes. */
+  clear?: string[];
+  /** A major mistake: after the rescue, run this repair branch before going on. */
+  repair?: string;
+}
+
+/**
+ * The extra operation a major mistake forces on the surgeon (e.g. repairing a
+ * torn cecum). Its steps play after the rescue; mistakes inside it can open
+ * further repairs. `then` decides where the case resumes: "redo" replays the
+ * step that went wrong, "next" moves past it.
+ */
+export interface RepairBranch {
+  title: string;
+  /** Badge shown while it runs; defaults to "Emergency repair". */
+  label?: string;
+  steps: StepDef[];
+  done?: { set?: string[]; clear?: string[] };
+  then: "redo" | "next";
 }
 
 export interface ProcedureBank {
   id: string;
   spec: StepSpec;
   steps: StepDef[];
+  /** Repair branches keyed by id, referenced from ChoiceEffect.repair. */
+  repairs?: Record<string, RepairBranch>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -298,6 +343,7 @@ function buildStepChoices(
       isCorrect: true,
       complication: "",
       feedback: isTemplate ? prefix(fbCorrect) : fbCorrect,
+      effect: step.effects?.[0] ?? undefined,
     },
     {
       id: `${stepId}_b`,
@@ -305,6 +351,9 @@ function buildStepChoices(
       isCorrect: false,
       complication: comp1,
       feedback: isTemplate ? prefix(fbWrong1) : fbWrong1,
+      consequence: step.consequences?.[0],
+      rescueKey: step.rescueVariants?.[0] ? `${comp1}:${step.rescueVariants[0]}` : undefined,
+      effect: step.effects?.[1] ?? undefined,
     },
     {
       id: `${stepId}_c`,
@@ -312,24 +361,52 @@ function buildStepChoices(
       isCorrect: false,
       complication: comp2,
       feedback: isTemplate ? prefix(fbWrong2) : fbWrong2,
+      consequence: step.consequences?.[1],
+      rescueKey: step.rescueVariants?.[1] ? `${comp2}:${step.rescueVariants[1]}` : undefined,
+      effect: step.effects?.[2] ?? undefined,
     },
   ];
 }
 
 /** Fisher-Yates shuffle on a copy; guarantees the correct choice is not first. */
-function shuffleChoices(choices: StockChoice[]): StockChoice[] {
+function shuffleChoices(choices: StockChoice[], rand: () => number = Math.random): StockChoice[] {
   const arr = [...choices];
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rand() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   // The correct answer must never be locked into position 0.
   const correctIdx = arr.findIndex((c) => c.isCorrect);
   if (correctIdx === 0 && arr.length > 1) {
-    const swapIdx = 1 + Math.floor(Math.random() * (arr.length - 1));
+    const swapIdx = 1 + Math.floor(rand() * (arr.length - 1));
     [arr[0], arr[swapIdx]] = [arr[swapIdx], arr[0]];
   }
   return arr;
+}
+
+/** Seeded PRNG so a step shows the same option order every render of a case. */
+export function seededRandom(seed: string): () => number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return () => {
+    h = (h + 0x6d2b79f5) | 0;
+    let t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Build one step (main-line or repair) with a deterministic option order. */
+export function buildStep(bank: ProcedureBank, def: StepDef, stepId: string, stepIndex: number, seed: string): StockStep {
+  return {
+    id: stepId,
+    title: def.title,
+    description: def.description,
+    choices: shuffleChoices(buildStepChoices(def, bank.spec, stepIndex, stepId), seededRandom(`${seed}:${stepId}`)),
+  };
 }
 
 export function buildStockSteps(bank: ProcedureBank): StockStep[] {

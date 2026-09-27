@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { auditAllBanks, AuditFlag } from "./stepAudit";
+import { auditAllBanks, auditAllTailoredBanks, AuditFlag, TAILORED_BANKS } from "./stepAudit";
+import { STOCK_STEP_BANKS } from "./index";
 
 // Known-benign template-mismatch flags: template steps whose generic clinical
 // response (exposure/verify/vessel/access/core) is *intended* even though it
@@ -37,6 +38,16 @@ describe("stock step banks content audit", () => {
     const mismatches = auditAllBanks().filter((f) => f.reason === "template_mismatch");
     const unexpected = mismatches.filter((f) => !ALLOWED_TEMPLATE_MISMATCHES.has(key(f)));
     expect(unexpected).toEqual([]);
+  });
+
+  it("tailored banks exist in the registry", () => {
+    const missing = [...TAILORED_BANKS].filter((id) => !STOCK_STEP_BANKS[id]);
+    expect(missing).toEqual([]);
+  });
+
+  it("tailored banks are fully authored, causal, and free of giveaway wording or length tells", () => {
+    const flags = auditAllTailoredBanks().map((f) => `${f.bankId} #${f.stepIndex} "${f.title}" [${f.reason}] ${f.detail}`);
+    expect(flags).toEqual([]);
   });
 
   it("allowlist is not stale — every entry is still actually flagged", () => {

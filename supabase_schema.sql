@@ -145,11 +145,23 @@ DROP POLICY IF EXISTS "Users can delete own sessions" ON sessions;
 CREATE POLICY "Users can delete own sessions" ON sessions
 FOR DELETE USING (auth.uid()::text = user_id);
 
--- Allow the anon key to read (writes are gated by the RLS policies above)
-GRANT ALL ON users TO anon;
-GRANT ALL ON sessions TO anon;
-GRANT ALL ON leaderboard_view TO anon;
-GRANT ALL ON leaderboard TO anon;
+-- Grant table privileges to both Postgres roles the app's Supabase client
+-- can run as (writes are still gated by the RLS policies above):
+--   - anon: requests made with no session (or before one is established).
+--   - authenticated: every signed-in user (email/password, GitHub, Google) -
+--     PostgREST assigns this role from the request's JWT. Without this grant,
+--     signed-in writes are rejected with "permission denied for table users"
+--     (42501) before RLS is even evaluated, independent of the RLS policies
+--     above being correct — this is why every real login used to fail to
+--     save a profile row / session score.
+-- service_role is also included: Supabase does not auto-grant privileges on
+-- tables created via raw SQL (only ones made through the table editor), so
+-- without this the service role - despite bypassing RLS - still gets a
+-- plain "permission denied for table" from Postgres's grant system itself.
+GRANT ALL ON users TO anon, authenticated, service_role;
+GRANT ALL ON sessions TO anon, authenticated, service_role;
+GRANT ALL ON leaderboard_view TO anon, authenticated, service_role;
+GRANT ALL ON leaderboard TO anon, authenticated, service_role;
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

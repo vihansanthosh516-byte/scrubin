@@ -133,14 +133,17 @@ describe("supabase schema contract", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("enables RLS and grants anon access for every table it creates", () => {
+  it("enables RLS and grants anon + authenticated + service_role access for every table it creates", () => {
     const tables = [...definedRelations()].filter((r) =>
       schema.includes(`CREATE TABLE IF NOT EXISTS ${r}`)
     );
     expect(tables.length).toBeGreaterThan(0);
     for (const t of tables) {
       expect(schema).toContain(`ALTER TABLE ${t} ENABLE ROW LEVEL SECURITY;`);
-      expect(schema).toContain(`GRANT ALL ON ${t} TO anon;`);
+      // Granting only `anon` leaves every signed-in user (authenticated) and
+      // the server's admin client (service_role) with "permission denied for
+      // table" regardless of RLS policy correctness - see supabase_schema.sql.
+      expect(schema).toContain(`GRANT ALL ON ${t} TO anon, authenticated, service_role;`);
     }
   });
 });
