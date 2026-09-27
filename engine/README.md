@@ -25,6 +25,9 @@ npm run engine:test    # physiology validation + grammar + surgery + API tests
   rate limit falls back to `openai/gpt-oss-20b`, then `qwen/qwen3.8-27b`. Each model has its own free quota
   (about 8k tokens/min and 1k requests/day), and one fallback parse costs about 1.8k tokens. Most orders
   never reach the LLM because the grammar parser handles them offline.
+- **OpenRouter backup (free):** set `OPENROUTER_API_KEY`. If every Groq model is rate-limited, the engine
+  tries `nvidia/nemotron-3-super-120b-a12b:free` (tested: correct, but 5-15 s). Override it with
+  `SCRUBIN_OPENROUTER_MODEL`. Other free OpenRouter models were rate-limited or returned bad JSON when tested.
 - **Fully local (free, unlimited, no key):** run Ollama and set
   `SCRUBIN_LLM_URL=http://localhost:11434/v1/chat/completions`, `SCRUBIN_LLM_MODEL=qwen3:8b` (or similar),
   and `SCRUBIN_LLM_FALLBACKS=` (empty).

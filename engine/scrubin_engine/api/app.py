@@ -10,7 +10,7 @@ from fastapi import APIRouter, FastAPI, File, HTTPException, UploadFile, WebSock
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from ..language.llm import api_key, transcribe
+from ..language.llm import _providers, transcribe
 from ..physiology.drugs import DRUGS, FLUIDS
 from ..scenarios import SCENARIOS
 from ..session import SPEEDS, SessionStore, rebuild_case, replay_frames
@@ -47,7 +47,7 @@ class Control(BaseModel):
 
 @router.get("/health")
 def health() -> dict:
-    return {"ok": True, "sessions": len(store.sessions), "llm": bool(api_key())}
+    return {"ok": True, "sessions": len(store.sessions), "llm": bool(_providers())}
 
 
 @router.get("/scenarios")

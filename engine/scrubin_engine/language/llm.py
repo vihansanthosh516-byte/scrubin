@@ -44,6 +44,21 @@ MODEL = os.environ.get("SCRUBIN_LLM_MODEL", "openai/gpt-oss-120b")
 # Free-tier friendly: Groq rate-limits each model separately (free plan: 8k tokens/min,
 # 1k requests/day per model), so on a 429 we fall through to the next free model.
 FALLBACK_MODELS = [m.strip() for m in os.environ.get("SCRUBIN_LLM_FALLBACKS", "openai/gpt-oss-20b,qwen/qwen3.8-27b").split(",") if m.strip()]
+# Last-resort free backup on OpenRouter (slower, ~5 s, but a separate quota).
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_MODEL = os.environ.get("SCRUBIN_OPENROUTER_MODEL", "nvidia/nemotron-3-super-120b-a12b:free")
+
+
+def _providers() -> list[tuple[str, str, str]]:
+    """(url, key, model) in the order to try them."""
+    out: list[tuple[str, str, str]] = []
+    key = api_key()
+    if key:
+        out += [(API_URL, key, m) for m in [MODEL, *[m for m in FALLBACK_MODELS if m != MODEL]]]
+    or_key = os.environ.get("OPENROUTER_API_KEY")
+    if or_key and OPENROUTER_MODEL:
+        out.append((OPENROUTER_URL, or_key, OPENROUTER_MODEL))
+    return out
 STT_URL = os.environ.get("SCRUBIN_STT_URL", "https://api.groq.com/openai/v1/audio/transcriptions")
 STT_MODEL = os.environ.get("SCRUBIN_STT_MODEL", "whisper-large-v3-turbo")
 
@@ -101,9 +116,9 @@ def _context_block(context: dict[str, Any]) -> str:
 
 
 async def llm_parse(text: str, context: dict[str, Any], timeout_s: float = 8.0) -> ParseResult:
-    key = api_key()
     r = ParseResult(source="llm")
-    if not key:
+    providers = _providers()
+    if not providers:
         r.unparsed.append(text)
         return r
     messages = [
@@ -112,18 +127,20 @@ async def llm_parse(text: str, context: dict[str, Any], timeout_s: float = 8.0) 
     ]
     data = None
     async with httpx.AsyncClient(timeout=timeout_s) as client:
-        for model in [MODEL, *[m for m in FALLBACK_MODELS if m != MODEL]]:
+        for url, key, model in providers:
             payload: dict[str, Any] = {"model": model, "temperature": 0, "response_format": {"type": "json_object"}, "messages": messages}
             if "gpt-oss" in model:
                 payload["reasoning_effort"] = "low"
-            elif "qwen3" in model:
+            elif "qwen3" in model and "groq" in url:
                 payload["reasoning_format"] = "hidden"
+            timeout = timeout_s if "openrouter" not in url else max(timeout_s, 15.0)
             try:
-                resp = await client.post(API_URL, headers={"Authorization": f"Bearer {key}"}, json=payload)
+                resp = await client.post(url, headers={"Authorization": f"Bearer {key}"}, json=payload, timeout=timeout)
                 if resp.status_code in (429, 500, 502, 503) or (resp.status_code == 400 and "json" in resp.text.lower()):
                     continue  # rate-limited / flaky / bad JSON: try the next free model
                 resp.raise_for_status()
-                data = json.loads(resp.json()["choices"][0]["message"]["content"])
+                content = resp.json()["choices"][0]["message"]["content"] or ""
+                data = json.loads(content[content.find("{"): content.rfind("}") + 1])
                 break
             except (httpx.HTTPError, KeyError, ValueError, json.JSONDecodeError):
                 continue

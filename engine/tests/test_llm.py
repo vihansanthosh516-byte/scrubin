@@ -50,3 +50,29 @@ def test_rate_limited_model_falls_back_to_next_free_model(monkeypatch):
     r = asyncio.run(L.llm_parse("sevo two", {}))
     assert calls == ["primary", "backup"]
     assert r.actions[0]["percent"] == 2.0
+
+
+def test_openrouter_backup_used_when_all_groq_models_limited(monkeypatch):
+    import asyncio
+    import json as _json
+
+    import httpx
+
+    import scrubin_engine.language.llm as L
+
+    hosts = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        hosts.append(request.url.host)
+        if request.url.host != "openrouter.ai":
+            return httpx.Response(429, json={"error": "rate limited"})
+        body = {"actions": [{"type": "volatile", "percent": 3.0}]}
+        return httpx.Response(200, json={"choices": [{"message": {"content": "```json\n" + _json.dumps(body) + "\n```"}}]})
+
+    real_client = httpx.AsyncClient
+    monkeypatch.setattr(L.httpx, "AsyncClient", lambda **kw: real_client(transport=httpx.MockTransport(handler), **kw))
+    monkeypatch.setattr(L, "api_key", lambda: "groq-test")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "or-test")
+    r = asyncio.run(L.llm_parse("sevo three", {}))
+    assert hosts[-1] == "openrouter.ai" and hosts.count("api.groq.com") == 1 + len(L.FALLBACK_MODELS)
+    assert r.actions[0]["percent"] == 3.0
