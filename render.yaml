@@ -22,3 +22,25 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS   # your frontend origin(s), comma-separated
         sync: false
+
+  # Express API (sign-in, AI grading, leaderboard). Uses the root Dockerfile.
+  - type: web
+    name: scrubin-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: VITE_GITHUB_CLIENT_ID
+        sync: false
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
+      - key: CORS_ORIGIN       # your frontend origin, e.g. https://scrubin.vercel.app
+        sync: false

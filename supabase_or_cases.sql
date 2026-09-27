@@ -19,3 +19,5 @@ CREATE TABLE IF NOT EXISTS or_cases (
 );
 CREATE INDEX IF NOT EXISTS idx_or_cases_user ON or_cases(user_id, updated_at DESC);
 ALTER TABLE or_cases ENABLE ROW LEVEL SECURITY;
+-- Newer Supabase projects do not auto-grant table access to service_role.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.or_cases TO service_role;
