@@ -88,7 +88,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
       description: "BP 95/65, HR 110, lactate 2.8. He has already had 1 L on the ward.",
       choices: [
         "Give a 500 mL crystalloid bolus, then recheck BP, heart rate, and lung sounds before deciding on more.",
-        "Run three liters of saline wide open now so he is fully filled before the propofol and rocuronium go in.",
+        "Run three liters of saline over twenty minutes so he is fully filled before the propofol and rocuronium go in.",
         "Hold further fluid and start a phenylephrine infusion to lift the pressure before induction.",
       ],
       feedback: [
@@ -194,7 +194,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
       description: "There are about 6 cm of subcutaneous fat before the aponeurosis.",
       choices: [
         "Divide the fat in layers with cautery, tying the superficial epigastric vein as you meet it.",
-        "Take long, deep blade strokes through the fat to reach the aponeurosis in one pass.",
+        "Take long, deep blade strokes through the fat down to the aponeurosis to keep the wound edges clean.",
         "Undermine the fat widely off the aponeurosis in every direction to give yourself more room.",
       ],
       feedback: [
@@ -324,7 +324,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
       choices: [
         "Clamp the mesoappendix in small bites close to the appendix and tie each with 2-0 absorbable.",
         "Take the whole mesoappendix in one large clamp and secure it with a single tie.",
-        "Ligate the mesentery back near the ileocolic trunk, where one tie controls the whole blood supply at once.",
+        "Ligate the mesentery back near the ileocolic trunk, where one secure tie controls the whole blood supply.",
       ],
       feedback: [
         "Small bites hold in edematous tissue and keep the ligatures away from the ileocolic vessels.",
@@ -518,7 +518,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
       when: {"none": ["contaminated"]},
       choices: [
         "Suction the pus, then irrigate the right lower quadrant with warm saline until the return is clear.",
-        "Irrigate the whole abdomen with six liters to wash out every quadrant for good measure.",
+        "Irrigate the whole abdomen with six liters so every quadrant is washed as well as the right side.",
         "Scrub the fibrin off the cecum and ileum with a dry sponge to clean the serosa.",
       ],
       feedback: [
@@ -734,7 +734,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
       description: "He snores, then SpO2 falls to 88% on 2 L nasal oxygen.",
       choices: [
         "Jaw thrust, sit him up 45 degrees, and start CPAP while you review his opioid doses.",
-        "Give naloxone 2 mg IV in one push to reverse every opioid in his system at once.",
+        "Give naloxone 2 mg IV to fully reverse the opioids that are depressing his breathing.",
         "Raise the oxygen to 15 L by face mask and let him sleep it off.",
       ],
       feedback: [
@@ -772,7 +772,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
       kind: "postop",
       title: "Decide on post-op antibiotics",
       description: "Pathology confirms acute appendicitis without perforation.",
-      when: {"none": ["perforated", "contaminated"]},
+      when: {"none": ["perforated", "contaminated", "ileocecal_resection", "cecum_repaired"]},
       choices: [
         "Stop antibiotics after the operation, since a non-perforated appendix needs no further course.",
         "Switch him to amoxicillin-clavulanate tablets for seven days at discharge to cover the gut flora.",
@@ -793,8 +793,8 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
     {
       kind: "postop",
       title: "Set the antibiotic course for a contaminated case",
-      description: "The appendix perforated or stool spilled. The source has now been controlled.",
-      when: {"any": ["perforated", "contaminated"]},
+      description: "The bowel was opened or contaminated during this operation. The source has now been controlled.",
+      when: {"any": ["perforated", "contaminated", "ileocecal_resection", "cecum_repaired"]},
       choices: [
         "Continue ciprofloxacin and metronidazole for four days after source control, then stop.",
         "Stop the antibiotics tonight, since the source has now been removed from his abdomen.",
@@ -818,7 +818,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
       choices: [
         "Scheduled acetaminophen and ketorolac, with small oral oxycodone doses for breakthrough.",
         "A morphine PCA with a 2 mg per hour basal rate so he is comfortable all night.",
-        "High-dose ketorolac every four hours around the clock with no end date, so he needs no opioid.",
+        "High-dose ketorolac every four hours around the clock for his whole stay, so he needs no opioid.",
       ],
       feedback: [
         "Multimodal analgesia limits opioids in a likely sleep apnea patient and caps the NSAID dose.",
@@ -944,7 +944,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
       kind: "postop",
       title: "Pain and tachycardia after the resection",
       description: "Day 4 after the ileocecal resection: HR 118, new abdominal pain, temp 38.5 °C.",
-      when: {"all": ["ileocecal_resection"]},
+      when: {"all": ["ileocecal_resection", "leak_risk"]},
       choices: [
         "Get a contrast CT for an anastomotic leak and prepare to return to theater if it confirms one.",
         "Start oral antibiotics and advance his diet, since pain on day 4 is expected after a resection.",
@@ -960,11 +960,13 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
         "That night he becomes peritonitic and septic, with feculent fluid on a repeat CT.",
         "By morning he is breathless with crackles, and still tachycardic.",
       ],
+      effects: [{"repair": "leak_mgmt"}, null, null],
     },
     {
       kind: "postop",
       title: "Plan the discharge",
       description: "Day 2. He is eating, walking, and his pain is controlled.",
+      when: {"none": ["ileocecal_resection"]},
       choices: [
         "Discharge on oral analgesia, wound and fever advice, and enoxaparin if he will be immobile.",
         "Send him home with extended-release oxycodone so he does not have to call the ward for more tablets.",
@@ -980,6 +982,28 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
         "His partner calls an ambulance when she cannot wake him on his first night home.",
         "Two days later he arrives in the ED with pleuritic chest pain and a swollen leg.",
       ],
+    },
+    {
+      kind: "postop",
+      title: "Plan the discharge after the resection",
+      description: "Day 8. He is eating, his bowels are working, and the wound is clean.",
+      when: {"all": ["ileocecal_resection"]},
+      choices: [
+        "Discharge with wound and leak warning signs, enoxaparin while his mobility is reduced, and clinic in two weeks.",
+        "Discharge with ten more days of oral amoxicillin-clavulanate to protect the join while it finishes healing.",
+        "Discharge with extended-release oxycodone twice daily, so the pain never interrupts his sleep.",
+      ],
+      feedback: [
+        "He knows which symptoms mean the join is leaking, and the clot plan covers his reduced mobility.",
+        "Antibiotics do not protect a healed join; a needless course selects out C. difficile.",
+        "Extended-release opioids at home, with probable sleep apnea, depress his breathing overnight.",
+      ],
+      wrongComps: ["infection", "hypoxia"],
+      consequences: [
+        "Nine days later he has profuse watery diarrhea and a fever.",
+        "His partner cannot wake him on the second night at home.",
+      ],
+      rescueVariants: ["cdiff", null],
     },
   ],
   repairs: {
@@ -1081,7 +1105,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
           choices: [
             "Continue once his pressure is steady, since his septic appendix still needs to come out today.",
             "Abandon the operation and treat the appendicitis with IV antibiotics alone until he recovers.",
-            "Continue at once, even though he still needs repeated epinephrine boluses to hold a pressure.",
+            "Continue now, while he still needs repeated epinephrine boluses to hold a pressure.",
           ],
           feedback: [
             "Once stable, carrying on with an urgent operation after a moderate reaction does not worsen outcome.",
@@ -1519,6 +1543,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
             "On day 4 the anastomosis leaks where it was made on dusky ileum.",
             "The divided mesentery bleeds from several points at once.",
           ],
+          effects: [null, {"set": ["leak_risk"]}, null],
         },
         {
           kind: "core",
@@ -1540,6 +1565,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
             "The bowel beside the anastomosis turns dusky as its mesentery is strangled.",
           ],
           rescueVariants: [null, "arterial"],
+          effects: [null, {"set": ["leak_risk"]}, null],
         },
         {
           kind: "verify",
@@ -1560,6 +1586,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
             "On day 4 the dusky anastomosis leaks and he becomes septic.",
             "A hematoma spreads along the mesentery beside the anastomosis.",
           ],
+          effects: [null, {"set": ["leak_risk"]}, null],
         },
       ],
     },
@@ -1595,7 +1622,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
           choices: [
             "Place a transfixion stitch of 2-0 absorbable on the artery under direct vision.",
             "Put a single free tie back around the swollen pedicle and pull it tight.",
-            "Tie the ileocolic trunk, which stops all flow into this area at once.",
+            "Tie the ileocolic trunk, which reliably stops all flow into this area.",
           ],
           feedback: [
             "A transfixion stitch cannot slip off a swollen pedicle.",
@@ -1623,7 +1650,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
           description: "The ileal mesentery has torn and a hematoma is spreading through it.",
           choices: [
             "Press the torn mesentery flat between swabs, then find and tie each bleeding vessel.",
-            "Place one large clamp across the whole torn area of the mesentery to stop it all at once.",
+            "Place one large clamp across the whole torn area of the mesentery to control every bleeder together.",
             "Pour topical thrombin over the hematoma and move on to the appendix.",
           ],
           feedback: [
@@ -1713,7 +1740,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
           choices: [
             "Evacuate all the clot, wash out, and find the bleeding vessel before you tie it.",
             "Squeeze the clot out through a small opening and let the vessel clot off on its own.",
-            "Remove the clot and close up again at once, without washing the wound out.",
+            "Remove the clot and close up, since the wound looks clean once the clot is out.",
           ],
           feedback: [
             "Clearing the clot shows the source, and washing out the old blood lowers infection risk.",
@@ -1726,6 +1753,75 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
             "On day 4 the wound is hot and discharging infected old blood.",
           ],
           rescueVariants: ["postop", "wound"],
+        },
+      ],
+    },
+    "leak_mgmt": {
+      title: "Anastomotic leak",
+      label: "Complication management",
+      then: "next",
+      done: {"set": ["leak", "ileostomy"]},
+      steps: [
+        {
+          kind: "postop",
+          title: "Decide on source control",
+          description: "Day 4. CT shows free fluid and gas around the ileocolic join, and he has generalized peritonitis.",
+          choices: [
+            "Resuscitate, give broad-spectrum antibiotics, and take him back tonight for a laparotomy and washout.",
+            "Place a CT-guided drain into the fluid and continue IV antibiotics on the ward overnight.",
+            "Give four liters of crystalloid overnight and decide in the morning once he is better filled.",
+          ],
+          feedback: [
+            "A free leak with peritonitis needs the abdomen opened and cleaned; drains only suit a small walled-off collection.",
+            "A drain cannot clear free feculent fluid from the whole abdomen, and the sepsis keeps going.",
+            "Fluid alone does not treat a leak; he keeps leaking, and the fluid collects in his lungs.",
+          ],
+          wrongComps: ["infection", "fluid_overload"],
+          consequences: [
+            "By morning he is on noradrenaline, with a lactate of 5.",
+            "By morning his lungs crackle and he is still septic.",
+          ],
+        },
+        {
+          kind: "core",
+          title: "Deal with the leaking join",
+          description: "At laparotomy a third of the join has come apart, with stool throughout the abdomen. He needs noradrenaline.",
+          choices: [
+            "Take down the join, bring out an end ileostomy, and wash out the whole abdomen.",
+            "Oversew the hole in the join, wash out the abdomen, and leave the join in place.",
+            "Free the whole right colon mesentery to gain enough length to make a new join.",
+          ],
+          feedback: [
+            "A septic patient on vasopressors should not get a new join; a stoma removes the leak for good.",
+            "Stitches into inflamed, leaking bowel in a septic patient break down again.",
+            "Wide mobilization in a septic, inflamed abdomen tears the mesenteric vessels.",
+          ],
+          wrongComps: ["infection", "hemorrhage"],
+          consequences: [
+            "Four days later the repaired join leaks again.",
+            "The middle colic vessels tear and bleed into the mesentery.",
+          ],
+          rescueVariants: [null, null],
+        },
+        {
+          kind: "postop",
+          title: "Plan his recovery after the leak",
+          description: "Day 5. He is off noradrenaline in the ICU and the stoma is working.",
+          choices: [
+            "Four more days of antibiotics after source control, enoxaparin, and stoma nurse teaching.",
+            "Stop the antibiotics tonight, since the source has been removed and he is off vasopressors.",
+            "Hold his enoxaparin for a week after this second operation, to protect the fresh stoma and wound.",
+          ],
+          feedback: [
+            "Four days after source control is enough (STOP-IT), and he needs clot protection and stoma teaching.",
+            "Stopping on the day of source control leaves residual peritonitis untreated.",
+            "Two operations, sepsis, and bed rest make a week without prophylaxis a clot risk.",
+          ],
+          wrongComps: ["infection", "thrombosis"],
+          consequences: [
+            "On day 7 he spikes a fever from a pelvic collection.",
+            "On day 9 his left leg swells from thigh to ankle.",
+          ],
         },
       ],
     },

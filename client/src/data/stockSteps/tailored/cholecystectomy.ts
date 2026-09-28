@@ -355,7 +355,7 @@ export const CHOLECYSTECTOMY_BANK: ProcedureBank = {
       choices: [
         "Grasp the stump with an atraumatic grasper, suction the field, and place a new clip under vision.",
         "Fire clips repeatedly into the pooling blood where the stump was until the bleeding stops.",
-        "Seal the pooled area with the hook on high coagulation, since heat will cauterize the bleeder in one go.",
+        "Seal the pooled area with the hook on high coagulation, since heat will cauterize the bleeding artery.",
       ],
       feedback: [
         "Holding the stump stops the bleeding and gives a clear view for a definitive clip.",
@@ -1009,7 +1009,7 @@ export const CHOLECYSTECTOMY_BANK: ProcedureBank = {
       kind: "postop",
       title: "Restart her anticoagulant",
       description: "She wants to fly home on day 4. She normally takes apixaban.",
-      when: {"none": ["icu_ventilated"]},
+      when: {"none": ["icu_ventilated", "bdi_managed"]},
       choices: [
         "Restart apixaban 48 hours after surgery once the wound is dry, then approve the flight.",
         "Restart full-dose apixaban tonight and add a daily aspirin, since she is flying home.",
@@ -1029,13 +1029,13 @@ export const CHOLECYSTECTOMY_BANK: ProcedureBank = {
     },
     {
       kind: "dvt",
-      title: "Plan her anticoagulation after ICU",
-      description: "Day 5. She is out of ICU, with no bleeding for 72 hours and a stable hemoglobin. She normally takes apixaban.",
-      when: {"all": ["icu_ventilated"]},
+      title: "Plan her anticoagulation after the major operation",
+      description: "Day 8 after a major, complicated operation. No bleeding for several days and a stable hemoglobin. She normally takes apixaban.",
+      when: {"any": ["icu_ventilated", "bdi_managed"]},
       choices: [
         "Continue prophylactic enoxaparin, then restart apixaban once she is eating and the wounds stay dry.",
         "Restart full-dose apixaban tonight and add daily aspirin, to make up for the days she has missed.",
-        "Hold all anticoagulation until her interval operation, since she came so close to bleeding to death.",
+        "Hold all anticoagulation until her clinic review in six weeks, since her operation was so complicated.",
       ],
       feedback: [
         "A stepwise return protects her from clots without risking the fresh repair and wounds.",
@@ -1083,7 +1083,7 @@ export const CHOLECYSTECTOMY_BANK: ProcedureBank = {
           choices: [
             "Go ahead in a latex-free room once she is stable, with the adrenaline still running.",
             "Wake her now and extubate her, then rebook the operation for another week.",
-            "Go ahead at once, insufflating to 15 mmHg while the adrenaline is still at a high dose.",
+            "Go ahead now, insufflating to 15 mmHg while the adrenaline is still at a high dose.",
           ],
           feedback: [
             "Her gallbladder is acutely inflamed, and a stable grade 3 reaction can continue in a latex-free room.",
@@ -1702,7 +1702,7 @@ export const CHOLECYSTECTOMY_BANK: ProcedureBank = {
           description: "Drain output has fallen from 300 to 20 mL a day over four days.",
           choices: [
             "Remove the drain now that output is low, and remove the stent at ERCP in 4 to 6 weeks.",
-            "Leave the stent in for good since it works, and there is no need for another ERCP.",
+            "Leave the stent in long term since it works, which spares her another ERCP.",
             "Keep her on bed rest until the drain is out, so the tube does not dislodge.",
           ],
           feedback: [

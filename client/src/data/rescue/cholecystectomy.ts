@@ -6,7 +6,7 @@ import type { ProcedureRescueBank } from "./types";
 export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
   hemorrhage: [
     {
-      situation: "Sarah is bleeding from the gallbladder region: HR 122, BP 86/50, and she is on apixaban at home.",
+      situation: "Sarah is bleeding from the gallbladder region, her pressure is falling, and she is on apixaban at home.",
       best: {
         text: "Press on the bleeding point, crossmatch, and get the vessel or bed controlled under direct vision.",
         feedback: "Pressure slows the loss while you gain a clear view to clip, suture, or seal the source.",
@@ -27,7 +27,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "The field is full of blood, HR 138, BP 72/40, and suction cannot keep up.",
+      situation: "The field is full of blood and suction cannot keep up.",
       best: {
         text: "Convert to open surgery, press on the bleeding, start massive transfusion, and give andexanet or PCC.",
         feedback: "An uncontrollable laparoscopic bleed needs open access, blood products, and apixaban reversal.",
@@ -50,7 +50,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   infection: [
     {
-      situation: "Sarah has fever 39.1 °C, HR 118, and right upper quadrant pain. Bile has leaked or become infected.",
+      situation: "Sarah is febrile and tachycardic with right upper quadrant pain. Bile has leaked or become infected.",
       best: {
         text: "Take blood cultures, start IV biliary-cover antibiotics, and image the right upper quadrant.",
         feedback: "Cultures and biliary cover treat the sepsis while imaging finds a bile leak or collection to drain.",
@@ -94,7 +94,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   hypoxia: [
     {
-      situation: "SpO2 is falling through 86% and her airway pressures are rising.",
+      situation: "Her saturation is falling and her airway pressures are rising.",
       best: {
         text: "Give 100% oxygen, let down the pneumoperitoneum, and check the airway and both lungs.",
         feedback: "Releasing the gas frees the diaphragm while the airway check finds aspiration, a tube problem, or collapse.",
@@ -115,7 +115,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "SpO2 is 78% and her heart rate is slowing despite 100% oxygen.",
+      situation: "Her saturation keeps dropping and her heart rate is slowing despite 100% oxygen.",
       best: {
         text: "Hand-ventilate, suction the tube or reintubate, and recruit the lungs with PEEP.",
         feedback: "Clearing the airway and opening collapsed lung restores oxygenation before she arrests.",
@@ -138,7 +138,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   anaphylaxis: [
     {
-      situation: "Sarah develops hives, wheeze, and a BP of 70/40 after exposure to a trigger.",
+      situation: "Sarah develops hives, a wheeze, and a collapsing blood pressure after exposure to a trigger.",
       best: {
         text: "Remove every latex item or stop the drug, give epinephrine, 100% oxygen, and a fluid bolus.",
         feedback: "Removing the trigger stops ongoing exposure, and epinephrine reverses the shock and bronchospasm.",
@@ -159,7 +159,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "After the first dose her BP is 58/30 and her tongue and lips are swelling.",
+      situation: "After the first dose her pressure is still falling and her tongue and lips are swelling.",
       best: {
         text: "Repeat the epinephrine, start an infusion, and secure her airway before the swelling closes it.",
         feedback: "Refractory anaphylaxis needs an epinephrine infusion, and a swelling airway must be secured early.",
@@ -189,7 +189,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
       },
       decoys: [
         {
-          text: "Give amiodarone 300 mg IV straight away, whatever the rhythm turns out to be.",
+          text: "Give amiodarone 300 mg IV now, since most rhythm changes under anesthesia respond to it.",
           feedback: "Amiodarone worsens bradycardia and heart block.",
         },
         {
@@ -226,7 +226,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   fluid_overload: [
     {
-      situation: "Crackles are spreading up both lungs, SpO2 89%, and she is four liters positive.",
+      situation: "Crackles are spreading up both lungs and she is four liters positive.",
       best: {
         text: "Stop the IV fluids, sit her up, give oxygen, and give furosemide 40 mg IV.",
         feedback: "Stopping the input and off-loading with a diuretic treat overload pulmonary edema.",
@@ -247,7 +247,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "She is coughing pink froth, SpO2 84%, and tiring.",
+      situation: "She is coughing pink froth and tiring.",
       best: {
         text: "Start CPAP, repeat the furosemide, and move her to a monitored bed to find the cause.",
         feedback: "CPAP pushes fluid out of the alveoli and supports her breathing while the diuretic works.",
@@ -314,7 +314,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   thrombosis: [
     {
-      situation: "Her leg is swollen and she is breathless with HR 118. With her previous DVT, a clot is likely.",
+      situation: "Her leg is swollen and she is breathless and tachycardic. With her previous DVT, a clot is likely.",
       best: {
         text: "Confirm with a duplex scan or CT pulmonary angiogram and restart anticoagulation.",
         feedback: "Imaging confirms the clot, and anticoagulation stops it growing.",
@@ -360,7 +360,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
   // ── Mistake-specific rescue scenarios (StepDef.rescueVariants) ──────────
   "hemorrhage:postop": [
     {
-      situation: "After surgery Sarah is bleeding: HR 118, BP 90/52, hemoglobin falling, and she has had anticoagulants.",
+      situation: "After surgery Sarah is bleeding: tachycardic, hemoglobin falling, and she has had anticoagulants.",
       best: {
         text: "Stop all anticoagulants and NSAIDs, crossmatch, and find the source: wound, abdomen, or gut.",
         feedback: "Removing what thins her blood and finding where she is bleeding come before anything else.",
@@ -381,7 +381,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "Her hemoglobin is 7.0 g/dL and BP 76/40 despite a liter of fluid.",
+      situation: "Her hemoglobin is 7.0 g/dL and she stays hypotensive despite a liter of fluid.",
       best: {
         text: "Transfuse, give PCC or andexanet, and take her for source control in theater or endoscopy.",
         feedback: "Blood, apixaban reversal, and definitive control of the source treat hemorrhagic shock.",
@@ -404,7 +404,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   "hemorrhage:major": [
     {
-      situation: "A major vessel is bleeding into the abdomen: HR 140, BP 62/30, and the field is filling fast.",
+      situation: "A major vessel is bleeding into the abdomen and the field is filling fast.",
       best: {
         text: "Open the abdomen, press directly on the vessel, and call the vascular surgeon and for blood.",
         feedback: "Only open access and direct pressure control a major vessel, while help and blood arrive.",
@@ -425,7 +425,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "Pressure is on the vessel, but she has had six units, her temperature is 35.0 °C, and everything oozes.",
+      situation: "Pressure is on the vessel, but she has had six units, she is cold, and everything oozes.",
       best: {
         text: "Give plasma, platelets, and cryoprecipitate with the red cells, warm everything, and replace calcium.",
         feedback: "Balanced products, warmth, and calcium break the cycle of cold, acid, and coagulopathy.",
@@ -492,7 +492,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   "infection:wound": [
     {
-      situation: "A port site is red, hot, and discharging cloudy fluid. Temp 38.3 °C.",
+      situation: "A port site is red, hot, and discharging cloudy fluid.",
       best: {
         text: "Open the port site, drain it, send a swab, and start antibiotics if the redness spreads.",
         feedback: "A port-site abscess needs opening and drainage; antibiotics are added for spreading cellulitis.",
@@ -601,7 +601,7 @@ export const CHOLECYSTECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "She becomes hypotensive at 84/48, with a lactate of 3.6: urosepsis.",
+      situation: "She becomes hypotensive with a rising lactate: urosepsis.",
       best: {
         text: "Give fluid boluses, take blood cultures, start broad IV antibiotics, and escalate her care.",
         feedback: "Septic shock needs fluid, antibiotics within the hour, and a higher level of care.",

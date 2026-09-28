@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import DebriefReport from "../components/DebriefReport";
 import TimelinePanel from "../components/TimelinePanel";
 import SimulationCompletionScreen from "../components/SimulationCompletionScreen";
 import { getCaseBankForProcedure } from "../data/stockProcedures";
+import { rescueTickMs, secondsLeft, windowSeconds, NORMAL_TICK_MS } from "../data/rescue/pacing";
 import { startCase, currentStep as runnerStep, chooseCorrect, chooseWrong, afterRescue, projectedLength, type CaseState, type CurrentStep } from "../data/caseRunner";
 import { RESCUE_BANKS, tailorRescue, CORE_GENERIC_FEEDBACK } from "../data/rescue";
 
@@ -157,7 +158,15 @@ export default function Simulation() {
   // and would otherwise wipe it mid-complication.
   const [llmNarrative, setLlmNarrative] = useState<string | null>(null);
   // The wrong stock choice behind the active complication, for its authored consequence.
-  const [lastMistake, setLastMistake] = useState<{ consequence?: string; rescueKey?: string } | null>(null);
+  const [lastMistake, setLastMistake] = useState<{ consequence?: string; rescueKey?: string; feedback?: string } | null>(null);
+  // Complications already rescued this case (by kind), so a repeat opens on a later round's scene.
+  const [rescueHistory, setRescueHistory] = useState<string[]>([]);
+  // The last complication fought and the answer that would have treated it, for the death summary.
+  const lastRescueRef = useRef<{ complication: string; cause: string; best?: string } | null>(null);
+  // /tick calls spent on the current complication — Core kills after a fixed number.
+  const [rescueTicks, setRescueTicks] = useState(0);
+  const [clockNow, setClockNow] = useState(() => Date.now());
+  const [rescueClockStart, setRescueClockStart] = useState<number | null>(null);
   // Core decision ids seen during the current rescue, in order: the index is the rescue round.
   const [rescueDecisionIds, setRescueDecisionIds] = useState<string[]>([]);
   const [completionTab, setCompletionTab] = useState<"summary" | "analytics" | "debrief">("summary");
@@ -207,11 +216,26 @@ export default function Simulation() {
     }
   }, [currentState]);
 
+  // During a rescue the clock runs at a per-complication pace (see rescue/pacing.ts):
+  // Core's death timer counts ticks, and 1.5 s ticks gave barely 12 s to read.
+  const pacingComplication =
+    (currentState?.mode || "").toLowerCase() === "branched" ? currentState?.active_complication ?? null : null;
+  const tickMs = pacingComplication ? rescueTickMs(pacingComplication) : NORMAL_TICK_MS;
+  useEffect(() => {
+    setRescueTicks(0);
+    setRescueClockStart(pacingComplication ? Date.now() : null);
+  }, [pacingComplication]);
+  useEffect(() => {
+    if (!pacingComplication) return;
+    const id = setInterval(() => setClockNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, [pacingComplication]);
+
   // Poll `/api/sim/tick` to fetch updated vitals from the Python server
   useEffect(() => {
     let intervalId: any = null;
 
-    if (simId && !isCompleted) {
+    if (simId && !isCompleted && tickMs !== null) {
       intervalId = setInterval(async () => {
         try {
           const res = await fetch(`${API_BASE}/api/sim/tick`, {
@@ -237,6 +261,7 @@ export default function Simulation() {
               events: [...prevEvents, ...engineEvents],
             });
             setTick(data.tick);
+            if ((data.mode || "").toLowerCase() === "branched") setRescueTicks((n) => n + 1);
             setEngineReconnecting(false);
           } else {
             // The Express proxy answers 503 (JSON body) when the core is down —
@@ -247,7 +272,7 @@ export default function Simulation() {
           console.error("Error ticking vitals:", e);
           setEngineReconnecting(true);
         }
-      }, 1500);
+      }, tickMs);
     }
 
     return () => {
@@ -255,7 +280,7 @@ export default function Simulation() {
         clearInterval(intervalId);
       }
     };
-  }, [simId, isCompleted]);
+  }, [simId, isCompleted, tickMs]);
 
   // Persist the finished simulation into Supabase once, on any terminal state:
   // successful completion, recovery-and-complete, or the patient expiring.
@@ -311,7 +336,13 @@ export default function Simulation() {
       return;
     }
     if (rescueDecisionId) {
-      setRescueDecisionIds((ids) => (ids.includes(rescueDecisionId) ? ids : [...ids, rescueDecisionId]));
+      setRescueDecisionIds((ids) => {
+        if (ids.includes(rescueDecisionId)) return ids;
+        if (ids.length === 0 && currentState?.active_complication) {
+          setRescueHistory((h) => [...h, String(currentState.active_complication)]);
+        }
+        return [...ids, rescueDecisionId];
+      });
     }
   }, [rescueMode, rescueDecisionId]);
 
@@ -617,7 +648,7 @@ export default function Simulation() {
       setIsSubmitting(false);
     } else {
       // Incorrect choice -> trigger complication in Python Engine
-      setLastMistake({ consequence: choice.consequence, rescueKey: choice.rescueKey });
+      setLastMistake({ consequence: choice.consequence, rescueKey: choice.rescueKey, feedback: choice.feedback });
       if (caseState) setCaseState(chooseWrong(caseBank, caseState, choice));
       try {
         const step = stepNow?.step;
@@ -697,7 +728,17 @@ export default function Simulation() {
 
   const activeComplication: string | null = currentState?.active_complication ?? currentState?.activeComplication ?? null;
   const rescueIdx = pendingDecision?.id ? rescueDecisionIds.indexOf(pendingDecision.id) : -1;
-  const rescueRound = rescueIdx >= 0 ? rescueIdx : rescueDecisionIds.length;
+  // A complication seen earlier in this case opens on its next round's scene, not the same text again.
+  const priorEpisodes = activeComplication
+    ? Math.max(0, rescueHistory.filter((c) => c === activeComplication).length - 1)
+    : 0;
+  const rescueRound = priorEpisodes + (rescueIdx >= 0 ? rescueIdx : rescueDecisionIds.length);
+  const timeLeft = activeComplication ? secondsLeft(activeComplication, rescueTicks) : null;
+  const timeWindow = activeComplication ? windowSeconds(activeComplication) : null;
+  // Smooth countdown between ticks: seconds since the last tick at this pace.
+  const sinceTick = rescueClockStart && tickMs ? ((clockNow - rescueClockStart) % tickMs) / 1000 : 0;
+  const shownTimeLeft = timeLeft === null ? null : Math.max(0, Math.round(timeLeft - sinceTick));
+  const vitalsNow = currentState?.vitals ?? {};
   const tailored = tailorRescue(
     RESCUE_BANKS,
     procId,
@@ -708,6 +749,13 @@ export default function Simulation() {
     complicationSource === "spontaneous" ? null : lastMistake?.rescueKey
   );
   const runtimeOptions = tailored ? tailored.options : options;
+  if (activeComplication && (currentState?.mode || "").toLowerCase() === "branched") {
+    lastRescueRef.current = {
+      complication: activeComplication,
+      cause: complicationSource === "spontaneous" ? "a spontaneous deterioration" : lastMistake?.consequence ?? "a surgical error",
+      best: tailored?.options.find((o: any) => o.correct)?.label,
+    };
+  }
   const currentMode = (currentState?.mode || "stock").toLowerCase();
   // Case length. A branching case has no fixed length: repairs add steps and the
   // case state removes others, so the runner projects it from where we are now.
@@ -717,8 +765,11 @@ export default function Simulation() {
   // Plain call, not a hook: this sits below an early return. It walks ~40 pure steps.
   const caseLength = caseState ? projectedLength(caseBank, caseState) : null;
   const totalTicks = caseLength ?? currentState?.total_ticks ?? scenario?.totalTicks ?? caseBank.steps.length;
+  // The step on screen. During a rescue that is the step just answered wrong
+  // (already counted in `played`); otherwise the next one to answer.
+  const rescuing = (currentState?.mode || "").toLowerCase() === "branched";
   const stepNow = caseState
-    ? Math.min(caseState.played + 1, Math.max(totalTicks, 1))
+    ? Math.min(Math.max(caseState.played + (rescuing ? 0 : 1), 1), Math.max(totalTicks, 1))
     : Math.min(Math.max(currentTick, 1), Math.max(totalTicks, 1));
   const isDeceased = currentMode === "deceased";
   const isBranched = currentMode === "branched";
@@ -754,7 +805,7 @@ export default function Simulation() {
             <Activity className="w-10 h-10 text-primary" />
           </div>
           <h1 className="text-3xl font-bold text-[#191919] dark:text-[#EDEAE4] mb-2 uppercase tracking-tight">Start {PATIENT?.name || 'the'}'s Surgery</h1>
-          <p className="text-[#666059] dark:text-[#C2BBB0] mb-8">The ScrubIn Causal Engine will boot a deterministic simulation session for this procedure.</p>
+          <p className="text-[#666059] dark:text-[#C2BBB0] mb-8">The ScrubIn Causal Engine will boot a simulation session for this procedure. Each run rolls a different patient: their ASA class and how sick they arrive are shown in the patient panel once the case starts.</p>
           {engineReconnecting && !startError && (
             <div className="p-3 mb-6 bg-[#3A2A0A]/10 border border-[#D99B26]/60 rounded-sm text-left animate-pulse">
               <p className="text-xs font-bold text-[#8A5A00] dark:text-[#E0B060]">
@@ -1034,7 +1085,14 @@ export default function Simulation() {
                         {isDeceased && (
                           <div className="mb-4 p-4 bg-[#3A0F0F] border-2 border-[#A32A2A] rounded-sm">
                             <h2 className="text-lg font-black text-[#E08080] mb-1 animate-pulse">Patient Expired</h2>
-                            <p className="text-[#EDEAE4]/80 text-xs mb-3">Critical vitals crossed lethal thresholds. The simulation has ended.</p>
+                            <p className="text-[#EDEAE4]/80 text-xs mb-3">
+                              {lastRescueRef.current
+                                ? `Cause: ${lastRescueRef.current.complication.replace(/_/g, " ")} was not brought under control in time (it began with ${lastRescueRef.current.cause.replace(/\.$/, "")}).`
+                                : "Critical vitals crossed lethal thresholds. The simulation has ended."}
+                            </p>
+                            {lastRescueRef.current?.best && (
+                              <p className="text-[#EDEAE4]/80 text-xs mb-3">What would have treated it: <span className="font-bold text-[#EDEAE4]">{lastRescueRef.current.best}</span></p>
+                            )}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left text-xs text-[#EDEAE4]/60">
                               <div>BP: {fmtVital(vitals.bp_systolic)}/{fmtVital(vitals.bp_diastolic)} mmHg</div>
                               <div>HR: {fmtVital(vitals.heart_rate)} bpm</div>
@@ -1087,10 +1145,33 @@ export default function Simulation() {
                           ? "The patient is deteriorating — vitals are declining and complications are developing on their own. Select the correct intervention to stabilize them."
                           : lastMistake?.consequence || "A complication has occurred due to an incorrect decision. Select the correct intervention to recover the patient."}
                       </p>
+                      {activeComplication && (
+                        <div className="mb-3">
+                          {shownTimeLeft !== null && timeWindow ? (
+                            <>
+                              <div className="flex justify-between text-[11px] font-black uppercase tracking-wider text-[#E08080]/90 mb-1">
+                                <span>Time to act</span>
+                                <span className="font-mono-data">~{shownTimeLeft}s</span>
+                              </div>
+                              <div className="h-1.5 bg-black/30 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full transition-all duration-500 ${shownTimeLeft / timeWindow < 0.3 ? "bg-[#E04040]" : "bg-[#D99B26]"}`}
+                                  style={{ width: `${Math.max(0, Math.min(100, (shownTimeLeft / timeWindow) * 100))}%` }}
+                                />
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-[11px] font-black uppercase tracking-wider text-[#E0B060]/90">Not immediately life-threatening. Take your time.</span>
+                          )}
+                        </div>
+                      )}
                       {tailored && (
                         <div className="mb-3 p-3 bg-black/25 border border-[#A32A2A]/40 rounded-sm">
                           <span className="text-[11px] font-black uppercase tracking-wider text-[#E08080]/80 block mb-1">Right now</span>
                           <p className="text-xs text-[#EDEAE4]/90 leading-relaxed">{tailored.situation}</p>
+                          <p className="mt-2 text-[11px] font-mono-data text-[#EDEAE4]/70">
+                            HR {Math.round(vitalsNow.heart_rate ?? 0)} · BP {Math.round(vitalsNow.bp_systolic ?? 0)}/{Math.round(vitalsNow.bp_diastolic ?? 0)} · SpO₂ {Math.round(vitalsNow.spo2 ?? 0)}% · RR {Math.round(vitalsNow.respiratory_rate ?? 0)} · T {Number(vitalsNow.temperature ?? 0).toFixed(1)} °C
+                          </p>
                         </div>
                       )}
                       {complicationCause && !tailored && (
@@ -1099,10 +1180,11 @@ export default function Simulation() {
                           <p className="text-xs text-[#EDEAE4]/85 leading-relaxed">{complicationCause}</p>
                         </div>
                       )}
-                      {llmNarrative && (
+                      {/* Tailored surgeries show the authored mechanism; the LLM note is for the rest. */}
+                      {(tailored ? (complicationSource !== "spontaneous" ? lastMistake?.feedback : null) : llmNarrative) && (
                         <div className="mt-2 p-3 bg-[#2A1A08]/40 border border-[#D99B26]/40 rounded-sm">
                           <span className="text-[11px] font-black uppercase tracking-wider text-[#E0B060]/90 block mb-1">🧠 Attending Note</span>
-                          <p className="text-xs text-[#EDEAE4]/90 leading-relaxed">{llmNarrative}</p>
+                          <p className="text-xs text-[#EDEAE4]/90 leading-relaxed">{tailored ? lastMistake?.feedback : llmNarrative}</p>
                         </div>
                       )}
                     </div>
@@ -1112,8 +1194,9 @@ export default function Simulation() {
                   /* STOCK MODE — authored surgical step choices */
                   <motion.div
                     key={currentStockStep.id}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0.6 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.12 }}
                     className="flex flex-col"
                   >
                     {runnerCurrent?.repairTitle && (
@@ -1149,7 +1232,7 @@ export default function Simulation() {
                       <div className="flex flex-col min-w-0">
                         <span className="text-sm font-bold text-[#8B2323]">{opt.label}</span>
                       </div>
-                      <Zap className="w-5 h-5 text-[#A32A2A] group-hover:scale-110 transition-transform shrink-0" />
+                      <ChevronRight className="w-5 h-5 text-[#A32A2A] group-hover:translate-x-0.5 transition-transform shrink-0" />
                     </button>
                   ))}
                 </div>
@@ -1177,11 +1260,11 @@ export default function Simulation() {
             </div>
 
             {/* Engine status strip (hidden on narrow screens — tick is already shown in the console header) */}
-            {/* The 1.5s loop is the VITALS REFRESH rate — the causal clock only advances with each surgical step or decision, so don't brand the poll as a tick rate. */}
+            {/* The poll (1.5s, slower during a rescue) is the VITALS REFRESH rate — the causal clock only advances with each surgical step or decision, so don't brand the poll as a tick rate. */}
             <div className="hidden lg:grid shrink-0 grid-cols-3 gap-3">
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground uppercase" title="Live vitals refresh cadence — physiology decays in real time between steps">Vitals Refresh</span>
-                <span className="text-base font-bold text-[#CC553D]">1.5s</span>
+                <span className="text-base font-bold text-[#CC553D]">{tickMs === null ? "paused" : `${tickMs / 1000}s`}</span>
               </div>
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground uppercase" title="Advances with each surgical step or decision, not per poll — vitals keep decaying between them">Causal Clock</span>
@@ -1196,7 +1279,7 @@ export default function Simulation() {
 
           {/* RIGHT COLUMN: OR STATUS + TIMELINE */}
           <div className="order-3 col-span-12 lg:order-none lg:col-span-3 flex min-h-0 flex-col gap-3 lg:overflow-y-auto lg:pr-1.5">
-            <OperatingRoomDashboard scenario={scenario} steps={caseState && caseLength ? { done: caseState.played, total: caseLength } : undefined} />
+            <OperatingRoomDashboard scenario={scenario} steps={caseState && caseLength ? { current: stepNow, total: caseLength } : undefined} />
 
             <div className="shrink-0 glass-card p-4">
               <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Procedure Timeline</h3>

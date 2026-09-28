@@ -140,6 +140,17 @@ export const DISTRACTOR_TELLS: RegExp[] = [
   /\bmaximum force\b/i,
   /\bwithout (checking|confirming|testing|verifying|looking)\b/i,
   /\bno need to\b/i,
+  // Absolutes a tester found reliably marked the wrong option.
+  /\bin one (push|go|pass|bolus)\b/i,
+  /\bwhatever\b/i,
+  /\bno end date\b/i,
+  /\bwithout doing anything else\b/i,
+  /\ball at once\b/i,
+  /\bno matter\b/i,
+  /\bat once\b/i,
+  /\bwide open\b/i,
+  /\bindefinitely\b/i,
+  /\bfor good\b/i,
 ];
 
 // Wording that marks an option as the "obviously right" careful one.

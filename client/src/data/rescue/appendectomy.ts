@@ -7,14 +7,14 @@ import type { ProcedureRescueBank } from "./types";
 export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
   hemorrhage: [
     {
-      situation: "Marcus is bleeding: blood is pooling in the right lower quadrant, HR 128, BP 84/48.",
+      situation: "Marcus is bleeding: blood is pooling in the right lower quadrant and his pressure is falling.",
       best: {
         text: "Press on the bleeding area, crossmatch four units, and get the vessel under vision to tie it.",
         feedback: "Pressure slows the loss, blood is on its way, and a stitch on the vessel is the only definitive fix.",
       },
       decoys: [
         {
-          text: "Clamp deep into the pool of blood with a large clamp and close it on whatever lies at the bottom.",
+          text: "Clamp deep into the pool of blood with a large clamp and close it on the tissue at the bottom.",
           feedback: "Clamping tissue you cannot see catches the ileum, the ureter, or the gonadal vessels.",
         },
         {
@@ -28,7 +28,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "The packs are soaked, HR 140, BP 70/38, and the field refills as fast as you suction it.",
+      situation: "The packs are soaked and the field refills as fast as you suction it.",
       best: {
         text: "Trigger the massive transfusion protocol, press on the mesenteric root, and call your senior in.",
         feedback: "Balanced blood products replace the loss while root pressure buys time for a definitive repair.",
@@ -51,7 +51,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   infection: [
     {
-      situation: "Marcus is septic from the contamination: 39.3 °C, HR 124, lactate 3.2, abdomen tender.",
+      situation: "Marcus is septic from the contamination: febrile, tachycardic, with a rising lactate and a tender abdomen.",
       best: {
         text: "Send blood cultures, give ciprofloxacin and metronidazole, and plan drainage of the source.",
         feedback: "Cultures first, antibiotics that respect his penicillin allergy, and source control together treat the sepsis.",
@@ -72,7 +72,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "Despite antibiotics his BP is 82/45 and lactate 4.1; the collection is still there.",
+      situation: "Despite antibiotics he is hypotensive and his lactate keeps climbing; the collection is still there.",
       best: {
         text: "Give fluid in 500 mL boluses to 30 mL/kg, add noradrenaline, and drain the collection today.",
         feedback: "Resuscitation restores perfusion, and an undrained collection must be removed for him to recover.",
@@ -95,7 +95,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   hypoxia: [
     {
-      situation: "SpO2 is falling through 86% and his breathing is labored.",
+      situation: "His saturation is falling and his breathing is labored.",
       best: {
         text: "Give 100% oxygen, open and suction the airway, and listen to both lungs to find the cause.",
         feedback: "Oxygen buys time while the airway check finds obstruction, aspiration, or collapse.",
@@ -116,7 +116,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "SpO2 is 78%, his heart rate is slowing, and he is tiring despite the oxygen.",
+      situation: "His saturation keeps dropping, his heart rate is slowing, and he is tiring despite the oxygen.",
       best: {
         text: "Secure the airway with a video laryngoscope, suction the trachea, and ventilate with PEEP.",
         feedback: "A definitive airway and positive pressure reopen collapsed lung before he arrests.",
@@ -139,7 +139,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   anaphylaxis: [
     {
-      situation: "Minutes after a new drug he has hives, a wheeze, and a BP of 70/40.",
+      situation: "Minutes after a new drug he has hives, a wheeze, and a collapsing blood pressure.",
       best: {
         text: "Stop the drug, give epinephrine 0.5 mg IM, 100% oxygen, and a rapid fluid bolus.",
         feedback: "Epinephrine reverses the vasodilation and bronchospasm; removing the trigger stops more exposure.",
@@ -160,7 +160,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "After the first dose his BP is 58/30 and his lips and tongue are swelling.",
+      situation: "After the first dose his pressure is still falling and his lips and tongue are swelling.",
       best: {
         text: "Repeat the epinephrine, start an infusion, and secure his airway before the swelling closes it.",
         feedback: "Refractory anaphylaxis needs an epinephrine infusion, and a swelling airway must be secured early.",
@@ -190,7 +190,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
       },
       decoys: [
         {
-          text: "Give amiodarone 300 mg IV straight away, whatever the rhythm turns out to be.",
+          text: "Give amiodarone 300 mg IV now, since most rhythm changes under anesthesia respond to it.",
           feedback: "Amiodarone suits some tachycardias but worsens bradycardia and heart block.",
         },
         {
@@ -227,7 +227,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   fluid_overload: [
     {
-      situation: "Crackles are rising in both lungs, SpO2 89%, and his fluid balance is five liters positive.",
+      situation: "Crackles are rising in both lungs and his fluid balance is five liters positive.",
       best: {
         text: "Stop the maintenance fluid, sit him up, give oxygen, and give furosemide 40 mg IV.",
         feedback: "Stopping the input, off-loading with a diuretic, and oxygen treat pulmonary edema from overload.",
@@ -248,7 +248,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "He is coughing pink froth, SpO2 84%, and tiring.",
+      situation: "He is coughing pink froth and tiring.",
       best: {
         text: "Start CPAP, repeat the furosemide, and move him to a monitored bed to find the cause.",
         feedback: "CPAP pushes fluid out of the alveoli and supports his breathing while the diuretic works.",
@@ -315,7 +315,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   thrombosis: [
     {
-      situation: "His leg is swollen and he is breathless with a heart rate of 118. A clot is likely.",
+      situation: "His leg is swollen and he is breathless and tachycardic. A clot is likely.",
       best: {
         text: "Confirm it with a duplex scan or CT pulmonary angiogram and start anticoagulation.",
         feedback: "Imaging confirms the diagnosis, and anticoagulation stops the clot from growing.",
@@ -361,7 +361,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
   // ── Mistake-specific rescue scenarios (StepDef.rescueVariants) ──────────
   "hemorrhage:postop": [
     {
-      situation: "After surgery Marcus's wound is swelling and oozing, HR 120, BP 92/55, and his hemoglobin has dropped.",
+      situation: "After surgery Marcus's wound is swelling and oozing, he is tachycardic, and his hemoglobin has dropped.",
       best: {
         text: "Stop any anticoagulant or NSAID, press on the wound, send a crossmatch, and call the surgeon.",
         feedback: "Removing what thins his blood, local pressure, and a surgical review address a post-op bleed at its cause.",
@@ -382,7 +382,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
       ],
     },
     {
-      situation: "His hemoglobin is now 7.1 g/dL and BP 78/40 despite a liter of fluid.",
+      situation: "His hemoglobin is now 7.1 g/dL and he stays hypotensive despite a liter of fluid.",
       best: {
         text: "Transfuse, reverse any anticoagulant, and take him back to theater to find and tie the bleeder.",
         feedback: "Ongoing shock from a surgical bleed needs blood and a return to theater.",
@@ -420,7 +420,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
           feedback: "Heparin cannot restore flow through a tied or twisted artery.",
         },
         {
-          text: "Resect the whole right colon to the mid-transverse colon now, whatever the bowel looks like.",
+          text: "Resect the whole right colon to the mid-transverse colon now, before any more bowel is lost.",
           feedback: "Resecting before restoring flow and reassessing may remove bowel that would recover.",
         },
       ],
@@ -449,7 +449,7 @@ export const APPENDECTOMY_RESCUE: ProcedureRescueBank = {
   ],
   "infection:wound": [
     {
-      situation: "Marcus's wound is red, hot, and swollen, and it is leaking cloudy fluid. Temp 38.4 °C.",
+      situation: "Marcus's wound is red, hot, and swollen, and it is leaking cloudy fluid.",
       best: {
         text: "Open the wound over the most swollen part, drain it, send a swab, and pack it loosely.",
         feedback: "A wound abscess needs to be opened and drained; antibiotics alone will not reach it.",

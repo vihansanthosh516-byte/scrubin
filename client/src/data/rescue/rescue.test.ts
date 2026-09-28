@@ -63,6 +63,14 @@ describe("tailored rescue content", () => {
     expect(missing).toEqual([]);
   });
 
+  it("describes the scene without frozen bedside vitals (live vitals are shown beside it)", () => {
+    const frozen = /\b(HR|BP|SpO2)\s*\d|\d+\/\d+\b|\d+(\.\d)?\s*°C/;
+    const hits = Object.entries(RESCUE_BANKS).flatMap(([p, bank]) =>
+      Object.entries(bank).flatMap(([k, rounds]) => rounds.filter((r) => frozen.test(r.situation)).map((r) => `${p} ${k}: ${r.situation}`))
+    );
+    expect(hits).toEqual([]);
+  });
+
   it("keys every rescue scenario by a real engine complication", () => {
     const valid = new Set(Object.values(CORE_INTERVENTIONS).flatMap((iv) => iv.treats));
     const bad = Object.entries(RESCUE_BANKS).flatMap(([p, bank]) =>

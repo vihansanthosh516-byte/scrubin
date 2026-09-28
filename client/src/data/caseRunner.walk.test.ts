@@ -18,15 +18,29 @@ describe.each([...TAILORED_BANKS])("random playthroughs: %s", (id) => {
   let longest = 0;
   let deepest = 0;
   let unfinished = 0;
+  const timeTravel = new Set<string>();
+  // "Day 2", "on day 4", "day-3" in a description pin the step to a post-op day.
+  const dayOf = (text: string) => {
+    const m = text.match(/\bday[\s-]?(\d+)\b/i);
+    return m ? Number(m[1]) : null;
+  };
 
   for (let run = 0; run < RUNS; run++) {
     // Vary how error-prone the trainee is from run to run.
     const errorRate = [0.05, 0.2, 0.4, 0.7][run % 4];
     let s = startCase(bank, `run-${run}`);
     let n = 0;
+    let day = 0;
+    let dayStep = "";
     while (!s.finished && n < MAX_STEPS) {
       const cur = currentStep(bank, s)!;
       seenTitles.add(cur.step.title);
+      const d = dayOf(cur.step.description);
+      if (d !== null) {
+        if (d < day) timeTravel.add(`"${dayStep}" (day ${day}) → "${cur.step.title}" (day ${d})`);
+        day = d;
+        dayStep = cur.step.title;
+      }
       deepest = Math.max(deepest, cur.depth);
       const choices = cur.step.choices;
       if (rand() < errorRate) {
@@ -59,6 +73,10 @@ describe.each([...TAILORED_BANKS])("random playthroughs: %s", (id) => {
   it("every step, including state-dependent variants, can be reached", () => {
     const all = [...bank.steps, ...Object.values(bank.repairs ?? {}).flatMap((r) => r.steps)].map((s) => s.title);
     expect(all.filter((t) => !seenTitles.has(t))).toEqual([]);
+  });
+
+  it("never goes back in time from one step to the next", () => {
+    expect([...timeTravel]).toEqual([]);
   });
 
   it("mistakes cascade into nested repairs", () => {

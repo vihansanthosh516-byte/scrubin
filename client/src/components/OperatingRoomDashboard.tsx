@@ -4,7 +4,7 @@ import { useSimulationStore } from "../state/simulationStore";
 interface DashboardProps {
   scenario: any;
   /** Steps answered and projected case length, for branching stock cases. */
-  steps?: { done: number; total: number };
+  steps?: { current: number; total: number };
 }
 
 // Simple UI‑only stability calculation – does not affect engine state
@@ -89,8 +89,8 @@ export default function OperatingRoomDashboard({ scenario, steps }: DashboardPro
         <Card label="Current Phase" value={(scenario?.phases || scenario?.PHASES || [])?.find((p: any) => p.id === (currentState?.pending_decision?.phase || currentState?.pendingDecision?.phase))?.name ?? "-"} />
         {steps ? (
           <>
-            <Card label="Steps Done" value={steps.done} />
-            <Card label="Remaining" value={`${Math.max(steps.total - steps.done, 0)} steps`} />
+            <Card label="Step" value={`${steps.current} of ${steps.total}`} />
+            <Card label="Steps After This" value={Math.max(steps.total - steps.current, 0)} />
           </>
         ) : (
           <>
