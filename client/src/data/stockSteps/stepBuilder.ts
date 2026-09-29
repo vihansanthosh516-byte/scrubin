@@ -66,7 +66,8 @@ export interface StepDef {
   id?: string;
   kind: StepKind;
   title: string;
-  description: string;
+  /** Several variants: each case picks one (seeded), so repeat cases don't read identically. */
+  description: string | string[];
   /** Per-step focus overrides (e.g. a different vessel at a later step) */
   f?: Partial<StepSpec>;
   /** Hand-authored choices: [correct, wrong1, wrong2] — overrides kind template */
@@ -400,11 +401,16 @@ export function seededRandom(seed: string): () => number {
 }
 
 /** Build one step (main-line or repair) with a deterministic option order. */
+function pickDescription(d: string | string[], seed: string): string {
+  if (typeof d === "string") return d;
+  return d[Math.floor(seededRandom(seed)() * d.length)];
+}
+
 export function buildStep(bank: ProcedureBank, def: StepDef, stepId: string, stepIndex: number, seed: string): StockStep {
   return {
     id: stepId,
     title: def.title,
-    description: def.description,
+    description: pickDescription(def.description, `${seed}:${stepId}:desc`),
     choices: shuffleChoices(buildStepChoices(def, bank.spec, stepIndex, stepId), seededRandom(`${seed}:${stepId}`)),
   };
 }
@@ -415,7 +421,7 @@ export function buildStockSteps(bank: ProcedureBank): StockStep[] {
     return {
       id: stepId,
       title: step.title,
-      description: step.description,
+      description: pickDescription(step.description, `${stepId}:desc`),
       choices: shuffleChoices(buildStepChoices(step, bank.spec, i, stepId)),
     };
   });

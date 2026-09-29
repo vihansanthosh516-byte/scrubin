@@ -493,7 +493,12 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
     {
       kind: "vitals",
       title: "Read the falling blood pressure",
-      description: "Estimated blood loss is 400 mL. HR 128, BP 84/50.",
+      description: [
+        "Estimated blood loss is 400 mL. HR 128, BP 84/50.",
+        "Estimated blood loss is 550 mL. HR 121, BP 88/54.",
+        "Estimated blood loss is 350 mL. HR 134, BP 81/47.",
+        "Estimated blood loss is 480 mL. HR 117, BP 86/52.",
+      ],
       choices: [
         "Tell anesthesia the blood loss, send a hemoglobin and crossmatch, and look again for bleeding.",
         "Put it down to the fever and ask for more fentanyl while the operation carries on.",
@@ -879,7 +884,12 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
     {
       kind: "postop",
       title: "Work up a day 1 fever",
-      description: "Temp 38.6 °C, HR 102. The wound is clean and his lungs sound quiet at the bases.",
+      description: [
+        "Temp 38.6 °C, HR 102. The wound is clean and his lungs sound quiet at the bases.",
+        "Temp 38.4 °C, HR 98, saturation 94% on air. The wound is dry and the bases are dull to percussion.",
+        "Temp 38.7 °C, HR 106. He is splinting when he breathes in; the wound looks healthy.",
+        "Temp 38.5 °C, HR 100, respiratory rate 22. The wound is clean and he has not used his incentive spirometer.",
+      ],
       when: {"none": ["aspiration"]},
       choices: [
         "Get him up and walking with incentive spirometry, and examine the wound and calves first.",
@@ -1538,11 +1548,12 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
             "An anastomosis made on dusky bowel breaks down.",
             "Unclamped bowel spills its contents and the untied mesentery bleeds.",
           ],
-          wrongComps: ["infection", "hemorrhage"],
+          wrongComps: ["thrombosis", "hemorrhage"],
           consequences: [
-            "On day 4 the anastomosis leaks where it was made on dusky ileum.",
+            "The cut end of the ileum stays dark and does not bleed: the margin is inside the ischemic segment.",
             "The divided mesentery bleeds from several points at once.",
           ],
+          rescueVariants: ["arterial", null],
           effects: [null, {"set": ["leak_risk"]}, null],
         },
         {
@@ -1561,7 +1572,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
           ],
           wrongComps: ["infection", "thrombosis"],
           consequences: [
-            "On day 5 the joined ends pull apart and bowel contents leak.",
+            "As the ends are drawn together a stitch cuts through the swollen bowel and its contents spill into the field.",
             "The bowel beside the anastomosis turns dusky as its mesentery is strangled.",
           ],
           rescueVariants: [null, "arterial"],
@@ -1581,11 +1592,12 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
             "A dusky anastomosis at the end of the case is one that will leak.",
             "Deep reinforcing bites tear the mesenteric vessels and bleed.",
           ],
-          wrongComps: ["infection", "hemorrhage"],
+          wrongComps: ["thrombosis", "hemorrhage"],
           consequences: [
-            "On day 4 the dusky anastomosis leaks and he becomes septic.",
+            "Ten minutes later the join is darker, not pinker: its blood supply is failing.",
             "A hematoma spreads along the mesentery beside the anastomosis.",
           ],
+          rescueVariants: ["arterial", null],
           effects: [null, {"set": ["leak_risk"]}, null],
         },
       ],

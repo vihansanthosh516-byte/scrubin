@@ -163,6 +163,9 @@ export default function Simulation() {
   const [rescueHistory, setRescueHistory] = useState<string[]>([]);
   // The last complication fought and the answer that would have treated it, for the death summary.
   const lastRescueRef = useRef<{ complication: string; cause: string; best?: string } | null>(null);
+  // The complication the trainee last answered correctly. The summary does not
+  // offer "what would have treated it" for a treatment they already gave.
+  const treatedRef = useRef<string | null>(null);
   // /tick calls spent on the current complication — Core kills after a fixed number.
   const [rescueTicks, setRescueTicks] = useState(0);
   const [clockNow, setClockNow] = useState(() => Date.now());
@@ -443,8 +446,25 @@ export default function Simulation() {
     }
   };
 
+  // "New Simulation" reloads with ?autostart=1 so one click starts a fresh case
+  // instead of dropping the trainee back on the intro screen.
+  const autostartedRef = useRef(false);
+  useEffect(() => {
+    if (autostartedRef.current) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("autostart") !== "1") return;
+    autostartedRef.current = true;
+    url.searchParams.delete("autostart");
+    window.history.replaceState(null, "", url.toString());
+    handleStartSimulation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleChoice = async (optionId: string, picked?: { feedback?: string }) => {
     if (isSubmitting || isCompleted) return;
+    // The next options render in the same buttons; a kept focus ring would
+    // sit on one of them and read like a hint.
+    (document.activeElement as HTMLElement | null)?.blur();
     setIsSubmitting(true);
     setDecisionError(null);
 
@@ -471,6 +491,8 @@ export default function Simulation() {
       }
       setEngineReconnecting(false);
       const data = await res.json();
+      const comp = currentState?.active_complication ?? currentState?.activeComplication;
+      if (comp && data.decision_result?.wasCorrect) treatedRef.current = comp;
       // A tailored rescue option replaces Core's generic feedback line with its own.
       const decisionEvents: string[] = [
         ...(data.events || []).filter((e: string) => !(picked?.feedback && CORE_GENERIC_FEEDBACK.has(e))),
@@ -1086,11 +1108,13 @@ export default function Simulation() {
                           <div className="mb-4 p-4 bg-[#3A0F0F] border-2 border-[#A32A2A] rounded-sm">
                             <h2 className="text-lg font-black text-[#E08080] mb-1 animate-pulse">Patient Expired</h2>
                             <p className="text-[#EDEAE4]/80 text-xs mb-3">
-                              {lastRescueRef.current
+                              {currentState?.death_reason
+                                ? `Cause: ${currentState.death_reason}.${lastRescueRef.current ? ` Last complication: ${lastRescueRef.current.complication.replace(/_/g, " ")} (it began with ${lastRescueRef.current.cause.replace(/\.$/, "")}).` : ""}`
+                                : lastRescueRef.current
                                 ? `Cause: ${lastRescueRef.current.complication.replace(/_/g, " ")} was not brought under control in time (it began with ${lastRescueRef.current.cause.replace(/\.$/, "")}).`
                                 : "Critical vitals crossed lethal thresholds. The simulation has ended."}
                             </p>
-                            {lastRescueRef.current?.best && (
+                            {lastRescueRef.current?.best && treatedRef.current !== lastRescueRef.current.complication && (
                               <p className="text-[#EDEAE4]/80 text-xs mb-3">What would have treated it: <span className="font-bold text-[#EDEAE4]">{lastRescueRef.current.best}</span></p>
                             )}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left text-xs text-[#EDEAE4]/60">
@@ -1119,7 +1143,11 @@ export default function Simulation() {
                     <Button variant="outline" className="h-10 border-[#E2DDD1] hover:bg-[#FBF9F5] text-[#191919] dark:border-[#3A342C] dark:hover:bg-[#26211B] dark:text-[#EDEAE4]" onClick={() => setLocation("/procedures")}>
                       <Home className="w-4 h-4 mr-2" /> Dashboard
                     </Button>
-                    <Button className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => window.location.reload()}>
+                    <Button className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => {
+                      const url = new URL(window.location.href);
+                      url.searchParams.set("autostart", "1");
+                      window.location.assign(url.toString());
+                    }}>
                       <Play className="w-4 h-4 mr-2" /> New Simulation
                     </Button>
                   </div>
@@ -1227,7 +1255,7 @@ export default function Simulation() {
                       key={opt.id}
                       onClick={() => handleChoice(opt.id, opt)}
                       disabled={isSubmitting}
-                      className="group w-full text-left p-4 bg-[#A32A2A]/5 border border-[#A32A2A]/30 hover:border-[#A32A2A] hover:bg-[#A32A2A]/10 transition-all rounded-sm flex items-center justify-between disabled:opacity-50"
+                      className="group w-full text-left p-4 bg-[#A32A2A]/5 border border-[#A32A2A]/30 hover:bg-[#A32A2A]/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8C827A]/60 rounded-sm flex items-center justify-between disabled:opacity-50"
                     >
                       <div className="flex flex-col min-w-0">
                         <span className="text-sm font-bold text-[#8B2323]">{opt.label}</span>
@@ -1245,7 +1273,7 @@ export default function Simulation() {
                       key={choice.id}
                       onClick={() => handleStockChoice(choice)}
                       disabled={isSubmitting}
-                      className={`group w-full text-left p-4 bg-white border border-[#E2DDD1] rounded-sm flex items-center justify-between hover:bg-[#FBF9F5] hover:border-primary/40 transition dark:bg-[#1E1A16] dark:border-[#3A342C] dark:hover:bg-[#26211B] ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`group w-full text-left p-4 bg-white border border-[#E2DDD1] rounded-sm flex items-center justify-between hover:bg-[#FBF9F5] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8C827A]/60 dark:bg-[#1E1A16] dark:border-[#3A342C] dark:hover:bg-[#26211B] ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <span className="text-sm font-bold leading-snug pr-3 text-[#191919] dark:text-[#EDEAE4]">
                         {choice.text}
