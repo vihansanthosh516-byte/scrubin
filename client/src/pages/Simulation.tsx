@@ -349,6 +349,20 @@ export default function Simulation() {
     }
   }, [rescueMode, rescueDecisionId]);
 
+  // "New Simulation" reloads with ?autostart=1 so one click starts a fresh case
+  // instead of dropping the trainee back on the intro screen.
+  const autostartedRef = useRef(false);
+  useEffect(() => {
+    if (autostartedRef.current || loadingScenario) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("autostart") !== "1") return;
+    autostartedRef.current = true;
+    url.searchParams.delete("autostart");
+    window.history.replaceState(null, "", url.toString());
+    handleStartSimulation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingScenario]);
+
   if (loadingScenario) {
     return (
       <div className="min-h-screen bg-[#FBF9F5] flex flex-col items-center justify-center space-y-4">
@@ -445,20 +459,6 @@ export default function Simulation() {
       setIsStarting(false);
     }
   };
-
-  // "New Simulation" reloads with ?autostart=1 so one click starts a fresh case
-  // instead of dropping the trainee back on the intro screen.
-  const autostartedRef = useRef(false);
-  useEffect(() => {
-    if (autostartedRef.current) return;
-    const url = new URL(window.location.href);
-    if (url.searchParams.get("autostart") !== "1") return;
-    autostartedRef.current = true;
-    url.searchParams.delete("autostart");
-    window.history.replaceState(null, "", url.toString());
-    handleStartSimulation();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleChoice = async (optionId: string, picked?: { feedback?: string }) => {
     if (isSubmitting || isCompleted) return;
