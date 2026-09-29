@@ -312,7 +312,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "proceed",
       label: "Proceed with planned approach",
-      treats: ["hemorrhage", "nerve_injury"],
+      treats: [],
       vitalsEffect: { heart_rate: +3 },
       riskIfWrong: { heart_rate: +8, bp_systolic: -5 },
       correctFeedback: "Planned approach is appropriate. Proceeding safely.",

@@ -920,7 +920,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the small bowel", "the bladder"],
       test: "an air-leak test of the anastomosis",
       wrongTests: ["a routine colonoscopy", "an on-table MRI"],
-      risks: ["infection", "hemorrhage", "nerve_injury", "thrombosis"],
+      risks: ["infection", "hemorrhage", "nerve_injury", "thrombosis", "cardiac_arrhythmia"],
       instrument: "a stapler and a laparoscopic camera",
       position: "modified lithotomy with left tilt",
       wrongPositions: ["prone", "supine flat"],
@@ -1057,8 +1057,34 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["infection", "hemorrhage"],
       },
-      { kind: "verify", title: "Confirm hemostasis and perfusion", description: "Check the anastomotic limbs and the field.", f: { test: "perfusion of the anastomotic limbs and pelvic hemostasis", wrongTests: ["a routine colonoscopy", "an on-table MRI"] } },
-      { kind: "verify", title: "Re-check the anastomotic limbs", description: "Confirm the perfusion of both limbs once more.", f: { test: "the perfusion of the anastomotic limbs", wrongTests: ["a routine colonoscopy", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Confirm hemostasis and perfusion", description: "Check the anastomotic limbs and the field.",
+        choices: [
+          "Check the mesentery for bleeding and that both limbs are pink with bleeding edges.",
+          "Accept a dusky proximal limb, since it will pink up.",
+          "Close the mesenteric window with deep stitches through the arcade.",
+        ],
+        feedback: [
+          "A well-perfused, dry field lets the anastomosis heal.",
+          "A dusky limb leaks.",
+          "Stitching through the arcade can bleed or devascularize the limb.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "verify", title: "Re-check the anastomotic limbs", description: "Confirm the perfusion of both limbs once more.",
+        choices: [
+          "Confirm tension-free limbs with pulsatile mesenteric flow, and mobilize the splenic flexure if needed.",
+          "Pull the colon down to reach, even if it is tight.",
+          "Trim the proximal limb back to where it looks healthy without checking its blood supply.",
+        ],
+        feedback: [
+          "Tension-free, perfused limbs are the basis of a sound anastomosis.",
+          "Tension on the anastomosis causes a leak.",
+          "Trimming without checking the supply can leave an ischemic end.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
       {
         kind: "verify", title: "Inspect the splenic flexure take-down", description: "Confirm no splenic capsular tear from the mobilization.",
         choices: [
@@ -1074,18 +1100,148 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         wrongComps: ["hemorrhage", "infection"],
       },
       { kind: "bleed", title: "Control a mesenteric bleeder", description: "A mesenteric vessel is bleeding at the resection line.", f: { vessel: "the mesenteric vessels at the resection", wrongVessels: ["the iliac artery", "the aorta"] } },
-      { kind: "verify", title: "Confirm the doughnuts", description: "Check both stapler doughnuts are intact and complete.", f: { test: "the stapler doughnuts", wrongTests: ["a routine X-ray", "a CT scan"] } },
+      {
+        kind: "verify", title: "Confirm the doughnuts", description: "Check both stapler doughnuts are intact and complete.",
+        choices: [
+          "Check that both doughnuts are complete and do an air leak test under saline.",
+          "Discard the doughnuts without inspecting them.",
+          "Accept an incomplete doughnut if the air test shows no bubbles.",
+        ],
+        feedback: [
+          "Complete doughnuts and a negative leak test confirm the staple line.",
+          "An incomplete doughnut means a defect in the anastomosis.",
+          "An incomplete doughnut needs repair or a diverting stoma even with a negative test.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       { kind: "closure", title: "Close the mesenteric defect and ports", description: "Close the defects and the port sites.", f: { structure: "the mesenteric defect and port sites" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Pelvic colorectal surgery is high-risk for thrombosis." },
-      { kind: "postop", title: "Watch for bleeding", description: "Monitor the hemoglobin and the vitals for delayed bleeding.", f: { test: "the hemoglobin and the vitals", wrongTests: ["a routine CT scan", "an ultrasound"] } },
-      { kind: "postop", title: "Manage the nasogastric tube", description: "Define the NG tube plan for the recovery.", f: { test: "the nasogastric output", wrongTests: ["a routine X-ray", "a blood panel"] } },
-      { kind: "postop", title: "Pain control plan", description: "Plan the multimodal analgesia.", f: { test: "the pain scores", wrongTests: ["a routine CT scan", "a blood panel"] } },
-      { kind: "postop", title: "Wound care", description: "Define the wound and drain care.", f: { test: "the wounds and the drains", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Watch for ileus", description: "Monitor for prolonged ileus after the resection.", f: { test: "the bowel function and the distension", wrongTests: ["a routine CT scan", "a blood panel"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology result.", f: { test: "the pathology and the recovery at follow-up", wrongTests: ["a routine CT scan", "a colonoscopy"] } },
-      { kind: "postop", title: "Colon cancer surveillance", description: "Define the surveillance colonoscopy schedule.", f: { test: "the surveillance schedule", wrongTests: ["a routine CT scan", "a blood panel"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the medications, diet, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Return to activity", description: "Define the lifting and activity restrictions.", f: { test: "the activity tolerance", wrongTests: ["a routine X-ray", "a stress test"] } },
+      {
+        kind: "postop", title: "Watch for bleeding", description: "Monitor the hemoglobin and the vitals for delayed bleeding.",
+        choices: [
+          "Check the hemoglobin on day 1 and watch for bright red blood per rectum or tachycardia.",
+          "Put blood per rectum down to the staple line and ignore it.",
+          "Start full-dose anticoagulation on day 1.",
+        ],
+        feedback: [
+          "Staple-line bleeding usually settles but needs monitoring.",
+          "Ongoing bleeding from the staple line can need endoscopic control.",
+          "Full anticoagulation on day 1 raises staple-line bleeding.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Manage the nasogastric tube", description: "Define the NG tube plan for the recovery.",
+        choices: [
+          "Remove the NG tube at the end of the operation as part of enhanced recovery.",
+          "Keep the NG tube until he passes flatus.",
+          "Keep the NG tube on free drainage for a week.",
+        ],
+        feedback: [
+          "Routine NG decompression is not needed and delays recovery.",
+          "Prolonged NG tubes raise aspiration pneumonia and delay feeding.",
+          "A week of NG drainage wastes potassium, which provokes arrhythmias, and delays feeding.",
+        ],
+        wrongComps: ["infection", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Pain control plan", description: "Plan the multimodal analgesia.",
+        choices: [
+          "Use multimodal analgesia with paracetamol, regional blocks, and minimal opioid.",
+          "Use a morphine PCA alone.",
+          "Give regular high-dose NSAIDs.",
+        ],
+        feedback: [
+          "Opioid-sparing analgesia speeds the return of bowel function.",
+          "Opioids alone delay the return of bowel function.",
+          "High-dose NSAIDs may raise the anastomotic leak rate and bleeding.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "Define the wound and drain care.",
+        choices: [
+          "Keep the wound dressed for 48 hours and inspect it for redness or discharge.",
+          "Soak the wound in the bath from day 1.",
+          "Leave the wound undressed from the end of the operation.",
+        ],
+        feedback: [
+          "Covered wounds and inspection cut surgical site infection.",
+          "Soaking a fresh wound raises infection.",
+          "An uncovered contaminated wound raises infection.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Watch for ileus", description: "Monitor for prolonged ileus after the resection.",
+        choices: [
+          "Encourage early feeding and mobilization, and check electrolytes if ileus persists.",
+          "Keep him nil by mouth until bowel sounds return.",
+          "Give prokinetics routinely from day 0.",
+        ],
+        feedback: [
+          "Early feeding and mobility shorten ileus; low potassium prolongs it.",
+          "Starvation does not shorten ileus and delays recovery.",
+          "Routine prokinetics do not help, and some prolong the QT interval.",
+        ],
+        wrongComps: ["infection", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology result.",
+        choices: [
+          "Review at 2 weeks with the pathology and refer node-positive disease for adjuvant chemotherapy.",
+          "Review at 3 months once he has recovered.",
+          "Discharge to the GP with the pathology to follow.",
+        ],
+        feedback: [
+          "Adjuvant chemotherapy should start within about 8 weeks.",
+          "A late review can miss the chemotherapy window.",
+          "The surgical team must review the staging to direct adjuvant treatment.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Colon cancer surveillance", description: "Define the surveillance colonoscopy schedule.",
+        choices: [
+          "Arrange CEA every 3 to 6 months, CT at intervals, and colonoscopy at one year.",
+          "Arrange a single colonoscopy at 5 years.",
+          "Use CEA alone for surveillance.",
+        ],
+        feedback: [
+          "Structured surveillance finds treatable recurrence and new polyps.",
+          "Most recurrences occur in the first 3 years.",
+          "CEA alone misses recurrence in patients whose tumors do not secrete it.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Summarize the medications, diet, and the warning signs.",
+        choices: [
+          "Explain the leak warning signs (fever, worsening pain, tachycardia) and give extended LMWH for 4 weeks.",
+          "Advise return only for wound problems.",
+          "Stop the LMWH at discharge.",
+        ],
+        feedback: [
+          "Leaks can present after discharge, and cancer surgery needs extended clot prophylaxis.",
+          "A leak presents with fever and pain, not a wound problem.",
+          "Extended LMWH after cancer surgery cuts late venous thromboembolism.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Return to activity", description: "Define the lifting and activity restrictions.",
+        choices: [
+          "Advise walking daily, no heavy lifting for 6 weeks, and driving when he can brake hard without pain.",
+          "Allow heavy lifting from 2 weeks.",
+          "Advise bed rest for the first week at home.",
+        ],
+        feedback: [
+          "Gradual activity helps recovery and protects the wound.",
+          "Early heavy lifting risks an incisional hernia.",
+          "Bed rest at home raises clot risk.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
       {
         kind: "postop", title: "Monitor for anastomotic leak", description: "Fever and tachycardia can signal a leak.",
         choices: [
@@ -1340,7 +1496,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the pancreas", "the spleen"],
       test: "a check of the renal vein for tumor thrombus",
       wrongTests: ["a routine liver biopsy", "an on-table MRI"],
-      risks: ["hemorrhage", "cardiac_arrhythmia", "infection", "nerve_injury"],
+      risks: ["hemorrhage", "cardiac_arrhythmia", "infection", "nerve_injury", "thrombosis"],
       instrument: "a Satinsky clamp and a vascular stapler",
       position: "flank position for a retroperitoneal approach",
       wrongPositions: ["prone", "supine flat"],
@@ -1397,15 +1553,15 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         kind: "vessel", title: "Control the renal vein", description: "Secure the venous outflow.",
         choices: [
           "Ligate the renal vein at the vena cava with a vascular stapler, checking for a thrombus.",
-          "Ligate the renal vein without checking for a tumor thrombus.",
-          "Clamp the vena cava broadly to control the vein.",
+          "Ligate the renal vein at the cava straight away to cut the tumor's venous drainage.",
+          "Place a side-biting clamp across most of the cava to control the vein.",
         ],
         feedback: [
           "The vein is controlled at the cava with the thrombus assessed.",
-          "Missing a thrombus can embolize during manipulation.",
-          "Clamping the cava broadly risks caval injury and hypotension.",
+          "An unchecked tumor thrombus in the vein can break off during ligation and embolize to the lungs.",
+          "A large caval clamp cuts venous return, dropping the pressure and provoking arrhythmia, and risks tearing the cava.",
         ],
-        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
+        wrongComps: ["thrombosis", "cardiac_arrhythmia"],
       },
       {
         kind: "core", title: "Mobilize the kidney within Gerota's fascia", description: "Dissect the kidney with its envelope.",
@@ -1477,8 +1633,34 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["infection", "hemorrhage"],
       },
-      { kind: "verify", title: "Check hemostasis and the contralateral kidney", description: "Confirm the field is dry.", f: { test: "the renal bed and the contralateral kidney function", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
-      { kind: "verify", title: "Check the renal vein stump", description: "Confirm the staple line is secure and the cava is intact.", f: { test: "the renal vein staple line and the vena cava", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Check hemostasis and the contralateral kidney", description: "Confirm the field is dry.",
+        choices: [
+          "Inspect the renal bed at normal pressure, check the adrenal and lumbar vessels, and confirm urine output.",
+          "Close once the bed looks dry at the current low pressure.",
+          "Pack the renal fossa and close.",
+        ],
+        feedback: [
+          "Inspection at normal pressure shows bleeders that low pressure hides.",
+          "A bed dry at low pressure can bleed as the pressure recovers.",
+          "Packs hide an active bleeder and need a second operation.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
+      {
+        kind: "verify", title: "Check the renal vein stump", description: "Confirm the staple line is secure and the cava is intact.",
+        choices: [
+          "Inspect the vein stump and cava for staple-line bleeding and a retained thrombus.",
+          "Oversew the stump with a deep running stitch into the cava.",
+          "Close without inspecting the stump.",
+        ],
+        feedback: [
+          "A secure stump without thrombus prevents bleeding and embolism.",
+          "A deep stitch into the cava can narrow it or tear it.",
+          "An unchecked stump can hide bleeding or residual thrombus.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
       {
         kind: "verify", title: "Inspect the adrenal bed", description: "Check the bed for bleeding after the specimen is out.",
         choices: [
@@ -1494,19 +1676,162 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         wrongComps: ["hemorrhage", "infection"],
       },
       { kind: "bleed", title: "Control a lumbar bleeder", description: "A lumbar vessel is bleeding in the renal bed.", f: { vessel: "the lumbar vessels in the renal bed", wrongVessels: ["the aorta", "the iliac artery"] } },
-      { kind: "verify", title: "Confirm the bowel is intact", description: "Check the colon and the duodenum after the retraction.", f: { test: "the colon and the duodenum for injury", wrongTests: ["a routine liver biopsy", "a CT scan"] } },
+      {
+        kind: "verify", title: "Confirm the bowel is intact", description: "Check the colon and the duodenum after the retraction.",
+        choices: [
+          "Inspect the colon, duodenum, and spleen for retraction injury before closing.",
+          "Close without inspecting the bowel.",
+          "Oversew any serosal tear with a deep stitch through the full wall.",
+        ],
+        feedback: [
+          "A missed bowel or duodenal injury causes peritonitis.",
+          "An unrecognized injury leaks after surgery.",
+          "Full-thickness stitches on a serosal tear can narrow or perforate the bowel.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       { kind: "closure", title: "Close the wound", description: "Close the fascia and skin in layers.", f: { structure: "the abdominal wall layers" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Major abdominal surgery carries thrombosis risk." },
-      { kind: "postop", title: "Watch for bleeding", description: "Monitor the hemoglobin and the vitals after the resection.", f: { test: "the hemoglobin and the vitals", wrongTests: ["a routine CT scan", "an ultrasound"] } },
-      { kind: "postop", title: "Monitor the urine output", description: "Track the output of the remaining kidney.", f: { test: "the urine output and the creatinine", wrongTests: ["a routine CT scan", "a blood panel"] } },
-      { kind: "postop", title: "Pain control", description: "Plan the analgesia for the flank or abdominal incision.", f: { test: "the pain scores", wrongTests: ["a routine CT scan", "a blood panel"] } },
-      { kind: "postop", title: "Wound care", description: "Define the wound care for the incision.", f: { test: "the wound for infection signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Blood pressure management", description: "Tighten the blood pressure control for the single kidney.", f: { test: "the blood pressure readings", wrongTests: ["a routine CT scan", "a blood panel"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the imaging.", f: { test: "the pathology and the surveillance imaging", wrongTests: ["a routine liver biopsy", "a CT scan of the chest"] } },
-      { kind: "postop", title: "Surveillance plan", description: "Define the imaging surveillance for recurrence.", f: { test: "the surveillance imaging schedule", wrongTests: ["a routine blood panel", "an ultrasound"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the medications, wound care, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Return to activity", description: "Define the lifting and activity restrictions.", f: { test: "the activity tolerance", wrongTests: ["a routine X-ray", "a stress test"] } },
-      { kind: "postop", title: "Lifestyle counseling", description: "Review the diet, fluids, and renal-protective habits.", f: { test: "the renal-protective habits", wrongTests: ["a routine blood panel", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for bleeding", description: "Monitor the hemoglobin and the vitals after the resection.",
+        choices: [
+          "Check the hemoglobin and drain on day 1 and watch for tachycardia or hypotension.",
+          "Put tachycardia down to pain and give more opioid.",
+          "Start full-dose anticoagulation on day 1.",
+        ],
+        feedback: [
+          "Early detection of retroperitoneal bleeding allows intervention.",
+          "Tachycardia after a nephrectomy can be bleeding.",
+          "Full anticoagulation raises bleeding in the renal bed.",
+        ],
+        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Monitor the urine output", description: "Track the output of the remaining kidney.",
+        choices: [
+          "Track hourly urine output and daily creatinine as the remaining kidney adapts.",
+          "Give furosemide if the urine output drops.",
+          "Check the creatinine only at discharge.",
+        ],
+        feedback: [
+          "The remaining kidney takes over; monitoring finds acute kidney injury early.",
+          "Diuretics hide hypovolemia and stress the single kidney.",
+          "A rising creatinine can go unnoticed until discharge.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "infection"],
+      },
+      {
+        kind: "postop", title: "Pain control", description: "Plan the analgesia for the flank or abdominal incision.",
+        choices: [
+          "Use regional analgesia or a PCA with paracetamol, and avoid NSAIDs with a single kidney.",
+          "Give regular NSAIDs for the flank pain.",
+          "Use oral opioids alone as needed.",
+        ],
+        feedback: [
+          "Kidney-safe analgesia protects the remaining kidney.",
+          "NSAIDs reduce blood flow to the single remaining kidney.",
+          "Poor pain control after a flank incision leads to atelectasis and pneumonia.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "infection"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "Define the wound care for the incision.",
+        choices: [
+          "Keep the wound dry for 48 hours and check it for redness, discharge, or bulging.",
+          "Soak the wound in the bath from day 1.",
+          "Remove the staples on day 3.",
+        ],
+        feedback: [
+          "Inspection catches infection and a flank bulge from nerve injury.",
+          "Soaking raises infection.",
+          "Early staple removal risks dehiscence.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Blood pressure management", description: "Tighten the blood pressure control for the single kidney.",
+        choices: [
+          "Keep the blood pressure under 130/80, favoring an ACE inhibitor once the creatinine is stable.",
+          "Stop all antihypertensives after the nephrectomy.",
+          "Start a high-dose diuretic for blood pressure control.",
+        ],
+        feedback: [
+          "Blood pressure control protects the single kidney long term.",
+          "Stopping antihypertensives causes rebound hypertension.",
+          "High-dose diuretics dehydrate and stress the single kidney.",
+        ],
+        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the imaging.",
+        choices: [
+          "Review at 4 to 6 weeks with the pathology and creatinine, and stage the surveillance.",
+          "Review at 6 months with a CT.",
+          "Discharge to the GP with the pathology to follow.",
+        ],
+        feedback: [
+          "The pathology sets the surveillance intensity and any adjuvant treatment.",
+          "A late review misses renal dysfunction and delays adjuvant decisions.",
+          "The urology team must interpret the staging.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Surveillance plan", description: "Define the imaging surveillance for recurrence.",
+        choices: [
+          "Arrange chest and abdominal CT at intervals set by the tumor stage and grade.",
+          "Stop surveillance after the first clear scan.",
+          "Use chest X-ray alone for surveillance.",
+        ],
+        feedback: [
+          "Risk-stratified imaging finds treatable recurrence.",
+          "Kidney cancer can recur years later.",
+          "A plain X-ray misses small metastases.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Summarize the medications, wound care, and the warning signs.",
+        choices: [
+          "Explain the warning signs (fever, flank swelling, falling urine output) and to avoid NSAIDs.",
+          "Advise return only for wound redness.",
+          "Advise taking ibuprofen for pain at home.",
+        ],
+        feedback: [
+          "The warning signs cover bleeding, infection, and kidney injury.",
+          "Bleeding and kidney injury present without wound changes.",
+          "NSAIDs harm the single remaining kidney.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Return to activity", description: "Define the lifting and activity restrictions.",
+        choices: [
+          "Advise no heavy lifting for 6 weeks and a gradual return to work.",
+          "Allow heavy lifting from 2 weeks.",
+          "Advise bed rest at home for two weeks.",
+        ],
+        feedback: [
+          "The fascia needs about 6 weeks before heavy loading.",
+          "Early heavy lifting risks hernia and bleeding.",
+          "Bed rest raises clot risk.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Lifestyle counseling", description: "Review the diet, fluids, and renal-protective habits.",
+        choices: [
+          "Advise adequate fluids, a moderate-protein diet, no smoking, and avoiding nephrotoxic drugs.",
+          "Advise a high-protein diet to build strength.",
+          "Advise restricting fluids to protect the kidney.",
+        ],
+        feedback: [
+          "Kidney-protective habits preserve the remaining kidney.",
+          "High protein raises the filtration load on a single kidney.",
+          "Fluid restriction risks dehydration and kidney injury.",
+        ],
+        wrongComps: ["infection", "cardiac_arrhythmia"],
+      },
       {
         kind: "postop", title: "Monitor renal function", description: "The remaining kidney must compensate.",
         choices: [

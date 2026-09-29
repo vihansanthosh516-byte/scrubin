@@ -436,7 +436,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the rectum", "the bladder diverticulum"],
       test: "a check of the anastomosis for a watertight seal",
       wrongTests: ["a routine cystoscopy", "an on-table MRI"],
-      risks: ["hemorrhage", "nerve_injury", "infection"],
+      risks: ["hemorrhage", "nerve_injury", "infection", "thrombosis"],
       instrument: "a robotic console and a needle driver",
       position: "steep Trendelenburg",
       wrongPositions: ["supine flat", "prone"],
@@ -526,8 +526,8 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         ],
         feedback: [
           "The pedicles are controlled sequentially.",
-          "Mass stapling risks the bundles and the ureters.",
-          "Cautery division causes delayed bleeding.",
+          "A mass staple line across thick pedicles leaves vessels partly controlled, and they bleed; it can also catch the ureters.",
+          "Heat spreading from cautery on the pedicles burns the neurovascular bundles, causing erectile dysfunction and incontinence.",
         ],
         wrongComps: ["hemorrhage", "nerve_injury"],
       },
@@ -587,21 +587,164 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         ],
         wrongComps: ["infection", "hemorrhage"],
       },
-      { kind: "verify", title: "Re-check the anastomotic hemostasis", description: "Re-inspect the anastomosis with the bladder filled.", f: { test: "the anastomosis under bladder filling", wrongTests: ["a routine cystoscopy", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Re-check the anastomotic hemostasis", description: "Re-inspect the anastomosis with the bladder filled.",
+        choices: [
+          "Fill the bladder with 150 mL, check for a leak and bleeding, and add a stitch if needed.",
+          "Close without testing the anastomosis.",
+          "Place extra deep stitches through the bladder neck and urethra to secure it.",
+        ],
+        feedback: [
+          "A leak test finds defects while they are easy to repair.",
+          "An untested anastomosis can leak urine into the pelvis.",
+          "Extra deep stitches narrow the anastomosis and can catch the sphincter.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
       { kind: "exposure", title: "Check the neurovascular bundles", description: "Confirm the bundles are intact.", f: { structure: "the neurovascular bundles", landmark: "the prostatic apex" } },
       { kind: "bleed", title: "Control a dorsal complex bleeder", description: "The dorsal venous complex is oozing.", f: { vessel: "the dorsal venous complex", wrongVessels: ["the iliac artery", "the obturator artery"] } },
-      { kind: "verify", title: "Confirm the catheter position", description: "Check the catheter is in the bladder.", f: { test: "the catheter position", wrongTests: ["a routine cystoscopy", "a CT scan"] } },
+      {
+        kind: "verify", title: "Confirm the catheter position", description: "Check the catheter is in the bladder.",
+        choices: [
+          "Confirm the catheter is in the bladder with free drainage and the balloon inflated there.",
+          "Inflate the balloon without checking its position.",
+          "Use a small catheter to limit discomfort.",
+        ],
+        feedback: [
+          "A correctly placed catheter splints the anastomosis while it heals.",
+          "A balloon inflated in the urethra tears the anastomosis.",
+          "A small catheter blocks with clots.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       { kind: "closure", title: "Close the ports", description: "Close the port sites.", f: { structure: "the port sites" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Pelvic robotic surgery carries a thrombosis risk." },
-      { kind: "postop", title: "Watch for clot retention", description: "Monitor for catheter blockage by clots.", f: { test: "the catheter output", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Pelvic floor exercises", description: "Start the pelvic floor training.", f: { test: "the pelvic floor exercises", wrongTests: ["a routine CT", "a nerve study"] } },
-      { kind: "postop", title: "Erectile rehabilitation plan", description: "Discuss the erectile rehabilitation options.", f: { test: "the erectile rehabilitation plan", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Wound care", description: "Define the port site care.", f: { test: "the port sites", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Pain control", description: "Plan the analgesia for the abdomen.", f: { test: "the pain scores", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Mobilization plan", description: "Define the early mobilization.", f: { test: "the mobilization tolerance", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "PSA surveillance plan", description: "Define the PSA monitoring schedule.", f: { test: "the PSA levels", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the PSA.", f: { test: "the pathology and the PSA at follow-up", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the catheter care, the medications, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for clot retention", description: "Monitor for catheter blockage by clots.",
+        choices: [
+          "Check the catheter drainage hourly and flush gently with saline if it blocks.",
+          "Flush the catheter forcefully to clear clots.",
+          "Leave a blocked catheter until the morning round.",
+        ],
+        feedback: [
+          "Gentle flushing keeps the catheter draining without disrupting the anastomosis.",
+          "Forceful flushing can disrupt the anastomosis.",
+          "A blocked catheter distends the bladder and stresses the anastomosis.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
+      {
+        kind: "postop", title: "Pelvic floor exercises", description: "Start the pelvic floor training.",
+        choices: [
+          "Start pelvic floor training after catheter removal, ideally with a physiotherapist.",
+          "Start forceful pelvic floor exercises with the catheter in.",
+          "Wait 6 months to see if continence returns before training.",
+        ],
+        feedback: [
+          "Guided training speeds the recovery of continence.",
+          "Straining against a catheter irritates the anastomosis.",
+          "Delaying training slows continence recovery.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Erectile rehabilitation plan", description: "Discuss the erectile rehabilitation options.",
+        choices: [
+          "Discuss early rehabilitation with a PDE5 inhibitor, and set realistic expectations after nerve sparing.",
+          "Promise full return of erections in a few weeks.",
+          "Advise avoiding any sexual activity for a year.",
+        ],
+        feedback: [
+          "Early rehabilitation may improve erectile recovery after nerve sparing.",
+          "Recovery takes months to years; false expectations cause distress.",
+          "A long abstinence period may worsen erectile recovery.",
+        ],
+        wrongComps: ["nerve_injury", "infection"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "Define the port site care.",
+        choices: [
+          "Keep the port sites dry and dressed for 48 hours and check them for redness.",
+          "Soak the port sites in the bath from day 1.",
+          "Remove the dressings immediately after surgery.",
+        ],
+        feedback: [
+          "Simple wound care prevents port-site infection.",
+          "Soaking raises infection.",
+          "Early dressing removal exposes the wounds to contamination.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Pain control", description: "Plan the analgesia for the abdomen.",
+        choices: [
+          "Use paracetamol, a short NSAID course if the kidneys allow, and minimal opioid.",
+          "Use opioids alone for pain.",
+          "Give high-dose NSAIDs for two weeks.",
+        ],
+        feedback: [
+          "Multimodal analgesia speeds mobilization and bowel recovery.",
+          "Opioids alone cause constipation, which strains the anastomosis.",
+          "Long high-dose NSAIDs raise bleeding and kidney injury.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Mobilization plan", description: "Define the early mobilization.",
+        choices: [
+          "Mobilize on the evening of surgery and give extended LMWH as pelvic cancer surgery requires.",
+          "Keep him in bed until the catheter is out.",
+          "Stop the LMWH at discharge.",
+        ],
+        feedback: [
+          "Early mobilization and extended prophylaxis prevent clots.",
+          "Bed rest raises clot and chest infection risk.",
+          "Pelvic cancer surgery calls for about 4 weeks of LMWH.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "PSA surveillance plan", description: "Define the PSA monitoring schedule.",
+        choices: [
+          "Check the PSA at 6 to 12 weeks, then every 3 to 6 months, and act on a rising value.",
+          "Check the PSA once a year.",
+          "Check the PSA only if symptoms develop.",
+        ],
+        feedback: [
+          "An undetectable PSA confirms clearance; a rising PSA shows early recurrence.",
+          "Yearly checks miss early biochemical recurrence.",
+          "Symptoms appear late; the PSA finds recurrence years earlier.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the PSA.",
+        choices: [
+          "Review at 6 weeks with the pathology, first PSA, and continence, and discuss radiotherapy if the margins are positive.",
+          "Review at 6 months with a PSA.",
+          "Discharge to the GP with the pathology to follow.",
+        ],
+        feedback: [
+          "Margins and the PSA decide on adjuvant or early salvage radiotherapy.",
+          "A late review delays radiotherapy decisions.",
+          "The urology team must interpret the pathology.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Summarize the catheter care, the medications, and the warning signs.",
+        choices: [
+          "Teach catheter care, and to return for fever, a blocked catheter, leg swelling, or heavy bleeding.",
+          "Advise return only for a fever.",
+          "Allow removing the catheter at home after a few days.",
+        ],
+        feedback: [
+          "The warning signs cover infection, clots, and a blocked catheter.",
+          "Leg swelling and a blocked catheter need urgent review too.",
+          "The catheter stays until the anastomosis heals; early removal causes a leak.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       {
         kind: "postop", title: "Plan catheter care", description: "Define the catheter course.",
         choices: [

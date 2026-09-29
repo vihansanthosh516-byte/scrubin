@@ -89,8 +89,8 @@ export const ARCHETYPE_COMPLICATION_MAP: Record<DecisionArchetypeType, Complicat
   BLEEDING_CONTROL:     ["hemorrhage"],
   INFECTION_MANAGEMENT: ["infection"],
   PAIN_MANAGEMENT:      ["nerve_injury"],
-  DIAGNOSTIC_STEP:      ["infection", "thrombosis", "nerve_injury"],
-  SURGICAL_DECISION:    ["hemorrhage", "nerve_injury", "thrombosis"],
+  DIAGNOSTIC_STEP:      ["thrombosis", "nerve_injury"],
+  SURGICAL_DECISION:    ["nerve_injury"],
   POST_OP_MONITORING:   ["infection", "thrombosis", "fluid_overload"],
 };
 

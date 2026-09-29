@@ -27,6 +27,8 @@ export interface CaseState {
   stack: Frame[];
   /** Repair demanded by the last wrong answer, entered once its rescue ends. */
   pendingRepair: string | null;
+  /** A wrong answer was recorded and its rescue has not ended yet. */
+  awaitingRescue?: boolean;
   /** Steps answered so far, main and repair — reported to Core as step_index. */
   played: number;
   finished: boolean;
@@ -157,6 +159,7 @@ export function chooseWrong(bank: ProcedureBank, s: CaseState, choice: Pick<Stoc
     ...s,
     flags: applyFlags(s.flags, effect),
     pendingRepair: effect?.repair ?? null,
+    awaitingRescue: true,
     played: s.played + 1,
     notes: [],
   };
@@ -169,8 +172,9 @@ export function chooseWrong(bank: ProcedureBank, s: CaseState, choice: Pick<Stoc
  */
 export function afterRescue(bank: ProcedureBank, s: CaseState, opts: { spontaneous: boolean }): CaseState {
   if (opts.spontaneous) return { ...s, notes: [] };
-  if (!s.pendingRepair) return advance(bank, { ...s, notes: [] });
-  return enterBranch(bank, { ...s, notes: [] }, s.pendingRepair);
+  const done = { ...s, awaitingRescue: false, notes: [] };
+  if (!s.pendingRepair) return advance(bank, done);
+  return enterBranch(bank, done, s.pendingRepair);
 }
 
 /**
@@ -179,7 +183,9 @@ export function afterRescue(bank: ProcedureBank, s: CaseState, opts: { spontaneo
  * shrinks when the state removes steps, so the header can show "step X of N".
  */
 export function projectedLength(bank: ProcedureBank, s: CaseState): number {
-  let cur = s.pendingRepair ? afterRescue(bank, s, { spontaneous: false }) : s;
+  // Mid-rescue, the failed step is already counted in `played`; move past it
+  // (or into its repair) before projecting, or it is counted twice.
+  let cur = s.pendingRepair || s.awaitingRescue ? afterRescue(bank, s, { spontaneous: false }) : s;
   let guard = 0;
   while (!cur.finished && guard++ < 10_000) {
     const step = currentStep(bank, cur);

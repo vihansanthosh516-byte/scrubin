@@ -1191,10 +1191,36 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["cardiac_arrhythmia", "infection"],
       },
-      { kind: "verify", title: "Re-check the packing sites", description: "Confirm the packs are placed at the bleeding sites.", f: { test: "the packing sites", wrongTests: ["a routine CT", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Re-check the packing sites", description: "Confirm the packs are placed at the bleeding sites.",
+        choices: [
+          "Place packs above and below the bleeding liver or retroperitoneum, compressing it, and count them onto the board.",
+          "Pack the whole abdomen as tightly as possible to stop every ooze.",
+          "Place the packs loosely over the bowel so they are easy to remove later.",
+        ],
+        feedback: [
+          "Directed packs compress the bleeding surface, and a count prevents a retained pack.",
+          "Over-packing raises the abdominal pressure and causes compartment syndrome.",
+          "Loose packs over the bowel do not compress the bleeding surface.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "hemorrhage"],
+      },
       { kind: "exposure", title: "Assess the bowel viability", description: "Check the bowel that was injured for viability.", f: { structure: "the injured bowel", landmark: "the mesenteric edge" } },
       { kind: "bleed", title: "Control a mesenteric bleeder", description: "A mesenteric vessel is bleeding again.", f: { vessel: "the mesenteric vessels", wrongVessels: ["the aorta", "the iliac artery"] } },
-      { kind: "verify", title: "Confirm the resuscitation parameters", description: "Check the temperature, the pH, and the coagulation before closing.", f: { test: "the temperature, pH, and coagulation", wrongTests: ["a routine CT", "a blood panel"] } },
+      {
+        kind: "verify", title: "Confirm the resuscitation parameters", description: "Check the temperature, the pH, and the coagulation before closing.",
+        choices: [
+          "Check the temperature, pH, lactate, and coagulation, and stop at damage control if he is cold, acidotic, or coagulopathic.",
+          "Complete the definitive repairs now, since he is already on the table.",
+          "Close the fascia tightly to keep the packs in place.",
+        ],
+        feedback: [
+          "Hypothermia, acidosis, and coagulopathy together are lethal; damage control stops before they spiral.",
+          "Long definitive surgery in a cold, acidotic patient deepens the coagulopathy and bleeding.",
+          "Tight fascial closure over packs raises the abdominal pressure; a temporary closure is used.",
+        ],
+        wrongComps: ["hemorrhage", "hypoxia"],
+      },
       { kind: "closure", title: "Close the abdomen temporarily", description: "Protect the viscera and allow decompression.",
         choices: [
           "Close with a temporary closure that allows decompression and re-exploration.",
@@ -1209,18 +1235,174 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         wrongComps: ["cardiac_arrhythmia", "infection"],
       },
       { kind: "dvt", title: "DVT prophylaxis", description: "Major trauma is the highest-risk setting for thrombosis." },
-      { kind: "postop", title: "Watch for abdominal compartment syndrome", description: "Monitor the bladder pressure and the ventilation.", f: { test: "the bladder pressure", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Transfusion plan", description: "Define the transfusion goals and the monitoring.", f: { test: "the hemoglobin and the coagulation", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Rewarming plan", description: "Plan the active rewarming in the ICU.", f: { test: "the core temperature", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Ventilator management", description: "Define the ventilation strategy for the resuscitation.", f: { test: "the ventilation parameters", wrongTests: ["a routine chest X-ray", "a blood panel"] } },
-      { kind: "postop", title: "Renal support", description: "Monitor the urine output and the renal function.", f: { test: "the urine output and the creatinine", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Coagulation management", description: "Correct the coagulopathy with the blood products.", f: { test: "the coagulation panel", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Watch for sepsis", description: "Monitor for the signs of developing sepsis.", f: { test: "the infection markers", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Nutrition support", description: "Start the early nutritional support.", f: { test: "the nutritional plan", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Family communication", description: "Coordinate the family updates on the damage-control course.", f: { test: "the family communication", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Planned re-exploration timing", description: "Set the timing and the criteria for the second look.", f: { test: "the re-exploration criteria", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Skin and wound protection", description: "Protect the open abdomen and the skin edges.", f: { test: "the abdominal wound", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Analgesia plan", description: "Plan the analgesia for the ventilated patient.", f: { test: "the sedation and the analgesia", wrongTests: ["a routine CT", "a blood panel"] } },
+      {
+        kind: "postop", title: "Watch for abdominal compartment syndrome", description: "Monitor the bladder pressure and the ventilation.",
+        choices: [
+          "Measure the bladder pressure every 4 hours and decompress if it stays above 20 mmHg with new organ dysfunction.",
+          "Treat falling urine output with more fluid boluses.",
+          "Watch the ventilator pressures only, without bladder pressures.",
+        ],
+        feedback: [
+          "Bladder pressure finds compartment syndrome before the kidneys and lungs fail.",
+          "More fluid raises the abdominal pressure further.",
+          "Ventilator pressures rise late; the bladder pressure shows it early.",
+        ],
+        wrongComps: ["hypoxia", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Transfusion plan", description: "Define the transfusion goals and the monitoring.",
+        choices: [
+          "Transfuse red cells, plasma, and platelets in balanced ratios guided by viscoelastic tests, and give calcium.",
+          "Give red cells alone until the hemoglobin is normal.",
+          "Resuscitate with crystalloid first and hold blood products.",
+        ],
+        feedback: [
+          "Balanced products and calcium treat the coagulopathy of massive transfusion.",
+          "Red cells alone dilute the clotting factors, and he keeps bleeding.",
+          "Crystalloid dilutes clotting factors and worsens acidosis and edema.",
+        ],
+        wrongComps: ["hemorrhage", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Rewarming plan", description: "Plan the active rewarming in the ICU.",
+        choices: [
+          "Use a forced-air warmer and warmed fluids and products, aiming for above 36 °C.",
+          "Rewarm slowly with blankets only.",
+          "Accept 34 °C, since hypothermia protects the organs.",
+        ],
+        feedback: [
+          "Active rewarming reverses the coagulopathy that cold causes.",
+          "Passive rewarming is too slow for a coagulopathic trauma patient.",
+          "Hypothermia after hemorrhage worsens bleeding and arrhythmias.",
+        ],
+        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Ventilator management", description: "Define the ventilation strategy for the resuscitation.",
+        choices: [
+          "Use lung-protective ventilation at 6 to 8 mL/kg with PEEP, and keep him sedated until the second look.",
+          "Use large tidal volumes of 12 mL/kg to recruit the lungs.",
+          "Extubate once he is rewarmed, before the second look.",
+        ],
+        feedback: [
+          "Protective ventilation limits lung injury after massive transfusion.",
+          "Large tidal volumes injure the lungs, especially after transfusion.",
+          "He needs to go back to theater with an open abdomen; extubating now risks aspiration and reintubation.",
+        ],
+        wrongComps: ["hypoxia", "infection"],
+      },
+      {
+        kind: "postop", title: "Renal support", description: "Monitor the urine output and the renal function.",
+        choices: [
+          "Track hourly urine output, lactate, and creatinine, and check the bladder pressure if output falls.",
+          "Give furosemide to keep the urine output above 1 mL/kg/h.",
+          "Accept low urine output until the second look.",
+        ],
+        feedback: [
+          "Oliguria after damage control can be hypovolemia or compartment syndrome; both need finding.",
+          "Diuretics in an under-resuscitated patient worsen hypovolemia and hide the cause.",
+          "Low urine output is an early warning that needs a cause found now.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Coagulation management", description: "Correct the coagulopathy with the blood products.",
+        choices: [
+          "Correct the coagulopathy guided by thromboelastography, with fibrinogen and platelets as needed.",
+          "Give vitamin K and wait for the INR to correct.",
+          "Start prophylactic heparin now to prevent clots.",
+        ],
+        feedback: [
+          "Targeted factor replacement stops coagulopathic bleeding quickly.",
+          "Vitamin K takes hours and does not treat dilutional coagulopathy.",
+          "Heparin before the bleeding is controlled restarts it.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Watch for sepsis", description: "Monitor for the signs of developing sepsis.",
+        choices: [
+          "Watch for fever, rising lactate, and new organ dysfunction, and send cultures early.",
+          "Put any fever down to transfusion reactions.",
+          "Give routine broad-spectrum antibiotics for two weeks.",
+        ],
+        feedback: [
+          "An open abdomen with packs is a high sepsis risk; early cultures guide treatment.",
+          "Fever after damage control can be sepsis from a missed bowel injury.",
+          "Long routine antibiotics select resistance without replacing source control.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Nutrition support", description: "Start the early nutritional support.",
+        choices: [
+          "Start trickle enteral feeding within 24 to 48 hours once he is resuscitated.",
+          "Keep him nil by mouth until the abdomen is closed.",
+          "Start full-rate feeding while he is still on escalating vasopressors.",
+        ],
+        feedback: [
+          "Early enteral feeding helps gut integrity even with an open abdomen.",
+          "Prolonged starvation raises infection and fistula risk.",
+          "Full feeding during shock risks bowel ischemia.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Family communication", description: "Coordinate the family updates on the damage-control course.",
+        choices: [
+          "Meet the family with the ICU team, explain the planned second operation, and set expectations.",
+          "Delay updating the family until after the second look.",
+          "Tell the family the operation was a success and he will recover fully.",
+        ],
+        feedback: [
+          "Early honest updates prepare the family for a staged course.",
+          "Leaving the family uninformed through a critical period damages trust and consent.",
+          "False reassurance before the second look sets up conflict if he deteriorates.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Planned re-exploration timing", description: "Set the timing and the criteria for the second look.",
+        choices: [
+          "Plan the second look at 24 to 48 hours once he is warm, not acidotic, and not coagulopathic.",
+          "Return to theater after 6 hours whatever his physiology.",
+          "Leave the packs for 7 days to be sure the bleeding has stopped.",
+        ],
+        feedback: [
+          "Re-exploring after resuscitation gives the best chance of definitive repair.",
+          "Going back before he is resuscitated repeats the lethal triad.",
+          "Packs left for days raise abdominal sepsis.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
+      {
+        kind: "postop", title: "Skin and wound protection", description: "Protect the open abdomen and the skin edges.",
+        choices: [
+          "Use a negative-pressure temporary abdominal closure and protect the skin edges.",
+          "Close the skin only over the packs.",
+          "Leave the abdomen covered with wet gauze alone.",
+        ],
+        feedback: [
+          "A vacuum closure controls fluid and protects the bowel until closure.",
+          "Skin-only closure can still cause compartment syndrome.",
+          "Wet gauze on exposed bowel raises infection and fistula risk.",
+        ],
+        wrongComps: ["hypoxia", "infection"],
+      },
+      {
+        kind: "postop", title: "Analgesia plan", description: "Plan the analgesia for the ventilated patient.",
+        choices: [
+          "Use a fentanyl infusion with sedation holds, titrated to a pain score.",
+          "Give regular NSAIDs for pain control.",
+          "Use sedation alone without analgesia.",
+        ],
+        feedback: [
+          "Opioid-based analgesia suits a ventilated patient with an open abdomen.",
+          "NSAIDs worsen bleeding and kidney injury.",
+          "Sedation without analgesia leaves pain, which drives tachycardia and arrhythmia.",
+        ],
+        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
+      },
       {
         kind: "postop", title: "Plan the ICU resuscitation", description: "Correct the physiology before the second look.",
         choices: [

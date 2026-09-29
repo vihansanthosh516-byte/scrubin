@@ -58,7 +58,8 @@ export function applyTimelineBatch(
     timeline = [];
   }
 
-  const tail = incoming.slice(lastLen);
+  // Empty entries render as a bare "EVENT" marker with nothing under it.
+  const tail = incoming.slice(lastLen).filter((ev) => norm(ev).trim() !== "");
   if (tail.length === 0) {
     return { timeline, lastLen, lastTick, added: 0 };
   }
