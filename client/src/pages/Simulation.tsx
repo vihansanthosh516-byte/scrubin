@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useRef } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useLocation, useSearch } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
@@ -101,7 +101,21 @@ function deriveCompletionState(data: any): {
   };
 }
 
+// The case lives in a global store, so a new procedure (or a fresh visit) would
+// otherwise render the previous case until something overwrote it. Clear it and
+// remount the page whenever the procedure in the URL changes.
 export default function Simulation() {
+  const procId = new URLSearchParams(useSearch()).get("proc") || "appendectomy";
+  const [readyFor, setReadyFor] = useState<string | null>(null);
+  useLayoutEffect(() => {
+    useSimulationStore.setState({ currentTick: 0, currentState: {}, simId: null, connectionStatus: "disconnected", mode: "live" });
+    setReadyFor(procId);
+  }, [procId]);
+  if (readyFor !== procId) return null;
+  return <SimulationPage key={procId} />;
+}
+
+function SimulationPage() {
   const [, setLocation] = useLocation();
   // wouter's useLocation() returns only the pathname (no query string), so
   // read the query from the browser URL directly.
