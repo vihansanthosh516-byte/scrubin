@@ -460,7 +460,7 @@ export default function Simulation() {
     }
   };
 
-  const handleChoice = async (optionId: string, picked?: { feedback?: string }) => {
+  const handleChoice = async (optionId: string, picked?: { label?: string; feedback?: string }) => {
     if (isSubmitting || isCompleted) return;
     // The next options render in the same buttons; a kept focus ring would
     // sit on one of them and read like a hint.
@@ -483,6 +483,9 @@ export default function Simulation() {
           session_id: simId,
           decision_id: decisionId,
           option_id: optionId,
+          // Tailored options ride on Core's generic ones; send what the trainee
+          // actually read so the debrief quotes it.
+          ...(picked?.feedback ? { label: picked.label, feedback: picked.feedback } : {}),
         }),
       });
       if (!res.ok) {
@@ -1107,16 +1110,32 @@ export default function Simulation() {
                         {isDeceased && (
                           <div className="mb-4 p-4 bg-[#3A0F0F] border-2 border-[#A32A2A] rounded-sm">
                             <h2 className="text-lg font-black text-[#E08080] mb-1 animate-pulse">Patient Expired</h2>
-                            <p className="text-[#EDEAE4]/80 text-xs mb-3">
-                              {currentState?.death_reason
-                                ? `Cause: ${currentState.death_reason}.${lastRescueRef.current ? ` Last complication: ${lastRescueRef.current.complication.replace(/_/g, " ")} (it began with ${lastRescueRef.current.cause.replace(/\.$/, "")}).` : ""}`
-                                : lastRescueRef.current
-                                ? `Cause: ${lastRescueRef.current.complication.replace(/_/g, " ")} was not brought under control in time (it began with ${lastRescueRef.current.cause.replace(/\.$/, "")}).`
-                                : "Critical vitals crossed lethal thresholds. The simulation has ended."}
-                            </p>
-                            {lastRescueRef.current?.best && treatedRef.current !== lastRescueRef.current.complication && (
-                              <p className="text-[#EDEAE4]/80 text-xs mb-3">What would have treated it: <span className="font-bold text-[#EDEAE4]">{lastRescueRef.current.best}</span></p>
-                            )}
+                            {(() => {
+                              const last = lastRescueRef.current;
+                              const comp = last?.complication.replace(/_/g, " ");
+                              const trigger = last ? last.cause.charAt(0).toUpperCase() + last.cause.slice(1).replace(/\.?$/, ".") : null;
+                              const treated = !!last && treatedRef.current === last.complication;
+                              return (
+                                <>
+                                  <p className="text-[#EDEAE4]/80 text-xs mb-2">
+                                    Cause: {currentState?.death_reason
+                                      ?? (comp ? `${comp} was not brought under control in time` : "critical vitals crossed lethal thresholds")}.
+                                  </p>
+                                  {last && (
+                                    <p className="text-[#EDEAE4]/80 text-xs mb-2">
+                                      Last complication: {comp}. What set it off: {trigger}
+                                    </p>
+                                  )}
+                                  {last?.best && (
+                                    <p className="text-[#EDEAE4]/80 text-xs mb-3">
+                                      {treated ? "You gave the right treatment" : "What would have treated it"}:{" "}
+                                      <span className="font-bold text-[#EDEAE4]">{last.best}</span>
+                                      {treated && ", but the patient's physiologic reserve was already too depleted to recover. Earlier control of the first complications is what would have saved them."}
+                                    </p>
+                                  )}
+                                </>
+                              );
+                            })()}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left text-xs text-[#EDEAE4]/60">
                               <div>BP: {fmtVital(vitals.bp_systolic)}/{fmtVital(vitals.bp_diastolic)} mmHg</div>
                               <div>HR: {fmtVital(vitals.heart_rate)} bpm</div>

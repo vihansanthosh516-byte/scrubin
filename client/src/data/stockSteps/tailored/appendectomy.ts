@@ -151,7 +151,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
       description: "After intubation BP is 72/40 and HR 118. Sevoflurane is at 1 MAC.",
       choices: [
         "Give phenylephrine 100 mcg, run the fluid, and lower the sevoflurane while you reassess.",
-        "Give epinephrine 1 mg IV push, the code-cart dose, to lift the pressure back to normal in one step.",
+        "Give epinephrine 1 mg IV push so a single dose brings the pressure back to normal.",
         "Bolus two liters of saline over ten minutes and avoid any vasopressor.",
       ],
       feedback: [
@@ -744,7 +744,7 @@ export const APPENDECTOMY_BANK: ProcedureBank = {
       ],
       feedback: [
         "Opening the airway and splinting it with CPAP treats obstruction without losing his pain control.",
-        "A large naloxone bolus causes a surge of catecholamines, with severe pain and arrhythmias.",
+        "2 mg is a full reversal dose: the catecholamine surge brings severe pain, arrhythmias, and can cause pulmonary edema. If opioids are the cause, titrate 40 mcg at a time.",
         "High-flow oxygen hides the saturation while CO2 climbs and he keeps obstructing.",
       ],
       wrongComps: ["cardiac_arrhythmia", "hypoxia"],
