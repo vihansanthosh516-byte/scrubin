@@ -454,12 +454,12 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         kind: "postop", title: "Discharge and follow-up", description: "Plan the postpartum visit.",
         choices: [
           "Arrange a 2-week postpartum visit and wound check.",
-          "No follow-up is needed after an uncomplicated cesarean.",
+          "Review at the routine 6-week postnatal check only.",
           "Schedule a routine ultrasound of the uterus.",
         ],
         feedback: [
           "Postpartum follow-up is the standard of care.",
-          "Skipping follow-up misses wound infection and postpartum depression.",
+          "Wound infection and early postpartum depression present in the first two weeks, before a 6-week check.",
           "Routine imaging adds no value.",
         ],
         wrongComps: ["infection", "hemorrhage"],
@@ -827,7 +827,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
           "The ureters can be injured late in the case at the vaginal angles — the second look is essential.",
           "The ureter's blood supply travels in those bands — divide them and you devascularize the ureter.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["infection", "thrombosis"],
       },
       { kind: "exposure", title: "Inspect the pelvic sidewalls", description: "Look for venous bleeding along the sidewalls.", f: { structure: "the pelvic sidewalls", landmark: "the internal iliac vessels" } },
       { kind: "bleed", title: "Control a cuff-angle bleeder", description: "The vaginal angle is bleeding.", f: { vessel: "the vaginal angle vessels", wrongVessels: ["the external iliac artery", "the obturator artery"] } },
@@ -876,12 +876,12 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         choices: [
           "Advance diet as tolerated, mobilize early, and arrange a 6-week review.",
           "Restrict activity and delay mobilization for a week.",
-          "No follow-up is needed after a hysterectomy.",
+          "Discharge to the GP with no gynecology review.",
         ],
         feedback: [
           "Early recovery and a 6-week review are standard.",
           "Delayed mobilization increases thrombosis risk.",
-          "Skipping follow-up misses cuff and wound complications.",
+          "Vaginal cuff problems and the pathology result need gynecology review at about 6 weeks.",
         ],
         wrongComps: ["thrombosis", "infection"],
       },
@@ -920,7 +920,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the small bowel", "the bladder"],
       test: "an air-leak test of the anastomosis",
       wrongTests: ["a routine colonoscopy", "an on-table MRI"],
-      risks: ["infection", "hemorrhage", "nerve_injury"],
+      risks: ["infection", "hemorrhage", "nerve_injury", "thrombosis"],
       instrument: "a stapler and a laparoscopic camera",
       position: "modified lithotomy with left tilt",
       wrongPositions: ["prone", "supine flat"],
@@ -970,7 +970,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
           "High ligation at the aorta adds risk without oncologic benefit here.",
           "Leaving the main trunk risks ischemia of the proximal limb.",
         ],
-        wrongComps: ["hemorrhage", "infection"],
+        wrongComps: ["hemorrhage", "thrombosis"],
       },
       { kind: "vessel", title: "Divide the inferior mesenteric vein", description: "Control the venous drainage.", f: { vessel: "the inferior mesenteric vein", wrongVessels: ["the superior mesenteric vein", "the splenic vein"] } },
       {
@@ -1118,12 +1118,12 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         kind: "postop", title: "Discharge and follow-up", description: "Define the follow-up and pathology plan.",
         choices: [
           "Discharge when tolerating diet and arrange follow-up with the pathology result.",
-          "No follow-up is needed after a resection.",
+          "Discharge to the GP and ask them to chase the pathology result.",
           "Schedule a routine CT scan before discharge.",
         ],
         feedback: [
           "Structured follow-up reviews pathology and recovery.",
-          "Skipping follow-up misses the pathology result and late complications.",
+          "The pathology decides on further treatment; the surgical team must review it, not a GP chasing results.",
           "A routine pre-discharge CT adds no value.",
         ],
         wrongComps: ["infection", "hemorrhage"],
@@ -1310,12 +1310,12 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         choices: [
           "Advance the diet as tolerated and arrange a 2-week follow-up.",
           "Keep the patient fasting until the first bowel movement.",
-          "No follow-up is needed.",
+          "Tell the patient to return only if the pain or jaundice returns.",
         ],
         feedback: [
           "Early diet and follow-up are appropriate.",
           "Prolonged fasting is unnecessary.",
-          "Skipping follow-up misses late bile leaks.",
+          "Return-if-worse misses late bile leaks and retained stones that are easier to treat early.",
         ],
         wrongComps: ["infection", "hemorrhage"],
       }
@@ -1525,12 +1525,12 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         kind: "postop", title: "Plan recovery and follow-up", description: "Define the surveillance plan.",
         choices: [
           "Arrange follow-up with the pathology result and a surveillance imaging plan.",
-          "No follow-up is needed after nephrectomy.",
+          "Discharge to the GP and ask them to chase the pathology result.",
           "Schedule a biopsy of the remaining kidney.",
         ],
         feedback: [
           "Surveillance matches the pathology and staging.",
-          "Skipping follow-up misses recurrence.",
+          "Surveillance imaging depends on the stage and grade, which the urology team must interpret.",
           "A biopsy of the remaining kidney is not indicated.",
         ],
         wrongComps: ["infection", "hemorrhage"],
@@ -1540,12 +1540,12 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         choices: [
           "Optimize blood pressure control and discuss lifestyle modifications.",
           "Discontinue all antihypertensives after the nephrectomy.",
-          "No lifestyle discussion is needed.",
+          "Leave the blood pressure and lifestyle discussion to the GP at the next routine visit.",
         ],
         feedback: [
           "Blood pressure and renal protection are optimized.",
           "Stopping antihypertensives can cause rebound hypertension.",
-          "Missing the discussion loses a renal-protection opportunity.",
+          "With one kidney left, blood pressure and renal protection need to start now, not at a routine visit.",
         ],
         wrongComps: ["cardiac_arrhythmia", "infection"],
       }

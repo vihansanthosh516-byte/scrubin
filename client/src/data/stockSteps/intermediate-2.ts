@@ -236,12 +236,12 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         choices: [
           "Discharge when mobilization is safe and arrange a 6-week review with X-ray.",
           "Discharge on the day of surgery.",
-          "No follow-up is needed after a hip replacement.",
+          "Discharge with a GP review and no orthopedic X-ray.",
         ],
         feedback: [
           "Criteria-based discharge with follow-up is standard.",
           "Same-day discharge is unsafe after a posterior-approach THA.",
-          "Skipping follow-up misses component and wound issues.",
+          "A 6-week X-ray and orthopedic review catch component malposition and wound problems early.",
         ],
         wrongComps: ["infection", "thrombosis"],
       }
@@ -383,12 +383,12 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         kind: "postop", title: "Plan the pathology conversation", description: "Prepare for the margin and node results.",
         choices: [
           "Arrange follow-up to review margins, nodes, and the adjuvant plan.",
-          "No follow-up is needed until symptoms appear.",
+          "Send the pathology to the GP and review only if the margins are involved.",
           "Discuss only the cosmetic outcome.",
         ],
         feedback: [
           "Follow-up reviews the pathology and the adjuvant plan.",
-          "Skipping follow-up delays treatment decisions.",
+          "Nodes, receptor status, and radiotherapy planning need a multidisciplinary review, whatever the margins.",
           "Cosmesis alone ignores the oncologic result.",
         ],
         wrongComps: ["infection", "hemorrhage"],
@@ -586,12 +586,12 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         choices: [
           "Keep the ear dry, avoid nose-blowing, and arrange follow-up otoscopy.",
           "Allow swimming immediately.",
-          "No follow-up is needed after a tympanoplasty.",
+          "Review once at one week to remove the packing and then discharge.",
         ],
         feedback: [
           "Ear protection and follow-up optimize graft take.",
           "Water exposure risks infection and graft failure.",
-          "Skipping follow-up misses graft failure and hearing outcomes.",
+          "Graft take and hearing are judged at months, not at the packing removal visit.",
         ],
         wrongComps: ["infection", "nerve_injury"],
       },
@@ -857,12 +857,12 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         kind: "postop", title: "Discharge and follow-up", description: "Define the radiological follow-up.",
         choices: [
           "Arrange outpatient follow-up with serial X-rays until union.",
-          "No follow-up is needed after nailing.",
+          "Review once at 6 weeks and discharge if walking comfortably.",
           "Schedule a routine MRI of the leg.",
         ],
         feedback: [
           "Serial radiographs track union.",
-          "Skipping follow-up misses non-union and implant failure.",
+          "Femoral union takes months; comfort at 6 weeks does not exclude non-union or implant failure.",
           "An MRI adds no value for union assessment.",
         ],
         wrongComps: ["infection", "hemorrhage"],
@@ -1059,12 +1059,12 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         kind: "postop", title: "Monitor for stiffness and infection", description: "Watch the recovery course.",
         choices: [
           "Review range of motion and the wound at follow-up visits.",
-          "No follow-up is needed after the repair.",
+          "Leave the recovery to the physiotherapist without surgical review.",
           "Check only the wound at one month.",
         ],
         feedback: [
           "Structured follow-up tracks motion and healing.",
-          "Skipping follow-up misses stiffness and retear.",
+          "Stiffness and retear need surgical review to decide on imaging or intervention.",
           "Wound-only checks miss functional issues.",
         ],
         wrongComps: ["infection", "nerve_injury"],
@@ -1262,12 +1262,12 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         kind: "postop", title: "Plan the follow-up", description: "Define the recovery timeline.",
         choices: [
           "Arrange follow-up for splint removal, then serial reviews over the year.",
-          "No follow-up is needed after a rhinoplasty.",
+          "Remove the splint at one week and discharge from follow-up.",
           "Schedule a CT scan at one month.",
         ],
         feedback: [
           "Structured follow-up tracks the healing nose.",
-          "Skipping follow-up misses early deformities.",
+          "The nose changes shape for a year; early deformities need serial review.",
           "Imaging adds no value for routine healing.",
         ],
         wrongComps: ["infection", "hypoxia"],
@@ -1452,12 +1452,12 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         kind: "postop", title: "Discharge and follow-up", description: "Define the calcium and clinic plan.",
         choices: [
           "Arrange a follow-up visit with repeat calcium and review of the pathology.",
-          "No follow-up is needed after parathyroidectomy.",
+          "Check the calcium once on the ward and discharge without a clinic visit.",
           "Schedule a routine neck ultrasound.",
         ],
         feedback: [
           "Follow-up confirms the cure and monitors calcium.",
-          "Skipping follow-up misses persistent hypercalcemia.",
+          "Persistent or recurrent hyperparathyroidism shows up on calcium checks weeks later, not on the ward.",
           "Routine imaging adds no value.",
         ],
         wrongComps: ["infection", "nerve_injury"],

@@ -23,7 +23,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the lungs", "the esophagus"],
       test: "graft flow measurement and a check of the anastomoses",
       wrongTests: ["a routine liver biopsy", "an on-table MRI"],
-      risks: ["cardiac_arrhythmia", "hemorrhage", "hypoxia", "thrombosis", "infection", "nerve_injury"],
+      risks: ["cardiac_arrhythmia", "hemorrhage", "hypoxia", "thrombosis", "infection", "nerve_injury", "anaphylaxis", "fluid_overload"],
       instrument: "a sternal saw and a cardioplegia cannula",
       position: "supine with arms tucked",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -76,6 +76,20 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "High-pressure distension injures the endothelium and invites graft failure.",
         ],
         wrongComps: ["thrombosis", "infection"],
+      },
+      {
+        kind: "core", title: "Heparinize for bypass", description: "Anticoagulate before the cannulas go in.",
+        choices: [
+          "Give heparin 300 to 400 units/kg through a central line and confirm an ACT above 400 seconds before cannulating.",
+          "Give a standard 5,000-unit heparin bolus, as for a vascular clamp, and start cannulating.",
+          "Cannulate first and give the heparin once bypass is running, to limit bleeding from the cannulation sites.",
+        ],
+        feedback: [
+          "Full heparinization with a confirmed ACT prevents clotting in the bypass circuit.",
+          "A vascular dose is far too low for bypass; the oxygenator clots and oxygenation fails.",
+          "Blood contacting the circuit before heparin clots in it, with catastrophic embolism.",
+        ],
+        wrongComps: ["hypoxia", "thrombosis"],
       },
       {
         kind: "core", title: "Cannulate for bypass", description: "Set up cardiopulmonary bypass.",
@@ -218,7 +232,20 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["cardiac_arrhythmia", "hypoxia"],
       },
-      { kind: "verify", title: "Confirm the hemostasis with protamine", description: "Reverse the heparin and confirm the field stays dry.", f: { test: "the field after protamine", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Confirm the hemostasis with protamine", description: "Reverse the heparin and confirm the field stays dry.",
+        choices: [
+          "Give protamine slowly over 10 minutes, recheck the ACT against baseline, then inspect every anastomosis and cannulation site.",
+          "Leave the heparin unreversed and transfuse platelets if the field keeps oozing.",
+          "Push the full protamine dose as a rapid bolus so the heparin is reversed before closing.",
+        ],
+        feedback: [
+          "Slow protamine with an ACT check reverses the heparin without a protamine reaction, and every site is inspected dry.",
+          "Unreversed heparin keeps him anticoagulated; platelets cannot correct a heparin effect.",
+          "Rapid protamine causes profound hypotension and pulmonary hypertension.",
+        ],
+        wrongComps: ["hemorrhage", "anaphylaxis"],
+      },
       {
         kind: "verify", title: "Check the LIMA bed", description: "Inspect the LIMA harvest bed for bleeding.",
         choices: [
@@ -231,18 +258,109 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "Drains reveal a bleed only after it has collected — the bed must be dry before closure.",
           "Cautery along the bed risks the phrenic nerve, which runs with the internal thoracic vessels — control only what is bleeding.",
         ],
-        wrongComps: ["hemorrhage", "hypoxia"],
+        wrongComps: ["hemorrhage", "nerve_injury"],
       },
       { kind: "bleed", title: "Control a graft bed bleeder", description: "The vein harvest site is bleeding.", f: { vessel: "the harvest site vessels", wrongVessels: ["the femoral artery", "the aorta"] } },
-      { kind: "verify", title: "Confirm the rhythm", description: "Check the rhythm is stable before closure.", f: { test: "the cardiac rhythm and the pacing", wrongTests: ["a routine ECG", "a CT scan"] } },
+      {
+        kind: "verify", title: "Confirm the rhythm", description: "Check the rhythm is stable before closure.",
+        choices: [
+          "Confirm the rhythm, place temporary epicardial pacing wires, and test capture before closing.",
+          "Close without pacing wires, since he is in sinus rhythm at the moment.",
+          "Place the pacing wires through the fresh vein-graft hood, where capture is most reliable.",
+        ],
+        feedback: [
+          "Epicardial wires give immediate pacing if heart block or bradycardia develops after bypass.",
+          "Heart block after bypass is common and unpredictable; without wires it needs emergency transvenous pacing.",
+          "A wire through a fresh graft anastomosis tears it, and it bleeds when the wire is pulled.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "hemorrhage"],
+      },
       { kind: "closure", title: "Close the sternum", description: "Wire the sternum and close the layers.", f: { structure: "the sternum and the soft tissues" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Cardiac surgery carries a high thrombosis risk." },
-      { kind: "postop", title: "Watch for low cardiac output", description: "Monitor the hemodynamics for low output.", f: { test: "the cardiac output and the filling pressures", wrongTests: ["a routine ECG", "a CT scan"] } },
-      { kind: "postop", title: "Manage atrial fibrillation", description: "Treat new postoperative atrial fibrillation.", f: { test: "the rhythm and the rate control", wrongTests: ["a routine ECG", "a CT scan"] } },
-      { kind: "postop", title: "Pulmonary hygiene", description: "Plan the breathing exercises and the extubation.", f: { test: "the respiratory status", wrongTests: ["a routine chest X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Renal protection", description: "Monitor the renal function after the bypass.", f: { test: "the urine output and the creatinine", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Sternal precautions", description: "Teach the sternal precautions for healing.", f: { test: "the sternal precautions", wrongTests: ["a routine chest X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Discharge and follow-up", description: "Plan the discharge and the cardiology follow-up.", f: { test: "the discharge criteria and the follow-up", wrongTests: ["a routine chest X-ray", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for low cardiac output", description: "Monitor the hemodynamics for low output.",
+        choices: [
+          "Track the cardiac index, filling pressures, lactate, and urine output hourly, and get an echo if the index falls.",
+          "Treat any low blood pressure with a fluid bolus first, whatever the filling pressures show.",
+          "Rely on the blood pressure, since a normal pressure means the output is adequate.",
+        ],
+        feedback: [
+          "Low output after bypass can hide behind a normal pressure; the index, lactate, and echo find tamponade or pump failure early.",
+          "High filling pressures with low output mean a failing ventricle or tamponade; more fluid makes it worse.",
+          "Vasoconstriction keeps the pressure normal while the output falls.",
+        ],
+        wrongComps: ["fluid_overload", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Manage atrial fibrillation", description: "Treat new postoperative atrial fibrillation.",
+        choices: [
+          "Correct potassium and magnesium, control the rate with a beta-blocker or amiodarone, and anticoagulate if it persists beyond 48 hours.",
+          "Cardiovert with a synchronized shock straight away, although he is hemodynamically stable.",
+          "Leave the atrial fibrillation untreated, since it resolves by itself in most patients after bypass.",
+        ],
+        feedback: [
+          "Electrolytes and rate control treat most post-bypass AF; persistent AF needs anticoagulation for stroke risk.",
+          "Stable AF after bypass usually recurs straight after a shock; cardioversion is for the unstable patient.",
+          "Most does resolve, but fast AF drops the output and persistent AF carries a stroke risk.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Pulmonary hygiene", description: "Plan the breathing exercises and the extubation.",
+        choices: [
+          "Extubate once he is awake, warm, and not bleeding, then start incentive spirometry and early mobilization.",
+          "Keep him ventilated overnight as routine so the lungs can rest after bypass.",
+          "Extubate on the table as soon as the chest is closed, before he rewarms.",
+        ],
+        feedback: [
+          "Early extubation of a stable, warm patient plus spirometry reduces pneumonia and atelectasis.",
+          "Routine overnight ventilation raises the risk of ventilator pneumonia with no benefit in a stable patient.",
+          "A cold patient shivers, raising oxygen demand, and may still be bleeding; extubate when warm and dry.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Renal protection", description: "Monitor the renal function after the bypass.",
+        choices: [
+          "Keep the mean arterial pressure above 65, avoid nephrotoxins, and track urine output and creatinine daily.",
+          "Give furosemide whenever the urine output drops below 0.5 mL/kg/h.",
+          "Order a contrast CT on day 1 to check the grafts.",
+        ],
+        feedback: [
+          "Perfusion pressure and avoiding nephrotoxins protect kidneys stressed by bypass.",
+          "Diuretics raise the urine number without protecting the kidney, and the potassium they waste triggers arrhythmias after bypass.",
+          "Early contrast adds a nephrotoxic load to a kidney stressed by bypass, and contrast can trigger a reaction.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Sternal precautions", description: "Teach the sternal precautions for healing.",
+        choices: [
+          "Teach sternal precautions: no lifting over about 5 kg and no pushing up with the arms for 6 to 8 weeks, and hug a pillow when coughing.",
+          "Tell him to hold back his cough so the sternal wires are not stressed.",
+          "Allow full upper-body activity once the skin has healed at 2 weeks.",
+        ],
+        feedback: [
+          "Limiting the load while the sternum unites prevents dehiscence and mediastinitis.",
+          "Holding back the cough leaves secretions in the lungs; splinting protects the sternum and still clears them.",
+          "The sternum takes 6 to 8 weeks to unite; early loading risks dehiscence and mediastinitis.",
+        ],
+        wrongComps: ["hypoxia", "infection"],
+      },
+      {
+        kind: "postop", title: "Discharge and follow-up", description: "Plan the discharge and the cardiology follow-up.",
+        choices: [
+          "Discharge on a high-intensity statin and a beta-blocker, with a wound check and a cardiology review at 4 to 6 weeks.",
+          "Stop the statin at discharge, since the diseased segments are now bypassed.",
+          "Arrange a cardiology review only if the chest pain comes back.",
+        ],
+        feedback: [
+          "Statins slow disease in the grafts and native vessels; every CABG patient needs secondary prevention and review.",
+          "Vein grafts develop atherosclerosis quickly without a statin, and they occlude.",
+          "A routine review catches arrhythmias, heart failure, and graft problems before they cause symptoms.",
+        ],
+        wrongComps: ["thrombosis", "cardiac_arrhythmia"],
+      },
       {
         kind: "postop", title: "Plan ICU monitoring", description: "Define the postoperative surveillance.",
         choices: [
@@ -289,12 +407,12 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         kind: "postop", title: "Plan cardiac rehabilitation", description: "Define the recovery pathway.",
         choices: [
           "Refer for cardiac rehabilitation and arrange cardiology follow-up.",
-          "No rehabilitation is needed after CABG.",
+          "Discharge home with a walking leaflet and let the GP decide on rehabilitation later.",
           "Restrict all exertion indefinitely.",
         ],
         feedback: [
           "Cardiac rehabilitation improves outcomes.",
-          "Skipping rehab delays functional recovery.",
+          "Formal cardiac rehab cuts mortality and readmission; a leaflet and a deferred GP decision usually means it never happens.",
           "Indefinite restriction is unnecessary and harmful.",
         ],
         wrongComps: ["thrombosis", "infection"],
@@ -309,7 +427,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
     id: "craniotomy",
     spec: {
       approach: "a right frontal craniotomy for the frontal mass",
-      wrongApproaches: ["a posterior fossa craniectomy as routine", "a transnasal approach"],
+      wrongApproaches: ["a bicoronal flap across both frontal lobes", "a single burr hole over the tumor"],
       landmark: "the superior sagittal sinus and the central sulcus",
       wrongLandmarks: ["the transverse sinus", "the sylvian fissure alone"],
       vessel: "the middle meningeal artery and the cortical veins",
@@ -330,7 +448,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
       { kind: "preop", title: "Confirm the plan", description: "Review the MRI, the navigation, and the eloquent-area plan." },
       { kind: "antibiotic", title: "Prophylactic antibiotic timing", description: "Bone and implant work demands timely prophylaxis." },
       { kind: "position", title: "Position and fix the head", description: "Supine with the head rotated and pinned.", f: { wrongPositions: ["prone", "lateral decubitus"] } },
-      { kind: "access", title: "Plan the skin incision", description: "Plan the incision for the frontal craniotomy.", f: { wrongApproaches: ["a posterior fossa approach", "a transnasal approach"] } },
+      { kind: "access", title: "Plan the skin incision", description: "Plan the incision for the frontal craniotomy.", f: { wrongApproaches: ["a bicoronal flap across both frontal lobes", "a single burr hole over the tumor"] } },
       { kind: "exposure", title: "Raise the scalp flap", description: "Reflect the scalp and pericranium.", f: { structure: "the scalp and pericranium", landmark: "the superior temporal line" } },
       {
         kind: "vessel", title: "Control scalp bleeding", description: "The scalp bleeds vigorously.",
@@ -428,7 +546,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "Broad cautery at the cortex causes a venous infarction.",
           "Packing over an active bleeder risks a rebleed and herniation.",
         ],
-        wrongComps: ["hemorrhage", "nerve_injury"],
+        wrongComps: ["thrombosis", "nerve_injury"],
       },
       {
         kind: "vitals", title: "Respond to the ICP rise", description: "The brain is swelling in the field.",
@@ -459,6 +577,36 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         wrongComps: ["hemorrhage", "nerve_injury"],
       },
       {
+        kind: "verify", title: "Confirm the hemostasis under irrigation", description: "Irrigate and confirm the cavity is dry.",
+        choices: [
+          "Irrigate the cavity with warm saline, ask anesthesia for a Valsalva, and check that the irrigation stays clear.",
+          "Pack the cavity with hemostatic agent and close without a test at raised venous pressure.",
+          "Close once the cavity looks dry at the current low blood pressure.",
+        ],
+        feedback: [
+          "Clear irrigation under a Valsalva shows venous bleeders that a low pressure hides.",
+          "Packed hemostatic agent hides a bleeder and swells, compressing the surrounding brain.",
+          "A cavity that is dry at a low pressure can bleed when the pressure normalizes on waking.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
+      { kind: "exposure", title: "Check the cortical veins", description: "Re-inspect the draining veins for patency.", f: { structure: "the cortical veins", landmark: "the sagittal sinus" } },
+      { kind: "bleed", title: "Control a bone-edge bleeder", description: "The bone edges are oozing.", f: { vessel: "the bone edge vessels", wrongVessels: ["the middle meningeal artery", "the internal carotid artery"] } },
+      {
+        kind: "verify", title: "Confirm the brain relaxation", description: "Check the brain is not tense before closure.",
+        choices: [
+          "Check that the brain sits below the bone edge and pulsates, and review the CO2, head position, and osmotherapy before closing the dura.",
+          "Close the dura tightly over the swollen brain and let the bone flap hold it in.",
+          "Hyperventilate to a PaCO2 of 25 mmHg for the rest of the case to shrink the brain.",
+        ],
+        feedback: [
+          "A relaxed brain lets the dura close without compressing cortex; checking the causes of swelling fixes it.",
+          "Closing over a swollen brain raises the intracranial pressure and compresses the cortex.",
+          "Deep, prolonged hyperventilation constricts cerebral vessels enough to cause ischemia.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
         kind: "closure", title: "Close the dura", description: "Watertight dural closure.",
         choices: [
           "Close the dura watertight, using a patch if needed.",
@@ -472,21 +620,134 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["infection", "nerve_injury"],
       },
-      { kind: "verify", title: "Confirm the hemostasis under irrigation", description: "Irrigate and confirm the cavity is dry.", f: { test: "the cavity under irrigation", wrongTests: ["a routine CT", "an on-table MRI"] } },
-      { kind: "exposure", title: "Check the cortical veins", description: "Re-inspect the draining veins for patency.", f: { structure: "the cortical veins", landmark: "the sagittal sinus" } },
-      { kind: "bleed", title: "Control a bone-edge bleeder", description: "The bone edges are oozing.", f: { vessel: "the bone edge vessels", wrongVessels: ["the middle meningeal artery", "the internal carotid artery"] } },
-      { kind: "verify", title: "Confirm the brain relaxation", description: "Check the brain is not tense before closure.", f: { test: "the brain relaxation", wrongTests: ["a routine CT", "an ultrasound"] } },
       { kind: "closure", title: "Replace the bone flap", description: "Fix the bone flap and close the scalp.", f: { structure: "the bone flap and scalp" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Neurosurgical patients are high-risk for thrombosis." },
-      { kind: "postop", title: "Seizure prophylaxis plan", description: "Define the seizure prophylaxis for the craniotomy.", f: { test: "the seizure prophylaxis plan", wrongTests: ["a routine EEG", "a CT scan"] } },
-      { kind: "postop", title: "Watch for new deficits", description: "Monitor the neurologic exam closely.", f: { test: "the neurologic exam", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Fluid management", description: "Manage the fluids to protect the brain.", f: { test: "the fluid balance and the sodium", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Anticonvulsant levels", description: "Monitor the anticonvulsant levels if started.", f: { test: "the anticonvulsant levels", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Wound care", description: "Define the scalp wound care.", f: { test: "the scalp wound", wrongTests: ["a routine CT", "an ultrasound"] } },
-      { kind: "postop", title: "Watch for CSF leak", description: "Monitor the wound for a CSF leak.", f: { test: "the wound for CSF", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Mobilization plan", description: "Define the early mobilization with the deficits.", f: { test: "the mobilization tolerance", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the imaging.", f: { test: "the pathology and the imaging at follow-up", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the medications, the seizure plan, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine CT", "a blood panel"] } },
+      {
+        kind: "postop", title: "Seizure prophylaxis plan", description: "Define the seizure prophylaxis for the craniotomy.",
+        choices: [
+          "Continue levetiracetam for about a week, with a plan to stop it if he stays seizure-free.",
+          "Load with phenytoin and continue it indefinitely.",
+          "Stop all anticonvulsants on the day of surgery to avoid drug interactions.",
+        ],
+        feedback: [
+          "Short levetiracetam prophylaxis covers the highest-risk first week with few interactions.",
+          "Phenytoin loading causes arrhythmias and hypotension, and indefinite prophylaxis is not indicated without seizures.",
+          "The first week after cortical surgery carries the highest seizure risk.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Watch for new deficits", description: "Monitor the neurologic exam closely.",
+        choices: [
+          "Do hourly neurologic observations overnight and get an urgent CT for any drop in GCS or new deficit.",
+          "Check the neurology once on the morning round, since he was intact at extubation.",
+          "Put any new weakness down to swelling and start steroids without imaging.",
+        ],
+        feedback: [
+          "A postoperative hematoma shows as a falling GCS or a new deficit; early CT and evacuation decide the outcome.",
+          "A hematoma can develop within hours; a single morning check finds it too late.",
+          "A new deficit can be a hematoma that needs evacuation; treating it as swelling delays the scan.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Fluid management", description: "Manage the fluids to protect the brain.",
+        choices: [
+          "Keep him euvolemic with isotonic fluid and check the sodium twice daily for SIADH or diabetes insipidus.",
+          "Run 5% dextrose as maintenance to avoid a sodium load.",
+          "Restrict fluids to 1 liter a day as routine to reduce brain swelling.",
+        ],
+        feedback: [
+          "Isotonic fluid and sodium checks catch SIADH and diabetes insipidus early.",
+          "Hypotonic fluid lowers the sodium and worsens cerebral edema.",
+          "Routine restriction causes hypovolemia and hypotension, which reduce cerebral perfusion and promote clotting.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Anticonvulsant levels", description: "Monitor the anticonvulsant levels if started.",
+        choices: [
+          "Check adherence and side effects; levetiracetam needs no routine levels, while phenytoin levels are corrected for albumin.",
+          "Increase the dose every day until mild drowsiness appears.",
+          "Stop the drug abruptly at discharge.",
+        ],
+        feedback: [
+          "Monitoring matches the drug: levetiracetam is not level-guided, phenytoin is.",
+          "Titrating to drowsiness causes toxicity, including phenytoin arrhythmias, and masks neurologic decline.",
+          "Abrupt withdrawal provokes seizures.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "Define the scalp wound care.",
+        choices: [
+          "Keep the wound dry for 48 hours, inspect it for swelling or clear fluid, and remove the staples at 7 to 10 days.",
+          "Keep a tight head bandage on for two weeks to prevent swelling.",
+          "Remove the staples on day 3 once the wound looks sealed.",
+        ],
+        feedback: [
+          "Daily inspection finds a CSF leak or infection early, and scalp staples need 7 to 10 days.",
+          "A tight bandage for weeks hides a collecting subgaleal hematoma or a CSF leak.",
+          "Early removal risks dehiscence and a CSF leak.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
+      {
+        kind: "postop", title: "Watch for CSF leak", description: "Monitor the wound for a CSF leak.",
+        choices: [
+          "Check the wound and nose for clear fluid, test any fluid for beta-2 transferrin, and review early if it is positive.",
+          "Treat a clear nasal drip as a cold and review it at the clinic visit.",
+          "Place a lumbar drain on the ward before any imaging.",
+        ],
+        feedback: [
+          "Beta-2 transferrin confirms CSF; early repair of a leak prevents meningitis.",
+          "An unrecognized CSF leak is a direct route for meningitis.",
+          "Draining CSF from below before a scan excludes a hematoma can cause herniation.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Mobilization plan", description: "Define the early mobilization with the deficits.",
+        choices: [
+          "Nurse him 30 degrees head-up and mobilize from day 1 with physiotherapy and mechanical DVT prophylaxis.",
+          "Keep him flat in bed for 72 hours to protect the dural closure.",
+          "Let him walk to the bathroom alone on the evening of surgery.",
+        ],
+        feedback: [
+          "Head-up positioning helps venous drainage, and early mobilization prevents DVT and pneumonia.",
+          "Prolonged bed rest raises DVT and pneumonia risk without protecting the dura.",
+          "Unsupervised walking hours after a craniotomy risks a fall and a head injury.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the imaging.",
+        choices: [
+          "Review at 2 weeks with the histology and postoperative MRI, taper the dexamethasone, and refer to neuro-oncology.",
+          "Stop the dexamethasone abruptly at discharge.",
+          "Restart his aspirin on the day of discharge.",
+        ],
+        feedback: [
+          "Early review sets the adjuvant plan, and a steroid taper avoids adrenal crisis.",
+          "Abrupt withdrawal after days of dexamethasone risks adrenal crisis and rebound swelling.",
+          "Aspirin within days of a craniotomy raises the risk of a postoperative hematoma.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Summarize the medications, the seizure plan, and the warning signs.",
+        choices: [
+          "Advise no driving until cleared under the seizure rules, and to return for headache, fever, wound leak, or new weakness.",
+          "Tell him he can fly home the next day.",
+          "Advise him to return only if he has a seizure.",
+        ],
+        feedback: [
+          "Driving rules and red flags cover seizures, infection, and a late hematoma.",
+          "Air in the skull expands at altitude; flying days after a craniotomy risks tension pneumocephalus.",
+          "Headache, fever, wound leak, and new weakness are red flags too.",
+        ],
+        wrongComps: ["nerve_injury", "infection"],
+      },
       {
         kind: "postop", title: "Monitor in the ICU", description: "Watch for bleeding, seizures, and ICP.",
         choices: [
@@ -519,12 +780,12 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         kind: "postop", title: "Plan rehabilitation", description: "Address the neurologic deficits.",
         choices: [
           "Refer for physiotherapy and speech therapy as indicated by the deficits.",
-          "No rehabilitation is needed after a craniotomy.",
+          "Wait six weeks to see which deficits recover on their own before referring to therapy.",
           "Restrict the patient to bed rest for a week.",
         ],
         feedback: [
           "Rehabilitation addresses the postoperative deficits.",
-          "Skipping rehab delays recovery.",
+          "Early therapy drives neurologic recovery; waiting to see what recovers by itself loses the most plastic period.",
           "Bed rest increases thrombosis and deconditioning.",
         ],
         wrongComps: ["thrombosis", "infection"],
@@ -533,12 +794,12 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         kind: "postop", title: "Plan the pathology and follow-up", description: "Coordinate the oncology plan.",
         choices: [
           "Arrange follow-up with the pathology result and the oncology team.",
-          "No follow-up is needed after the resection.",
+          "Discharge to the GP and ask them to chase the pathology result.",
           "Schedule a routine repeat MRI in one month regardless.",
         ],
         feedback: [
           "The pathology guides the adjuvant plan.",
-          "Skipping follow-up delays treatment decisions.",
+          "The adjuvant plan needs the surgical and oncology teams; handing the pathology to the GP delays it.",
           "Routine imaging timing depends on the pathology.",
         ],
         wrongComps: ["infection", "hemorrhage"],
@@ -777,12 +1038,12 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         kind: "postop", title: "Discharge and follow-up", description: "Define the imaging and clinic plan.",
         choices: [
           "Arrange follow-up with X-rays at 6 weeks and 3 months to assess fusion.",
-          "No follow-up is needed after a fusion.",
+          "Review in clinic once at 6 weeks and discharge if the wound has healed.",
           "Schedule an MRI at one month as routine.",
         ],
         feedback: [
           "Serial X-rays track fusion.",
-          "Skipping follow-up misses non-union and hardware failure.",
+          "Fusion takes months; a single 6-week wound check misses non-union and hardware failure.",
           "Routine MRI is not indicated for fusion assessment.",
         ],
         wrongComps: ["infection", "nerve_injury"],
@@ -808,7 +1069,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the heart", "the lung"],
       test: "a systematic four-quadrant and retroperitoneal survey",
       wrongTests: ["a routine colonoscopy", "a CT scan in the OR"],
-      risks: ["hemorrhage", "cardiac_arrhythmia", "infection", "hypoxia"],
+      risks: ["hemorrhage", "cardiac_arrhythmia", "infection", "hypoxia", "thrombosis"],
       instrument: "a self-retaining retractor and vascular clamps",
       position: "supine with the arms out",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -1000,7 +1261,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "Re-exploring only on deterioration risks missed ischemia.",
           "Bedside closure without a look risks an untreated injury.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["thrombosis", "hemorrhage"],
       },
       {
         kind: "postop", title: "Antibiotics and source control", description: "Manage the contamination.",
@@ -1037,7 +1298,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the middle lobe", "the left lower lobe"],
       test: "an air-leak test and a check of the bronchial stump",
       wrongTests: ["a routine liver biopsy", "an on-table MRI"],
-      risks: ["hypoxia", "hemorrhage", "cardiac_arrhythmia", "infection", "nerve_injury"],
+      risks: ["hypoxia", "hemorrhage", "cardiac_arrhythmia", "infection", "nerve_injury", "thrombosis"],
       instrument: "a thoracoscope and an endostapler",
       position: "lateral decubitus",
       wrongPositions: ["prone", "supine"],
@@ -1088,7 +1349,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "Stapling the whole vein devascularizes the remaining lung.",
           "Blind ligation risks the atrial cuff.",
         ],
-        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
+        wrongComps: ["thrombosis", "cardiac_arrhythmia"],
       },
       {
         kind: "vessel", title: "Control the pulmonary artery branches", description: "Secure the arterial supply of the lobe.",
@@ -1249,12 +1510,12 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         kind: "postop", title: "Plan the pathology and follow-up", description: "Coordinate the oncology plan.",
         choices: [
           "Arrange follow-up with the pathology result and the oncology team.",
-          "No follow-up is needed after a lobectomy.",
+          "Discharge to the GP and ask them to chase the pathology result.",
           "Schedule a routine CT in one month regardless.",
         ],
         feedback: [
           "The pathology guides the adjuvant plan.",
-          "Skipping follow-up delays treatment decisions.",
+          "The adjuvant plan needs the surgical and oncology teams; handing the pathology to the GP delays it.",
           "Routine imaging timing depends on the pathology.",
         ],
         wrongComps: ["infection", "hypoxia"],
@@ -1280,7 +1541,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the spleen", "the left kidney"],
       test: "a check of the anastomoses and the SMA margin",
       wrongTests: ["a routine liver biopsy", "an on-table MRI"],
-      risks: ["infection", "hemorrhage", "cardiac_arrhythmia", "hypoxia", "thrombosis", "nerve_injury"],
+      risks: ["infection", "hemorrhage", "cardiac_arrhythmia", "hypoxia", "thrombosis", "nerve_injury", "anaphylaxis"],
       instrument: "a vascular stapler and a self-retaining retractor",
       position: "supine",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -1324,7 +1585,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         kind: "vessel", title: "Control the gastroduodenal artery", description: "Secure the arterial inflow to the specimen.",
         choices: [
           "Isolate and ligate the gastroduodenal artery with a test clamp and pulse check.",
-          "Ligate the hepatic artery by mistake.",
+          "Ligate the larger artery running along the upper border of the pancreas as the GDA.",
           "Ligate the gastroduodenal artery blindly.",
         ],
         feedback: [
@@ -1332,7 +1593,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "Ligating the hepatic artery devascularizes the liver.",
           "Blind ligation risks the common hepatic artery.",
         ],
-        wrongComps: ["hemorrhage", "infection"],
+        wrongComps: ["thrombosis", "infection"],
       },
       {
         kind: "core", title: "Divide the stomach or duodenum", description: "Set the proximal margin.",
@@ -1418,7 +1679,20 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["nerve_injury", "hemorrhage"],
       },
-      { kind: "verify", title: "Check the SMA margin", description: "Confirm the margin on the specimen.", f: { test: "the SMA groove margin on the specimen", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Check the SMA margin", description: "Confirm the margin on the specimen.",
+        choices: [
+          "Ink the SMA margin, send it for frozen section, and clear the tissue off the right side of the SMA under direct vision.",
+          "Pull the specimen off the SMA with blunt traction to include more tissue.",
+          "Clear the margin with the energy device flush against the SMA wall.",
+        ],
+        feedback: [
+          "The SMA margin is the one most often involved; frozen section guides further clearance.",
+          "Blunt traction tears SMA branches and the first jejunal vein.",
+          "Energy flush on the SMA wall can injure the artery, causing delayed bleeding or thrombosis.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
       {
         kind: "core", title: "Reconstruct the pancreaticojejunostomy", description: "Restore the pancreatic drainage.",
         choices: [
@@ -1437,15 +1711,15 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         kind: "core", title: "Reconstruct the hepaticojejunostomy", description: "Restore the biliary drainage.",
         choices: [
           "Create a tension-free hepaticojejunostomy to the Roux limb.",
-          "Anastomose the bile duct to the stomach.",
+          "Run the duct stitch deep enough to include the artery branch lying behind the duct.",
           "Ligate the common hepatic duct and rely on collaterals.",
         ],
         feedback: [
           "The biliary anastomosis is created to the Roux limb.",
-          "A biliary-gastric anastomosis is not standard.",
+          "The right hepatic artery runs behind the duct; catching it bleeds or devascularizes the duct.",
           "Ligating the duct causes cholangitis and jaundice.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "core", title: "Reconstruct the gastrojejunostomy", description: "Restore the alimentary continuity.",
@@ -1475,7 +1749,20 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["hemorrhage", "infection"],
       },
-      { kind: "verify", title: "Re-check the anastomotic perfusion", description: "Confirm the perfusion of the bowel and the stomach limbs.", f: { test: "the perfusion of the anastomotic limbs", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Re-check the anastomotic perfusion", description: "Confirm the perfusion of the bowel and the stomach limbs.",
+        choices: [
+          "Check each anastomosis for pink, bleeding edges and no tension, and confirm hepatic artery flow on Doppler.",
+          "Accept a dusky jejunal limb, since it usually pinks up after closure.",
+          "Tighten the anastomotic sutures further to make the joins more secure.",
+        ],
+        feedback: [
+          "Well-perfused, tension-free joins heal; Doppler confirms the hepatic artery was not compromised.",
+          "A dusky limb will leak; it needs revision now.",
+          "Over-tight sutures strangle the edges and cause ischemic leaks.",
+        ],
+        wrongComps: ["thrombosis", "infection"],
+      },
       {
         kind: "verify", title: "Inspect the retroperitoneum", description: "Check the retroperitoneal bed for bleeding.",
         choices: [
@@ -1491,16 +1778,120 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         wrongComps: ["hemorrhage", "infection"],
       },
       { kind: "bleed", title: "Control an anastomotic bleeder", description: "An anastomotic suture line is bleeding.", f: { vessel: "the anastomotic vessels", wrongVessels: ["the aorta", "the portal vein"] } },
-      { kind: "verify", title: "Confirm the drain positions", description: "Check the drains are placed at the anastomoses.", f: { test: "the drain positions", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Confirm the drain positions", description: "Check the drains are placed at the anastomoses.",
+        choices: [
+          "Place a closed-suction drain beside the pancreatic and biliary anastomoses, clear of the vessels, and secure it at the skin.",
+          "Place the drain tip on the gastroduodenal artery stump for the best drainage.",
+          "Use an open corrugated drain through the main wound.",
+        ],
+        feedback: [
+          "A drain beside the pancreatic anastomosis detects and controls a fistula.",
+          "A drain eroding the GDA stump causes a sentinel bleed and pseudoaneurysm rupture.",
+          "Open drains through the wound raise infection and do not measure the output.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       { kind: "closure", title: "Place drains and close", description: "Drain the anastomoses and close.", f: { structure: "the drains and the abdominal wall" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Major pancreatic surgery carries a high thrombosis risk." },
-      { kind: "postop", title: "Watch for delayed gastric emptying", description: "Monitor the gastric emptying after the reconstruction.", f: { test: "the gastric emptying", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Monitor the drains daily", description: "Track the drain output and the amylase.", f: { test: "the drain amylase and the output", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Glucose control", description: "Manage the diabetes and the stress hyperglycemia.", f: { test: "the blood glucose levels", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Nutrition support", description: "Start the early enteral or parenteral nutrition.", f: { test: "the nutritional plan", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Watch for cholangitis", description: "Monitor for fever and jaundice suggesting cholangitis.", f: { test: "the liver enzymes and the bilirubin", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Mobilization plan", description: "Define the early mobilization.", f: { test: "the mobilization tolerance", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the oncology plan.", f: { test: "the pathology and the oncology plan", wrongTests: ["a routine CT", "a blood panel"] } },
+      {
+        kind: "postop", title: "Watch for delayed gastric emptying", description: "Monitor the gastric emptying after the reconstruction.",
+        choices: [
+          "Keep the NG tube while the output is high, start a prokinetic such as erythromycin, and advance the diet as it settles.",
+          "Remove the NG tube and start a full diet on day 1 whatever the output.",
+          "Take him back to theater for a presumed obstruction on day 3.",
+        ],
+        feedback: [
+          "Delayed gastric emptying is common after a Whipple and usually settles with decompression and prokinetics.",
+          "Feeding through a high NG output causes vomiting and aspiration.",
+          "Delayed emptying is managed conservatively; early re-operation adds morbidity.",
+        ],
+        wrongComps: ["hypoxia", "infection"],
+      },
+      {
+        kind: "postop", title: "Monitor the drains daily", description: "Track the drain output and the amylase.",
+        choices: [
+          "Measure the drain volume and amylase on day 3, and keep the drain if the amylase is over 3 times the serum level.",
+          "Remove the drains on day 1 whatever the output.",
+          "Put the drains on high-pressure wall suction to keep them empty.",
+        ],
+        feedback: [
+          "Drain amylase on day 3 identifies a pancreatic fistula.",
+          "Removing the drains before checking the amylase misses a fistula, which then collects.",
+          "Wall suction on a drain beside the GDA stump erodes it and causes bleeding.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Glucose control", description: "Manage the diabetes and the stress hyperglycemia.",
+        choices: [
+          "Check capillary glucose every 4 to 6 hours and use a variable-rate insulin infusion if it stays above 10 mmol/L (180 mg/dL).",
+          "Treat the glucose only once it goes above 20 mmol/L (360 mg/dL).",
+          "Give a fixed high dose of long-acting insulin from day 1.",
+        ],
+        feedback: [
+          "Pancreatic resection causes new diabetes; close monitoring prevents both highs and lows.",
+          "Sustained hyperglycemia raises infection and fistula rates.",
+          "Fixed insulin while he is not eating causes hypoglycemia, which provokes arrhythmias.",
+        ],
+        wrongComps: ["infection", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Nutrition support", description: "Start the early enteral or parenteral nutrition.",
+        choices: [
+          "Start enteral feeding within 48 hours by mouth or feeding jejunostomy, with pancreatic enzyme replacement at meals.",
+          "Keep him nil by mouth on IV fluids alone until the drains are out.",
+          "Start total parenteral nutrition as routine on day 1.",
+        ],
+        feedback: [
+          "Early enteral feeding with enzymes reduces infection and supports healing.",
+          "Prolonged starvation delays healing and raises infection.",
+          "Routine TPN adds a central line, with its infection and thrombosis risk, and no benefit when the gut works.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Watch for cholangitis", description: "Monitor for fever and jaundice suggesting cholangitis.",
+        choices: [
+          "Watch for fever, rigors, and jaundice, and send blood cultures, liver tests, and imaging of the hepaticojejunostomy if they appear.",
+          "Treat a fever as atelectasis with physiotherapy and no cultures.",
+          "Start long-term prophylactic antibiotics for every Whipple patient.",
+        ],
+        feedback: [
+          "Cholangitis after a hepaticojejunostomy needs cultures, antibiotics, and imaging for a stricture or leak.",
+          "Missed cholangitis progresses to biliary sepsis.",
+          "Routine long-term antibiotics select resistant organisms and risk drug reactions without preventing strictures.",
+        ],
+        wrongComps: ["infection", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Mobilization plan", description: "Define the early mobilization.",
+        choices: [
+          "Sit him out of bed on day 1 and walk on day 2 with physiotherapy, alongside LMWH.",
+          "Keep him in bed until the drains are removed.",
+          "Hold the LMWH until he is fully mobile.",
+        ],
+        feedback: [
+          "Early mobilization reduces DVT, pneumonia, and ileus.",
+          "Bed rest leads to atelectasis and pneumonia and raises DVT risk.",
+          "Cancer surgery calls for LMWH now and for about 4 weeks after discharge.",
+        ],
+        wrongComps: ["hypoxia", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the oncology plan.",
+        choices: [
+          "Review at 2 weeks with the histology, refer for adjuvant chemotherapy, and continue pancreatic enzymes and extended LMWH.",
+          "Stop the LMWH at discharge rather than completing 4 weeks.",
+          "Remove the remaining drain in clinic without checking its amylase.",
+        ],
+        feedback: [
+          "Adjuvant chemotherapy should start within about 12 weeks, and extended prophylaxis covers the cancer-related clot risk.",
+          "Extended LMWH after major cancer surgery halves late venous thromboembolism.",
+          "An undrained pancreatic fistula collects and becomes an abscess.",
+        ],
+        wrongComps: ["thrombosis", "infection"],
+      },
       {
         kind: "postop", title: "Monitor for pancreatic fistula", description: "The highest-risk complication.",
         choices: [
@@ -1534,12 +1925,12 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         choices: [
           "Start enteral or parenteral nutrition support and arrange oncology follow-up with the pathology.",
           "Keep the patient fasting until discharge.",
-          "No follow-up is needed after a Whipple.",
+          "Discharge to the GP and ask them to chase the pathology result.",
         ],
         feedback: [
           "Nutrition support and oncology follow-up are arranged.",
           "Prolonged fasting delays recovery.",
-          "Skipping follow-up misses recurrence and late complications.",
+          "Adjuvant chemotherapy decisions need the surgical and oncology teams; handing the pathology to the GP delays them.",
         ],
         wrongComps: ["infection", "hemorrhage"],
       }

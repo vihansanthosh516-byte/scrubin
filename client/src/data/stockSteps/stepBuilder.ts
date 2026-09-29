@@ -189,7 +189,7 @@ const CHOICE_TEMPLATES: Record<StepKind, (s: StepSpec) => [string, string, strin
   verify: (s) => [
     `Perform ${s.test} to confirm the repair before closing.`,
     `Trust the visual inspection and move straight to closure.`,
-    `Order ${s.wrongTests[0]} — it provides more definitive information.`,
+    `Close now and check ${s.test} on the post-op ward round.`,
   ],
   bleed: (s) => [
     `Apply direct pressure, identify the source, and control ${s.vessel} precisely.`,
@@ -272,7 +272,7 @@ const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
   verify: [
     "Verification confirms the repair is sound before closure.",
     "Skipping verification risks discovering a failure after closure.",
-    "The wrong test wastes time and does not answer the surgical question.",
+    "A failure found on the ward means a return to theater; the check belongs before closure.",
   ],
   bleed: [
     "The bleeding source is controlled precisely.",
@@ -300,6 +300,35 @@ const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
     "Deferring prophylaxis until ambulation misses the highest-risk window.",
   ],
 };
+
+// What each template distractor actually does to the patient, per step kind
+// (e.g. "retract the nerve for exposure" injures a nerve, "hold antibiotics"
+// infects), most fitting first. The first one the procedure declares in its
+// risks wins; the two wrong options never share a complication. Kinds with no
+// single mechanism fall back to the procedure's risk list.
+const KIND_COMPS: Partial<Record<StepKind, [string[], string[]]>> = {
+  preop: [["anaphylaxis", "infection"], ["infection", "anaphylaxis"]],
+  antibiotic: [["infection"], ["anaphylaxis"]],
+  position: [["hypoxia", "nerve_injury"], ["nerve_injury", "hypoxia"]],
+  access: [["hemorrhage", "nerve_injury"], ["nerve_injury", "hemorrhage", "infection"]],
+  exposure: [["nerve_injury", "hemorrhage"], ["hemorrhage", "nerve_injury"]],
+  landmark: [["hemorrhage", "nerve_injury"], ["nerve_injury", "hemorrhage"]],
+  vessel: [["hemorrhage"], ["nerve_injury", "thrombosis"]],
+  nerve: [["nerve_injury"], ["hemorrhage"]],
+  dissect: [["hemorrhage", "nerve_injury"], ["nerve_injury", "hemorrhage"]],
+  bleed: [["hemorrhage"], ["nerve_injury", "thrombosis", "infection"]],
+  vitals: [["cardiac_arrhythmia", "hemorrhage", "hypoxia"], ["fluid_overload", "cardiac_arrhythmia", "hypoxia"]],
+  closure: [["infection"], ["hemorrhage", "thrombosis"]],
+  dvt: [["thrombosis"], ["hypoxia", "infection"]],
+};
+
+function templateComps(kind: StepKind, risks: string[], stepIndex: number): [string, string] {
+  const [prefs1, prefs2] = KIND_COMPS[kind] ?? [[], []];
+  const c1 = prefs1.find((c) => risks.includes(c)) ?? pick(risks, stepIndex);
+  const rotation = risks.map((_, i) => pick(risks, stepIndex + 1 + i));
+  const c2 = prefs2.find((c) => risks.includes(c) && c !== c1) ?? rotation.find((c) => c !== c1) ?? c1;
+  return [c1, c2];
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Builder
@@ -334,8 +363,7 @@ function buildStepChoices(
     : FEEDBACK_TEMPLATES[step.kind];
   const prefix = (fb: string) => `${step.title} — ${fb}`;
   const [comp1, comp2] = step.wrongComps
-    ? step.wrongComps
-    : [pick(s.risks, stepIndex), pick(s.risks, stepIndex + 1)];
+    ?? (step.choices ? [pick(s.risks, stepIndex), pick(s.risks, stepIndex + 1)] : templateComps(step.kind, s.risks, stepIndex));
 
   return [
     {

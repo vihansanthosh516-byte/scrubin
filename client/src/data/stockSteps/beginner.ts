@@ -237,12 +237,12 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         kind: "postop", title: "Discharge and follow-up", description: "Define the clinic plan.",
         choices: [
           "Arrange a 2-week wound check and a 6-week recurrence assessment.",
-          "No follow-up is needed after an uncomplicated repair.",
+          "Tell the patient to return only if a lump reappears.",
           "Schedule a yearly CT scan to monitor the mesh.",
         ],
         feedback: [
           "Structured follow-up catches wound issues and early recurrence.",
-          "Skipping follow-up misses wound complications and patient concerns.",
+          "Return-if-worse misses wound complications and chronic groin pain that need early review.",
           "Routine imaging of mesh is unnecessary and wasteful.",
         ],
         wrongComps: ["infection", "hemorrhage"],
@@ -362,7 +362,7 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
           "Ligating the trunk proximally is unnecessary and risks devascularizing the parathyroids.",
           "Cautery near the nerve can cause thermal injury even with a monitor.",
         ],
-        wrongComps: ["nerve_injury", "hypoxia"],
+        wrongComps: ["hypoxia", "nerve_injury"],
       },
       {
         kind: "core", title: "Preserve the parathyroid glands", description: "The inferior parathyroid sits near the lower pole.",
@@ -376,7 +376,7 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
           "Routine parathyroid removal causes avoidable hypocalcemia.",
           "Dividing the pedicle devascularizes the gland even if it stays behind.",
         ],
-        wrongComps: ["nerve_injury", "infection"],
+        wrongComps: ["nerve_injury", "hypoxia"],
       },
       {
         kind: "dissect", title: "Dissect the gland off the trachea", description: "Free the lobe from the trachea and Berry's ligament.",
@@ -543,12 +543,12 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         kind: "postop", title: "Discharge and wound care", description: "Define the follow-up and scar care.",
         choices: [
           "Arrange a 2-week wound check and review the final pathology.",
-          "No follow-up is needed after an uncomplicated total thyroidectomy.",
+          "Discharge on levothyroxine and let the GP review the pathology.",
           "Schedule a routine neck ultrasound in one month.",
         ],
         feedback: [
           "Follow-up reviews pathology, calcium stability, and the scar.",
-          "Skipping follow-up misses the pathology result and late hypocalcemia.",
+          "The surgeon must review the pathology (it decides on radioiodine) and the calcium; the GP cannot make that call.",
           "Routine early ultrasound adds no value after a complete thyroidectomy.",
         ],
         wrongComps: ["infection", "hypoxia"],
@@ -744,12 +744,12 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         choices: [
           "Explain that numbness may take weeks to months to resolve and arrange follow-up.",
           "Promise immediate, complete resolution of all symptoms.",
-          "No follow-up is needed once the wound heals.",
+          "Arrange a wound check with the practice nurse and discharge from surgical follow-up.",
         ],
         feedback: [
           "Realistic expectations and a follow-up visit are set.",
           "Overpromising immediate cure sets the patient up for frustration.",
-          "Skipping follow-up misses incomplete release and wound problems.",
+          "A nurse wound check misses incomplete release and pillar pain that the surgeon needs to assess.",
         ],
         wrongComps: ["infection", "nerve_injury"],
       },

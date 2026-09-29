@@ -23,7 +23,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the duodenum", "the left kidney"],
       test: "a check of the distal pulses and the graft anastomoses",
       wrongTests: ["a routine liver biopsy", "an on-table MRI"],
-      risks: ["hemorrhage", "cardiac_arrhythmia", "hypoxia", "thrombosis", "infection"],
+      risks: ["hemorrhage", "cardiac_arrhythmia", "hypoxia", "thrombosis", "infection", "anaphylaxis", "fluid_overload"],
       instrument: "a vascular clamp and a Dacron graft",
       position: "supine",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -60,7 +60,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "Suprarenal clamping causes renal ischemia.",
           "Clamping at the diaphragm risks the celiac and mesenteric flow.",
         ],
-        wrongComps: ["cardiac_arrhythmia", "hemorrhage"],
+        wrongComps: ["thrombosis", "hemorrhage"],
       },
       {
         kind: "vessel", title: "Control the iliac arteries", description: "Prepare the distal clamp sites.",
@@ -174,7 +174,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         ],
         wrongComps: ["cardiac_arrhythmia", "hypoxia"],
       },
-      { kind: "verify", title: "Re-check the anastomoses after the flow", description: "Re-inspect the anastomoses after the clamps are off.", f: { test: "the anastomoses after flow", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Re-check the anastomoses after the flow", description: "Re-inspect the anastomoses after the clamps are off.",
+        choices: [
+          "Inspect both anastomoses under full pressure, repair any needle-hole bleeding with a precise suture, and check the limbs are not kinked.",
+          "Pack the anastomoses with gauze and close the aneurysm sac over the graft.",
+          "Reverse all the heparin and close before checking the anastomoses under full flow.",
+        ],
+        feedback: [
+          "Checking under full pressure finds the bleeding points while they are easy to repair.",
+          "Packing hides a bleeding suture line that then bleeds into the retroperitoneum.",
+          "Unchecked anastomoses can leak, and a kinked limb clots once the flow slows.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
       {
         kind: "verify", title: "Check the retroperitoneal bed", description: "Inspect the bed for oozing before the sac closure.",
         choices: [
@@ -190,7 +203,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         wrongComps: ["hemorrhage", "infection"],
       },
       { kind: "bleed", title: "Control a sac-edge bleeder", description: "The sac edge is bleeding.", f: { vessel: "the sac edge vessels", wrongVessels: ["the aorta", "the vena cava"] } },
-      { kind: "verify", title: "Confirm the foot pulses", description: "Confirm the pedal pulses are present.", f: { test: "the pedal pulses", wrongTests: ["a routine X-ray", "a Doppler of the legs"] } },
+      {
+        kind: "verify", title: "Confirm the foot pulses", description: "Confirm the pedal pulses are present.",
+        choices: [
+          "Check the femoral and foot pulses or Doppler signals in both legs before leaving theater.",
+          "Accept an absent foot pulse on one side as vasospasm and recheck it tomorrow.",
+          "Check the femoral pulses only, since the feet are cold after the clamp.",
+        ],
+        feedback: [
+          "Distal embolism or limb thrombosis must be found on the table, while an embolectomy is simple.",
+          "An absent pulse after clamping is embolism until proven otherwise; waiting loses the limb, and reperfusing it late floods the circulation with potassium.",
+          "Femoral pulses can be normal with emboli in the calf vessels.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "thrombosis"],
+      },
       { kind: "closure", title: "Close the sac over the graft", description: "Wrap the sac around the graft.", f: { structure: "the aneurysm sac" } },
       {
         kind: "closure", title: "Close the abdomen", description: "Close the fascia and skin.",
@@ -207,15 +233,132 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         wrongComps: ["infection", "hemorrhage"],
       },
       { kind: "dvt", title: "DVT prophylaxis", description: "Major vascular surgery carries a high thrombosis risk." },
-      { kind: "postop", title: "Watch for graft limb occlusion", description: "Monitor the legs for acute ischemia.", f: { test: "the leg perfusion", wrongTests: ["a routine X-ray", "a Doppler of the legs"] } },
-      { kind: "postop", title: "Monitor the bowel", description: "Watch for ischemic colitis signs.", f: { test: "the bowel function and the symptoms", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Blood pressure targets", description: "Define the blood pressure targets for the graft.", f: { test: "the blood pressure readings", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Watch for renal impairment", description: "Monitor the renal function closely.", f: { test: "the urine output and the creatinine", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Graft infection precautions", description: "Review the endocarditis and the graft infection precautions.", f: { test: "the infection precautions", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Wound care", description: "Define the laparotomy wound care.", f: { test: "the wound for infection signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the imaging surveillance of the graft.", f: { test: "the graft surveillance imaging", wrongTests: ["a routine MRI", "a blood panel"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the medications, the activity, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Lifestyle management", description: "Optimize the risk factors for the graft and the vessels.", f: { test: "the risk factor control", wrongTests: ["a routine blood panel", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for graft limb occlusion", description: "Monitor the legs for acute ischemia.",
+        choices: [
+          "Check the pulses and leg color hourly for 24 hours and get an urgent duplex for any change.",
+          "Check the legs once a day on the ward round.",
+          "Start full-dose heparin in every patient for 5 days.",
+        ],
+        feedback: [
+          "Limb occlusion presents early; hourly checks find it in time for thrombectomy.",
+          "Daily checks miss an occluded limb until ischemia is established.",
+          "Routine full anticoagulation raises bleeding without preventing limb occlusion.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Monitor the bowel", description: "Watch for ischemic colitis signs.",
+        choices: [
+          "Watch for bloody diarrhea, a rising lactate, or abdominal pain, and arrange early sigmoidoscopy if they appear.",
+          "Treat postoperative diarrhea with loperamide and observe.",
+          "Start feeding on day 1 regardless of distension or lactate.",
+        ],
+        feedback: [
+          "Colonic ischemia after IMA ligation shows as bloody stool; early sigmoidoscopy decides on resection.",
+          "Bloody diarrhea after AAA repair is colonic ischemia until proven otherwise.",
+          "Feeding an ischemic, distended bowel makes it worse, and it can perforate.",
+        ],
+        wrongComps: ["thrombosis", "infection"],
+      },
+      {
+        kind: "postop", title: "Blood pressure targets", description: "Define the blood pressure targets for the graft.",
+        choices: [
+          "Keep the systolic pressure around 100 to 140 mmHg, treating pain first and then using short-acting agents.",
+          "Let the pressure run above 180 mmHg so the kidneys and bowel stay perfused.",
+          "Drive the systolic pressure below 90 mmHg to protect the suture lines.",
+        ],
+        feedback: [
+          "A moderate pressure protects the anastomoses while keeping the organs perfused.",
+          "High pressure stresses fresh anastomoses and the heart.",
+          "Low pressure risks kidney, bowel, and heart ischemia.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Watch for renal impairment", description: "Monitor the renal function closely.",
+        choices: [
+          "Track hourly urine output and daily creatinine, keep him euvolemic, and avoid NSAIDs and contrast.",
+          "Give NSAIDs for pain, since they spare opioids.",
+          "Order a contrast CT on day 1 as a routine graft check.",
+        ],
+        feedback: [
+          "Aortic clamping stresses the kidneys; perfusion and avoiding nephrotoxins protect them.",
+          "NSAIDs after aortic clamping injure an already stressed kidney, and oliguria follows.",
+          "Early routine contrast adds a nephrotoxic load with no indication, and contrast can trigger a reaction.",
+        ],
+        wrongComps: ["fluid_overload", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Graft infection precautions", description: "Review the endocarditis and the graft infection precautions.",
+        choices: [
+          "Complete the perioperative antibiotic course, keep the wounds clean, and treat any wound infection early and aggressively.",
+          "Continue oral antibiotics for 6 weeks as routine.",
+          "Treat a discharging wound with dressings alone.",
+        ],
+        feedback: [
+          "Graft infection starts from wound or bloodstream sources; early treatment protects the graft.",
+          "Prolonged routine antibiotics do not reduce graft infection, select resistance, and risk drug reactions.",
+          "A wound infection can track down to the graft.",
+        ],
+        wrongComps: ["anaphylaxis", "infection"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "Define the laparotomy wound care.",
+        choices: [
+          "Inspect the laparotomy daily, keep it dry, and remove the clips at 10 to 14 days.",
+          "Keep him in bed until the clips are out to protect the wound.",
+          "Allow soaking in a bath from day 1.",
+        ],
+        feedback: [
+          "A long laparotomy in an arteriopath heals slowly; clips stay 10 to 14 days.",
+          "Two weeks of bed rest to protect a wound invites DVT and pneumonia.",
+          "Soaking a fresh wound raises infection risk.",
+        ],
+        wrongComps: ["thrombosis", "infection"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the imaging surveillance of the graft.",
+        choices: [
+          "Review at 6 weeks with the wound and a first imaging check of the graft, then enter the surveillance program.",
+          "Stop the beta-blocker now the surgery is over.",
+          "Stop the antiplatelet at discharge since the aneurysm is gone.",
+        ],
+        feedback: [
+          "The first review checks the wound and graft and starts lifelong surveillance.",
+          "Abrupt beta-blocker withdrawal after vascular surgery causes rebound tachycardia and ischemia.",
+          "Aneurysm patients need lifelong antiplatelet therapy for their cardiovascular risk.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Summarize the medications, the activity, and the warning signs.",
+        choices: [
+          "Advise no heavy lifting for 6 weeks, and urgent return for back or abdominal pain, fever, leg pain, or bloody stools.",
+          "Advise return only if the wound becomes red.",
+          "Allow a return to heavy manual work at 2 weeks if the wound has healed.",
+        ],
+        feedback: [
+          "The red flags cover graft infection, limb occlusion, and bowel ischemia.",
+          "Back pain, fever, leg pain, or bloody stools can mean graft infection, limb occlusion, or bowel ischemia.",
+          "Heavy lifting before 6 weeks risks wound dehiscence and incisional hernia.",
+        ],
+        wrongComps: ["thrombosis", "infection"],
+      },
+      {
+        kind: "postop", title: "Lifestyle management", description: "Optimize the risk factors for the graft and the vessels.",
+        choices: [
+          "Support smoking cessation, control his blood pressure, and continue the statin and antiplatelet.",
+          "Defer smoking cessation until he has recovered from the surgery.",
+          "Stop the blood pressure tablets now the aneurysm has been repaired.",
+        ],
+        feedback: [
+          "Risk-factor control prevents new aneurysms and cardiovascular events.",
+          "Smoking delays wound healing now and drives new aneurysms and cardiovascular events later.",
+          "Hypertension still drives stroke and new aneurysm formation.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
       {
         kind: "postop", title: "Monitor distal perfusion", description: "Confirm the limbs are perfused.",
         choices: [
@@ -262,12 +405,12 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         kind: "postop", title: "Plan surveillance and follow-up", description: "Define the graft surveillance.",
         choices: [
           "Arrange follow-up with imaging surveillance of the graft.",
-          "No follow-up is needed after an AAA repair.",
+          "Arrange one CT at 30 days and discharge from surveillance if the graft looks good.",
           "Schedule a single clinic visit and stop.",
         ],
         feedback: [
           "Graft surveillance is planned.",
-          "Skipping surveillance misses graft complications.",
+          "Graft complications such as pseudoaneurysm and graft infection appear years later; surveillance is lifelong.",
           "A single visit does not cover late graft issues.",
         ],
         wrongComps: ["infection", "hemorrhage"],
@@ -505,12 +648,12 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         kind: "postop", title: "Plan the pathology and follow-up", description: "Coordinate the surveillance.",
         choices: [
           "Arrange follow-up with the pathology result and PSA surveillance.",
-          "No follow-up is needed after a prostatectomy.",
+          "Arrange a single clinic visit at 3 months to check continence, then discharge.",
           "Check PSA only at one year.",
         ],
         feedback: [
           "The pathology and PSA surveillance are planned.",
-          "Skipping follow-up misses recurrence.",
+          "Biochemical recurrence is caught by serial PSA over years; one continence visit does not cover it.",
           "Delayed PSA checks miss early biochemical recurrence.",
         ],
         wrongComps: ["infection", "hemorrhage"],
@@ -536,7 +679,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the trachea", "the left bronchus"],
       test: "an anastomotic air-leak test and a check of the conduit perfusion",
       wrongTests: ["a routine liver biopsy", "an on-table MRI"],
-      risks: ["hypoxia", "infection", "hemorrhage", "cardiac_arrhythmia", "nerve_injury"],
+      risks: ["hypoxia", "infection", "hemorrhage", "cardiac_arrhythmia", "nerve_injury", "thrombosis"],
       instrument: "a circular stapler and a thoracoscope",
       position: "supine for the abdominal phase, then left lateral",
       wrongPositions: ["prone throughout", "right lateral decubitus"],
@@ -573,7 +716,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "Ligating the right gastric artery devascularizes the conduit.",
           "Dividing the arcade kills the conduit.",
         ],
-        wrongComps: ["hemorrhage", "infection"],
+        wrongComps: ["thrombosis", "infection"],
       },
       {
         kind: "core", title: "Create the gastric conduit", description: "Construct the conduit.",
@@ -587,7 +730,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "A wide conduit is bulky and hard to pass.",
           "An un-narrowed stomach risks ischemia at the tip.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["infection", "thrombosis"],
       },
       {
         kind: "nerve", title: "Protect the thoracic duct", description: "The duct runs beside the esophagus.",
@@ -671,7 +814,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "A dusky conduit will necrose and leak.",
           "Anastomosing a dead tip guarantees failure.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["thrombosis", "hemorrhage"],
       },
       {
         kind: "core", title: "Create the anastomosis", description: "Join the conduit to the esophagus.",
@@ -788,12 +931,12 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         kind: "postop", title: "Plan the pathology and follow-up", description: "Coordinate the oncology plan.",
         choices: [
           "Arrange follow-up with the pathology result and the oncology team.",
-          "No follow-up is needed after an esophagectomy.",
+          "Discharge to the GP and ask them to chase the pathology result.",
           "Schedule a routine CT in one month regardless.",
         ],
         feedback: [
           "The pathology guides the adjuvant plan.",
-          "Skipping follow-up delays treatment decisions.",
+          "The adjuvant plan needs the surgical and oncology teams; handing the pathology to the GP delays it.",
           "Routine imaging timing depends on the pathology.",
         ],
         wrongComps: ["infection", "hypoxia"],
@@ -819,7 +962,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the left lobe", "the gallbladder bed alone"],
       test: "an ultrasound of the inflow vessels and a check of the resection margin",
       wrongTests: ["a routine liver biopsy", "an on-table MRI"],
-      risks: ["hemorrhage", "cardiac_arrhythmia", "infection", "hypoxia"],
+      risks: ["hemorrhage", "cardiac_arrhythmia", "infection", "hypoxia", "thrombosis"],
       instrument: "an ultrasonic dissector and vascular staplers",
       position: "supine",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -850,14 +993,14 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         choices: [
           "Dissect the porta hepatis and control the right hepatic artery and portal vein individually.",
           "Clamp the whole porta hepatis and divide it.",
-          "Ligate the left portal vein by mistake.",
+          "Ligate the first portal branch that comes into view at the hilum.",
         ],
         feedback: [
           "The right inflow is controlled individually.",
           "Mass clamping risks the left inflow and the bile duct.",
           "Ligating the left portal vein devascularizes the left lobe.",
         ],
-        wrongComps: ["hemorrhage", "infection"],
+        wrongComps: ["hemorrhage", "thrombosis"],
       },
       {
         kind: "vessel", title: "Control the hepatic veins", description: "Secure the outflow before transection.",
@@ -993,12 +1136,12 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         choices: [
           "Start nutrition support and arrange oncology follow-up with the pathology.",
           "Keep the patient fasting until discharge.",
-          "No follow-up is needed after a lobectomy.",
+          "Discharge to the GP and ask them to chase the pathology result.",
         ],
         feedback: [
           "Nutrition and oncology follow-up are arranged.",
           "Prolonged fasting delays recovery.",
-          "Skipping follow-up misses recurrence.",
+          "Adjuvant decisions and recurrence surveillance need the thoracic and oncology teams, not a GP chasing results.",
         ],
         wrongComps: ["infection", "hemorrhage"],
       }
@@ -1235,12 +1378,12 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         kind: "postop", title: "Discharge and follow-up", description: "Define the clinic plan.",
         choices: [
           "Arrange follow-up to review recovery and return-to-work plans.",
-          "No follow-up is needed after a discectomy.",
+          "Tell the patient to return only if the leg pain comes back.",
           "Schedule a routine MRI before discharge.",
         ],
         feedback: [
           "Structured follow-up tracks recovery.",
-          "Skipping follow-up misses recurrence and complications.",
+          "Return-if-worse misses wound problems, new deficits, and a structured return to work.",
           "Routine MRI adds no value.",
         ],
         wrongComps: ["infection", "nerve_injury"],
@@ -1432,7 +1575,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "Drains reveal a bleed only after it has collected — the bed must be dry before closure.",
           "Cautery along the bed risks the phrenic nerve, which runs with the internal thoracic vessels — control only what is bleeding.",
         ],
-        wrongComps: ["hemorrhage", "hypoxia"],
+        wrongComps: ["hemorrhage", "nerve_injury"],
       },
       { kind: "bleed", title: "Control a graft bed bleeder", description: "The harvest site is bleeding.", f: { vessel: "the harvest site vessels", wrongVessels: ["the femoral artery", "the aorta"] } },
       { kind: "verify", title: "Confirm the rhythm", description: "Check the rhythm is stable before closure.", f: { test: "the cardiac rhythm", wrongTests: ["a routine ECG", "a CT scan"] } },
@@ -1492,12 +1635,12 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         kind: "postop", title: "Plan cardiac rehabilitation", description: "Define the recovery pathway.",
         choices: [
           "Refer for cardiac rehabilitation and arrange cardiology follow-up.",
-          "No rehabilitation is needed after CABG.",
+          "Discharge home with a walking leaflet and let the GP decide on rehabilitation later.",
           "Restrict all exertion indefinitely.",
         ],
         feedback: [
           "Cardiac rehabilitation improves outcomes.",
-          "Skipping rehab delays recovery.",
+          "Formal cardiac rehab cuts mortality and readmission; a leaflet and a deferred GP decision usually means it never happens.",
           "Indefinite restriction is harmful.",
         ],
         wrongComps: ["thrombosis", "infection"],
