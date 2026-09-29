@@ -158,18 +158,18 @@ const CHOICE_TEMPLATES: Record<StepKind, (s: StepSpec) => [string, string, strin
   ],
   exposure: (s) => [
     `Place gentle retraction on ${s.landmark} and bring ${s.structure} into view.`,
-    `Use deep, forceful retractors to open the field as wide as possible.`,
-    `Retract blindly until the anatomy becomes visible.`,
+    `Set self-retaining retractors at full tension to open the field widely.`,
+    `Pull firmly on a deep retractor until the anatomy comes into view.`,
   ],
   landmark: (s) => [
     `Confirm ${s.landmark} before dividing anything.`,
     `Use ${s.wrongLandmarks[0]} as the reference and move on.`,
-    `Rely on the preoperative imaging and skip in-field landmark confirmation.`,
+    `Rely on the preoperative imaging to locate it and proceed.`,
   ],
   vessel: (s) => [
     `Isolate, ligate, and divide ${s.vessel} after tracing its full course.`,
     `Run cautery across ${s.wrongVessels[0]} to control it quickly.`,
-    `Clip ${s.vessel} without full dissection to save time.`,
+    `Clip ${s.vessel} as soon as it is seen, before its course is traced.`,
   ],
   nerve: (s) => [
     `Bluntly dissect and preserve ${s.nerve}, keeping it under direct vision.`,
@@ -179,12 +179,12 @@ const CHOICE_TEMPLATES: Record<StepKind, (s: StepSpec) => [string, string, strin
   dissect: (s) => [
     `Dissect in the avascular plane along ${s.landmark}.`,
     `Sweep through the adjacent tissue with cautery to speed the dissection.`,
-    `Bluntly push through the tissue planes to keep moving.`,
+    `Develop the plane with blunt finger dissection to save time.`,
   ],
   core: (s) => [
     `Proceed with the planned technique on ${s.structure} as rehearsed.`,
     `Switch to a larger, more invasive approach to be safe.`,
-    `Improvise the approach based on how the tissue looks right now.`,
+    `Adapt the technique to how the tissue looks as you go.`,
   ],
   verify: (s) => [
     `Perform ${s.test} to confirm the repair before closing.`,
@@ -194,7 +194,7 @@ const CHOICE_TEMPLATES: Record<StepKind, (s: StepSpec) => [string, string, strin
   bleed: (s) => [
     `Apply direct pressure, identify the source, and control ${s.vessel} precisely.`,
     `Pack the field and wait for pressure to tamponade the bleeding.`,
-    `Cauterize broadly across the oozing area to dry the field.`,
+    `Spray-coagulate the oozing area until the field is dry.`,
   ],
   vitals: (s) => [
     `Pause the dissection, inform the anesthesia team, and reassess before continuing.`,
@@ -241,8 +241,8 @@ const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
   ],
   exposure: [
     "Exposure obtained without trauma to surrounding structures.",
-    "Forceful retraction risks crush injury to nerves and vessels.",
-    "Blind retraction can tear vascular attachments out of view.",
+    "Retractors at full tension crush the nerves and vessels under their blades.",
+    "Pulling before the anatomy is seen tears vascular attachments out of view.",
   ],
   landmark: [
     "Landmark confirmed; dissection is now safe to proceed.",
@@ -262,12 +262,12 @@ const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
   dissect: [
     "The avascular plane was followed; dissection is clean.",
     "Aggressive cautery through fat risks thermal injury and bleeding.",
-    "Blunt sweeping tears vessels and nerves instead of identifying them.",
+    "Finger dissection tears vessels and nerves instead of identifying them.",
   ],
   core: [
     "The planned technique is appropriate for the current anatomy.",
     "Escalating to a larger approach adds morbidity without benefit here.",
-    "Improvising mid-case without a clear plan increases error risk.",
+    "Changing technique mid-step without a plan increases error risk.",
   ],
   verify: [
     "Verification confirms the repair is sound before closure.",
@@ -277,7 +277,7 @@ const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
   bleed: [
     "The bleeding source is controlled precisely.",
     "Packing alone delays definitive control and allows continued loss.",
-    "Blind cautery across the field can injure structures and re-bleed.",
+    "Spray coagulation spreads heat to nearby structures, and the source re-bleeds.",
   ],
   vitals: [
     "The team is aligned and the situation reassessed before proceeding.",
@@ -316,6 +316,7 @@ const KIND_COMPS: Partial<Record<StepKind, [string[], string[]]>> = {
   vessel: [["hemorrhage"], ["nerve_injury", "thrombosis"]],
   nerve: [["nerve_injury"], ["hemorrhage"]],
   dissect: [["hemorrhage", "nerve_injury"], ["nerve_injury", "hemorrhage"]],
+  verify: [["infection", "hemorrhage"], ["hemorrhage", "infection"]],
   bleed: [["hemorrhage"], ["nerve_injury", "thrombosis", "infection"]],
   vitals: [["cardiac_arrhythmia", "hemorrhage", "hypoxia"], ["fluid_overload", "cardiac_arrhythmia", "hypoxia"]],
   closure: [["infection"], ["hemorrhage", "thrombosis"]],

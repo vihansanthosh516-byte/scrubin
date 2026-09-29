@@ -52,7 +52,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         kind: "core", title: "Harvest the LIMA", description: "Take down the left internal mammary artery.",
         choices: [
           "Harvest the LIMA as a pedicle, protecting the phrenic nerve and confirming flow.",
-          "Harvest the LIMA with wide electrocautery along its length.",
+          "Harvest the LIMA skeletonized on a high cautery setting to speed it up.",
           "Use the LIMA only if the radial artery is unavailable.",
         ],
         feedback: [
@@ -1327,7 +1327,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         kind: "dissect", title: "Divide the fissures", description: "Complete the fissures to expose the hilum.",
         choices: [
           "Complete the major and minor fissures with the interlobar artery identified and protected.",
-          "Divide the fissures with a stapler through the lung parenchyma without finding the artery.",
+          "Staple across the incomplete fissure first and find the interlobar artery afterward.",
           "Divide the fissures with cautery to save stapler time.",
         ],
         feedback: [
@@ -1383,15 +1383,15 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         kind: "core", title: "Divide the bronchus", description: "Close the lobar bronchus.",
         choices: [
           "Staple the lobar bronchus at the correct level, confirming the other lobes ventilate.",
-          "Staple the main bronchus to ensure a complete resection.",
+          "Staple the bronchus flush at the carina so no stump is left behind.",
           "Suture the bronchus closed with a running stitch.",
         ],
         feedback: [
           "The lobar bronchus is stapled at the correct level.",
-          "Stapling the main bronchus removes more lung than intended.",
+          "Stapling at the carina takes the main bronchus, removing more lung than intended and leaving the remaining lobe unventilated.",
           "A running suture on the bronchus risks a stump leak.",
         ],
-        wrongComps: ["infection", "hypoxia"],
+        wrongComps: ["hypoxia", "infection"],
       },
       {
         kind: "verify", title: "Test the bronchial stump", description: "Confirm the stump is sealed.",
@@ -1435,21 +1435,164 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["infection", "hypoxia"],
       },
-      { kind: "verify", title: "Re-inflate the remaining lobes", description: "Confirm the remaining lobes re-expand fully.", f: { test: "the re-expansion of the remaining lobes", wrongTests: ["a routine chest X-ray", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Re-inflate the remaining lobes", description: "Confirm the remaining lobes re-expand fully.",
+        choices: [
+          "Ask anesthesia to re-inflate under saline, check the stump for bubbles, and confirm the remaining lobes expand fully.",
+          "Re-inflate at high pressure to open every collapsed segment at once.",
+          "Close without re-inflating, since the lobes will expand on the chest drain.",
+        ],
+        feedback: [
+          "A leak test at moderate pressure checks the stump and confirms the remaining lung fills the space.",
+          "High inflation pressure can disrupt the fresh bronchial stump and staple lines.",
+          "A lobe that is twisted or collapsed at closure stays that way; it must be seen to expand.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
       { kind: "exposure", title: "Check the bronchial stump once more", description: "Re-inspect the stump for any leak under pressure.", f: { structure: "the bronchial stump", landmark: "the carina" } },
       { kind: "bleed", title: "Control a chest wall bleeder", description: "A chest wall vessel is bleeding at the port site.", f: { vessel: "the intercostal vessels at the port site", wrongVessels: ["the pulmonary artery", "the aorta"] } },
-      { kind: "verify", title: "Confirm the drain position", description: "Check the chest drain is positioned correctly.", f: { test: "the drain position and the function", wrongTests: ["a routine chest X-ray", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Confirm the drain position", description: "Check the chest drain is positioned correctly.",
+        choices: [
+          "Place one drain toward the apex, secure it, and connect it to an underwater seal.",
+          "Place the drain low in the costophrenic angle only, since fluid collects there.",
+          "Clamp the drain for the transfer to recovery.",
+        ],
+        feedback: [
+          "An apical drain evacuates air after a lobectomy, when the remaining lung must fill the space.",
+          "A basal-only drain leaves apical air, and the remaining lobe does not expand.",
+          "A clamped drain with an air leak causes a tension pneumothorax.",
+        ],
+        wrongComps: ["hypoxia", "cardiac_arrhythmia"],
+      },
       { kind: "closure", title: "Place the drains and close", description: "Drain the chest and close the ports.", f: { structure: "the chest drain and port sites" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Thoracic surgery carries a significant thrombosis risk." },
-      { kind: "postop", title: "Watch for a persistent air leak", description: "Monitor the drain for a prolonged air leak.", f: { test: "the air leak duration", wrongTests: ["a routine chest X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Chest physiotherapy", description: "Start the breathing exercises early.", f: { test: "the respiratory effort", wrongTests: ["a routine chest X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Mobilization plan", description: "Define the early mobilization.", f: { test: "the mobilization tolerance", wrongTests: ["a routine chest X-ray", "a blood panel"] } },
-      { kind: "postop", title: "Wound care", description: "Define the port site care.", f: { test: "the port sites", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Pulmonary rehabilitation", description: "Refer for pulmonary rehabilitation.", f: { test: "the exercise tolerance", wrongTests: ["a routine chest X-ray", "a stress test"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the chest X-ray and the pathology.", f: { test: "the chest X-ray and the pathology", wrongTests: ["a routine MRI", "a CT scan"] } },
-      { kind: "postop", title: "Smoking cessation", description: "Discuss smoking cessation with the patient.", f: { test: "the smoking cessation plan", wrongTests: ["a routine chest X-ray", "a blood panel"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the drain care, the medications, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine chest X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Surveillance plan", description: "Define the imaging surveillance schedule.", f: { test: "the surveillance imaging", wrongTests: ["a routine blood panel", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for a persistent air leak", description: "Monitor the drain for a prolonged air leak.",
+        choices: [
+          "Record the air leak daily, keep the drain on water seal, and consider a portable valve if it lasts beyond 5 days.",
+          "Put the drain on high suction until the leak stops.",
+          "Remove the drain on day 2 whatever the leak.",
+        ],
+        feedback: [
+          "Water seal shortens most leaks; a persistent one is managed with a portable valve rather than a longer stay.",
+          "High suction keeps small leaks open and prolongs them.",
+          "Removing the drain with an ongoing leak causes a pneumothorax.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Chest physiotherapy", description: "Start the breathing exercises early.",
+        choices: [
+          "Start deep breathing, coughing, and incentive spirometry from day 0 with good analgesia.",
+          "Rest the lung for 48 hours before starting physiotherapy.",
+          "Give physiotherapy only if the chest X-ray shows collapse.",
+        ],
+        feedback: [
+          "Early physiotherapy clears secretions and prevents atelectasis and pneumonia.",
+          "Resting the lung lets secretions pool and the remaining lobe collapse.",
+          "Waiting for collapse on X-ray treats the complication instead of preventing it.",
+        ],
+        wrongComps: ["hypoxia", "infection"],
+      },
+      {
+        kind: "postop", title: "Mobilization plan", description: "Define the early mobilization.",
+        choices: [
+          "Sit him out on day 0 and walk on day 1 with the drain, alongside LMWH.",
+          "Keep him in bed until the drain is removed.",
+          "Hold the LMWH until he is walking the ward.",
+        ],
+        feedback: [
+          "Early mobilization improves ventilation and prevents clots.",
+          "Bed rest with a drain leads to atelectasis and pneumonia.",
+          "Thoracic cancer surgery carries a high clot risk that needs prophylaxis from the start.",
+        ],
+        wrongComps: ["hypoxia", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "Define the port site care.",
+        choices: [
+          "Keep the port and drain sites dry and closed, and place a mattress suture to close the drain site on removal.",
+          "Leave the drain site open to drain freely after removal.",
+          "Remove the port sutures on day 2.",
+        ],
+        feedback: [
+          "A sealed drain site stops air entering the chest and heals cleanly.",
+          "An open drain site lets air in and becomes infected.",
+          "Early suture removal risks dehiscence of the port sites.",
+        ],
+        wrongComps: ["hypoxia", "infection"],
+      },
+      {
+        kind: "postop", title: "Pulmonary rehabilitation", description: "Refer for pulmonary rehabilitation.",
+        choices: [
+          "Refer to pulmonary rehabilitation, especially with COPD or reduced FEV1.",
+          "Advise avoiding exertion for three months to protect the remaining lung.",
+          "Start rehabilitation only once breathlessness appears.",
+        ],
+        feedback: [
+          "Rehabilitation improves exercise capacity and quality of life after lung resection.",
+          "Inactivity leads to deconditioning, clots, and chest infection.",
+          "Waiting for symptoms loses the early recovery window.",
+        ],
+        wrongComps: ["thrombosis", "infection"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the chest X-ray and the pathology.",
+        choices: [
+          "Review at 2 weeks with a chest X-ray and the pathology, and discuss adjuvant treatment at the multidisciplinary meeting.",
+          "Review at 3 months with a CT, since the pathology can wait.",
+          "Let the respiratory team give the pathology at their routine appointment.",
+        ],
+        feedback: [
+          "Node status decides on adjuvant chemotherapy, which should start within weeks.",
+          "A late review delays adjuvant treatment and misses early complications like an effusion.",
+          "The surgical team must explain the resection and pathology before the adjuvant plan.",
+        ],
+        wrongComps: ["hypoxia", "infection"],
+      },
+      {
+        kind: "postop", title: "Smoking cessation", description: "Discuss smoking cessation with the patient.",
+        choices: [
+          "Offer nicotine replacement or varenicline and refer to a cessation service.",
+          "Advise cutting down slowly over the next year.",
+          "Leave smoking for the GP to raise later.",
+        ],
+        feedback: [
+          "Structured support doubles quit rates, and stopping reduces recurrence and second cancers.",
+          "Cutting down keeps the risk; stopping is what helps.",
+          "Surgery is the moment patients are most likely to quit.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Summarize the drain care, the medications, and the warning signs.",
+        choices: [
+          "Teach breathing exercises and drain-site care, and to return for breathlessness, fever, chest pain, or a leaking site.",
+          "Advise return only for a high fever.",
+          "Allow flying the day after discharge.",
+        ],
+        feedback: [
+          "Red flags cover pneumothorax, empyema, and pulmonary embolism.",
+          "Breathlessness and chest pain can be a pneumothorax or embolism, not only infection.",
+          "Air trapped in the chest expands at altitude; flying is usually delayed about two weeks after a clear X-ray.",
+        ],
+        wrongComps: ["hypoxia", "infection"],
+      },
+      {
+        kind: "postop", title: "Surveillance plan", description: "Define the imaging surveillance schedule.",
+        choices: [
+          "Arrange CT surveillance every 6 months for 2 years, then yearly, per the thoracic oncology guideline.",
+          "Stop surveillance at one year if the first scan is clear.",
+          "Use chest X-ray alone for surveillance.",
+        ],
+        feedback: [
+          "CT surveillance finds recurrence and second primaries while they are treatable.",
+          "Most recurrences occur in the first 2 to 3 years.",
+          "A plain X-ray misses small recurrences.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
       {
         kind: "postop", title: "Manage the chest drain", description: "Track the air leak and drainage.",
         choices: [

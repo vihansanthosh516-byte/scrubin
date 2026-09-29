@@ -709,12 +709,12 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         choices: [
           "Ligate the left gastric artery at its origin, preserving the right gastric and gastroepiploic arcades.",
           "Ligate the right gastric artery to simplify the dissection.",
-          "Divide the gastroepiploic arcade to mobilize the stomach.",
+          "Divide the gastrocolic omentum close to the stomach wall, taking the short arcade vessels with it.",
         ],
         feedback: [
           "The left gastric artery is divided with the arcades preserved.",
           "Ligating the right gastric artery devascularizes the conduit.",
-          "Dividing the arcade kills the conduit.",
+          "Dividing close to the greater curve takes the gastroepiploic arcade, the conduit's blood supply, and the ischemic conduit leaks.",
         ],
         wrongComps: ["thrombosis", "infection"],
       },
@@ -736,15 +736,15 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         kind: "nerve", title: "Protect the thoracic duct", description: "The duct runs beside the esophagus.",
         choices: [
           "Identify and preserve the thoracic duct, ligating it if injured.",
-          "Divide the duct blindly during the dissection.",
+          "Take the tissue between the aorta and azygos en bloc without identifying the duct.",
           "Cauterize the duct to control oozing.",
         ],
         feedback: [
           "The thoracic duct is preserved.",
-          "Blind division causes a chyle leak.",
-          "Cauterizing the duct does not seal it.",
+          "The unligated duct leaks chyle into the chest, and the chylothorax compresses the lung.",
+          "Cautery does not seal the duct; the leak drains protein and lymphocytes and sets up infection.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["hypoxia", "infection"],
       },
       {
         kind: "core", title: "Mobilize the esophagus", description: "Free the esophagus to the level of the azygos.",
@@ -844,7 +844,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         ],
         wrongComps: ["infection", "hypoxia"],
       },
-      { kind: "verify", title: "Re-check the conduit tip", description: "Confirm the conduit tip stays well-perfused.", f: { test: "the conduit perfusion at the tip", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Re-check the conduit tip", description: "Confirm the conduit tip stays well-perfused.",
+        choices: [
+          "Check the conduit tip is pink and bleeding, and trim back to healthy tissue before the anastomosis.",
+          "Accept a dusky tip, since it improves once the conduit sits in the chest.",
+          "Build the anastomosis at the very tip to preserve length.",
+        ],
+        feedback: [
+          "The tip has the poorest blood supply; an anastomosis on healthy tissue heals.",
+          "A dusky tip necroses and leaks.",
+          "The tip is the most ischemic part of the conduit; joining there invites a leak.",
+        ],
+        wrongComps: ["thrombosis", "infection"],
+      },
       {
         kind: "verify", title: "Check the anastomotic tension", description: "Confirm the anastomosis is tension-free.",
         choices: [
@@ -860,17 +873,134 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         wrongComps: ["infection", "hemorrhage"],
       },
       { kind: "bleed", title: "Control a conduit-edge bleeder", description: "The conduit staple line is bleeding.", f: { vessel: "the conduit staple line vessels", wrongVessels: ["the aorta", "the pulmonary artery"] } },
-      { kind: "verify", title: "Confirm the drain positions", description: "Check the drains are at the anastomosis and the chest.", f: { test: "the drain positions", wrongTests: ["a routine chest X-ray", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Confirm the drain positions", description: "Check the drains are at the anastomosis and the chest.",
+        choices: [
+          "Place chest drains apically and basally, away from the anastomosis, and confirm the feeding jejunostomy.",
+          "Lay a drain directly against the anastomosis.",
+          "Use a single basal drain to limit discomfort.",
+        ],
+        feedback: [
+          "Drains clear air and fluid, and the feeding tube allows early nutrition.",
+          "A drain against a fresh anastomosis can erode it.",
+          "A single basal drain leaves apical air and the lung does not expand.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
       { kind: "closure", title: "Place the drains and close", description: "Drain the chest and abdomen.", f: { structure: "the chest drain and the abdominal closure" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Major esophagogastric surgery carries a high thrombosis risk." },
-      { kind: "postop", title: "Watch for an anastomotic leak", description: "Monitor the drains and the vitals for a leak.", f: { test: "the drain output and the inflammatory markers", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Ventilator management", description: "Plan the extubation and the pulmonary care.", f: { test: "the respiratory status", wrongTests: ["a routine chest X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Nutrition support", description: "Start the enteral feeding plan.", f: { test: "the nutritional plan", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Watch for recurrent laryngeal injury", description: "Assess the voice after the surgery.", f: { test: "the voice quality", wrongTests: ["a routine laryngoscopy", "a CT scan"] } },
-      { kind: "postop", title: "Pain control", description: "Plan the thoracic analgesia.", f: { test: "the pain scores", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Mobilization plan", description: "Define the early mobilization.", f: { test: "the mobilization tolerance", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the oncology plan.", f: { test: "the pathology and the oncology plan", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the diet, the drain care, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for an anastomotic leak", description: "Monitor the drains and the vitals for a leak.",
+        choices: [
+          "Watch for fever, tachycardia, new atrial fibrillation, or a change in the drain, and get a CT or endoscopy if they appear.",
+          "Treat new atrial fibrillation with rate control alone and continue feeding by mouth.",
+          "Start oral fluids on day 1 to test the anastomosis.",
+        ],
+        feedback: [
+          "New AF or tachycardia after an esophagectomy is a leak until proven otherwise.",
+          "AF is often the first sign of a leak; feeding through it spreads contamination into the chest.",
+          "Oral intake before the anastomosis is assessed pushes fluid through any leak.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Ventilator management", description: "Plan the extubation and the pulmonary care.",
+        choices: [
+          "Extubate early once warm and awake with good epidural analgesia, then start physiotherapy.",
+          "Keep him ventilated for 48 hours to protect the anastomosis.",
+          "Extubate straight away without checking his cough or the analgesia.",
+        ],
+        feedback: [
+          "Early extubation with good pain control reduces pneumonia, the commonest complication.",
+          "Prolonged ventilation raises pneumonia and aspiration risk.",
+          "A weak cough without analgesia leads to sputum retention and reintubation.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Nutrition support", description: "Start the enteral feeding plan.",
+        choices: [
+          "Start jejunostomy feeding within 24 to 48 hours and build up to the target.",
+          "Keep him nil by mouth on IV fluids until the swallow study.",
+          "Start oral feeding on day 2 if he feels hungry.",
+        ],
+        feedback: [
+          "Early jejunal feeding maintains nutrition and gut function without stressing the anastomosis.",
+          "Prolonged starvation delays healing and raises infection.",
+          "Oral intake before the anastomosis is checked risks aspiration and leak.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Watch for recurrent laryngeal injury", description: "Assess the voice after the surgery.",
+        choices: [
+          "Check the voice and cough before oral intake, and get an ENT assessment for hoarseness.",
+          "Start oral intake and assess the voice at the clinic visit.",
+          "Put hoarseness down to the tube and reassure him.",
+        ],
+        feedback: [
+          "Vocal cord palsy impairs the cough and causes aspiration; it is found before feeding by mouth.",
+          "A palsied cord lets fluid into the airway; oral feeding before assessment leads to aspiration.",
+          "Hoarseness after the neck dissection is nerve injury until proven otherwise.",
+        ],
+        wrongComps: ["hypoxia", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Pain control", description: "Plan the thoracic analgesia.",
+        choices: [
+          "Run a thoracic epidural or paravertebral catheter with regular paracetamol, and check the block daily.",
+          "Use IV morphine on demand only.",
+          "Give regular NSAIDs at full dose.",
+        ],
+        feedback: [
+          "Regional analgesia lets him cough and breathe deeply, which prevents pneumonia.",
+          "Opioids alone sedate him and suppress the cough.",
+          "NSAIDs risk kidney injury and bleeding after a major resection.",
+        ],
+        wrongComps: ["hypoxia", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Mobilization plan", description: "Define the early mobilization.",
+        choices: [
+          "Sit him out on day 1 and walk on day 2, with LMWH and compression stockings.",
+          "Keep him in bed until the drains are out.",
+          "Hold the LMWH until he is fully mobile.",
+        ],
+        feedback: [
+          "Early mobilization prevents pneumonia and clots.",
+          "Bed rest after a thoracotomy leads to atelectasis and pneumonia.",
+          "Esophageal cancer surgery carries a high clot risk that needs prophylaxis from the start.",
+        ],
+        wrongComps: ["hypoxia", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the oncology plan.",
+        choices: [
+          "Review at 2 weeks with the pathology, discuss adjuvant treatment, and monitor weight and dysphagia.",
+          "Review at 3 months once he has recovered.",
+          "Discharge to the GP with the pathology to follow.",
+        ],
+        feedback: [
+          "Adjuvant decisions and early strictures need prompt review.",
+          "An anastomotic stricture or weight loss develops before a 3-month review.",
+          "The oncology plan needs the surgical team's review of the pathology.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Summarize the diet, the drain care, and the warning signs.",
+        choices: [
+          "Advise small frequent meals, sleeping head-up, and return for fever, chest pain, or trouble swallowing.",
+          "Advise large meals three times a day to regain weight quickly.",
+          "Allow lying flat at night as usual.",
+        ],
+        feedback: [
+          "Small meals and head-up sleep reduce dumping and reflux into the conduit.",
+          "Large meals cause dumping and regurgitation from the conduit.",
+          "Lying flat lets the conduit reflux, with aspiration at night.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
       {
         kind: "postop", title: "Monitor the anastomosis", description: "Watch for a leak.",
         choices: [
@@ -992,12 +1122,12 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         kind: "vessel", title: "Control the porta hepatis inflow", description: "Secure the right inflow vessels.",
         choices: [
           "Dissect the porta hepatis and control the right hepatic artery and portal vein individually.",
-          "Clamp the whole porta hepatis and divide it.",
+          "Divide the right-sided hilar structures together with one vascular stapler load.",
           "Ligate the first portal branch that comes into view at the hilum.",
         ],
         feedback: [
           "The right inflow is controlled individually.",
-          "Mass clamping risks the left inflow and the bile duct.",
+          "A mass staple across the hilum risks the left-sided inflow and the bile duct.",
           "Ligating the left portal vein devascularizes the left lobe.",
         ],
         wrongComps: ["hemorrhage", "thrombosis"],
@@ -1035,14 +1165,14 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         choices: [
           "Apply pressure, then suture or staple the bleeding point precisely.",
           "Pack the liver and close.",
-          "Cauterize the bleeding vein.",
+          "Coagulate the bleeding point with the bipolar forceps.",
         ],
         feedback: [
           "The venous bleed is controlled precisely.",
           "Packing alone risks ongoing loss and biliary injury.",
-          "Cautery on a hepatic vein enlarges the hole.",
+          "Coagulation enlarges the hole in a thin-walled hepatic vein, and air is drawn in.",
         ],
-        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
+        wrongComps: ["hemorrhage", "hypoxia"],
       },
       {
         kind: "vitals", title: "Respond to the air embolism risk", description: "A hepatic vein is open to the air.",
@@ -1086,23 +1216,192 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         ],
         wrongComps: ["hemorrhage", "infection"],
       },
-      { kind: "verify", title: "Re-check the cut surface hemostasis", description: "Re-inspect the cut surface before the closure.", f: { test: "the cut surface hemostasis", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Re-check the cut surface hemostasis", description: "Re-inspect the cut surface before the closure.",
+        choices: [
+          "Inspect the cut surface with the CVP back up, control points with sutures or clips, and apply a sealant if needed.",
+          "Inspect at the current low CVP and close if dry.",
+          "Pack the cut surface and close.",
+        ],
+        feedback: [
+          "Raising the CVP back to normal reveals venous bleeders that low CVP hides.",
+          "A surface that is dry at low CVP can bleed once the pressure normalizes.",
+          "Packing hides active bleeders and a bile leak.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       { kind: "exposure", title: "Check the remnant perfusion", description: "Confirm the remnant lobe is well-perfused.", f: { structure: "the remnant lobe", landmark: "the inflow vessels" } },
       { kind: "bleed", title: "Control a surface bleeder", description: "The cut surface is bleeding again.", f: { vessel: "the cut surface vessels", wrongVessels: ["the aorta", "the vena cava"] } },
-      { kind: "verify", title: "Confirm the bile duct closure", description: "Check the ducts on the cut surface are sealed.", f: { test: "the bile duct closures", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Confirm the bile duct closure", description: "Check the ducts on the cut surface are sealed.",
+        choices: [
+          "Check the cut surface for bile with a white gauze or leak test, and suture any open duct.",
+          "Close without checking, since small ducts seal on their own.",
+          "Cauterize any bile-stained area on the cut surface.",
+        ],
+        feedback: [
+          "A leak test finds open ducts that would otherwise leak into the abdomen.",
+          "Unsealed ducts on the cut surface leak and form a biloma.",
+          "Cautery does not close a duct; it leaks later as the eschar separates.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       { kind: "closure", title: "Place drains and close", description: "Drain the resection bed and close.", f: { structure: "the resection bed drain and the abdominal wall" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Major hepatic surgery carries a thrombosis risk." },
-      { kind: "postop", title: "Watch for a bile leak", description: "Monitor the drain for bile.", f: { test: "the drain fluid for bile", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Liver function monitoring", description: "Track the liver enzymes and the synthesis.", f: { test: "the liver function panel", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Ascites monitoring", description: "Watch for ascites as the remnant regenerates.", f: { test: "the abdominal distension and the weight", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Encephalopathy watch", description: "Monitor for the signs of hepatic encephalopathy.", f: { test: "the mental status", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Nutrition support", description: "Start the liver-supportive nutrition.", f: { test: "the nutritional plan", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Pain control", description: "Plan the analgesia for the incision.", f: { test: "the pain scores", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Mobilization plan", description: "Define the early mobilization.", f: { test: "the mobilization tolerance", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the imaging.", f: { test: "the pathology and the surveillance imaging", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Surveillance plan", description: "Define the imaging surveillance for recurrence.", f: { test: "the surveillance imaging schedule", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the medications, the diet, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Return to activity", description: "Define the lifting and activity restrictions.", f: { test: "the activity tolerance", wrongTests: ["a routine X-ray", "a stress test"] } },
+      {
+        kind: "postop", title: "Watch for a bile leak", description: "Monitor the drain for bile.",
+        choices: [
+          "Check the drain for bile daily and measure the drain bilirubin if it looks bilious.",
+          "Remove the drain on day 1 whatever it shows.",
+          "Put a bile-stained drain down to old blood and continue.",
+        ],
+        feedback: [
+          "A drain bilirubin 3 times the serum level confirms a bile leak.",
+          "Early removal misses a leak, which collects as a biloma.",
+          "Bile in the drain needs confirming and managing, not dismissing.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Liver function monitoring", description: "Track the liver enzymes and the synthesis.",
+        choices: [
+          "Track bilirubin, INR, and lactate daily to watch for liver failure in the remnant.",
+          "Check the liver tests once at discharge.",
+          "Give fresh frozen plasma routinely to keep the INR normal.",
+        ],
+        feedback: [
+          "A rising bilirubin and INR after day 5 signal post-hepatectomy liver failure.",
+          "Liver failure develops in the first days; one test at discharge misses it.",
+          "Routine plasma masks the INR, which is the main marker of remnant function, and overloads him.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Ascites monitoring", description: "Watch for ascites as the remnant regenerates.",
+        choices: [
+          "Weigh him daily and watch the drain volume and abdominal girth, restricting sodium if ascites builds.",
+          "Give large volumes of saline to keep the urine output high.",
+          "Leave the drain in until the ascites stops completely.",
+        ],
+        feedback: [
+          "Early ascites control prevents wound leaks and infection.",
+          "Saline loads a regenerating liver and worsens ascites.",
+          "A long-standing drain in ascites becomes infected.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
+      {
+        kind: "postop", title: "Encephalopathy watch", description: "Monitor for the signs of hepatic encephalopathy.",
+        choices: [
+          "Check his orientation and asterixis daily, and correct precipitants such as sepsis, bleeding, and sedatives.",
+          "Sedate him with benzodiazepines for confusion.",
+          "Put confusion down to the anesthetic and wait.",
+        ],
+        feedback: [
+          "Encephalopathy signals remnant failure; treating the triggers helps.",
+          "Benzodiazepines worsen hepatic encephalopathy and suppress breathing.",
+          "New confusion can be liver failure or sepsis and needs assessment.",
+        ],
+        wrongComps: ["hypoxia", "infection"],
+      },
+      {
+        kind: "postop", title: "Nutrition support", description: "Start the liver-supportive nutrition.",
+        choices: [
+          "Start oral or enteral feeding on day 1 with adequate protein.",
+          "Restrict protein to prevent encephalopathy.",
+          "Keep him nil by mouth until the liver tests normalize.",
+        ],
+        feedback: [
+          "Early feeding with protein supports regeneration.",
+          "Protein restriction causes muscle loss and does not prevent encephalopathy.",
+          "Starvation slows regeneration and raises infection.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Pain control", description: "Plan the analgesia for the incision.",
+        choices: [
+          "Use an epidural or wound catheters with paracetamol at a reduced dose.",
+          "Give regular full-dose NSAIDs.",
+          "Use a morphine infusion without monitoring.",
+        ],
+        feedback: [
+          "Regional analgesia avoids drugs the remnant cannot clear.",
+          "NSAIDs risk kidney injury and bleeding.",
+          "A regenerating liver clears morphine slowly, and it accumulates and depresses breathing.",
+        ],
+        wrongComps: ["hemorrhage", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Mobilization plan", description: "Define the early mobilization.",
+        choices: [
+          "Sit him out on day 1 and walk on day 2 with LMWH once the INR allows.",
+          "Keep him in bed until the drain is out.",
+          "Withhold LMWH for the whole stay because of the liver surgery.",
+        ],
+        feedback: [
+          "Early mobilization prevents pneumonia and clots; LMWH is started once the INR allows.",
+          "Bed rest after a large incision leads to atelectasis and pneumonia.",
+          "Liver resection patients are hypercoagulable despite a raised INR.",
+        ],
+        wrongComps: ["hypoxia", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the imaging.",
+        choices: [
+          "Review at 2 weeks with the pathology and liver tests, and discuss adjuvant treatment.",
+          "Review at 3 months with a CT.",
+          "Discharge to the GP for the liver tests.",
+        ],
+        feedback: [
+          "Early review checks the liver function and sets the oncology plan.",
+          "A late review misses a collection or early liver dysfunction.",
+          "The surgical team must interpret the pathology and remnant function.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Surveillance plan", description: "Define the imaging surveillance for recurrence.",
+        choices: [
+          "Arrange CT and tumor markers every 3 to 6 months for 2 years, then less often.",
+          "Stop surveillance after the first clear scan.",
+          "Use ultrasound alone every year.",
+        ],
+        feedback: [
+          "Liver recurrence is often resectable when found early.",
+          "Most recurrences appear in the first 2 years.",
+          "Yearly ultrasound misses small recurrences.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Summarize the medications, the diet, and the warning signs.",
+        choices: [
+          "Teach wound care and to return for jaundice, fever, abdominal swelling, or confusion.",
+          "Advise return only for wound problems.",
+          "Allow alcohol in moderation from discharge.",
+        ],
+        feedback: [
+          "Red flags cover bile leak, liver failure, and infection.",
+          "Jaundice, swelling, and confusion can be liver failure or a bile leak.",
+          "Alcohol stresses a regenerating remnant.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Return to activity", description: "Define the lifting and activity restrictions.",
+        choices: [
+          "Advise no heavy lifting for 6 weeks and a gradual return to work.",
+          "Allow heavy lifting from 2 weeks.",
+          "Advise bed rest for 2 weeks at home.",
+        ],
+        feedback: [
+          "The fascia needs about 6 weeks before heavy loading.",
+          "Early heavy lifting risks wound dehiscence and hernia.",
+          "Bed rest at home raises clot risk.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
       {
         kind: "postop", title: "Monitor liver function", description: "The remnant must compensate.",
         choices: [
@@ -1409,7 +1708,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the lungs", "the esophagus"],
       test: "graft flow measurement and a check of the anastomoses",
       wrongTests: ["a routine liver biopsy", "an on-table MRI"],
-      risks: ["cardiac_arrhythmia", "hemorrhage", "hypoxia", "thrombosis", "infection", "nerve_injury"],
+      risks: ["cardiac_arrhythmia", "hemorrhage", "hypoxia", "thrombosis", "infection", "nerve_injury", "anaphylaxis", "fluid_overload"],
       instrument: "a stabilizer and a coronary shunt",
       position: "supine with arms tucked",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -1438,12 +1737,12 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         kind: "core", title: "Harvest the LIMA", description: "Take down the conduit.",
         choices: [
           "Harvest the LIMA as a pedicle, protecting the phrenic nerve and confirming flow.",
-          "Harvest the LIMA with wide electrocautery.",
+          "Harvest the LIMA skeletonized on a high cautery setting to speed it up.",
           "Skip the LIMA and use vein grafts only.",
         ],
         feedback: [
           "The LIMA pedicle is harvested with intact flow.",
-          "Wide cautery burns the pedicle and the phrenic nerve.",
+          "High-power cautery along the pedicle burns the artery and the phrenic nerve.",
           "The LIMA is the best conduit for the LAD when available.",
         ],
         wrongComps: ["nerve_injury", "thrombosis"],
@@ -1481,12 +1780,12 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         kind: "core", title: "Construct the anastomosis", description: "Sew the graft to the target.",
         choices: [
           "Construct the anastomosis with the correct size and orientation on the beating heart.",
-          "Sew the graft to the wrong branch.",
+          "Graft the first large branch in the field without matching it to the angiogram.",
           "Make the anastomosis as large as possible.",
         ],
         feedback: [
           "The anastomosis is correct and functional.",
-          "Grafting the wrong branch leaves the disease untreated.",
+          "An unconfirmed target can be the wrong branch, leaving the diseased vessel ungrafted.",
           "An oversized anastomosis steals flow.",
         ],
         wrongComps: ["cardiac_arrhythmia", "thrombosis"],
@@ -1495,12 +1794,12 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         kind: "vitals", title: "Respond to ischemia", description: "The ST segment is changing during the anastomosis.",
         choices: [
           "Pause, communicate with anesthesia, and support the hemodynamics while completing the anastomosis.",
-          "Continue — the changes will resolve.",
+          "Finish the anastomosis quickly, since the ST changes usually settle once flow is restored.",
           "Remove the stabilizer and abandon the graft.",
         ],
         feedback: [
           "Ischemia is managed while the graft is completed.",
-          "Ignoring ST changes risks infarction.",
+          "Unsupported ischemia during the anastomosis can progress to arrhythmia and infarction before flow returns.",
           "Abandoning the graft leaves the disease untreated.",
         ],
         wrongComps: ["cardiac_arrhythmia", "hypoxia"],
@@ -1562,7 +1861,20 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         wrongComps: ["thrombosis", "cardiac_arrhythmia"],
       },
       { kind: "vessel", title: "Control sternal bleeding", description: "The sternal edges are oozing.", f: { vessel: "the sternal bleeding points", wrongVessels: ["the aorta", "the pulmonary artery"] } },
-      { kind: "verify", title: "Confirm the hemostasis with protamine", description: "Reverse the heparin and confirm the field stays dry.", f: { test: "the field after protamine", wrongTests: ["a routine liver biopsy", "an on-table MRI"] } },
+      {
+        kind: "verify", title: "Confirm the hemostasis with protamine", description: "Reverse the heparin and confirm the field stays dry.",
+        choices: [
+          "Give protamine slowly, recheck the ACT against baseline, then inspect every anastomosis and the LIMA bed.",
+          "Leave the heparin unreversed, since off-pump grafts stay open better while he is anticoagulated.",
+          "Push the full protamine dose as a rapid bolus so the heparin is reversed before closing.",
+        ],
+        feedback: [
+          "Slow protamine with an ACT check reverses the heparin without a reaction, and every site is inspected dry.",
+          "Unreversed heparin keeps the field bleeding; graft patency comes from antiplatelet therapy, not from leaving the heparin on.",
+          "Rapid protamine causes profound hypotension and pulmonary hypertension.",
+        ],
+        wrongComps: ["hemorrhage", "anaphylaxis"],
+      },
       {
         kind: "verify", title: "Check the LIMA bed", description: "Inspect the LIMA harvest bed for bleeding.",
         choices: [
@@ -1578,17 +1890,134 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         wrongComps: ["hemorrhage", "nerve_injury"],
       },
       { kind: "bleed", title: "Control a graft bed bleeder", description: "The harvest site is bleeding.", f: { vessel: "the harvest site vessels", wrongVessels: ["the femoral artery", "the aorta"] } },
-      { kind: "verify", title: "Confirm the rhythm", description: "Check the rhythm is stable before closure.", f: { test: "the cardiac rhythm", wrongTests: ["a routine ECG", "a CT scan"] } },
+      {
+        kind: "verify", title: "Confirm the rhythm", description: "Check the rhythm is stable before closure.",
+        choices: [
+          "Confirm the rhythm, place temporary epicardial pacing wires, and test capture before closing.",
+          "Close without pacing wires, since he is in sinus rhythm at the moment.",
+          "Place the pacing wires through the fresh vein-graft hood, where capture is most reliable.",
+        ],
+        feedback: [
+          "Epicardial wires give immediate pacing if heart block or bradycardia develops after surgery.",
+          "Heart block after coronary surgery is common and unpredictable; without wires it needs emergency transvenous pacing.",
+          "A wire through a fresh graft anastomosis tears it, and it bleeds when the wire is pulled.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "hemorrhage"],
+      },
       { kind: "closure", title: "Close the sternum", description: "Wire the sternum and close the layers.", f: { structure: "the sternum and the soft tissues" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Cardiac surgery carries a high thrombosis risk." },
-      { kind: "postop", title: "Watch for low cardiac output", description: "Monitor the hemodynamics after the surgery.", f: { test: "the cardiac output and the pressures", wrongTests: ["a routine ECG", "a CT scan"] } },
-      { kind: "postop", title: "Manage atrial fibrillation", description: "Treat new postoperative atrial fibrillation.", f: { test: "the rhythm and the rate", wrongTests: ["a routine ECG", "a CT scan"] } },
-      { kind: "postop", title: "Pulmonary hygiene", description: "Plan the breathing exercises.", f: { test: "the respiratory status", wrongTests: ["a routine chest X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Renal protection", description: "Monitor the renal function.", f: { test: "the urine output and the creatinine", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Sternal precautions", description: "Teach the sternal precautions.", f: { test: "the sternal precautions", wrongTests: ["a routine chest X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Graft surveillance", description: "Define the graft surveillance plan.", f: { test: "the graft surveillance", wrongTests: ["a routine ECG", "a CT scan"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the cardiology follow-up.", f: { test: "the discharge criteria and the follow-up", wrongTests: ["a routine chest X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the medications, the sternal precautions, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine chest X-ray", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for low cardiac output", description: "Monitor the hemodynamics after the surgery.",
+        choices: [
+          "Track the cardiac index, filling pressures, lactate, and urine output hourly, and get an echo if the index falls.",
+          "Treat any low blood pressure with a fluid bolus first, whatever the filling pressures show.",
+          "Rely on the blood pressure, since a normal pressure means the output is adequate.",
+        ],
+        feedback: [
+          "Low output after grafting can hide behind a normal pressure; the index, lactate, and echo find tamponade or pump failure early.",
+          "High filling pressures with low output mean a failing ventricle or tamponade; more fluid makes it worse.",
+          "Vasoconstriction keeps the pressure normal while the output falls.",
+        ],
+        wrongComps: ["fluid_overload", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Manage atrial fibrillation", description: "Treat new postoperative atrial fibrillation.",
+        choices: [
+          "Correct potassium and magnesium, control the rate with a beta-blocker or amiodarone, and anticoagulate if it persists beyond 48 hours.",
+          "Cardiovert with a synchronized shock straight away, although he is hemodynamically stable.",
+          "Leave the atrial fibrillation untreated, since it resolves by itself in most patients after heart surgery.",
+        ],
+        feedback: [
+          "Electrolytes and rate control treat most postoperative AF; persistent AF needs anticoagulation for stroke risk.",
+          "Stable postoperative AF usually recurs straight after a shock; cardioversion is for the unstable patient.",
+          "Most does resolve, but fast AF drops the output and persistent AF carries a stroke risk.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Pulmonary hygiene", description: "Plan the breathing exercises.",
+        choices: [
+          "Extubate once he is awake, warm, and not bleeding, then start incentive spirometry and early mobilization.",
+          "Keep him ventilated overnight as routine so the lungs can rest after surgery.",
+          "Extubate on the table as soon as the chest is closed, before he rewarms.",
+        ],
+        feedback: [
+          "Early extubation of a stable, warm patient plus spirometry reduces pneumonia and atelectasis.",
+          "Routine overnight ventilation raises the risk of ventilator pneumonia with no benefit in a stable patient.",
+          "A cold patient shivers, raising oxygen demand, and may still be bleeding; extubate when warm and dry.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Renal protection", description: "Monitor the renal function.",
+        choices: [
+          "Keep the mean arterial pressure above 65, avoid nephrotoxins, and track urine output and creatinine daily.",
+          "Give furosemide whenever the urine output drops below 0.5 mL/kg/h.",
+          "Order a contrast CT on day 1 to check the grafts.",
+        ],
+        feedback: [
+          "Perfusion pressure and avoiding nephrotoxins protect kidneys stressed by surgery.",
+          "Diuretics raise the urine number without protecting the kidney, and the potassium they waste triggers arrhythmias after cardiac surgery.",
+          "Early contrast adds a nephrotoxic load to a stressed kidney, and contrast can trigger a reaction.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Sternal precautions", description: "Teach the sternal precautions.",
+        choices: [
+          "Teach sternal precautions: no lifting over about 5 kg and no pushing up with the arms for 6 to 8 weeks, and hug a pillow when coughing.",
+          "Tell him to hold back his cough so the sternal wires are not stressed.",
+          "Allow full upper-body activity once the skin has healed at 2 weeks.",
+        ],
+        feedback: [
+          "Limiting the load while the sternum unites prevents dehiscence and mediastinitis.",
+          "Holding back the cough leaves secretions in the lungs; splinting protects the sternum and still clears them.",
+          "The sternum takes 6 to 8 weeks to unite; early loading risks dehiscence and mediastinitis.",
+        ],
+        wrongComps: ["hypoxia", "infection"],
+      },
+      {
+        kind: "postop", title: "Graft surveillance", description: "Define the graft surveillance plan.",
+        choices: [
+          "Start aspirin within 6 hours of surgery and investigate any new ischemia with an ECG, troponin, and angiography.",
+          "Hold aspirin for a week to let the anastomoses settle.",
+          "Arrange routine CT angiography of every graft at one week.",
+        ],
+        feedback: [
+          "Early aspirin keeps vein grafts open; new ischemia after off-pump grafting needs prompt imaging.",
+          "Delaying aspirin raises early graft occlusion.",
+          "Routine early CT angiography adds a contrast load to recovering kidneys without changing management.",
+        ],
+        wrongComps: ["thrombosis", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the cardiology follow-up.",
+        choices: [
+          "Review at 4 to 6 weeks with a wound check, an ECG, and the secondary-prevention medications, then cardiac rehab.",
+          "Stop the beta-blocker at the clinic visit if he is in sinus rhythm.",
+          "Stop the statin once the chest pain has gone.",
+        ],
+        feedback: [
+          "Structured review and secondary prevention protect the grafts and native vessels.",
+          "Beta-blockers after CABG reduce atrial fibrillation and ischemia; stopping early brings them back.",
+          "Statins slow graft disease; symptom relief does not mean the disease has stopped.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Summarize the medications, the sternal precautions, and the warning signs.",
+        choices: [
+          "Teach the sternal precautions and medications, and to return for chest pain, breathlessness, fever, or wound discharge.",
+          "Advise return only for chest pain.",
+          "Allow driving in the first week if he feels well.",
+        ],
+        feedback: [
+          "Red flags cover graft occlusion, effusion, and sternal infection.",
+          "Fever or wound discharge can be mediastinitis, which needs early treatment.",
+          "Braking and steering load the healing sternum, and a crash would split it; most units advise about 4 weeks.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       {
         kind: "postop", title: "Plan ICU monitoring", description: "Define the postoperative surveillance.",
         choices: [
