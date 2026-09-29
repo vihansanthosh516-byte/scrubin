@@ -689,6 +689,7 @@ export default function Simulation() {
             // Hybrid Groq context — lets the LLM judge THIS step + THIS action
             // instead of blindly trusting the authored complication.
             chosen_action: choice.text,
+            choice_feedback: choice.feedback,
             step_description: step?.description,
             procedure: procId,
             procedure_phase: currentState?.procedure_phase ?? currentState?.procedurePhase ?? undefined,
