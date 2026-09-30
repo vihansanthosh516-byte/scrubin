@@ -825,7 +825,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the sacrum", "the facet joints above"],
       test: "neuromonitoring and a final X-ray of the construct",
       wrongTests: ["an on-table MRI", "a bone scan"],
-      risks: ["nerve_injury", "hemorrhage", "infection", "thrombosis"],
+      risks: ["nerve_injury", "hemorrhage", "infection", "thrombosis", "hypoxia", "fluid_overload"],
       instrument: "a pedicle probe and an awl",
       position: "prone on a spinal frame",
       wrongPositions: ["supine", "lateral decubitus"],
@@ -847,9 +847,9 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         feedback: [
           "The level is confirmed radiographically.",
           "Trusting the incision risks instrumenting the wrong level.",
-          "Palpation alone is unreliable in the obese or deep back.",
+          "Palpation miscounts often; exploring a second level doubles the dissection and the blood loss.",
         ],
-        wrongComps: ["nerve_injury", "infection"],
+        wrongComps: ["nerve_injury", "hemorrhage"],
       },
       {
         kind: "core", title: "Place the pedicle screws", description: "Instrument the pedicles safely.",
@@ -861,7 +861,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         feedback: [
           "The pedicles are probed and confirmed before instrumentation.",
           "Freehand drilling risks a pedicle breach and nerve root injury.",
-          "Oversized screws can breach the pedicle wall.",
+          "Oversized screws split the pedicle, and the cancellous bone bleeds heavily.",
         ],
         wrongComps: ["nerve_injury", "hemorrhage"],
       },
@@ -874,10 +874,10 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "The pedicle is confirmed intact with stimulation.",
-          "Advancing through resistance can breach into the canal.",
+          "Pushing through resistance breaches the front of the vertebral body toward the great vessels.",
           "Skipping stimulation risks a silent root injury.",
         ],
-        wrongComps: ["nerve_injury", "hemorrhage"],
+        wrongComps: ["hemorrhage", "nerve_injury"],
       },
       {
         kind: "core", title: "Perform the decompression", description: "Decompress the L4-L5 nerve roots.",
@@ -888,10 +888,10 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "The roots are decompressed under direct vision.",
-          "Burring to the dura without vision risks a dural tear.",
-          "Fusing without decompression leaves the radiculopathy.",
+          "Burring to the dura without vision tears it — the CSF leak opens a path for meningitis.",
+          "Fusing without decompression leaves the root compressed and the radiculopathy in place.",
         ],
-        wrongComps: ["nerve_injury", "hemorrhage"],
+        wrongComps: ["infection", "nerve_injury"],
       },
       {
         kind: "bleed", title: "Control epidural venous bleeding", description: "The epidural plexus is bleeding.",
@@ -902,10 +902,10 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "The epidural bleeding is controlled safely.",
-          "Cauterizing the dura causes a dural tear.",
-          "Bone wax in the epidural space causes a mass effect.",
+          "Cautery on the dura burns a hole — the CSF leak opens a path for meningitis.",
+          "Bone wax in the epidural space presses on the sac and roots.",
         ],
-        wrongComps: ["hemorrhage", "nerve_injury"],
+        wrongComps: ["infection", "nerve_injury"],
       },
       {
         kind: "core", title: "Prepare the disc space", description: "Prepare L4-L5 for the interbody cage.",
@@ -916,22 +916,22 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "The disc space is prepared with the neural structures protected.",
-          "Aggressive reaming violates the endplates.",
-          "Blind rongeur use risks the thecal sac.",
+          "Reaming through the endplates opens the cancellous bone, which bleeds and lets the cage sink.",
+          "Blind rongeur use risks the thecal sac and the exiting root.",
         ],
-        wrongComps: ["nerve_injury", "hemorrhage"],
+        wrongComps: ["hemorrhage", "nerve_injury"],
       },
       {
         kind: "core", title: "Place the interbody cage", description: "Restore the disc height.",
         choices: [
           "Place the cage with the correct size and position, confirmed by fluoroscopy.",
           "Impact the largest cage that fits.",
-          "Place the cage off-midline for better purchase.",
+          "Impact the cage past the anterior annulus to maximize lordosis.",
         ],
         feedback: [
           "The cage is placed in the correct position and size.",
           "Oversized cages risk endplate fracture and nerve stretch.",
-          "Off-midline placement risks root injury.",
+          "The iliac vessels lie just in front of the anterior annulus — driving through it can tear them.",
         ],
         wrongComps: ["nerve_injury", "hemorrhage"],
       },
@@ -940,12 +940,12 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         choices: [
           "Place the rods and lock them with the correct sagittal alignment.",
           "Compress the construct forcefully for maximum lordosis.",
-          "Place the rods without checking the alignment.",
+          "Leave the rods long above the top screws to allow a later extension.",
         ],
         feedback: [
           "The rods are placed with correct alignment.",
-          "Forceful compression can cause a listhesis or root stretch.",
-          "Unchecked alignment leaves a poor sagittal balance.",
+          "Forceful compression closes the foramen and stretches the root.",
+          "Long rod ends are prominent under thin tissue — the wound breaks down over them and becomes infected.",
         ],
         wrongComps: ["nerve_injury", "infection"],
       },
@@ -954,16 +954,29 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         choices: [
           "Check the final X-ray for screw and cage position and obtain a wake-up test if monitoring is unreliable.",
           "Trust the placement and close.",
-          "Skip the final imaging to save time.",
+          "Rely on the neuromonitoring alone and skip the final image.",
         ],
         feedback: [
           "The construct is confirmed on imaging.",
-          "Skipping the check risks a misplaced screw left behind.",
-          "Final imaging is standard before closing a fusion.",
+          "A medially placed screw left behind presses on the root.",
+          "Monitoring does not see a screw that has breached forward toward the great vessels.",
         ],
-        wrongComps: ["nerve_injury", "infection"],
+        wrongComps: ["nerve_injury", "hemorrhage"],
       },
-      { kind: "vessel", title: "Protect the segmental vessels", description: "The segmentals cross the mid-vertebral body.", f: { vessel: "the segmental vessels", wrongVessels: ["the aorta", "the iliac artery"] } },
+      {
+        kind: "vessel", title: "Protect the vessels in front of the disc", description: "The iliac vessels lie just anterior to the L4-L5 disc.",
+        choices: [
+          "Keep the instruments within the disc space, checking their depth on fluoroscopy, and never breach the anterior annulus.",
+          "Push the curette through the anterior annulus to clear the disc completely.",
+          "Control a foraminal bleeder with a large clamp deep in the foramen.",
+        ],
+        feedback: [
+          "Depth control inside the annulus keeps the great vessels safe.",
+          "A breach through the anterior annulus can lacerate the iliac artery or vein — a hidden, massive bleed.",
+          "The exiting root sits in the foramen — a blind clamp there crushes it.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
       { kind: "verify", title: "Confirm the screws on final imaging", description: "Re-check the screw positions on the final fluoroscopy.", f: { test: "the screw positions on the final image", wrongTests: ["an on-table MRI", "a CT scan"] } },
       {
         kind: "verify", title: "Check the decompression", description: "Confirm the thecal sac is free of compression.",
@@ -983,15 +996,132 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
       { kind: "verify", title: "Confirm the neuromonitoring signals", description: "Re-check the motor and sensory signals before closure.", f: { test: "the neuromonitoring signals", wrongTests: ["a nerve conduction study", "a CT scan"] } },
       { kind: "closure", title: "Close the wound", description: "Close the fascia, subcutaneous layer, and skin.", f: { structure: "the thoracolumbar fascia and skin" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Spinal surgery patients are high-risk for thrombosis." },
-      { kind: "postop", title: "Watch for hematoma", description: "Monitor for a spinal epidural hematoma.", f: { test: "the neuro exam for a new deficit", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Wound drainage", description: "Define the drain management.", f: { test: "the drain output", wrongTests: ["a routine X-ray", "a blood panel"] } },
-      { kind: "postop", title: "Pain control", description: "Plan the analgesia for the back.", f: { test: "the pain scores", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Log-roll training", description: "Teach the log-roll technique for the staff and the patient.", f: { test: "the log-roll technique", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Watch for infection", description: "Monitor the wound and the inflammatory markers.", f: { test: "the wound and the inflammatory markers", wrongTests: ["a routine CT scan", "a blood panel"] } },
-      { kind: "postop", title: "Bowel and bladder monitoring", description: "Assess the bowel and bladder function after the surgery.", f: { test: "the bowel and bladder function", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Bracing plan", description: "Define the brace use if prescribed.", f: { test: "the brace plan", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the X-ray follow-up for the fusion.", f: { test: "the fusion on X-ray", wrongTests: ["a routine MRI", "a bone scan"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the lifting precautions and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for epidural hematoma", description: "Two hours post-op he reports new heaviness in both legs.",
+        choices: [
+          "Examine urgently; if a new deficit is confirmed, get an emergency MRI and return to theatre for evacuation.",
+          "Reassure him it's residual anesthetic and recheck in the morning.",
+          "Give more IV opioid for the discomfort and recheck in 4 hours.",
+        ],
+        feedback: [
+          "A new deficit after spinal surgery is a hematoma until proven otherwise — decompression within hours saves function.",
+          "Waiting overnight lets an epidural hematoma compress the cauda equina permanently.",
+          "Sedating him hides the progression and depresses his breathing.",
+        ],
+        wrongComps: ["hemorrhage", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Wound drain", description: "The drain has put out 150 mL in 12 hours.",
+        choices: [
+          "Record the output and remove the drain at 24–48 hours once it slows.",
+          "Leave the drain for a week to be safe.",
+          "Pull the drain now, even though it is still draining briskly.",
+        ],
+        feedback: [
+          "Short-term drainage with timely removal balances hematoma and infection risk.",
+          "A long-standing drain is a route for bacteria into the implant.",
+          "Pulling a brisk drain lets the blood collect around the dura.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Pain control", description: "Back pain 7/10 on day 1.",
+        choices: [
+          "Multimodal analgesia: paracetamol, a gabapentinoid, and PCA opioid with monitoring.",
+          "Double the PCA dose and add a benzodiazepine for comfort.",
+          "Give high-dose NSAIDs for 6 weeks to speed recovery.",
+        ],
+        feedback: [
+          "Multimodal analgesia with monitoring controls pain safely after fusion.",
+          "Stacking opioid and benzodiazepine depresses breathing.",
+          "Prolonged high-dose NSAIDs impair bone healing and platelet function — the wound and epidural space can bleed.",
+        ],
+        wrongComps: ["hypoxia", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Log-roll and early movement", description: "Nursing asks how to move him.",
+        choices: [
+          "Log-roll for turning, sit out on day 1, and walk with physio.",
+          "Keep him flat without turning for 48 hours.",
+          "Let him sit up by twisting and pulling on the rails.",
+        ],
+        feedback: [
+          "Log-rolling protects the construct while allowing early movement.",
+          "Two days flat without turning risks DVT and pressure injury.",
+          "Twisting loads the fresh screws and can shift them against a root.",
+        ],
+        wrongComps: ["thrombosis", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Watch for infection", description: "Day 5: new wound ooze and temperature 38.2°C.",
+        choices: [
+          "Examine the wound, send cultures and inflammatory markers, and involve the surgeon about washout.",
+          "Start oral antibiotics and discharge.",
+          "Put it down to atelectasis and recheck in 3 days.",
+        ],
+        feedback: [
+          "A draining wound over an implant needs early surgical review — washout can save the hardware.",
+          "Oral antibiotics alone do not clear a deep infection around the implant.",
+          "Delay lets a deep infection spread along the implant.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Bowel and bladder", description: "He has not passed urine for 8 hours.",
+        choices: [
+          "Scan the bladder, catheterize if in retention, and examine for saddle anesthesia.",
+          "Wait until he feels the urge.",
+          "Give a large fluid bolus to get the kidneys going.",
+        ],
+        feedback: [
+          "Retention after spinal surgery can be simple, or a sign of cauda equina compression — both need checking.",
+          "Unrecognized retention with saddle numbness may be a hematoma compressing the cauda equina.",
+          "Fluid does not fix retention — it overfills the bladder and the circulation.",
+        ],
+        wrongComps: ["hemorrhage", "fluid_overload"],
+      },
+      {
+        kind: "postop", title: "Bracing plan", description: "He asks if he needs a brace.",
+        choices: [
+          "No routine brace for a stable instrumented fusion — follow the surgeon's movement precautions.",
+          "Wear a rigid brace full-time for 6 months.",
+          "Take the precautions off entirely at 1 week.",
+        ],
+        feedback: [
+          "Instrumented fusions rarely need a brace; precautions protect the construct.",
+          "Long-term rigid bracing weakens the core and keeps him inactive, raising the clot risk.",
+          "Dropping all precautions early loads the screws before fusion, and they can loosen onto a root.",
+        ],
+        wrongComps: ["thrombosis", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the fusion review.",
+        choices: [
+          "Review at 6 weeks and 3 months with standing X-rays to check the construct.",
+          "One wound check at 2 weeks and discharge.",
+          "Review only if he reports pain.",
+        ],
+        feedback: [
+          "Serial reviews catch hardware problems and track fusion.",
+          "A single early wound check misses late infection and loosening.",
+          "Without routine review, a slowly loosening screw can shift onto a root unnoticed.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "He is going home on day 3.",
+        choices: [
+          "Explain wound care, lifting limits, and red flags: new weakness, saddle numbness, fever, or wound discharge.",
+          "Tell him bladder problems are normal after back surgery.",
+          "Give no wound advice — the dressing is waterproof.",
+        ],
+        feedback: [
+          "Clear red flags lead to early treatment of hematoma or infection.",
+          "Bladder change can mean an epidural hematoma or cauda equina compression — it is an emergency.",
+          "Without wound advice, an early infection is missed.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       {
         kind: "postop", title: "Monitor the neurology", description: "Watch for new deficits.",
         choices: [
@@ -1016,9 +1146,9 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         feedback: [
           "Wound surveillance catches early infection.",
           "No review risks a deep infection.",
-          "Delayed dressing changes hide wound breakdown.",
+          "A dressing left until clinic hides a growing wound hematoma.",
         ],
-        wrongComps: ["infection", "nerve_injury"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       {
         kind: "postop", title: "Plan mobilization", description: "Define the recovery pathway.",
@@ -1030,23 +1160,23 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
         feedback: [
           "Early, protected mobilization is the standard.",
           "Prolonged bed rest increases thrombosis risk.",
-          "Unrestricted activity stresses the construct.",
+          "Early bending and lifting loosens the screws before fusion — a loose screw can shift onto a root.",
         ],
-        wrongComps: ["thrombosis", "infection"],
+        wrongComps: ["thrombosis", "nerve_injury"],
       },
       {
         kind: "postop", title: "Discharge and follow-up", description: "Define the imaging and clinic plan.",
         choices: [
           "Arrange follow-up with X-rays at 6 weeks and 3 months to assess fusion.",
           "Review in clinic once at 6 weeks and discharge if the wound has healed.",
-          "Schedule an MRI at one month as routine.",
+          "Stop all analgesia at discharge to avoid dependence.",
         ],
         feedback: [
           "Serial X-rays track fusion.",
-          "Fusion takes months; a single 6-week wound check misses non-union and hardware failure.",
-          "Routine MRI is not indicated for fusion assessment.",
+          "Fusion takes months; a single 6-week wound check misses non-union, hardware failure, and late infection.",
+          "Uncontrolled pain at home keeps him in bed, and immobility after a fusion raises the clot risk.",
         ],
-        wrongComps: ["infection", "nerve_injury"],
+        wrongComps: ["infection", "thrombosis"],
       }
     ],
   },

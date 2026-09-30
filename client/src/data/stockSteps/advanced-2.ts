@@ -1612,7 +1612,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       instrument: "a microscope and a Kerrison punch",
       position: "prone on a spinal frame",
       wrongPositions: ["supine", "lateral decubitus"],
-      detail: "38-year-old, L5 radiculopathy from an L4-L5 disc herniation",
+      detail: "42-year-old, L5 radiculopathy from an L4-L5 disc herniation",
     },
     steps: [
       { kind: "preop", title: "Confirm the level and the plan", description: "Review the MRI and the clinical level before induction." },
@@ -1642,10 +1642,10 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         ],
         feedback: [
           "The level is confirmed radiographically.",
-          "Operating on the wrong level is a serious error.",
-          "Palpation alone is unreliable.",
+          "The incision is often a level off — decompressing the wrong level leaves the L5 root compressed.",
+          "Palpation miscounts often; exploring a second level doubles the dissection and the epidural bleeding.",
         ],
-        wrongComps: ["nerve_injury", "infection"],
+        wrongComps: ["nerve_injury", "hemorrhage"],
       },
       {
         kind: "core", title: "Perform the laminotomy", description: "Open the interlaminar window.",
@@ -1656,8 +1656,8 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         ],
         feedback: [
           "A targeted laminotomy exposes the root with the facets preserved.",
-          "Removing the facets destabilizes the spine.",
-          "Blind punching risks a dural tear.",
+          "Removing the facet destabilizes the segment, and the root is exposed to traction as it shifts.",
+          "Blind punching tears the epidural veins lying under the flavum.",
         ],
         wrongComps: ["nerve_injury", "hemorrhage"],
       },
@@ -1671,7 +1671,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         feedback: [
           "The root is identified and protected.",
           "Forceful retraction causes a root injury.",
-          "Working around the root without retraction risks an unseen injury.",
+          "Working around an unretracted root, instruments tear the epidural veins on its shoulder.",
         ],
         wrongComps: ["nerve_injury", "hemorrhage"],
       },
@@ -1684,10 +1684,10 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         ],
         feedback: [
           "The epidural bleeding is controlled safely.",
-          "Cauterizing the dura tears it.",
+          "Cautery on the dura burns a hole — the CSF leak that follows opens a path for meningitis.",
           "Bone wax in the epidural space compresses the sac.",
         ],
-        wrongComps: ["hemorrhage", "nerve_injury"],
+        wrongComps: ["infection", "nerve_injury"],
       },
       {
         kind: "core", title: "Find and remove the fragment", description: "Decompress the root.",
@@ -1699,7 +1699,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         feedback: [
           "The fragment is removed under direct vision.",
           "Blind rongeur use risks the root and the dura.",
-          "Aggressive disc removal destabilizes the level.",
+          "Curetting through the anterior annulus can lacerate the iliac vessels just in front of the disc.",
         ],
         wrongComps: ["nerve_injury", "hemorrhage"],
       },
@@ -1713,7 +1713,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         feedback: [
           "The root is confirmed decompressed.",
           "Skipping the check risks a missed fragment.",
-          "Removing more disc adds instability without benefit.",
+          "Extra curettage of a decompressed disc raises the risk of discitis without helping the root.",
         ],
         wrongComps: ["nerve_injury", "infection"],
       },
@@ -1726,8 +1726,8 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         ],
         feedback: [
           "The dura is confirmed intact.",
-          "Skipping the test misses a dural tear.",
-          "Waiting for a headache delays repair of a leak.",
+          "A missed dural tear leaks CSF toward the skin, which opens a path for meningitis.",
+          "By the time a headache appears, a pseudomeningocele is pressing on the roots and needs a second operation.",
         ],
         wrongComps: ["infection", "nerve_injury"],
       },
@@ -1763,17 +1763,160 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       },
       { kind: "closure", title: "Close the wound", description: "Close the fascia, subcutaneous layer, and skin.", f: { structure: "the fascia and skin" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Spinal surgery patients are at risk for thrombosis." },
-      { kind: "postop", title: "Watch for a CSF leak", description: "Monitor for a positional headache or a wound leak.", f: { test: "the wound and the headache symptoms", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Radicular pain expectation", description: "Explain that some leg symptoms may persist briefly.", f: { test: "the leg symptoms", wrongTests: ["a routine MRI", "a nerve study"] } },
-      { kind: "postop", title: "Wound care", description: "Define the back wound care.", f: { test: "the wound for infection signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Pain control", description: "Plan the analgesia for the back and the leg.", f: { test: "the pain scores", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Mobilization plan", description: "Define the early mobilization with the lifting precautions.", f: { test: "the mobilization tolerance", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Return-to-work plan", description: "Define the return-to-work restrictions.", f: { test: "the functional tolerance", wrongTests: ["a routine X-ray", "a stress test"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up to review the recovery.", f: { test: "the recovery at follow-up", wrongTests: ["a routine MRI", "a CT scan"] } },
-      { kind: "postop", title: "Recurrence risk discussion", description: "Discuss the recurrent herniation risk and the signs.", f: { test: "the recurrent symptoms", wrongTests: ["a routine MRI", "a nerve study"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the medications, the lifting rules, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Posture and body mechanics", description: "Teach the back-protective body mechanics.", f: { test: "the body mechanics", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Long-term back health", description: "Discuss the core strengthening for the long term.", f: { test: "the core strengthening plan", wrongTests: ["a routine X-ray", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for a CSF leak", description: "Day 1: headache when sitting up, gone when lying flat.",
+        choices: [
+          "Examine the wound for clear fluid, keep her flat for a short period, and involve the surgeon about a repair.",
+          "Put it down to anesthetic and discharge her.",
+          "Start IV antibiotics as routine for the headache.",
+        ],
+        feedback: [
+          "A positional headache means a CSF leak until proved otherwise — it needs a surgical opinion.",
+          "A leak that tracks to the skin opens the way for meningitis.",
+          "Antibiotics don't seal a leak; they only delay the diagnosis and risk a drug reaction.",
+        ],
+        wrongComps: ["infection", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Leg pain expectation", description: "The leg pain has gone, but she has tingling in the L5 area.",
+        choices: [
+          "Explain that numbness can take weeks to settle, and document the exam to compare with later.",
+          "Tell her all symptoms should vanish by tomorrow.",
+          "Order an urgent MRI for the tingling alone.",
+        ],
+        feedback: [
+          "Setting expectations and documenting a baseline lets a new deficit be spotted.",
+          "False reassurance means a genuinely new weakness is dismissed as expected.",
+          "Early MRI after surgery is hard to read and adds nothing for stable residual numbness — the contrast also carries a reaction risk.",
+        ],
+        wrongComps: ["nerve_injury", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "A small dressing over a 3 cm incision.",
+        choices: [
+          "Keep the dressing dry for 48 hours, then inspect; report redness, discharge, or fever.",
+          "Soak the wound in a bath from day 1.",
+          "Leave the dressing untouched for 3 weeks.",
+        ],
+        feedback: [
+          "Simple wound care and warning signs cover the main infection risk.",
+          "Soaking a fresh wound softens it and lets bacteria in.",
+          "A dressing left for weeks hides a developing infection.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Pain control", description: "Back pain 5/10 on day 0.",
+        choices: [
+          "Regular paracetamol and an NSAID, with short-course oral opioid for breakthrough pain.",
+          "High-dose IV opioid infusion overnight without monitoring.",
+          "High-dose IV ketorolac every 6 hours for a week as the main treatment.",
+        ],
+        feedback: [
+          "Multimodal analgesia controls pain with minimal opioid.",
+          "An unmonitored opioid infusion depresses breathing.",
+          "A week of high-dose ketorolac impairs platelets — an epidural hematoma can form over the fresh laminotomy.",
+        ],
+        wrongComps: ["hypoxia", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Mobilization plan", description: "She is awake and comfortable.",
+        choices: [
+          "Walk the same day with a physiotherapist and teach log-rolling and safe bending.",
+          "Strict bed rest for 3 days to protect the disc.",
+          "No restrictions — she can lift and twist as normal today.",
+        ],
+        feedback: [
+          "Early walking with sensible precautions is the standard after microdiscectomy.",
+          "Bed rest brings no benefit to the disc and raises the DVT risk.",
+          "Early heavy loading can re-herniate the disc onto the root.",
+        ],
+        wrongComps: ["thrombosis", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Return to work", description: "She works as a warehouse picker.",
+        choices: [
+          "Graded return — light duties at 2–4 weeks, full lifting around 6–8 weeks with a physio plan.",
+          "Return to full heavy lifting next week.",
+          "Stay off all work for 6 months.",
+        ],
+        feedback: [
+          "A graded return matches the healing of the annulus.",
+          "Heavy lifting before the annulus heals is the classic trigger for re-herniation.",
+          "Prolonged inactivity slows recovery and raises the risk of a clot.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the review.",
+        choices: [
+          "Review at about 6 weeks to check the wound, the leg symptoms, and the return-to-work plan.",
+          "No review needed if she feels better.",
+          "Review at 6 months only.",
+        ],
+        feedback: [
+          "A 6-week review catches residual deficits and guides rehab.",
+          "Without a review, a slow wound infection or new weakness is missed.",
+          "By 6 months a deficit that could have been addressed has become permanent.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Recurrence and red flags", description: "She asks what should make her come back.",
+        choices: [
+          "Explain that new leg weakness, saddle numbness, or bladder changes need emergency review.",
+          "Tell her some bladder change is normal after back surgery.",
+          "Tell her to wait for clinic if the leg pain returns with weakness.",
+        ],
+        feedback: [
+          "Cauda equina symptoms need an emergency MRI and decompression.",
+          "Bladder change can mean an epidural hematoma or a large recurrence compressing the cauda equina.",
+          "Waiting weeks with new weakness risks permanent root damage.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "She is going home the same evening.",
+        choices: [
+          "Give written advice on the wound, walking, lifting limits, analgesia, and red flags.",
+          "Discharge with verbal advice only while she is still drowsy.",
+          "Give her the full opioid supply for a month.",
+        ],
+        feedback: [
+          "Clear written advice makes a safe same-day discharge.",
+          "Instructions given to a drowsy patient are forgotten — wound warning signs go unnoticed.",
+          "A large opioid supply risks accidental overdose and respiratory depression.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Posture and body mechanics", description: "Physio session before discharge.",
+        choices: [
+          "Teach a hip hinge with a neutral spine, carrying loads close to the body.",
+          "Teach toe-touch stretches to regain flexibility early.",
+          "Tell her to avoid all movement until review.",
+        ],
+        feedback: [
+          "Neutral-spine mechanics protect the healing annulus.",
+          "Repeated loaded flexion stresses the annular defect and re-herniates the disc.",
+          "Immobility slows recovery and raises the clot risk.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Long-term back health", description: "She wants to prevent a recurrence.",
+        choices: [
+          "Recommend a core-strengthening program, weight control, and smoking cessation.",
+          "Recommend a lumbar brace for daily wear indefinitely.",
+          "Recommend long-term opioid use to manage flare-ups.",
+        ],
+        feedback: [
+          "Core strength, weight, and not smoking all lower the recurrence risk.",
+          "Long-term bracing weakens the core muscles, and the weak spine re-herniates onto the root.",
+          "Long-term opioids risk dependence and respiratory depression.",
+        ],
+        wrongComps: ["nerve_injury", "hypoxia"],
+      },
       {
         kind: "postop", title: "Monitor the neurology", description: "Watch for new symptoms.",
         choices: [
@@ -1783,8 +1926,8 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         ],
         feedback: [
           "Early neurologic assessment catches a new deficit.",
-          "A delayed exam misses a developing problem.",
-          "Skipping the exam risks missing a root injury.",
+          "A new root deficit left until clinic may no longer be reversible.",
+          "An epidural hematoma compressing the cauda equina is found only by examining the legs.",
         ],
         wrongComps: ["nerve_injury", "hemorrhage"],
       },
@@ -1793,14 +1936,14 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         choices: [
           "Inspect the wound and ask about positional headaches that suggest a CSF leak.",
           "Discharge without a wound check.",
-          "Ignore headaches after spinal surgery.",
+          "Treat any headache with a week of strict bed rest.",
         ],
         feedback: [
           "Wound and CSF leak signs are monitored.",
           "No check misses an early infection.",
-          "A positional headache is the hallmark of a dural leak.",
+          "A positional headache needs assessment for a CSF leak, not a week in bed — and bed rest invites a DVT.",
         ],
-        wrongComps: ["infection", "nerve_injury"],
+        wrongComps: ["infection", "thrombosis"],
       },
       {
         kind: "postop", title: "Plan mobilization", description: "Define the recovery pathway.",
@@ -1812,23 +1955,23 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         feedback: [
           "Early mobilization with precautions is standard.",
           "Prolonged bed rest increases thrombosis risk.",
-          "Unrestricted lifting risks a recurrent herniation.",
+          "Heavy lifting in the first weeks re-herniates the disc onto the root.",
         ],
-        wrongComps: ["thrombosis", "infection"],
+        wrongComps: ["thrombosis", "nerve_injury"],
       },
       {
         kind: "postop", title: "Discharge and follow-up", description: "Define the clinic plan.",
         choices: [
           "Arrange follow-up to review recovery and return-to-work plans.",
           "Tell the patient to return only if the leg pain comes back.",
-          "Schedule a routine MRI before discharge.",
+          "Discharge with two weeks of regular opioid as the only analgesic.",
         ],
         feedback: [
           "Structured follow-up tracks recovery.",
           "Return-if-worse misses wound problems, new deficits, and a structured return to work.",
-          "Routine MRI adds no value.",
+          "Round-the-clock opioid alone at home risks sedation and respiratory depression.",
         ],
-        wrongComps: ["infection", "nerve_injury"],
+        wrongComps: ["infection", "hypoxia"],
       }
     ],
   },

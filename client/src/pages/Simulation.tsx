@@ -618,7 +618,7 @@ function SimulationPage() {
     if (choice.isCorrect) {
       const next = caseState ? chooseCorrect(caseBank, caseState, choice) : null;
       const updatedEvents = [
-        ...(currentState?.events || []),
+        ...(useSimulationStore.getState().currentState?.events || []),
         `✅ Correct Step: ${choice.feedback}`,
         ...(next?.notes ?? []),
       ];
@@ -722,7 +722,7 @@ function SimulationPage() {
         setState({
           ...data,
           events: [
-            ...(currentState?.events || []),
+            ...(useSimulationStore.getState().currentState?.events || []),
             `❌ Incorrect Step: ${choice.feedback}`,
             `⚠️ Complication triggered: ${String(data.active_complication ?? choice.complication).replace(/_/g, ' ').toUpperCase()}`,
           ]

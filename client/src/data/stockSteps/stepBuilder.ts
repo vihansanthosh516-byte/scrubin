@@ -144,7 +144,7 @@ const CHOICE_TEMPLATES: Record<StepKind, (s: StepSpec) => [string, string, strin
   antibiotic: (s) => [
     `Infuse the ordered prophylactic antibiotic within 60 minutes of incision.`,
     `Hold antibiotics — this case carries a low contamination risk.`,
-    `Defer antibiotics until after closure to avoid an intraoperative reaction.`,
+    `Start the infusion without re-checking the allergy record — it was reviewed in clinic.`,
   ],
   position: (s) => [
     `Position the patient ${s.position} and pad every pressure point before prepping.`,
@@ -204,7 +204,7 @@ const CHOICE_TEMPLATES: Record<StepKind, (s: StepSpec) => [string, string, strin
   closure: (s) => [
     `Irrigate, confirm hemostasis, and close in layers with the fascia reapproximated.`,
     `Close the skin only — it shortens the case and the wound looks clean.`,
-    `Apply skin adhesive over the deeper layers without separate fascial closure.`,
+    `Close the layers without irrigating or re-checking hemostasis — the field looked dry.`,
   ],
   postop: (s) => [
     `Order serial monitoring of vitals and ${s.test} per protocol.`,
@@ -221,13 +221,13 @@ const CHOICE_TEMPLATES: Record<StepKind, (s: StepSpec) => [string, string, strin
 const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
   preop: [
     "Time-out completed; identity, site, and consent verified.",
-    "Skipping the safety check risks wrong-site surgery and protocol violations.",
-    "A verbal-only check leaves the formal safety barrier incomplete.",
+    "Skipping the checklist misses the allergy review — an unflagged allergen reaches the patient at induction.",
+    "Without the formal time-out nobody confirms the prophylactic antibiotic was given, and the wound goes unprotected.",
   ],
   antibiotic: [
     "Prophylactic antibiotic delivered within the 60-minute window.",
     "Holding prophylaxis exposes the wound to avoidable infection.",
-    "Post-incision antibiotics are less effective for prophylaxis.",
+    "Skipping the allergy re-check lets an unflagged allergen reach the patient — anaphylaxis follows.",
   ],
   position: [
     "Positioning and padding completed; pressure points protected.",
@@ -287,7 +287,7 @@ const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
   closure: [
     "Layered closure restores the integrity of each tissue plane.",
     "Skin-only closure leaves dead space and risks dehiscence and infection.",
-    "Adhesive over open deeper layers risks a fascial defect and herniation.",
+    "An oozer left unchecked under a closed wound collects into a hematoma and keeps bleeding.",
   ],
   postop: [
     "Post-operative monitoring matches the procedure's risk profile.",
@@ -297,7 +297,7 @@ const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
   dvt: [
     "DVT prophylaxis is in place for the operative and recovery period.",
     "Withholding prophylaxis in the perioperative window invites thromboembolism.",
-    "Deferring prophylaxis until ambulation misses the highest-risk window.",
+    "Deferring prophylaxis until ambulation misses the highest-risk window — a clot can embolize to the lungs.",
   ],
 };
 
@@ -307,9 +307,9 @@ const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
 // risks wins; the two wrong options never share a complication. Kinds with no
 // single mechanism fall back to the procedure's risk list.
 const KIND_COMPS: Partial<Record<StepKind, [string[], string[]]>> = {
-  preop: [["anaphylaxis", "infection"], ["infection", "anaphylaxis"]],
+  preop: [["anaphylaxis"], ["infection"]],
   antibiotic: [["infection"], ["anaphylaxis"]],
-  position: [["hypoxia", "nerve_injury"], ["nerve_injury", "hypoxia"]],
+  position: [["hypoxia"], ["nerve_injury"]],
   access: [["hemorrhage", "nerve_injury"], ["nerve_injury", "hemorrhage", "infection"]],
   exposure: [["nerve_injury", "hemorrhage"], ["hemorrhage", "nerve_injury"]],
   landmark: [["hemorrhage", "nerve_injury"], ["nerve_injury", "hemorrhage"]],
@@ -319,15 +319,21 @@ const KIND_COMPS: Partial<Record<StepKind, [string[], string[]]>> = {
   verify: [["infection", "hemorrhage"], ["hemorrhage", "infection"]],
   bleed: [["hemorrhage"], ["nerve_injury", "thrombosis", "infection"]],
   vitals: [["cardiac_arrhythmia", "hemorrhage", "hypoxia"], ["fluid_overload", "cardiac_arrhythmia", "hypoxia"]],
-  closure: [["infection"], ["hemorrhage", "thrombosis"]],
-  dvt: [["thrombosis"], ["hypoxia", "infection"]],
+  closure: [["infection"], ["hemorrhage"]],
+  dvt: [["thrombosis"], ["hypoxia"]],
 };
 
 function templateComps(kind: StepKind, risks: string[], stepIndex: number): [string, string] {
+  // Each template option has a fixed meaning, so its complication comes from
+  // the kind's preference list — never a random bank risk (a random draw paired
+  // "defer antibiotics" with an arrhythmia and pre-incision steps with bleeding).
   const [prefs1, prefs2] = KIND_COMPS[kind] ?? [[], []];
-  const c1 = prefs1.find((c) => risks.includes(c)) ?? pick(risks, stepIndex);
-  const rotation = risks.map((_, i) => pick(risks, stepIndex + 1 + i));
-  const c2 = prefs2.find((c) => risks.includes(c) && c !== c1) ?? rotation.find((c) => c !== c1) ?? c1;
+  const c1 = prefs1.find((c) => risks.includes(c)) ?? prefs1[0] ?? pick(risks, stepIndex);
+  const c2 =
+    prefs2.find((c) => risks.includes(c) && c !== c1) ??
+    prefs2.find((c) => c !== c1) ??
+    risks.map((_, i) => pick(risks, stepIndex + 1 + i)).find((c) => c !== c1) ??
+    c1;
   return [c1, c2];
 }
 

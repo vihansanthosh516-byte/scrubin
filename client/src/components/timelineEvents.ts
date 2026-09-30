@@ -59,7 +59,8 @@ export function applyTimelineBatch(
   }
 
   // Empty entries render as a bare "EVENT" marker with nothing under it.
-  const tail = incoming.slice(lastLen).filter((ev) => norm(ev).trim() !== "");
+  // Anything without a letter or digit (blank, bare emoji, "null") counts as empty.
+  const tail = incoming.slice(lastLen).filter((ev) => /[\p{L}\p{N}]/u.test(norm(ev) ?? "") && norm(ev) !== "null");
   if (tail.length === 0) {
     return { timeline, lastLen, lastTick, added: 0 };
   }

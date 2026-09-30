@@ -39,6 +39,11 @@ const contentWords = (s: string): string[] => {
 const INTRINSICALLY_GENERIC_KINDS = new Set(["closure", "bleed", "vitals", "dvt", "postop", "preop", "antibiotic", "position"]);
 
 // The engine's canonical complication set (server/engine/state/models.ts).
+// Complications any operation can cause (an allergen, a contaminated wound, a
+// positioning palsy, an airway problem, a DVT) — valid even when a bank's risk list
+// only names its procedure-specific dangers.
+export const UNIVERSAL_COMPS = new Set(["anaphylaxis", "infection", "nerve_injury", "hypoxia", "thrombosis"]);
+
 export const VALID_COMPLICATIONS = new Set([
   "hypoxia",
   "hemorrhage",
@@ -296,7 +301,7 @@ export function auditBank(bank: ProcedureBank): AuditFlag[] {
           reason: "complication_invalid",
           detail: `wrong choice triggers unknown complication "${c.complication}"`,
         });
-      } else if (!risks.includes(c.complication)) {
+      } else if (!risks.includes(c.complication) && !UNIVERSAL_COMPS.has(c.complication)) {
         flags.push({
           bankId: bank.id,
           stepIndex: i + 1,

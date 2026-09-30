@@ -242,11 +242,11 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the bladder", "the small bowel"],
       test: "a check of the uterine incision and the placenta",
       wrongTests: ["an on-table ultrasound", "a CT scan"],
-      risks: ["hemorrhage", "hypoxia", "cardiac_arrhythmia", "infection", "thrombosis"],
+      risks: ["hemorrhage", "hypoxia", "cardiac_arrhythmia", "infection", "thrombosis", "fluid_overload", "anaphylaxis"],
       instrument: "a bladder blade and ring forceps",
       position: "supine with left uterine displacement",
       wrongPositions: ["supine without displacement", "prone"],
-      detail: "31-year-old G2P1, 39 weeks, non-reassuring fetal tracing",
+      detail: "31-year-old G2P1, 39 weeks, non-reassuring fetal tracing, mild asthma",
     },
     steps: [
       { kind: "preop", title: "Confirm the indication", description: "Non-reassuring fetal tracing — time matters; confirm the plan." },
@@ -263,10 +263,10 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "The peritoneum is opened safely away from the bladder, at the upper extent.",
-          "Entry at the dome risks bladder injury and bleeding.",
-          "A lateral entry endangers the uterine vessels and the pelvic sidewall.",
+          "Blunt entry at the dome perforates the bladder — urine spills into the field and the cavity is contaminated.",
+          "A lateral entry tears into the uterine vessels at the pelvic sidewall.",
         ],
-        wrongComps: ["hemorrhage", "hypoxia"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       {
         kind: "landmark", title: "Create the bladder flap", description: "Reflect the bladder off the lower uterine segment.",
@@ -278,9 +278,9 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         feedback: [
           "The bladder flap is developed safely off the lower segment.",
           "Blunt pushing can tear the bladder wall or its veins.",
-          "Incising over the dome risks bladder injury.",
+          "Incising over the dome opens the bladder — an unrecognized cystotomy leaks urine and becomes infected.",
         ],
-        wrongComps: ["hemorrhage", "hypoxia"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "core", title: "Incision in the lower uterine segment", description: "Enter the uterus at the correct site.",
@@ -292,23 +292,23 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         feedback: [
           "The low transverse incision is safe and heals well.",
           "A routine fundal vertical incision is reserved for specific indications and bleeds more.",
-          "Entering at the os risks injury to the cervix and bladder.",
+          "Entering at the os injures the cervix and bladder base — the missed urinary leak becomes an infected collection.",
         ],
-        wrongComps: ["hemorrhage", "hypoxia"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "core", title: "Deliver the baby", description: "Deliver the head and body smoothly.",
         choices: [
-          "Deliver the head with a hand, clear the airway, and deliver the shoulders and body.",
+          "Deliver the head with a hand, then the shoulders and body, and start a slow oxytocin infusion.",
           "Pull firmly on the head to expedite delivery.",
-          "Use forceps on the head before it is engaged.",
+          "Ask anesthesia for a 10-unit oxytocin IV push as the shoulders deliver.",
         ],
         feedback: [
           "A controlled, atraumatic delivery is achieved.",
-          "Firm traction risks uterine extension tears and fetal injury.",
-          "Forceps on a high, unengaged head is dangerous.",
+          "Firm traction extends the hysterotomy laterally into the uterine vessels.",
+          "A rapid 10-unit oxytocin push causes profound vasodilation, tachycardia, and arrhythmia — oxytocin goes in as a slow bolus or infusion.",
         ],
-        wrongComps: ["hypoxia", "hemorrhage"],
+        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
       },
       {
         kind: "verify", title: "Deliver the placenta", description: "Complete the third stage.",
@@ -334,9 +334,9 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         feedback: [
           "Fundal massage and uterotonics restore uterine tone.",
           "Closing over an atonic uterus leaves the hemorrhage to continue.",
-          "Blind clamping risks the ureters and the uterine vessels.",
+          "Blind clamping catches the ureter — the urine leak surfaces days later as an infected collection.",
         ],
-        wrongComps: ["hemorrhage", "hypoxia"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "core", title: "Close the uterine incision", description: "Repair the hysterotomy.",
@@ -348,9 +348,9 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         feedback: [
           "A two-layer closure restores uterine integrity.",
           "A single layer may leave the closure weak and bleeding.",
-          "Including the bladder in the closure is a catastrophic error.",
+          "Stitching the bladder edge into the closure creates a vesicouterine fistula — urine leaks and the pelvis becomes infected.",
         ],
-        wrongComps: ["hemorrhage", "hypoxia"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "verify", title: "Inspect the adnexa and pelvis", description: "Check for bleeding and injury before closure.",
@@ -387,7 +387,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       {
         kind: "closure", title: "Close the skin", description: "Subcuticular skin closure.",
         choices: [
-          "Approve the skin edges and close with a subcuticular stitch.",
+          "Approximate the skin edges and close with a subcuticular stitch.",
           "Close the skin with a running locked suture through the full thickness.",
           "Close the skin before confirming the uterine incision is dry — time is short.",
         ],
@@ -399,42 +399,159 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         wrongComps: ["infection", "hemorrhage"],
       },
       { kind: "dvt", title: "DVT prophylaxis", description: "Pregnancy and surgery are both prothrombotic." },
-      { kind: "postop", title: "Monitor the lochia and the tone", description: "Watch for heavy lochia and a soft uterus.", f: { test: "the lochia and the fundal tone", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Antibiotic plan", description: "Define the postoperative antibiotic course.", f: { test: "the infection markers", wrongTests: ["a routine blood panel", "an ultrasound"] } },
-      { kind: "postop", title: "Breastfeeding and analgesia", description: "Plan analgesia compatible with breastfeeding.", f: { test: "the analgesia plan", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Wound care", description: "Define the incision care for the postpartum period.", f: { test: "the wound for infection signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Thromboembolism education", description: "Teach the signs of DVT and pulmonary embolism.", f: { test: "the DVT warning signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Contraception counseling", description: "Discuss the postpartum contraception options.", f: { test: "the contraception plan", wrongTests: ["a routine ultrasound", "a blood panel"] } },
-      { kind: "postop", title: "Baby care coordination", description: "Coordinate the neonatal care and feeding support.", f: { test: "the neonatal transition", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the postpartum visit and the wound check.", f: { test: "the recovery at the postpartum visit", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the medications, wound care, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
+      {
+        kind: "postop", title: "Monitor the lochia and the tone", description: "Recovery nurse reports steady lochia; the fundus is at the umbilicus.",
+        choices: [
+          "Palpate the fundus and weigh the pads every 15 minutes for the first 2 hours, then hourly.",
+          "Check the lochia once before transfer to the ward.",
+          "Rely on the heart rate alone — a young mother will show bleeding with tachycardia first.",
+        ],
+        feedback: [
+          "Scheduled fundal checks and weighed pads catch atony before she loses a large volume.",
+          "A single check misses the uterus that relaxes an hour later.",
+          "Young, fit mothers compensate — the heart rate can stay normal until she has lost a large volume.",
+        ],
+        wrongComps: ["hemorrhage", "fluid_overload"],
+      },
+      {
+        kind: "postop", title: "Postoperative antibiotics", description: "Cefazolin was given before incision; the labor was not prolonged.",
+        choices: [
+          "No further antibiotics — a single pre-incision dose is enough for an uncomplicated section.",
+          "Continue IV antibiotics for 5 days as routine.",
+          "Switch to oral amoxicillin for a week, even though she has a penicillin allergy listed.",
+        ],
+        feedback: [
+          "A single pre-incision dose is standard; extra doses add resistance and side effects without benefit.",
+          "Prolonged routine antibiotics breed resistant organisms and C. difficile — the infection that follows is harder to treat.",
+          "Ignoring a listed penicillin allergy risks an anaphylactic reaction.",
+        ],
+        wrongComps: ["infection", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Analgesia while breastfeeding", description: "She plans to breastfeed and asks what she can take.",
+        choices: [
+          "Regular paracetamol and ibuprofen, with short-course oral opioid only for breakthrough pain.",
+          "Codeine every 4 hours as the main analgesic.",
+          "Paracetamol alone — anything stronger is unsafe while breastfeeding.",
+        ],
+        feedback: [
+          "Paracetamol and NSAIDs are compatible with breastfeeding and cut opioid needs.",
+          "Codeine is avoided in breastfeeding — ultra-rapid metabolizers pass morphine to the baby, and the mother's breathing is depressed too.",
+          "Undertreated pain keeps her in bed, and immobility after a section raises the clot risk.",
+        ],
+        wrongComps: ["hypoxia", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "The dressing is dry on day 1; her BMI is 38.",
+        choices: [
+          "Remove the dressing at 24–48 hours, keep the fold clean and dry, and check the wound before discharge.",
+          "Leave the dressing on until the 6-week check.",
+          "Apply a fresh dressing daily without looking at the wound.",
+        ],
+        feedback: [
+          "Obesity raises wound-infection risk; early inspection catches it.",
+          "A dressing left for weeks hides a developing wound infection under the fold.",
+          "Changing dressings without inspecting the wound misses early cellulitis.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Thromboprophylaxis after a section", description: "She had an emergency section and a BMI of 38.",
+        choices: [
+          "Give LMWH for 10 days after discharge, with stockings and early mobilization.",
+          "Stop the LMWH at discharge — she is walking now.",
+          "Start LMWH 1 hour after the spinal catheter is removed without checking timing.",
+        ],
+        feedback: [
+          "Emergency section plus obesity puts her in the high-risk group for postpartum VTE; extended LMWH is recommended.",
+          "The postpartum clot risk persists for weeks — stopping at discharge leaves her exposed.",
+          "LMWH timed too close to the neuraxial catheter removal risks a spinal epidural hematoma.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Blood pressure in recovery", description: "Her BP is 152/98 on two readings; no headache.",
+        choices: [
+          "Recheck, send preeclampsia labs, and treat if it stays at or above 150/100.",
+          "Ignore it — BP rises after surgery from pain.",
+          "Give a large IV fluid bolus to protect the kidneys.",
+        ],
+        feedback: [
+          "Postpartum preeclampsia can appear after delivery and needs labs and treatment of severe-range pressures.",
+          "Postpartum preeclampsia left untreated can progress to seizures and stroke.",
+          "Preeclamptic patients have leaky capillaries — a large bolus causes pulmonary edema.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "fluid_overload"],
+      },
+      {
+        kind: "postop", title: "Urinary catheter and voiding", description: "The catheter has been in since the spinal.",
+        choices: [
+          "Remove the catheter at 12 hours and confirm she voids adequately within 6 hours.",
+          "Leave the catheter for 3 days to rest the bladder.",
+          "Remove it and discharge without checking that she has voided.",
+        ],
+        feedback: [
+          "Early removal with a voiding check prevents both infection and unrecognized retention.",
+          "Each extra catheter day raises the risk of urinary infection.",
+          "Unrecognized retention after a spinal overdistends the bladder and blocks uterine contraction — the bleeding picks up.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Anemia check", description: "Estimated blood loss was 1,100 mL.",
+        choices: [
+          "Check hemoglobin on day 1 and give oral or IV iron if low; transfuse only if symptomatic.",
+          "Transfuse two units now to be safe.",
+          "Skip the blood count — she looks well.",
+        ],
+        feedback: [
+          "A day-1 count after a large bleed guides iron or transfusion.",
+          "Routine transfusion in a stable patient adds volume and transfusion risk — two units into a young mother can overload her.",
+          "An unrecognized low hemoglobin leaves her with no reserve if bleeding recurs.",
+        ],
+        wrongComps: ["fluid_overload", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Handover to the ward", description: "She is ready to leave recovery.",
+        choices: [
+          "Hand over the blood loss, uterotonic plan, BP trend, and LMWH timing to the ward midwife.",
+          "Send her with the notes only — the ward will read them.",
+          "Hand over the baby's details and skip the mother's surgical issues.",
+        ],
+        feedback: [
+          "A structured handover makes the ward watch for the specific risks of this case.",
+          "Unread notes mean nobody watches for bleeding when the oxytocin stops.",
+          "Leaving out the mother's BP trend means rising pressures go unnoticed on the ward.",
+        ],
+        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
+      },
       {
         kind: "postop", title: "Monitor the mother", description: "Watch for postpartum hemorrhage and vitals.",
         choices: [
           "Monitor vitals, lochia, and uterine tone closely for the first 24 hours.",
           "Check vitals once and discharge from recovery.",
-          "Monitor the baby only — the mother is stable.",
+          "Check vitals and lochia, but skip the temperature and wound checks until discharge.",
         ],
         feedback: [
           "Postpartum monitoring catches delayed hemorrhage.",
           "A single check misses late atonic bleeding.",
-          "Ignoring maternal monitoring risks missing a postpartum complication.",
+          "Without temperature and wound checks, early endometritis or wound infection goes unnoticed.",
         ],
         wrongComps: ["hemorrhage", "infection"],
       },
       {
-        kind: "postop", title: "Neonatal assessment", description: "Confirm the baby's transition.",
+        kind: "postop", title: "Uterotonic plan in recovery", description: "She had an atonic uterus in theatre and a history of asthma.",
         choices: [
-          "Confirm the neonatal team is present for the delivery and reassessment.",
-          "Hand the baby to the family immediately.",
-          "Defer the neonatal check until the mother is closed.",
+          "Continue the oxytocin infusion for 4–6 hours and reassess the fundal tone and blood loss.",
+          "Stop the oxytocin on arrival in recovery — the uterus contracted well at closure.",
+          "Add carboprost now as routine prophylaxis against further atony.",
         ],
         feedback: [
-          "The neonate is assessed by the team during the delivery.",
-          "Immediate handover without assessment risks missing respiratory distress.",
-          "Delaying neonatal care risks a deteriorating transition.",
+          "Continued oxytocin covers the window when a previously atonic uterus is most likely to relax again.",
+          "An atonic uterus that firmed up in theatre can relax again once the oxytocin stops — the bleeding returns.",
+          "Carboprost causes bronchospasm and is contraindicated in asthma — her saturation falls.",
         ],
-        wrongComps: ["hypoxia", "hemorrhage"],
+        wrongComps: ["hemorrhage", "hypoxia"],
       },
       {
         kind: "postop", title: "Pain and mobilization", description: "Plan analgesia and early mobility.",
@@ -453,14 +570,14 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       {
         kind: "postop", title: "Discharge and follow-up", description: "Plan the postpartum visit.",
         choices: [
-          "Arrange a 2-week postpartum visit and wound check.",
+          "Arrange a wound and blood-pressure check within 1–2 weeks and teach the warning signs.",
           "Review at the routine 6-week postnatal check only.",
-          "Schedule a routine ultrasound of the uterus.",
+          "Discharge without teaching the signs of heavy bleeding — the lochia is light today.",
         ],
         feedback: [
-          "Postpartum follow-up is the standard of care.",
-          "Wound infection and early postpartum depression present in the first two weeks, before a 6-week check.",
-          "Routine imaging adds no value.",
+          "Early review catches wound infection, bleeding, and mood problems when they are most likely to appear.",
+          "Wound infection and endometritis present in the first two weeks — well before a 6-week check.",
+          "Secondary postpartum hemorrhage can start days after discharge; she must know when to come back.",
         ],
         wrongComps: ["infection", "hemorrhage"],
       }
@@ -703,7 +820,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the bladder", "the sigmoid colon"],
       test: "palpation of the ureters and a check of the cuff",
       wrongTests: ["an on-table cystoscopy as routine", "a CT scan"],
-      risks: ["hemorrhage", "infection", "nerve_injury", "thrombosis"],
+      risks: ["hemorrhage", "infection", "nerve_injury", "thrombosis", "hypoxia", "fluid_overload"],
       instrument: "a self-retaining retractor and Heaney clamps",
       position: "supine with a slight Trendelenburg tilt",
       wrongPositions: ["prone", "steep reverse Trendelenburg"],
@@ -715,7 +832,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       { kind: "position", title: "Position the patient", description: "Supine with a modest Trendelenburg tilt for pelvic access.", f: { wrongPositions: ["prone", "steep reverse Trendelenburg"] } },
       { kind: "access", title: "Make the incision", description: "Choose the entry for pelvic exposure.", f: { wrongApproaches: ["a midline vertical incision as routine", "a lumbar approach"] } },
       { kind: "exposure", title: "Open the fascia and peritoneum", description: "Divide the rectus sheath and enter the peritoneum.", f: { structure: "the rectus sheath and peritoneum", landmark: "the bladder peritoneum" } },
-      { kind: "landmark", title: "Identify the ureters", description: "Palpate the ureters at the pelvic brim before any clamping.", f: { landmark: "the ureters at the pelvic brim", wrongLandmarks: ["the uterine vessels", "the ovarian vessels"] } },
+      {
+        kind: "landmark", title: "Identify the ureters", description: "Palpate the ureters at the pelvic brim before any clamping.",
+        choices: [
+          "Identify each ureter crossing the iliac bifurcation at the brim and follow it down the sidewall.",
+          "Rely on the preoperative imaging to locate the ureters and start clamping.",
+          "Use the uterine vessels as the reference and clamp lateral to them.",
+        ],
+        feedback: [
+          "Seeing the ureter before clamping is the single best protection against injury.",
+          "Fibroids distort the pelvis — the ureter is rarely where the scan suggests, and an unseen ureter gets clamped and leaks.",
+          "Clamping lateral to the uterine vessels is exactly where the ureter runs — and the tear in the plexus bleeds.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       {
         kind: "vessel", title: "Clamp the round ligaments", description: "Divide the round ligaments and open the broad ligament.",
         choices: [
@@ -725,24 +855,24 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "The round ligament is divided safely and the broad ligament opened in the avascular window.",
-          "Including the ureter in the clamp is the classic ureteric injury.",
+          "A clamped ureter is the classic hysterectomy injury — the urine leak becomes an infected pelvic collection.",
           "Unligated division invites bleeding from the round ligament vessels.",
         ],
-        wrongComps: ["nerve_injury", "hemorrhage"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       {
         kind: "core", title: "Divide the ovarian vessels", description: "Decide the adnexal management.",
         choices: [
           "Clamp, divide, and ligate the infundibulopelvic ligament at the pelvic brim, clear of the ureter.",
-          "Clamp the infundibulopelvic ligament low near the ovary.",
+          "Clamp the infundibulopelvic ligament at the brim before the ureter has been seen.",
           "Cut the ovarian vessels with cautery only.",
         ],
         feedback: [
           "The infundibulopelvic ligament is secured with the ureter visualized.",
-          "Clamping low risks tearing the ovarian vessels and leaving the ovary behind.",
+          "The ureter crosses right under the IP ligament at the brim — a blind clamp catches it and the leak becomes infected.",
           "Cautery alone on these vessels risks delayed hemorrhage.",
         ],
-        wrongComps: ["hemorrhage", "infection"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       {
         kind: "dissect", title: "Develop the bladder flap", description: "Reflect the bladder off the cervix and vagina.",
@@ -754,7 +884,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         feedback: [
           "The bladder is reflected safely below the cuff.",
           "Sponge-only reflection can tear the bladder wall.",
-          "Clamping through the bladder is a catastrophic injury.",
+          "Clamping through the bladder leaves a cystotomy — urine leaks into the pelvis and becomes infected.",
         ],
         wrongComps: ["hemorrhage", "infection"],
       },
@@ -767,10 +897,10 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "The uterine arteries are secured at the cervical level where they are safe.",
-          "Clamping at the brim is unnecessary and risks the ureter.",
-          "Including the ureter causes silent hydronephrosis.",
+          "Clamping at the brim takes a large pedicle away from the cervix, and it slips and bleeds.",
+          "A ligated ureter causes silent hydronephrosis and an obstructed, infected kidney.",
         ],
-        wrongComps: ["hemorrhage", "nerve_injury"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "core", title: "Clamp the cardinal and uterosacral ligaments", description: "Complete the parametrial dissection.",
@@ -781,22 +911,22 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "The parametrium is taken in safe, sequential bites on the cervix.",
-          "Mass clamping risks the ureter and the venous plexus.",
-          "Stapling across the parametrium can include the ureter.",
+          "Mass clamping pulls the ureter into the pedicle — the injury leaks and becomes infected.",
+          "A stapler across the parametrium cuts through the venous plexus, and the plexus bleeds between the staples.",
         ],
-        wrongComps: ["nerve_injury", "hemorrhage"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       {
         kind: "core", title: "Open the vagina and remove the uterus", description: "Complete the hysterectomy.",
         choices: [
           "Open the vagina anteriorly, cut the lateral attachments under vision, and remove the specimen.",
           "Pull the uterus firmly through the vagina to expedite removal.",
-          "Close the vagina before removing the uterus.",
+          "Open the vagina posteriorly first, through the rectovaginal space.",
         ],
         feedback: [
           "The cuff is opened and the specimen removed under direct vision.",
-          "Forceful traction can tear the vaginal angles and the ureters.",
-          "Closing the cuff first traps the uterus.",
+          "Forceful traction tears the vaginal angles and their vessels.",
+          "The rectum sits right behind the posterior fornix — a posterior entry risks a rectal injury and fecal contamination.",
         ],
         wrongComps: ["hemorrhage", "infection"],
       },
@@ -809,10 +939,10 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "The ureters are confirmed intact and the pelvis is dry.",
-          "Skipping the check misses a silent ureteric injury.",
-          "Routine retroperitoneal opening adds risk without benefit.",
+          "Skipping the check misses a silent ureteric injury — the leak declares days later as an infected urinoma.",
+          "Routine retroperitoneal opening disturbs the sidewall veins and starts a new bleed.",
         ],
-        wrongComps: ["nerve_injury", "hemorrhage"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       { kind: "bleed", title: "Control a pelvic venous bleeder", description: "The uterine venous plexus is oozing.", f: { vessel: "the uterine venous plexus", wrongVessels: ["the external iliac artery", "the ovarian artery"] } },
       {
@@ -825,14 +955,27 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         feedback: [
           "A final trace confirms no clamp, suture, or angulation compromised either ureter during the dissection.",
           "The ureters can be injured late in the case at the vaginal angles — the second look is essential.",
-          "The ureter's blood supply travels in those bands — divide them and you devascularize the ureter.",
+          "Those bands carry small vessels and the ureter's own blood supply — dividing them bleeds and devascularizes it.",
         ],
-        wrongComps: ["infection", "thrombosis"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       { kind: "exposure", title: "Inspect the pelvic sidewalls", description: "Look for venous bleeding along the sidewalls.", f: { structure: "the pelvic sidewalls", landmark: "the internal iliac vessels" } },
       { kind: "bleed", title: "Control a cuff-angle bleeder", description: "The vaginal angle is bleeding.", f: { vessel: "the vaginal angle vessels", wrongVessels: ["the external iliac artery", "the obturator artery"] } },
       { kind: "verify", title: "Complete the sponge count", description: "Confirm the counts are correct before the abdomen is closed.", f: { test: "the sponge and instrument count", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "closure", title: "Close the vaginal cuff", description: "Suture the cuff with the angles incorporated.", f: { structure: "the vaginal cuff" } },
+      {
+        kind: "closure", title: "Close the vaginal cuff", description: "Suture the cuff with the angles incorporated.",
+        choices: [
+          "Close the cuff with absorbable sutures, securing both angles and incorporating the uterosacral ligaments.",
+          "Leave the cuff open to drain — it heals by itself.",
+          "Close the middle of the cuff and leave the angles to heal on their own.",
+        ],
+        feedback: [
+          "A secure cuff with supported angles prevents bleeding, infection, and later prolapse.",
+          "An open cuff exposes the pelvis to vaginal flora — cuff cellulitis and a pelvic abscess follow.",
+          "The angles hold the vaginal artery branches — left unsutured, they bleed.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       {
         kind: "closure", title: "Close the abdomen", description: "Close the fascia and skin in layers.",
         choices: [
@@ -848,28 +991,145 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         wrongComps: ["infection", "hemorrhage"],
       },
       { kind: "dvt", title: "DVT prophylaxis", description: "Pelvic surgery carries a significant thrombosis risk." },
-      { kind: "postop", title: "Watch for cuff infection", description: "Vaginal cuff cellulitis can develop after hysterectomy.", f: { test: "the cuff for discharge and tenderness", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Manage the catheter", description: "Define the catheter removal timing.", f: { test: "the voiding trial", wrongTests: ["a routine ultrasound", "a blood panel"] } },
-      { kind: "postop", title: "Hormonal considerations", description: "Review the hormonal implications of the ovarian decision.", f: { test: "the hormonal plan", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Wound care", description: "Define the abdominal wound care.", f: { test: "the wound for infection signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Activity restrictions", description: "Define the lifting and activity limits during recovery.", f: { test: "the activity tolerance", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Watch for bleeding", description: "Monitor the vaginal bleeding as the cuff heals.", f: { test: "the vaginal bleeding", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Pelvic floor therapy", description: "Discuss pelvic floor exercises during recovery.", f: { test: "the pelvic floor function", wrongTests: ["a routine ultrasound", "a nerve study"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the 6-week pelvic review.", f: { test: "the cuff and the recovery at 6 weeks", wrongTests: ["a routine MRI", "a CT scan"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the medications, wound care, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for cuff infection", description: "Day 2: low-grade fever of 37.9°C and mild pelvic ache.",
+        choices: [
+          "Examine the abdomen and the cuff, send blood tests and cultures, and image the pelvis if a collection is suspected.",
+          "Put the fever down to atelectasis and recheck tomorrow.",
+          "Start oral antibiotics without examining her.",
+        ],
+        feedback: [
+          "A structured fever work-up after hysterectomy looks for cuff cellulitis, a pelvic abscess, and urinary sources.",
+          "A pelvic collection keeps growing while the fever is written off as atelectasis.",
+          "Blind antibiotics can mask a pelvic abscess that needs drainage.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Manage the catheter", description: "The catheter has been in since theatre; the ureters were seen intact.",
+        choices: [
+          "Remove the catheter the morning after surgery and check a post-void residual.",
+          "Leave the catheter for a week to protect the bladder.",
+          "Remove it and discharge without confirming she has voided.",
+        ],
+        feedback: [
+          "Early removal with a residual check prevents infection and retention.",
+          "Every extra catheter day raises the risk of a urinary tract infection.",
+          "Unrecognized retention overstretches the bladder and becomes infected.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Anemia follow-up", description: "Preoperative Hb was 9.1 from menorrhagia; blood loss 600 mL.",
+        choices: [
+          "Check Hb on day 1 and give IV iron; transfuse only if she is symptomatic or Hb is very low.",
+          "Transfuse three units to bring her to normal before discharge.",
+          "Skip the count — the bleeding source is gone.",
+        ],
+        feedback: [
+          "A day-1 count guides iron or transfusion; IV iron corrects chronic iron deficiency quickly.",
+          "Aggressive transfusion in a stable, euvolemic patient overloads her circulation.",
+          "A low Hb after the operation leaves her with no reserve if the cuff bleeds.",
+        ],
+        wrongComps: ["fluid_overload", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "Pfannenstiel wound; the dressing is dry on day 1.",
+        choices: [
+          "Remove the dressing at 48 hours, keep the wound dry, and check it before discharge.",
+          "Leave the dressing untouched until the 6-week review.",
+          "Apply antibiotic ointment daily as routine.",
+        ],
+        feedback: [
+          "Early inspection catches wound infection in the skin fold.",
+          "A dressing left for weeks hides an evolving wound infection.",
+          "Routine topical antibiotics don't prevent infection and breed resistance and contact dermatitis.",
+        ],
+        wrongComps: ["infection", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Early mobilization", description: "She is comfortable on day 1.",
+        choices: [
+          "Sit out and walk on day 1 with continued LMWH and stockings.",
+          "Bed rest until the drain and catheter are out.",
+          "Walk on day 1 but stop the LMWH — mobilizing is enough.",
+        ],
+        feedback: [
+          "Early walking plus prophylaxis is standard after major pelvic surgery.",
+          "Bed rest after pelvic surgery is a setup for DVT.",
+          "Walking alone does not replace chemoprophylaxis in a high-risk pelvic case — a clot can embolize.",
+        ],
+        wrongComps: ["thrombosis", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Watch for bleeding", description: "Day 1: light vaginal spotting; HR 88.",
+        choices: [
+          "Expect light spotting; review promptly for heavy bleeding, a falling Hb, or a rising heart rate.",
+          "Pack the vagina as routine for 24 hours.",
+          "Tell her any bleeding is normal and can be ignored.",
+        ],
+        feedback: [
+          "Light spotting is expected; heavy bleeding or tachycardia needs examination of the cuff.",
+          "Routine packing is uncomfortable, holds bacteria against the fresh cuff, and hides bleeding.",
+          "A cuff-angle bleed can be brisk — dismissing it delays control.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Analgesia plan", description: "She reports pain 6/10 on day 1.",
+        choices: [
+          "Regular paracetamol and an NSAID, with oral opioid for breakthrough pain.",
+          "IV morphine PCA for 5 days with no other analgesia.",
+          "Paracetamol only — she should tolerate some pain.",
+        ],
+        feedback: [
+          "Multimodal analgesia controls pain with the least opioid.",
+          "Prolonged opioid-only PCA depresses breathing and slows recovery.",
+          "Poorly controlled pain keeps her in bed, raising the clot risk.",
+        ],
+        wrongComps: ["hypoxia", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the post-op review.",
+        choices: [
+          "Review at 6 weeks to check the cuff and discuss the pathology.",
+          "No review needed — fibroids are benign.",
+          "Review at 6 months only.",
+        ],
+        feedback: [
+          "The 6-week visit checks cuff healing and confirms benign pathology.",
+          "Rarely a fibroid is a sarcoma, and cuff granulation or infection needs an exam.",
+          "By 6 months a cuff infection or granulation problem has long declared itself.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "She is ready to go home on day 3.",
+        choices: [
+          "Teach her to report fever, heavy bleeding, leg swelling, or breathlessness, and to avoid intercourse for 6 weeks.",
+          "Tell her to resume intercourse whenever she feels ready.",
+          "Give no specific warning signs — she can call if worried.",
+        ],
+        feedback: [
+          "Clear warning signs and pelvic rest protect the healing cuff.",
+          "Early intercourse can disrupt the cuff and cause bleeding or dehiscence.",
+          "Without warning signs, she won't recognize a clot until she is breathless.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
       {
         kind: "postop", title: "Monitor the urine output", description: "Oliguria can signal a ureteric injury.",
         choices: [
-          "Track urine output and investigate if it is unexpectedly low.",
-          "Ignore urine output — it is not relevant here.",
-          "Place a Foley only if the patient asks.",
+          "Track hourly output; if it falls, check the catheter, give one measured fluid challenge, and image the ureters if it stays low.",
+          "Treat low output with repeated large fluid boluses until it picks up.",
+          "Accept low output — it is common after pelvic surgery.",
         ],
         feedback: [
-          "Urine output is monitored and investigated if low.",
-          "Ignoring oliguria can delay detection of a ureteric injury.",
-          "A Foley catheter is standard for the first 24 hours.",
+          "A stepwise work-up separates dehydration from an obstructed or injured ureter.",
+          "Low output from an obstructed ureter will not respond — the extra fluid ends up in her lungs.",
+          "Low output can be the first sign of a ureteric injury, which then declares as an infected urinoma.",
         ],
-        wrongComps: ["nerve_injury", "infection"],
+        wrongComps: ["fluid_overload", "infection"],
       },
       {
         kind: "postop", title: "Plan recovery", description: "Define activity and follow-up.",
@@ -886,18 +1146,18 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         wrongComps: ["thrombosis", "infection"],
       },
       {
-        kind: "postop", title: "Hormone and surveillance plan", description: "Plan post-operative hormone and screening if indicated.",
+        kind: "postop", title: "Hormone plan", description: "The ovaries were conserved; she is on a combined pill for her heavy periods.",
         choices: [
-          "Discuss hormone replacement if the ovaries were removed and arrange routine surveillance.",
-          "Start hormones for every patient.",
-          "Skip surveillance — the surgery was curative.",
+          "The ovaries were conserved, so no hormone replacement is needed; review the fibroid pathology at clinic.",
+          "Start estrogen replacement on day 1 as routine after hysterectomy.",
+          "Restart her combined contraceptive pill the day after surgery for cycle control.",
         ],
         feedback: [
-          "The hormone and surveillance plan matches the surgery performed.",
-          "Blanket hormone therapy is not indicated for every patient.",
-          "Skipping surveillance can miss recurrence in malignant cases.",
+          "With conserved ovaries, her own hormones continue; the pathology still needs review to exclude sarcoma.",
+          "Estrogen started in the immediate post-op window adds to an already high clot risk.",
+          "The combined pill has no role after hysterectomy and raises the clot risk — a pulmonary embolus follows.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["thrombosis", "hypoxia"],
       }
     ],
   },
@@ -967,7 +1227,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "The vessel is divided at the appropriate level for the pathology.",
-          "High ligation at the aorta adds risk without oncologic benefit here.",
+          "Flush ligation at the aorta is an oncologic step — for diverticulitis it only adds bleeding risk and endangers the nerves.",
           "Leaving the main trunk risks ischemia of the proximal limb.",
         ],
         wrongComps: ["hemorrhage", "thrombosis"],
@@ -991,7 +1251,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         kind: "nerve", title: "Protect the pelvic nerves", description: "Dissection near the presacral fascia risks the autonomic nerves.",
         choices: [
           "Stay anterior to the presacral fascia and avoid wide lateral dissection.",
-          "Dissect widely along the pelvic sidewall to ensure clear margins.",
+          "Dissect widely along the pelvic sidewall to free the inflamed segment.",
           "Cauterize the presacral venous plexus to improve visibility.",
         ],
         feedback: [
@@ -1189,30 +1449,30 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       {
         kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology result.",
         choices: [
-          "Review at 2 weeks with the pathology and refer node-positive disease for adjuvant chemotherapy.",
+          "Review at 2–3 weeks with the pathology, checking the wound and for a late collection.",
           "Review at 3 months once he has recovered.",
           "Discharge to the GP with the pathology to follow.",
         ],
         feedback: [
-          "Adjuvant chemotherapy should start within about 8 weeks.",
-          "A late review can miss the chemotherapy window.",
-          "The surgical team must review the staging to direct adjuvant treatment.",
+          "An early review catches a late pelvic collection and confirms the pathology is benign diverticular disease.",
+          "A pelvic collection or wound infection can smoulder for weeks before a 3-month visit.",
+          "The pathology occasionally shows an unexpected cancer — the surgical team must see it and act, not leave it to chance.",
         ],
         wrongComps: ["infection", "thrombosis"],
       },
       {
-        kind: "postop", title: "Colon cancer surveillance", description: "Define the surveillance colonoscopy schedule.",
+        kind: "postop", title: "Colonoscopy after recovery", description: "He has not had a colonoscopy; the CT showed complicated diverticulitis.",
         choices: [
-          "Arrange CEA every 3 to 6 months, CT at intervals, and colonoscopy at one year.",
-          "Arrange a single colonoscopy at 5 years.",
-          "Use CEA alone for surveillance.",
+          "Arrange a colonoscopy at 6–8 weeks to examine the remaining colon and exclude a hidden cancer.",
+          "Scope him on day 3 while he is still an inpatient.",
+          "No colonoscopy — the diseased segment has been removed.",
         ],
         feedback: [
-          "Structured surveillance finds treatable recurrence and new polyps.",
-          "Most recurrences occur in the first 3 years.",
-          "CEA alone misses recurrence in patients whose tumors do not secrete it.",
+          "After complicated diverticulitis, a colonoscopy once healed excludes a cancer the CT could have mimicked.",
+          "Insufflating a fresh anastomosis on day 3 risks disrupting it — a leak and peritonitis follow.",
+          "Diverticulitis and cancer can look alike on CT, and the rest of the colon has never been examined.",
         ],
-        wrongComps: ["infection", "thrombosis"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       {
         kind: "postop", title: "Discharge instructions", description: "Summarize the medications, diet, and the warning signs.",
@@ -1222,9 +1482,9 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
           "Stop the LMWH at discharge.",
         ],
         feedback: [
-          "Leaks can present after discharge, and cancer surgery needs extended clot prophylaxis.",
+          "Leaks can present after discharge, and major pelvic surgery in an older, obese patient warrants extended clot prophylaxis.",
           "A leak presents with fever and pain, not a wound problem.",
-          "Extended LMWH after cancer surgery cuts late venous thromboembolism.",
+          "Extended LMWH after major pelvic surgery cuts late venous thromboembolism.",
         ],
         wrongComps: ["infection", "thrombosis"],
       },
