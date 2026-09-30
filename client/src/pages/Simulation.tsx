@@ -141,7 +141,11 @@ function SimulationPage() {
     dvkChain
   } = useSimulationStore();
 
-  const causalPastes = dvkChain.length > 0 ? Math.round((dvkChain.filter((p: any) => Array.isArray(p.causal_events) && p.causal_events.length > 0).length / dvkChain.length) * 100) : 100;
+  // First-attempt accuracy on the surgical steps so far.
+  const stepLog: string[] = (currentState?.events ?? []).filter((e: any) => typeof e === "string");
+  const stepsRight = stepLog.filter((e) => e.startsWith("✅ Correct Step")).length;
+  const stepsWrong = stepLog.filter((e) => e.startsWith("❌ Incorrect Step")).length;
+  const stepAccuracy = stepsRight + stepsWrong > 0 ? Math.round((stepsRight / (stepsRight + stepsWrong)) * 100) : null;
 
   const { user } = useAuth();
   // Session started at wall-clock time — used for the sessions.time_seconds column.
@@ -312,7 +316,10 @@ function SimulationPage() {
     if (!terminal) return;
     if (!user) return; // anonymous play is not recorded
     const c = currentState || {};
-    const score = typeof c.score === "number" ? c.score : 0;
+    // Save the same number the debrief shows (the evaluation's final score);
+    // the raw engine points are only a fallback when no evaluation came back.
+    const finalScore = c.evaluation?.final_score;
+    const score = typeof finalScore === "number" ? Math.round(finalScore) : typeof c.score === "number" ? c.score : 0;
     const compCount = typeof c.complication_count === "number" ? c.complication_count : 0;
     const correct = typeof c.correct_steps === "number" ? c.correct_steps : 0;
     const total = typeof c.total_steps === "number" ? c.total_steps : 0;
@@ -1348,8 +1355,8 @@ function SimulationPage() {
                 <span className="text-base font-bold text-[#2E6B4B]">{currentTick}t</span>
               </div>
               <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
-                <span className="text-[11px] text-muted-foreground uppercase">Consistency</span>
-                <span className="text-base font-bold text-[#C27820]">{causalPastes}%</span>
+                <span className="text-[11px] text-muted-foreground uppercase" title="Surgical steps answered correctly on the first attempt">Step Accuracy</span>
+                <span className="text-base font-bold text-[#C27820]">{stepAccuracy === null ? "—" : `${stepAccuracy}%`}</span>
               </div>
             </div>
           </div>
