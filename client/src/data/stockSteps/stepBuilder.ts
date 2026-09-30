@@ -187,7 +187,7 @@ const CHOICE_TEMPLATES: Record<StepKind, (s: StepSpec) => [string, string, strin
     `Adapt the technique to how the tissue looks as you go.`,
   ],
   verify: (s) => [
-    `Perform ${s.test} to confirm the repair before closing.`,
+    `Confirm the repair with ${s.test} before closing.`,
     `Trust the visual inspection and move straight to closure.`,
     `Close now and check ${s.test} on the post-op ward round.`,
   ],
@@ -212,17 +212,17 @@ const CHOICE_TEMPLATES: Record<StepKind, (s: StepSpec) => [string, string, strin
     `Order intensive monitoring for 48 hours regardless of stability.`,
   ],
   dvt: (s) => [
-    `Start sequential compression devices and scheduled chemoprophylaxis as ordered.`,
-    `Hold DVT prophylaxis — the patient is at low risk for this case.`,
-    `Defer prophylaxis until the patient is ambulating.`,
+    `Score the VTE risk (Caprini) and prescribe to it: early walking and compression devices, adding LMWH only if the score is high.`,
+    `Skip the risk assessment — prophylaxis is not needed after this operation.`,
+    `Give full-dose therapeutic anticoagulation to every surgical patient.`,
   ],
 };
 
 const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
   preop: [
     "Time-out completed; identity, site, and consent verified.",
-    "Skipping the checklist misses the allergy review — an unflagged allergen reaches the patient at induction.",
-    "Without the formal time-out nobody confirms the prophylactic antibiotic was given, and the wound goes unprotected.",
+    "Skipping the checklist means nobody confirms the prophylactic antibiotic was given, and the wound goes unprotected.",
+    "Without the formal time-out the VTE plan is never confirmed, and prophylaxis is missed.",
   ],
   antibiotic: [
     "Prophylactic antibiotic delivered within the 60-minute window.",
@@ -295,9 +295,9 @@ const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
     "Excessive monitoring adds cost and delays recovery without benefit.",
   ],
   dvt: [
-    "DVT prophylaxis is in place for the operative and recovery period.",
-    "Withholding prophylaxis in the perioperative window invites thromboembolism.",
-    "Deferring prophylaxis until ambulation misses the highest-risk window — a clot can embolize to the lungs.",
+    "Risk-matched prophylaxis protects high-risk patients without making low-risk ones bleed.",
+    "Without a risk assessment, a high-risk patient goes unprotected and a clot forms.",
+    "Therapeutic anticoagulation without an indication makes the wound bleed.",
   ],
 };
 
@@ -307,7 +307,7 @@ const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
 // risks wins; the two wrong options never share a complication. Kinds with no
 // single mechanism fall back to the procedure's risk list.
 const KIND_COMPS: Partial<Record<StepKind, [string[], string[]]>> = {
-  preop: [["anaphylaxis"], ["infection"]],
+  preop: [["infection"], ["thrombosis"]],
   antibiotic: [["infection"], ["anaphylaxis"]],
   position: [["hypoxia"], ["nerve_injury"]],
   access: [["hemorrhage", "nerve_injury"], ["nerve_injury", "hemorrhage", "infection"]],
@@ -320,7 +320,7 @@ const KIND_COMPS: Partial<Record<StepKind, [string[], string[]]>> = {
   bleed: [["hemorrhage"], ["nerve_injury", "thrombosis", "infection"]],
   vitals: [["cardiac_arrhythmia", "hemorrhage", "hypoxia"], ["fluid_overload", "cardiac_arrhythmia", "hypoxia"]],
   closure: [["infection"], ["hemorrhage"]],
-  dvt: [["thrombosis"], ["hypoxia"]],
+  dvt: [["thrombosis"], ["hemorrhage"]],
 };
 
 function templateComps(kind: StepKind, risks: string[], stepIndex: number): [string, string] {

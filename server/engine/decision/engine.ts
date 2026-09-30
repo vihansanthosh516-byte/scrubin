@@ -75,11 +75,11 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "oxygen_therapy",
       label: "Administer supplemental O₂",
-      treats: ["hypoxia"],
+      treats: [],
       vitalsEffect: { spo2: +4, respiratory_rate: -2 },
       riskIfWrong: { spo2: -2 },
       correctFeedback: "Oxygen therapy effective. Saturation improving.",
-      wrongFeedback: "O₂ alone is insufficient for this severity. Delayed proper intervention.",
+      wrongFeedback: "Supplemental O₂ cannot get past an obstructed or failing airway — the airway has to be secured.",
     },
     {
       id: "cricothyroidotomy",
@@ -342,7 +342,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
       treats: ["nerve_injury"],
       vitalsEffect: { heart_rate: -4 },
       riskIfWrong: { heart_rate: +3 },
-      correctFeedback: "Traction released and the limb repositioned — nerve signals recovering.",
+      correctFeedback: "Traction released and the tissues repositioned — nerve signals recovering.",
       wrongFeedback: "Releasing retraction cost time without addressing the real problem.",
     },
     {

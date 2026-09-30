@@ -11,7 +11,7 @@ export interface CoreIntervention {
 
 export const CORE_INTERVENTIONS: Record<string, CoreIntervention> = {
   intubate: { treats: ["hypoxia"], correctFeedback: "Airway secured successfully. SpO2 improving.", wrongFeedback: "Intubation was unnecessary — caused mild trauma and temporary desaturation." },
-  oxygen_therapy: { treats: ["hypoxia"], correctFeedback: "Oxygen therapy effective. Saturation improving.", wrongFeedback: "O₂ alone is insufficient for this severity. Delayed proper intervention." },
+  oxygen_therapy: { treats: [], correctFeedback: "Oxygen therapy effective. Saturation improving.", wrongFeedback: "Supplemental O₂ cannot get past an obstructed or failing airway — the airway has to be secured." },
   cricothyroidotomy: { treats: ["hypoxia"], correctFeedback: "Surgical airway established. Patient stabilized.", wrongFeedback: "Cricothyroidotomy was overly aggressive. Unnecessary surgical trauma inflicted." },
   call_anesthesia: { treats: [], correctFeedback: "Anesthesia team consulted. Additional expertise on the way.", wrongFeedback: "Waiting for anesthesia support delayed critical intervention." },
   fluid_resuscitation: { treats: ["hemorrhage"], correctFeedback: "Fluid resuscitation restoring intravascular volume. BP stabilizing.", wrongFeedback: "Fluid bolus in a volume-overloaded patient worsens pulmonary edema." },
@@ -39,7 +39,7 @@ export const CORE_INTERVENTIONS: Record<string, CoreIntervention> = {
   proceed: { treats: [], correctFeedback: "Planned approach is appropriate. Proceeding safely.", wrongFeedback: "The planned approach is not safe given current conditions. Complication risk rising." },
   modify: { treats: ["thrombosis", "nerve_injury"], correctFeedback: "Modified approach avoids the danger zone. Good surgical judgment.", wrongFeedback: "Modification was unnecessary. The original approach was safer." },
   abort: { treats: ["hemorrhage", "thrombosis"], correctFeedback: "Correct call to abort. Patient safety prioritized over completing the case.", wrongFeedback: "Aborting was premature. The case could have been completed safely." },
-  release_traction: { treats: ["nerve_injury"], correctFeedback: "Traction released and the limb repositioned — nerve signals recovering.", wrongFeedback: "Releasing retraction cost time without addressing the real problem." },
+  release_traction: { treats: ["nerve_injury"], correctFeedback: "Traction released and the tissues repositioned — nerve signals recovering.", wrongFeedback: "Releasing retraction cost time without addressing the real problem." },
   request_assistance: { treats: [], correctFeedback: "Senior assistance improves outcome. Second opinion confirms approach.", wrongFeedback: "Waiting for assistance consumed critical time." },
   vitals_check: { treats: [], correctFeedback: "Close monitoring detected the change early. Intervention initiated promptly.", wrongFeedback: "Over-monitoring is tying up resources. Standard frequency is sufficient." },
   doppler: { treats: [], correctFeedback: "Doppler caught the clot early. Anticoagulation started.", wrongFeedback: "Doppler was negative. Unnecessary study performed." },

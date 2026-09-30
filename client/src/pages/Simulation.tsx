@@ -512,7 +512,8 @@ function SimulationPage() {
       if (comp && data.decision_result?.wasCorrect) treatedRef.current = comp;
       // A tailored rescue option replaces Core's generic feedback line with its own.
       const decisionEvents: string[] = [
-        ...(data.events || []).filter((e: string) => !(picked?.feedback && CORE_GENERIC_FEEDBACK.has(e))),
+        // The client adds its own "✅ Complication resolved" line with the next step.
+        ...(data.events || []).filter((e: string) => e !== "Complication resolved" && !(picked?.feedback && CORE_GENERIC_FEEDBACK.has(e))),
         ...(picked?.feedback ? [`${data.decision_result?.wasCorrect ? "✅" : "❌"} ${picked.feedback}`] : []),
       ];
 
