@@ -425,6 +425,56 @@ function buildStepChoices(
 }
 
 /** Fisher-Yates shuffle on a copy; guarantees the correct choice is not first. */
+// The correct option tends to be the longest and most detailed, which gives it
+// away. On most steps where that is true, one wrong option gains the
+// kind of rationalization a hurried surgeon really uses, so length stops being
+// a clue. Deterministic per step id, so a step always reads the same.
+const RATIONALES = [
+  "it keeps the case on schedule",
+  "the anatomy looked straightforward on the scan",
+  "the patient is young and otherwise fit",
+  "the attending on the last list did it this way",
+  "it saves an extra step at this stage",
+  "it has worked well in similar cases",
+  "the field already looks clear enough to judge",
+  "the team is under pressure to turn the room over",
+  "the risk seems low for this patient",
+  "it avoids disturbing the tissue further",
+];
+
+// Ward-phase reasoning for the post-op steps, where theatre pressures don't apply.
+const WARD_RATIONALES = [
+  "the patient feels well today",
+  "the ward is short of beds",
+  "it has worked well in similar cases",
+  "the patient is keen to get home",
+  "the recovery so far has been smooth",
+  "it saves the patient another visit",
+  "the risk seems low for this patient",
+  "the observations have been normal",
+];
+
+function hashStr(str: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+function balanceLengths(choices: StockChoice[], stepId: string, kind: StepKind): StockChoice[] {
+  const correct = choices.find((c) => c.isCorrect);
+  const wrong = choices.filter((c) => !c.isCorrect);
+  if (!correct || wrong.length === 0) return choices;
+  if (correct.text.length <= Math.max(...wrong.map((c) => c.text.length))) return choices;
+  const h = hashStr(stepId);
+  if (h % 100 >= 75) return choices;
+  const target = wrong[(h >>> 8) % wrong.length];
+  const pool = kind === "postop" || kind === "dvt" ? WARD_RATIONALES : RATIONALES;
+  const why = pool[(h >>> 16) % pool.length];
+  const base = target.text.replace(/\.$/, "");
+  const text = base.includes(" — ") ? `${base}, since ${why}.` : `${base} — ${why}.`;
+  return choices.map((c) => (c === target ? { ...c, text } : c));
+}
+
 function shuffleChoices(choices: StockChoice[], rand: () => number = Math.random): StockChoice[] {
   const arr = [...choices];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -466,7 +516,7 @@ export function buildStep(bank: ProcedureBank, def: StepDef, stepId: string, ste
     id: stepId,
     title: def.title,
     description: pickDescription(def.description, `${seed}:${stepId}:desc`),
-    choices: shuffleChoices(buildStepChoices(def, bank.spec, stepIndex, stepId), seededRandom(`${seed}:${stepId}`)),
+    choices: shuffleChoices(balanceLengths(buildStepChoices(def, bank.spec, stepIndex, stepId), stepId, def.kind), seededRandom(`${seed}:${stepId}`)),
   };
 }
 
@@ -477,7 +527,7 @@ export function buildStockSteps(bank: ProcedureBank): StockStep[] {
       id: stepId,
       title: step.title,
       description: pickDescription(step.description, `${stepId}:desc`),
-      choices: shuffleChoices(buildStepChoices(step, bank.spec, i, stepId)),
+      choices: shuffleChoices(balanceLengths(buildStepChoices(step, bank.spec, i, stepId), stepId, step.kind)),
     };
   });
 }
