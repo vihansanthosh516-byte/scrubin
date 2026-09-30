@@ -11,6 +11,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
   {
     id: "hip-replacement",
     spec: {
+      vteHigh: true,
       approach: "a posterior approach to the hip",
       wrongApproaches: ["an anterior approach as routine", "a medial approach"],
       landmark: "the greater trochanter and the femoral neck",
@@ -217,7 +218,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         ],
         feedback: [
           "Daily checks and glucose control lower periprosthetic infection risk.",
-          "A long-standing dressing hides a draining wound over the implant.",
+          "A long-standing dressing hides a hematoma collecting over the implant.",
           "Frequent dressing changes expose the wound to bacteria.",
         ],
         wrongComps: ["infection", "hemorrhage"],
@@ -304,7 +305,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "Without advice, a wound infection is reported late.",
           "Calf swelling can be a DVT — dismissing it risks a pulmonary embolus.",
         ],
-        wrongComps: ["infection", "hypoxia"],
+        wrongComps: ["infection", "thrombosis"],
       },
       {
         kind: "postop", title: "Return-to-activity plan", description: "The patient asks about driving.",
@@ -480,7 +481,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "An open cavity leaves a depression and seroma.",
           "Routine drainage increases infection risk.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       { kind: "dvt", title: "DVT prophylaxis", description: "Standard prophylaxis for a short breast case." },
       {
@@ -495,7 +496,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "Repeated aspiration introduces bacteria into the cavity.",
           "A tight bandage doesn't stop an active bleed.",
         ],
-        wrongComps: ["hemorrhage", "infection"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       {
         kind: "postop", title: "Arm and shoulder care", description: "After sentinel node biopsy.",
@@ -521,7 +522,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         feedback: [
           "Support and simple care help healing.",
           "Soaking fresh wounds lets bacteria in.",
-          "Old dressings hide an infection.",
+          "Old dressings hide a slowly expanding hematoma.",
         ],
         wrongComps: ["infection", "hemorrhage"],
       },
@@ -565,7 +566,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "Positive margins left unaddressed let the cancer recur.",
           "Chemotherapy without indication causes infection risk from neutropenia.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "postop", title: "Breast self-examination guidance", description: "Surveillance plan.",
@@ -691,7 +692,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "No check misses a hematoma or early lymphedema.",
           "Immobilizing the arm promotes stiffness.",
         ],
-        wrongComps: ["infection", "nerve_injury"],
+        wrongComps: ["hemorrhage", "nerve_injury"],
       },
       {
         kind: "postop", title: "Plan radiation and adjuvant therapy", description: "Coordinate the multidisciplinary plan.",
@@ -963,7 +964,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "Water still enters the canal under a cap.",
           "Packing soaks up pool water and infects the ear.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "postop", title: "Discharge instructions", description: "Going home the same day.",
@@ -1100,6 +1101,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
   {
     id: "femoral-nail-fixation",
     spec: {
+      vteHigh: true,
       approach: "an antegrade piriformis-entry intramedullary nail",
       wrongApproaches: ["a retrograde nail through the knee as routine", "a plate fixation as routine"],
       landmark: "the piriformis fossa and the greater trochanter",
@@ -1233,7 +1235,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "Continuing risks worsening fat embolism.",
           "Masking the hypoxia delays treatment of the embolism.",
         ],
-        wrongComps: ["hypoxia", "hemorrhage"],
+        wrongComps: ["thrombosis", "hemorrhage"],
       },
       {
         kind: "core", title: "Lock the nail", description: "Secure the nail with interlocking screws.",
@@ -1449,7 +1451,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "Wound-only monitoring misses fat embolism.",
           "No monitoring risks missing both complications.",
         ],
-        wrongComps: ["hypoxia", "hemorrhage"],
+        wrongComps: ["thrombosis", "hemorrhage"],
       },
       {
         kind: "postop", title: "Discharge and follow-up", description: "Define the radiological follow-up.",
@@ -1508,7 +1510,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "An open approach as routine adds deltoid morbidity that arthroscopy avoids.",
           "A midline posterior approach risks the axillary nerve and gives poor footprint access.",
         ],
-        wrongComps: ["nerve_injury", "hemorrhage"],
+        wrongComps: ["hemorrhage", "nerve_injury"],
       },
       {
         kind: "landmark", title: "Diagnostic arthroscopy", description: "Survey the joint and confirm the tear.",
@@ -1679,7 +1681,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         feedback: [
           "Simple portal care prevents infection.",
           "Soaking fresh portals lets bacteria in.",
-          "Dressings left for weeks hide an infection.",
+          "Dressings left for weeks hide a wound hematoma until it bursts.",
         ],
         wrongComps: ["infection", "hemorrhage"],
       },
@@ -1951,7 +1953,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "Skipping the check risks a missed septal hematoma.",
           "Delaying the airway check misses an obstruction.",
         ],
-        wrongComps: ["hypoxia", "hemorrhage"],
+        wrongComps: ["hemorrhage", "hypoxia"],
       },
       { kind: "verify", title: "Assess the symmetry", description: "Step back and confirm the nasal symmetry before closure.", f: { test: "the nasal symmetry", wrongTests: ["an on-table CT", "a rhinomanometry test"] } },
       { kind: "exposure", title: "Check the dorsal line", description: "Confirm the dorsal profile is smooth and straight.", f: { structure: "the dorsal line", landmark: "the radix and the tip" } },
@@ -2053,7 +2055,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "An undrained hematoma becomes an abscess and destroys the cartilage.",
           "Long decongestant use causes rebound obstruction; the hematoma remains.",
         ],
-        wrongComps: ["infection", "hypoxia"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       {
         kind: "postop", title: "Airway assessment", description: "Review at 1 week.",
@@ -2238,7 +2240,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "Transverse division of the strap muscles adds denervation and bleeding for no benefit.",
           "Opening only the lower raphe restricts access to the upper pole and the external laryngeal nerve.",
         ],
-        wrongComps: ["nerve_injury", "hemorrhage"],
+        wrongComps: ["hemorrhage", "nerve_injury"],
       },
       {
         kind: "landmark", title: "Identify the inferior thyroid artery", description: "This artery leads to the parathyroid glands.",
@@ -2294,7 +2296,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
           "Broad cautery risks the RLN and the thyroid capsule.",
           "Avulsion causes bleeding and capsular rupture.",
         ],
-        wrongComps: ["hemorrhage", "nerve_injury"],
+        wrongComps: ["nerve_injury", "hemorrhage"],
       },
       {
         kind: "verify", title: "Measure intraoperative PTH", description: "Confirm the biochemical cure.",
@@ -2354,9 +2356,9 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         feedback: [
           "Short oral supplementation with a check is standard.",
           "Excess IV calcium causes hypercalcemia and arrhythmias.",
-          "A late hypocalcemia is missed.",
+          "An unrecognized late hypocalcemia can trigger laryngospasm.",
         ],
-        wrongComps: ["cardiac_arrhythmia", "nerve_injury"],
+        wrongComps: ["cardiac_arrhythmia", "hypoxia"],
       },
       {
         kind: "postop", title: "Voice assessment", description: "Day 1: the voice is hoarse.",
@@ -2382,7 +2384,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         feedback: [
           "Simple care prevents infection.",
           "Soaking a fresh wound lets bacteria in.",
-          "Old dressings hide infection.",
+          "Old dressings hide a neck hematoma until it compresses the airway.",
         ],
         wrongComps: ["infection", "hemorrhage"],
       },
@@ -2419,12 +2421,12 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         choices: [
           "Check calcium at 1 week and at 6 months.",
           "No calcium checks.",
-          "Daily calcium checks for a year.",
+          "Keep IV calcium running at home through a PICC line for a year.",
         ],
         feedback: [
           "Timed checks confirm cure and catch hypocalcemia.",
           "Persistent disease or hypocalcemia is missed.",
-          "Excessive venesection adds infection risk without benefit.",
+          "A long-term central line for an oral-treatable problem invites a line infection.",
         ],
         wrongComps: ["cardiac_arrhythmia", "infection"],
       },
@@ -2521,10 +2523,10 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         ],
         feedback: [
           "Calcium is monitored for the hungry-bone syndrome.",
-          "Waiting for symptoms risks severe hypocalcemia.",
-          "No monitoring is unsafe after parathyroidectomy.",
+          "Waiting for symptoms risks severe hypocalcemia — tetany and a dangerous arrhythmia.",
+          "Unmonitored hypocalcemia can progress to laryngospasm.",
         ],
-        wrongComps: ["nerve_injury", "hemorrhage"],
+        wrongComps: ["cardiac_arrhythmia", "hypoxia"],
       },
       {
         kind: "postop", title: "Check the voice", description: "Confirm the RLN function.",

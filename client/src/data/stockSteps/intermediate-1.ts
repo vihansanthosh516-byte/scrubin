@@ -580,7 +580,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "Obesity raises wound-infection risk; early inspection catches it.",
-          "A dressing left for weeks hides a developing wound infection under the fold.",
+          "A dressing left for weeks hides a hematoma collecting under the fold.",
           "Changing dressings without inspecting the wound misses early cellulitis.",
         ],
         wrongComps: ["infection", "hemorrhage"],
@@ -720,6 +720,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
   {
     id: "total-knee-replacement",
     spec: {
+      vteHigh: true,
       approach: "a medial parapatellar approach with a midline skin incision",
       wrongApproaches: ["a lateral parapatellar approach as routine", "a posterior approach"],
       landmark: "the tibial tubercle and the joint line",
@@ -1289,7 +1290,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "Early inspection catches wound infection in the skin fold.",
-          "A dressing left for weeks hides an evolving wound infection.",
+          "A dressing left for weeks hides a wound hematoma.",
           "Routine topical antibiotics don't prevent infection and breed resistance and contact dermatitis.",
         ],
         wrongComps: ["infection", "anaphylaxis"],
@@ -1534,7 +1535,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
           "Anal traction risks tearing the rectum and sphincter.",
           "Leaving the specimen in the wound invites infection and hernia.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "core", title: "Create the anastomosis", description: "Join the colon to the rectum.",
@@ -1814,7 +1815,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       wrongTests: ["a routine liver biopsy", "an on-table ultrasound of the kidney"],
       risks: ["hemorrhage", "infection", "nerve_injury", "hypoxia", "fluid_overload", "cardiac_arrhythmia", "thrombosis", "anaphylaxis"],
       instrument: "a 30° laparoscope and a clip applier",
-      position: "supine with the patient in reverse Trendelenburg with left tilt",
+      position: "supine in reverse Trendelenburg with a left tilt",
       wrongPositions: ["prone", "steep Trendelenburg"],
       detail: "42-year-old, gallstones, obese, Murphy's sign positive",
     },
@@ -1981,10 +1982,10 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "Early review catches a bile leak or retained stone.",
-          "A bile leak causes worsening pain and peritonitis.",
+          "Worsening pain can be a bleed from the liver bed — it needs assessment, not waiting.",
           "Jaundice signals bile duct obstruction or injury, which can progress to cholangitis.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "postop", title: "Return to activity", description: "The patient asks about lifting.",
@@ -2093,10 +2094,10 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "Early imaging finds a bile duct injury while it can be repaired.",
-          "A missed bile leak causes peritonitis.",
+          "Painkillers mask a bleed from the cystic artery stump or liver bed.",
           "A duct injury becomes cholangitis if ignored.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "postop", title: "Diet and follow-up", description: "Plan the diet and clinic visit.",
@@ -2254,7 +2255,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
           "Stapling over a thrombus risks embolization.",
           "Imaging cannot substitute for intraoperative assessment.",
         ],
-        wrongComps: ["cardiac_arrhythmia", "hemorrhage"],
+        wrongComps: ["thrombosis", "hemorrhage"],
       },
       {
         kind: "core", title: "Divide the ureter", description: "Complete the specimen.",
@@ -2439,7 +2440,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
           "Bleeding and kidney injury present without wound changes.",
           "NSAIDs harm the single remaining kidney.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "postop", title: "Return to activity", description: "Define the lifting and activity restrictions.",

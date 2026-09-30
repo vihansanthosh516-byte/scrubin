@@ -427,7 +427,7 @@ export const CHOLECYSTECTOMY_BANK: ProcedureBank = {
         "More gas enlarges the embolus and the heart stops.",
         "Letting the gas pass into the pulmonary artery blocks lung perfusion and oxygenation collapses.",
       ],
-      wrongComps: ["cardiac_arrhythmia", "hypoxia"],
+      wrongComps: ["thrombosis", "hypoxia"],
       consequences: [
         "The rhythm degenerates into pulseless electrical activity within a minute.",
         "SpO2 plunges to 70% and EtCO2 stays near zero as the gas blocks her pulmonary circulation.",

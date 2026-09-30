@@ -42,7 +42,7 @@ const title = (s: CaseState) => currentStep(BANK, s)?.step.title;
 const pick = (s: CaseState, which: 0 | 1 | 2) => {
   const choices = currentStep(BANK, s)!.step.choices;
   const texts = choices.map((c) => c.text);
-  const t = texts.find((x) => x.endsWith(which === 0 ? "right" : which === 1 ? "wrong1" : "wrong2"))!;
+  const t = texts.find((x) => new RegExp(`\\b${which === 0 ? "right" : which === 1 ? "wrong1" : "wrong2"}\\b`).test(x))!;
   return choices.find((c) => c.text === t)!;
 };
 

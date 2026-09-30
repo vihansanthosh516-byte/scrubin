@@ -237,7 +237,7 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
           "Skin-only closure leaves dead space over the repair.",
           "A routine drain in a clean mesh repair increases infection risk.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       { kind: "dvt", title: "DVT prophylaxis", description: "The patient will be ambulatory but prophylaxis is still indicated." },
       {
@@ -666,7 +666,7 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
           "Waiting for symptoms can miss clinically significant hypocalcemia.",
           "A delayed voice check delays management of a possible nerve injury.",
         ],
-        wrongComps: ["nerve_injury", "hypoxia"],
+        wrongComps: ["cardiac_arrhythmia", "nerve_injury"],
       },
       {
         kind: "postop", title: "Plan hormone replacement", description: "The patient will need thyroid hormone after total thyroidectomy.",

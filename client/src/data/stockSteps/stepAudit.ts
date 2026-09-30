@@ -122,7 +122,7 @@ export const KIND_COMPLICATIONS: Record<string, string[]> = {
   nerve: ["nerve_injury"],
   bleed: ["hemorrhage", "fluid_overload", "infection", "cardiac_arrhythmia"],
   verify: ["infection", "hemorrhage", "nerve_injury", "thrombosis"],
-  vitals: ["hypoxia", "cardiac_arrhythmia", "fluid_overload", "anaphylaxis", "hemorrhage"],
+  vitals: ["hypoxia", "cardiac_arrhythmia", "fluid_overload", "anaphylaxis", "hemorrhage", "thrombosis"],
   closure: ["infection", "hemorrhage", "nerve_injury"],
   postop: ["infection", "hypoxia", "fluid_overload", "cardiac_arrhythmia", "thrombosis", "hemorrhage", "anaphylaxis"],
   dvt: ["thrombosis", "hemorrhage"],

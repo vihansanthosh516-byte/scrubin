@@ -926,6 +926,13 @@ function SimulationPage() {
               <span className="text-[10px] font-mono text-[#666059] dark:text-[#C2BBB0]">{simId}</span>
             </div>
 
+            {/* A finished case is already recorded with its score; saving it again
+                would only add a resumable "active" copy to My Simulations. */}
+            {isCompleted ? (
+              <span className="px-3 py-1.5 rounded-sm border border-border text-xs font-bold text-muted-foreground flex items-center gap-2">
+                <Save className="w-3 h-3" /> {user ? "Saved to My Simulations" : "Sign in to save results"}
+              </span>
+            ) : (
             <button
               onClick={handleSaveSimulation}
               disabled={isSaving}
@@ -942,6 +949,7 @@ function SimulationPage() {
                 </>
               )}
             </button>
+            )}
 
             <div className="bg-background/60 rounded-sm p-1 border border-border flex">
               <button

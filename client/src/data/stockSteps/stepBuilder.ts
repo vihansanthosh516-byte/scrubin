@@ -13,6 +13,8 @@
 import type { StockChoice, StockStep } from "../stockProcedures";
 
 export interface StepSpec {
+  /** Major orthopaedic or trauma surgery — VTE prophylaxis is pharmacological for everyone (NICE NG89). */
+  vteHigh?: boolean;
   /** Correct approach/incision, e.g. "a transverse McBurney's point incision" */
   approach: string;
   /** Plausible-but-wrong approaches */
@@ -187,7 +189,7 @@ const CHOICE_TEMPLATES: Record<StepKind, (s: StepSpec) => [string, string, strin
     `Adapt the technique to how the tissue looks as you go.`,
   ],
   verify: (s) => [
-    `Confirm the repair with ${s.test} before closing.`,
+    `Confirm the repair by checking ${s.test.replace(/^a check of /, "")} before closing.`,
     `Trust the visual inspection and move straight to closure.`,
     `Close now and check ${s.test} on the post-op ward round.`,
   ],
@@ -323,6 +325,19 @@ const KIND_COMPS: Partial<Record<StepKind, [string[], string[]]>> = {
   dvt: [["thrombosis"], ["hemorrhage"]],
 };
 
+// Joint replacement and major fracture fixation are high VTE risk for every
+// patient, so the risk-scored template answer would under-treat them.
+const HIGH_VTE_CHOICES: [string, string, string] = [
+  "Start LMWH for an extended course alongside compression devices and early walking.",
+  "Rely on early walking and stockings alone, since the patient will mobilize quickly.",
+  "Give full-dose therapeutic anticoagulation from the evening of surgery.",
+];
+const HIGH_VTE_FEEDBACK: [string, string, string] = [
+  "Major orthopaedic surgery warrants pharmacological prophylaxis for an extended course (NICE NG89).",
+  "Walking and stockings alone under-protect a major orthopaedic patient — a clot forms.",
+  "Therapeutic dosing without an indication makes the wound bleed.",
+];
+
 function templateComps(kind: StepKind, risks: string[], stepIndex: number): [string, string] {
   // Each template option has a fixed meaning, so its complication comes from
   // the kind's preference list — never a random bank risk (a random draw paired
@@ -373,6 +388,8 @@ function buildStepChoices(
   const s = mergeSpec(spec, step.f);
   const [correct, wrong1, wrong2] = step.choices
     ? step.choices
+    : step.kind === "dvt" && s.vteHigh
+    ? HIGH_VTE_CHOICES
     : CHOICE_TEMPLATES[step.kind](s);
   // Template steps inherit per-kind feedback, which is identical for every
   // step of that kind in a bank. Prefixing the step's title makes each step's
@@ -382,6 +399,8 @@ function buildStepChoices(
   const isTemplate = !step.feedback;
   const [fbCorrect, fbWrong1, fbWrong2] = step.feedback
     ? step.feedback
+    : step.kind === "dvt" && s.vteHigh
+    ? HIGH_VTE_FEEDBACK
     : FEEDBACK_TEMPLATES[step.kind];
   const prefix = (fb: string) => `${step.title} — ${fb}`;
   let [comp1, comp2] = step.wrongComps
@@ -426,32 +445,28 @@ function buildStepChoices(
 
 /** Fisher-Yates shuffle on a copy; guarantees the correct choice is not first. */
 // The correct option tends to be the longest and most detailed, which gives it
-// away. On most steps where that is true, one wrong option gains the
-// kind of rationalization a hurried surgeon really uses, so length stops being
-// a clue. Deterministic per step id, so a step always reads the same.
+// away. Neutral logistics tails ("the equipment is already on the table") are
+// added to a wrong option on most steps where the correct one is longest, and
+// to the correct option on some steps too, so neither length nor a tail marks
+// the answer. Deterministic per step id, so a step always reads the same.
 const RATIONALES = [
-  "it keeps the case on schedule",
-  "the anatomy looked straightforward on the scan",
-  "the patient is young and otherwise fit",
-  "the attending on the last list did it this way",
-  "it saves an extra step at this stage",
-  "it has worked well in similar cases",
-  "the field already looks clear enough to judge",
-  "the team is under pressure to turn the room over",
-  "the risk seems low for this patient",
-  "it avoids disturbing the tissue further",
+  "the scrub nurse already has everything for it laid out on the back table",
+  "it can be done straight away without changing the planned sequence",
+  "the team has done it this way many times on this list",
+  "it fits the plan the team agreed at the morning briefing",
+  "the anesthetist is happy for the team to proceed with it now",
+  "the instruments for it are already open on the table",
+  "it can be finished before moving on to the next part of the operation",
+  "the attending has signed off on this approach for the case",
 ];
 
-// Ward-phase reasoning for the post-op steps, where theatre pressures don't apply.
+// Ward-phase logistics for the post-op steps.
 const WARD_RATIONALES = [
-  "the patient feels well today",
-  "the ward is short of beds",
-  "it has worked well in similar cases",
-  "the patient is keen to get home",
-  "the recovery so far has been smooth",
-  "it saves the patient another visit",
-  "the risk seems low for this patient",
-  "the observations have been normal",
+  "the ward team can arrange it today without delaying anything",
+  "it fits into the discharge plan the team drafted this morning",
+  "the nursing staff have been briefed and know what to do",
+  "it can be written up on this morning's ward round",
+  "the team can put it in place before the end of the shift",
 ];
 
 function hashStr(str: string): number {
@@ -460,19 +475,33 @@ function hashStr(str: string): number {
   return h >>> 0;
 }
 
+function withTail(text: string, why: string): string {
+  const base = text.replace(/\.$/, "");
+  return base.includes(" — ") ? `${base}, and ${why}.` : `${base} — ${why}.`;
+}
+
 function balanceLengths(choices: StockChoice[], stepId: string, kind: StepKind): StockChoice[] {
   const correct = choices.find((c) => c.isCorrect);
   const wrong = choices.filter((c) => !c.isCorrect);
   if (!correct || wrong.length === 0) return choices;
-  if (correct.text.length <= Math.max(...wrong.map((c) => c.text.length))) return choices;
   const h = hashStr(stepId);
-  if (h % 100 >= 75) return choices;
-  const target = wrong[(h >>> 8) % wrong.length];
   const pool = kind === "postop" || kind === "dvt" ? WARD_RATIONALES : RATIONALES;
-  const why = pool[(h >>> 16) % pool.length];
-  const base = target.text.replace(/\.$/, "");
-  const text = base.includes(" — ") ? `${base}, since ${why}.` : `${base} — ${why}.`;
-  return choices.map((c) => (c === target ? { ...c, text } : c));
+  const pick = (salt: number) => pool[(hashStr(`${stepId}:${salt}`)) % pool.length];
+  let out = choices;
+  // A tail on the correct option too, on a third of steps.
+  if (h % 100 < 33) out = out.map((c) => (c.isCorrect ? { ...c, text: withTail(c.text, pick(1)) } : c));
+  if ((h >>> 8) % 100 >= 90) return out;
+  // Then tail the wrong options, longest first, until the correct one no longer stands out.
+  const tailed = new Set<string>();
+  for (let salt = 2; salt < 4; salt++) {
+    const cNow = out.find((c) => c.isCorrect)!;
+    const open = out.filter((c) => !c.isCorrect && !tailed.has(c.id));
+    if (!open.length || cNow.text.length <= Math.max(...out.filter((c) => !c.isCorrect).map((c) => c.text.length))) break;
+    const target = open.sort((x, y) => y.text.length - x.text.length)[0];
+    tailed.add(target.id);
+    out = out.map((c) => (c === target ? { ...c, text: withTail(c.text, pick(salt)) } : c));
+  }
+  return out;
 }
 
 function shuffleChoices(choices: StockChoice[], rand: () => number = Math.random): StockChoice[] {

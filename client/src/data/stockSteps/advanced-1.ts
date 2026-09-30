@@ -201,7 +201,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "Abrupt weaning causes hemodynamic collapse.",
           "Prolonged bypass increases bleeding and organ injury.",
         ],
-        wrongComps: ["cardiac_arrhythmia", "hypoxia"],
+        wrongComps: ["cardiac_arrhythmia", "hemorrhage"],
       },
       { kind: "vitals", title: "Manage post-bypass hypotension", description: "The pressure is falling after weaning.", f: { structure: "the hemodynamics", landmark: "the filling pressures and contractility" } },
       {
@@ -317,7 +317,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "Routine overnight ventilation raises the risk of ventilator pneumonia with no benefit in a stable patient.",
           "A cold patient shivers, raising oxygen demand, and may still be bleeding; extubate when warm and dry.",
         ],
-        wrongComps: ["infection", "hypoxia"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       {
         kind: "postop", title: "Renal protection", description: "Monitor the renal function after the bypass.",
@@ -401,7 +401,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "Full anticoagulation risks tamponade without benefit.",
           "No antiplatelet therapy increases graft thrombosis.",
         ],
-        wrongComps: ["thrombosis", "hemorrhage"],
+        wrongComps: ["hemorrhage", "thrombosis"],
       },
       {
         kind: "postop", title: "Plan cardiac rehabilitation", description: "Define the recovery pathway.",
@@ -546,7 +546,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "Broad cautery at the cortex causes a venous infarction.",
           "Packing over an active bleeder risks a rebleed and herniation.",
         ],
-        wrongComps: ["thrombosis", "nerve_injury"],
+        wrongComps: ["thrombosis", "hemorrhage"],
       },
       {
         kind: "vitals", title: "Respond to the ICP rise", description: "The brain is swelling in the field.",
@@ -704,7 +704,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "An unrecognized CSF leak is a direct route for meningitis.",
           "Draining CSF from below before a scan excludes a hematoma can cause herniation.",
         ],
-        wrongComps: ["infection", "nerve_injury"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       {
         kind: "postop", title: "Mobilization plan", description: "Define the early mobilization with the deficits.",
@@ -1447,7 +1447,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "Vitamin K takes hours and does not treat dilutional coagulopathy.",
           "Heparin before the bleeding is controlled restarts it.",
         ],
-        wrongComps: ["hemorrhage", "thrombosis"],
+        wrongComps: ["thrombosis", "hemorrhage"],
       },
       {
         kind: "postop", title: "Watch for sepsis", description: "Monitor for the signs of developing sepsis.",
@@ -2104,7 +2104,7 @@ export const ADVANCED_BANKS_1: ProcedureBank[] = [
           "Packing alone risks ongoing loss and thrombosis.",
           "Clipping a venous tear is ineffective.",
         ],
-        wrongComps: ["hemorrhage", "thrombosis"],
+        wrongComps: ["thrombosis", "hemorrhage"],
       },
       {
         kind: "core", title: "Divide the uncinate process", description: "Free the specimen from the SMA.",

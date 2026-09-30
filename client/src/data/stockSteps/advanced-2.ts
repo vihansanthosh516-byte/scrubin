@@ -74,7 +74,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "Clamping the vena cava is a fatal error.",
           "Clamping only at the bifurcation leaves back-bleeding.",
         ],
-        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
+        wrongComps: ["cardiac_arrhythmia", "hemorrhage"],
       },
       {
         kind: "core", title: "Heparinize and clamp", description: "Prepare for the aortic occlusion.",
@@ -615,7 +615,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "A balloon inflated in the urethra tears the anastomosis.",
           "A small catheter blocks with clots.",
         ],
-        wrongComps: ["hemorrhage", "infection"],
+        wrongComps: ["hemorrhage", "thrombosis"],
       },
       { kind: "closure", title: "Close the ports", description: "Close the port sites.", f: { structure: "the port sites" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Pelvic robotic surgery carries a thrombosis risk." },
@@ -929,7 +929,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "Dividing too high risks the recurrent laryngeal nerves.",
           "Dividing at the hiatus leaves disease behind.",
         ],
-        wrongComps: ["infection", "nerve_injury"],
+        wrongComps: ["nerve_injury", "infection"],
       },
       {
         kind: "core", title: "Deliver the conduit", description: "Bring the conduit into the chest.",
@@ -1235,7 +1235,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the left lobe", "the gallbladder bed alone"],
       test: "an ultrasound of the inflow vessels and a check of the resection margin",
       wrongTests: ["a routine liver biopsy", "an on-table MRI"],
-      risks: ["hemorrhage", "cardiac_arrhythmia", "infection", "hypoxia", "thrombosis"],
+      risks: ["hemorrhage", "cardiac_arrhythmia", "infection", "hypoxia", "thrombosis", "fluid_overload"],
       instrument: "an ultrasonic dissector and vascular staplers",
       position: "supine",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -1329,7 +1329,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "Ignoring the open vein risks a fatal air embolism.",
           "Raising the head increases the embolism risk.",
         ],
-        wrongComps: ["cardiac_arrhythmia", "hypoxia"],
+        wrongComps: ["thrombosis", "hypoxia"],
       },
       {
         kind: "verify", title: "Check the resection margin", description: "Confirm the margin is clear.",
@@ -1417,7 +1417,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "Liver failure develops in the first days; one test at discharge misses it.",
           "Routine plasma masks the INR, which is the main marker of remnant function, and overloads him.",
         ],
-        wrongComps: ["infection", "hemorrhage"],
+        wrongComps: ["infection", "fluid_overload"],
       },
       {
         kind: "postop", title: "Ascites monitoring", description: "Watch for ascites as the remnant regenerates.",
@@ -1801,7 +1801,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         feedback: [
           "Simple wound care and warning signs cover the main infection risk.",
           "Soaking a fresh wound softens it and lets bacteria in.",
-          "A dressing left for weeks hides a developing infection.",
+          "A dressing left for weeks hides a developing hematoma.",
         ],
         wrongComps: ["infection", "hemorrhage"],
       },
@@ -2046,7 +2046,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "Excessive suction injures the myocardium.",
           "Forceful retraction causes hypotension and arrhythmia.",
         ],
-        wrongComps: ["cardiac_arrhythmia", "hemorrhage"],
+        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
       },
       {
         kind: "vessel", title: "Control the target vessel", description: "Prepare the coronary for the anastomosis.",
@@ -2232,7 +2232,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "Routine overnight ventilation raises the risk of ventilator pneumonia with no benefit in a stable patient.",
           "A cold patient shivers, raising oxygen demand, and may still be bleeding; extubate when warm and dry.",
         ],
-        wrongComps: ["infection", "hypoxia"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       {
         kind: "postop", title: "Renal protection", description: "Monitor the renal function.",
@@ -2344,7 +2344,7 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
           "Full anticoagulation risks tamponade.",
           "No antiplatelet therapy increases graft thrombosis.",
         ],
-        wrongComps: ["thrombosis", "hemorrhage"],
+        wrongComps: ["hemorrhage", "thrombosis"],
       },
       {
         kind: "postop", title: "Plan cardiac rehabilitation", description: "Define the recovery pathway.",
