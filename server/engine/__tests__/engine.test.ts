@@ -214,9 +214,9 @@ describe("Decision Option Count", () => {
   });
 
   it("archetype selection is phase-aware (pre-op excludes intra-op-only archetypes)", () => {
-    // lap-cholecystectomy is [DIAGNOSTIC_STEP, SURGICAL_DECISION]; nerve_injury
-    // maps to both, but SURGICAL_DECISION (proceed/modify/abort) is intra-op
-    // only — so in Patient Intake the engine must offer DIAGNOSTIC_STEP.
+    // lap-cholecystectomy is [DIAGNOSTIC_STEP, SURGICAL_DECISION]. A nerve
+    // injury is only treated by SURGICAL_DECISION (release traction), so it is
+    // offered in every phase rather than a set with no real treatment.
     const procedure = getProcedure("lap-cholecystectomy");
     const VITALS = { spo2: 98, heart_rate: 72, bp_systolic: 120, bp_diastolic: 80, temperature: 37, respiratory_rate: 16 };
     for (let seed = 1; seed <= 6; seed++) {
@@ -227,7 +227,8 @@ describe("Decision Option Count", () => {
         "nerve_injury",
         "Patient Intake"
       );
-      expect(preOp.archetype).toBe("DIAGNOSTIC_STEP");
+      expect(preOp.archetype).toBe("SURGICAL_DECISION");
+      expect(preOp.options.map((o) => o.id)).toContain("release_traction");
 
       const intraOp = new DecisionEngine(new DeterministicRNG(seed), procedure).generateDecision(
         10,

@@ -236,7 +236,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "iv_opioid",
       label: "IV opioid analgesic",
-      treats: ["nerve_injury"],
+      treats: [],
       vitalsEffect: { heart_rate: -8, bp_systolic: -3, respiratory_rate: -2 },
       riskIfWrong: { spo2: -3, respiratory_rate: -4 },
       correctFeedback: "Pain controlled. Patient comfortable and vitals stabilizing.",
@@ -245,7 +245,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "regional_block",
       label: "Regional nerve block",
-      treats: ["nerve_injury"],
+      treats: [],
       vitalsEffect: { heart_rate: -10, bp_systolic: -5 },
       riskIfWrong: { heart_rate: +5, bp_systolic: -8 },
       correctFeedback: "Regional block effective. Pain well-controlled with minimal systemic effect.",
@@ -254,7 +254,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "nsaid",
       label: "IV NSAID (ketorolac)",
-      treats: ["nerve_injury"],
+      treats: [],
       vitalsEffect: { heart_rate: -4, temperature: -0.2 },
       riskIfWrong: { bp_systolic: +5 },
       correctFeedback: "NSAID providing adjunct pain relief. Anti-inflammatory effect helpful.",
@@ -274,7 +274,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "imaging",
       label: "Order imaging (CT/X-ray)",
-      treats: ["nerve_injury"],
+      treats: [],
       vitalsEffect: {},
       riskIfWrong: { heart_rate: +3 },
       correctFeedback: "Imaging reveals the key finding. Diagnosis clarified.",
@@ -335,6 +335,15 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
       riskIfWrong: { heart_rate: +10, bp_systolic: -5 },
       correctFeedback: "Correct call to abort. Patient safety prioritized over completing the case.",
       wrongFeedback: "Aborting was premature. The case could have been completed safely.",
+    },
+    {
+      id: "release_traction",
+      label: "Release retraction, reposition, and check nerve monitoring",
+      treats: ["nerve_injury"],
+      vitalsEffect: { heart_rate: -4 },
+      riskIfWrong: { heart_rate: +3 },
+      correctFeedback: "Traction released and the limb repositioned — nerve signals recovering.",
+      wrongFeedback: "Releasing retraction cost time without addressing the real problem.",
     },
     {
       id: "request_assistance",
@@ -598,7 +607,7 @@ export class DecisionEngine {
     }
 
     const possibleComplications = ARCHETYPE_COMPLICATION_MAP[option.archetype];
-    const triggerComp = activeComplication
+    const triggerComp = activeComplication || possibleComplications.length === 0
       ? null
       : this.rng.next() < 0.4
         ? this.rng.pick(possibleComplications)

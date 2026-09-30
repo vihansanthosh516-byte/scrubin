@@ -36,12 +36,12 @@ const norm = (ev: any): string =>
 
 // A header per line so the log reads at a glance instead of a column of
 // identical "EVENT" labels.
-function classify(text: string): { type: string; severity: "info" | "warning" | "critical" } {
+export function classify(text: string): { type: string; severity: "info" | "warning" | "critical" } {
   if (/^(🔴|💀)|CRITICAL FAILURE|died/i.test(text)) return { type: "Critical", severity: "critical" };
   if (/^❌/.test(text)) return { type: "Mistake", severity: "critical" };
+  if (/^✅|resolved/i.test(text)) return { type: "Progress", severity: "info" };
   if (/^⚠️|COMPLICATION|DETERIORATING/i.test(text)) return { type: "Complication", severity: "warning" };
   if (/^🧠/.test(text)) return { type: "Attending", severity: "info" };
-  if (/^✅|resolved/i.test(text)) return { type: "Progress", severity: "info" };
   if (/^Patient profile/i.test(text)) return { type: "Patient", severity: "info" };
   return { type: "Update", severity: "info" };
 }

@@ -1340,10 +1340,10 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         ],
         feedback: [
           "The nerve is identified and protected throughout.",
-          "Mobilizing first risks an unseen nerve injury.",
+          "Mobilizing first tears the inferior thyroid artery branches before the nerve is seen, and the field fills with blood.",
           "Cautery near the nerve causes thermal injury.",
         ],
-        wrongComps: ["nerve_injury", "hemorrhage"],
+        wrongComps: ["hemorrhage", "nerve_injury"],
       },
       {
         kind: "core", title: "Find the adenoma", description: "Locate the abnormal gland.",

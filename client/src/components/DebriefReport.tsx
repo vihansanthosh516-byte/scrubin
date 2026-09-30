@@ -1,3 +1,4 @@
+import { classify } from "./timelineEvents";
 import React from 'react';
 import { useSimulationStore } from '../state/simulationStore';
 import { ShieldCheck, Clock, AlertTriangle, XCircle, CheckCircle, Lightbulb, Save } from 'lucide-react';
@@ -104,7 +105,7 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
               {evalData.timeline_summary.map((event: any, i: number) => (
                 <div key={i} className="relative flex items-start gap-4">
                   <div className="absolute -left-[21px] mt-1 w-2 h-2 bg-border rounded-full" />
-                  <span className="text-[10px] font-mono text-muted-foreground mt-0.5 w-8">T:{event.tick ?? i}</span>
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground mt-0.5 w-24 shrink-0">{classify(String(event.description || event)).type}</span>
                   <p className="text-sm text-muted-foreground">{event.description || event}</p>
                 </div>
               ))}

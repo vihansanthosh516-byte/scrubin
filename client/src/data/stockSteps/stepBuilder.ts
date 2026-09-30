@@ -174,7 +174,7 @@ const CHOICE_TEMPLATES: Record<StepKind, (s: StepSpec) => [string, string, strin
   nerve: (s) => [
     `Bluntly dissect and preserve ${s.nerve}, keeping it under direct vision.`,
     `Retract ${s.wrongNerves[0]} with a self-retaining retractor for exposure.`,
-    `Divide the fascial bands over the nerve without functional testing.`,
+    `Sweep the tissue off the nerve bluntly with a swab to speed the exposure.`,
   ],
   dissect: (s) => [
     `Dissect in the avascular plane along ${s.landmark}.`,
@@ -257,7 +257,7 @@ const FEEDBACK_TEMPLATES: Record<StepKind, [string, string, string]> = {
   nerve: [
     "The nerve is preserved under direct vision.",
     "Retraction injury to the nerve risks permanent dysfunction.",
-    "Dividing un-tested bands risks irreversible nerve damage.",
+    "Blunt sweeping tears the small vessels running with the nerve — the field bleeds and the nerve is lost in the blood.",
   ],
   dissect: [
     "The avascular plane was followed; dissection is clean.",
@@ -384,8 +384,13 @@ function buildStepChoices(
     ? step.feedback
     : FEEDBACK_TEMPLATES[step.kind];
   const prefix = (fb: string) => `${step.title} — ${fb}`;
-  const [comp1, comp2] = step.wrongComps
+  let [comp1, comp2] = step.wrongComps
     ?? (step.choices ? [pick(s.risks, stepIndex), pick(s.risks, stepIndex + 1)] : templateComps(step.kind, s.risks, stepIndex));
+  // A deferred nerve check misses a nerve injury, not a bleed.
+  if (!step.wrongComps && step.kind === "verify" && /nerve|RLN|neuromonitor/i.test(s.test)) {
+    if (comp1 === "hemorrhage") comp1 = comp2 === "nerve_injury" ? comp1 : "nerve_injury";
+    if (comp2 === "hemorrhage") comp2 = comp1 === "nerve_injury" ? comp2 : "nerve_injury";
+  }
 
   return [
     {

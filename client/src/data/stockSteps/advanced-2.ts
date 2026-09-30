@@ -485,9 +485,9 @@ export const ADVANCED_BANKS_2: ProcedureBank[] = [
         feedback: [
           "The bladder neck is divided with the appropriate margin.",
           "Routine wide excision worsens continence without benefit.",
-          "Stapling the bladder neck risks the ureters.",
+          "A staple line at the bladder neck can catch the ureteric orifices — the obstructed, leaking ureter gets infected.",
         ],
-        wrongComps: ["nerve_injury", "hemorrhage"],
+        wrongComps: ["nerve_injury", "infection"],
       },
       {
         kind: "core", title: "Mobilize the seminal vesicles", description: "Free the posterior structures.",

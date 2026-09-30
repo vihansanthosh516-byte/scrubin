@@ -629,7 +629,13 @@ function SimulationPage() {
           const res = await fetch(`${API_BASE}/api/sim/complete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ session_id: simId })
+            // Report the final step too — it never goes through /next.
+            body: JSON.stringify({
+              session_id: simId,
+              step_index: caseState?.played ?? 0,
+              step_correct: true,
+              step_label: stepLabel(stepNow),
+            })
           });
           if (res.ok) {
             const data = await res.json();
@@ -1196,7 +1202,15 @@ function SimulationPage() {
                     <div className="p-4 bg-[#3A0F0F] border border-[#A32A2A] rounded-sm mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <h2 className="text-xl font-bold text-[#E08080]">
-                          Complication: {String(currentState?.active_complication || '').replace(/_/g, ' ').toUpperCase()}
+                          {(() => {
+                            // A named injury (ureter, dura, bladder, bowel) heads the banner;
+                            // the complication it is causing follows.
+                            const comp = String(currentState?.active_complication || '').replace(/_/g, ' ').toUpperCase();
+                            const injury = complicationSource !== "spontaneous" && /^[A-Z][a-z]+( [a-z]+)* injury|^Dural tear/.test(lastMistake?.consequence ?? "")
+                              ? lastMistake!.consequence!.split(" — ")[0]
+                              : null;
+                            return injury ? `${injury} → ${comp}` : `Complication: ${comp}`;
+                          })()}
                         </h2>
                         <span className={`px-2 py-0.5 rounded-full border text-[11px] font-black uppercase tracking-wider ${complicationSource === "spontaneous" ? "bg-[#D99B26]/15 border-[#D99B26]/50 text-[#E0B060]" : "bg-[#A32A2A]/20 border-[#A32A2A]/60 text-[#E08080]"}`}>
                           {complicationSource === "spontaneous" ? "Spontaneous Deterioration" : "Surgical Error"}

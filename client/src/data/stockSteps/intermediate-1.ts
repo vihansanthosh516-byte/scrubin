@@ -855,7 +855,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         feedback: [
           "Seeing the ureter before clamping is the single best protection against injury.",
           "Fibroids distort the pelvis — the ureter is rarely where the scan suggests, and an unseen ureter gets clamped and leaks.",
-          "Clamping lateral to the uterine vessels is exactly where the ureter runs — and the tear in the plexus bleeds.",
+          "Clamping lateral to the uterine vessels tears into the venous plexus on the pelvic sidewall.",
         ],
         wrongComps: ["infection", "hemorrhage"],
       },
@@ -967,8 +967,8 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "A final trace confirms no clamp, suture, or angulation compromised either ureter during the dissection.",
-          "The ureters can be injured late in the case at the vaginal angles — the second look is essential.",
-          "Those bands carry small vessels and the ureter's own blood supply — dividing them bleeds and devascularizes it.",
+          "The ureters can be caught late at the vaginal angles — without a second look, the leak becomes an infected urinoma.",
+          "Those bands carry small vessels — dividing them starts a bleed on the ureter's surface that is hard to control.",
         ],
         wrongComps: ["infection", "hemorrhage"],
       },
@@ -1227,9 +1227,9 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         feedback: [
           "The ureter is identified and traced before any division.",
           "Dividing vessels before finding the ureter risks a silent ureteric injury.",
-          "Skipping identification makes a ureteric injury almost certain eventually.",
+          "Trusting the CT alone leaves the ureter unseen — the dissection runs into the gonadal vessels beside it.",
         ],
-        wrongComps: ["nerve_injury", "infection"],
+        wrongComps: ["infection", "hemorrhage"],
       },
       {
         kind: "vessel", title: "Divide the inferior mesenteric artery", description: "Control the blood supply at the correct level.",
@@ -1804,9 +1804,9 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         feedback: [
           "The ureter is identified and traced safely.",
           "Dissecting the hilum without the ureter risks the duodenum and the vena cava.",
-          "Dividing the gonadal vein instead of the ureter injures the urinary tract.",
+          "Mistaking the gonadal vein for the ureter leaves the real ureter unseen — it is injured later and leaks urine.",
         ],
-        wrongComps: ["hemorrhage", "nerve_injury"],
+        wrongComps: ["hemorrhage", "infection"],
       },
       {
         kind: "vessel", title: "Control the renal artery", description: "Secure the arterial inflow first.",
@@ -1901,8 +1901,8 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         feedback: [
           "The ureter is divided cleanly and the specimen removed.",
-          "Avulsing the ureter risks a leak and incomplete resection.",
-          "Leaving the ureter attached is an incomplete resection.",
+          "Avulsing the ureter leaves an open stump that leaks urine into the retroperitoneum.",
+          "Leaving the ureter attached means pulling the specimen out against it — the gonadal vein alongside tears.",
         ],
         wrongComps: ["infection", "hemorrhage"],
       },

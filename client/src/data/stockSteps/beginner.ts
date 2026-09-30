@@ -357,8 +357,8 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         ],
         feedback: [
           "The nerve is identified and traced before any inferior division — the safe sequence.",
-          "Dividing the inferior thyroid artery before finding the nerve risks injury.",
-          "The monitor assists but cannot replace direct identification of the nerve.",
+          "The nerve often runs between the branches of the inferior thyroid artery — dividing first can cut or crush it.",
+          "Free lateral dissection without seeing the nerve tears the middle thyroid vein and inferior thyroid branches — the field fills with blood.",
         ],
         wrongComps: ["nerve_injury", "hemorrhage"],
       },
