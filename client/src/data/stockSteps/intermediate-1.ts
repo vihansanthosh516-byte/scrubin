@@ -26,7 +26,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the PCL", "the articular cartilage"],
       test: "probing the graft for tension and isometry",
       wrongTests: ["an on-table MRI", "a stress radiograph"],
-      risks: ["hemorrhage", "nerve_injury", "infection", "thrombosis"],
+      risks: ["hemorrhage", "nerve_injury", "infection", "thrombosis", "fluid_overload", "cardiac_arrhythmia", "hypoxia", "anaphylaxis"],
       instrument: "an arthroscope and a tunnel reamer",
       position: "supine with a lateral post and a foot support",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -183,15 +183,132 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       },
       { kind: "closure", title: "Close the portals", description: "Close the skin and apply the dressing.", f: { structure: "the portal sites" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Knee surgery carries a measurable thrombosis risk." },
-      { kind: "postop", title: "Cryotherapy and elevation", description: "Define the early swelling-control plan.", f: { test: "the swelling and effusion", wrongTests: ["a routine X-ray", "an ultrasound"] } },
-      { kind: "postop", title: "Watch for deep infection", description: "Knee infections after reconstruction are serious.", f: { test: "the knee for warmth, swelling, and fever", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Muscle activation exercises", description: "Start quadriceps activation on day one.", f: { test: "the quadriceps activation", wrongTests: ["a routine X-ray", "a nerve study"] } },
-      { kind: "postop", title: "Brace and crutch plan", description: "Define the brace setting and the crutch use.", f: { test: "the brace and crutch protocol", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Return-to-work guidance", description: "Plan the return to school and sport-specific activities.", f: { test: "the functional milestones", wrongTests: ["a routine MRI", "a stress test"] } },
-      { kind: "postop", title: "Long-term graft protection", description: "Discuss the graft protection strategies in sport.", f: { test: "the sport-specific readiness", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange follow-up to review motion, strength, and the rehab plan.", f: { test: "the range of motion and strength at follow-up", wrongTests: ["a routine MRI", "a blood panel"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the wound care, medications, and when to call.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Plan for the second knee", description: "Discuss prevention and screening for the contralateral knee.", f: { test: "the contralateral knee assessment", wrongTests: ["a routine MRI", "a bone scan"] } },
+      {
+        kind: "postop", title: "Cryotherapy and elevation", description: "Day 1: the knee is swollen and warm.",
+        choices: [
+          "Use a cryotherapy cuff in 20-minute cycles and elevate the leg above the heart.",
+          "Apply ice directly to the skin for hours at a time.",
+          "Keep the leg hanging down over the bed edge to ease pain.",
+        ],
+        feedback: [
+          "Cold and elevation reduce swelling and pain safely.",
+          "Prolonged direct ice freezes the skin and can injure the superficial nerves.",
+          "A dependent leg swells, and venous pooling raises the clot risk.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Watch for deep infection", description: "Day 5: the knee is hot, with fever of 38.5°C.",
+        choices: [
+          "Aspirate the knee for cell count and culture, and arrange washout if infected.",
+          "Start oral antibiotics and review in 2 weeks.",
+          "Put the fever down to the anesthetic and ignore it.",
+        ],
+        feedback: [
+          "A septic knee after reconstruction needs aspiration and urgent washout to save the graft.",
+          "Oral antibiotics alone let the infection destroy the graft and the cartilage.",
+          "Ignoring a hot knee with fever lets septic arthritis progress.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Muscle activation exercises", description: "The quadriceps are inhibited on day 1.",
+        choices: [
+          "Start quad sets, straight-leg raises, and ankle pumps on day 1.",
+          "Rest the leg completely for 2 weeks.",
+          "Start heavy open-chain leg extensions with weights now.",
+        ],
+        feedback: [
+          "Early activation prevents quadriceps shutdown and helps venous return.",
+          "Complete rest wastes the quadriceps and raises the clot risk.",
+          "Heavy open-chain extension early stretches the new graft.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Brace and crutch plan", description: "The patient is going home tomorrow.",
+        choices: [
+          "Weight-bear as tolerated with crutches and a hinged brace locked straight for walking at first.",
+          "No crutches — walk normally without support today.",
+          "Stay non-weight-bearing in bed for a month.",
+        ],
+        feedback: [
+          "Protected early walking helps recovery without risking a fall.",
+          "Walking unsupported with a weak quad risks a fall onto the fresh knee, bleeding into the joint.",
+          "A month in bed invites a DVT.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Return-to-work guidance", description: "The patient is a student and plays competitive soccer.",
+        choices: [
+          "Back to classes within 1–2 weeks; sport only after criteria-based testing, usually 9–12 months.",
+          "Return to soccer training at 6 weeks if the knee feels fine.",
+          "Avoid school for 3 months.",
+        ],
+        feedback: [
+          "Criteria-based return lowers re-rupture risk.",
+          "Early pivoting sport stresses an immature graft — re-rupture bleeds into the joint.",
+          "Long inactivity weakens the leg and raises the clot risk.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Long-term graft protection", description: "The patient asks how to avoid another tear.",
+        choices: [
+          "Recommend a neuromuscular prevention program focusing on landing and cutting technique.",
+          "Recommend a rigid brace for every game forever instead of training.",
+          "Tell the patient the new graft is stronger than the original.",
+        ],
+        feedback: [
+          "Prevention programs reduce re-injury rates.",
+          "A brace does not replace neuromuscular control — the knee re-injures.",
+          "Overconfidence leads to early high-risk activity and graft rupture.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the post-op review.",
+        choices: [
+          "Review at 2 weeks for the wound and at 6 weeks for motion and strength.",
+          "Review only at 1 year.",
+          "No review — the physiotherapist will manage everything.",
+        ],
+        feedback: [
+          "Early reviews catch stiffness, infection, and graft problems.",
+          "A wound infection or stiff knee goes unnoticed for months.",
+          "Complications like infection need a surgeon's review.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "The patient is ready to go home.",
+        choices: [
+          "Explain wound care, calf pain or swelling, fever, and a hot knee as reasons to return.",
+          "Give only the physiotherapy leaflet.",
+          "Tell the patient calf pain is normal after knee surgery.",
+        ],
+        feedback: [
+          "Clear warning signs catch infection and DVT early.",
+          "Without warning signs, a knee infection is reported late.",
+          "Calf pain can be a DVT — dismissing it risks a pulmonary embolus.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Plan for the second knee", description: "The patient worries about the other knee.",
+        choices: [
+          "Recommend the same neuromuscular program for both legs.",
+          "Recommend prophylactic ACL surgery on the healthy knee.",
+          "Advise no exercise for the other leg.",
+        ],
+        feedback: [
+          "Prevention training lowers the risk of a contralateral tear.",
+          "Operating on a healthy knee adds surgical risks — infection among them — without benefit.",
+          "Inactivity weakens the leg and raises the clot risk.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
       {
         kind: "postop", title: "Plan rehabilitation", description: "Set the recovery pathway.",
         choices: [
@@ -206,7 +323,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["thrombosis", "infection"],
       },
-      { kind: "postop", title: "Monitor for effusion and infection", description: "Watch for signs of joint infection.", f: { test: "the joint for warmth, swelling, and fever", wrongTests: ["a routine CT scan", "a bone scan"] } },
+      {
+        kind: "postop", title: "Monitor for effusion and infection", description: "The knee has a moderate effusion at 1 week.",
+        choices: [
+          "Examine the knee; aspirate if tense or if infection is suspected.",
+          "Aspirate every post-op knee in clinic as routine.",
+          "Ignore the effusion and increase the exercises.",
+        ],
+        feedback: [
+          "Selective aspiration helps diagnosis without adding risk.",
+          "Routine aspiration introduces bacteria into the joint.",
+          "A tense hemarthrosis needs assessment, not harder exercise.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       {
         kind: "postop", title: "Return-to-sport guidance", description: "Define when the athlete can return.",
         choices: [
@@ -602,7 +732,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the fibula", "the posterior capsule"],
       test: "a trial reduction with range-of-motion and stability testing",
       wrongTests: ["an on-table MRI", "a bone scan"],
-      risks: ["thrombosis", "infection", "nerve_injury", "hemorrhage"],
+      risks: ["thrombosis", "infection", "nerve_injury", "hemorrhage", "fluid_overload", "cardiac_arrhythmia", "hypoxia", "anaphylaxis"],
       instrument: "an alignment guide and a saw",
       position: "supine with a tourniquet on the thigh",
       wrongPositions: ["lateral decubitus", "prone"],
@@ -761,14 +891,118 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       { kind: "bleed", title: "Control the lateral geniculate bleeder", description: "A vessel at the lateral edge is bleeding.", f: { vessel: "the lateral geniculate vessels", wrongVessels: ["the popliteal artery", "the femoral artery"] } },
       { kind: "verify", title: "Confirm the patellar tracking again", description: "Re-check the tracking with the tourniquet released.", f: { test: "the patellar tracking through the range", wrongTests: ["an on-table X-ray", "a CT scan"] } },
       { kind: "closure", title: "Close the arthrotomy and skin", description: "Close in layers over a drain if used.", f: { structure: "the arthrotomy and the subcutaneous layer" } },
-      { kind: "postop", title: "Cryotherapy and elevation", description: "Define the swelling-control plan for the first days.", f: { test: "the knee swelling", wrongTests: ["a routine X-ray", "an ultrasound"] } },
-      { kind: "postop", title: "Watch for wound ooze", description: "Monitor the dressing for excessive drainage.", f: { test: "the wound for drainage", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Quadriceps activation", description: "Start quad sets and ankle pumps on day one.", f: { test: "the quadriceps activation", wrongTests: ["a routine X-ray", "a nerve study"] } },
-      { kind: "postop", title: "Drain management", description: "Define when the drain is removed.", f: { test: "the drain output", wrongTests: ["a routine X-ray", "a blood panel"] } },
-      { kind: "postop", title: "Blood glucose control", description: "Optimize the diabetes control to protect the wound.", f: { test: "the blood glucose levels", wrongTests: ["a routine CT scan", "an ultrasound"] } },
-      { kind: "postop", title: "Home exercise program", description: "Provide the exercises to perform at home.", f: { test: "the home exercise compliance", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Fall precautions", description: "Review the fall risks with the new knee.", f: { test: "the gait safety", wrongTests: ["a routine X-ray", "a balance test"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the 6-week review with an X-ray.", f: { test: "the X-ray and the range of motion at 6 weeks", wrongTests: ["a routine MRI", "a CT scan"] } },
+      {
+        kind: "postop", title: "Cryotherapy and elevation", description: "Day 1: the knee is swollen.",
+        choices: [
+          "Use a cold-compression device in cycles and elevate the leg.",
+          "Keep ice on the bare skin continuously.",
+          "Keep the leg dependent to help bending.",
+        ],
+        feedback: [
+          "Cold compression reduces swelling and pain.",
+          "Continuous ice on bare skin burns it and can injure the superficial nerves.",
+          "A dependent leg swells, and venous pooling raises the clot risk.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Watch for wound ooze", description: "Day 2: the dressing is soaked.",
+        choices: [
+          "Reinforce the dressing, check the wound and the anticoagulant dose, and review if it keeps oozing.",
+          "Change the dressing every hour.",
+          "Ignore it — oozing is normal after knee replacement.",
+        ],
+        feedback: [
+          "Persistent ooze after a knee replacement risks deep infection; it needs review.",
+          "Frequent dressing changes let bacteria into a draining wound over the implant.",
+          "An ooze from a hematoma can hide deeper bleeding.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Quadriceps activation", description: "Day 1 physiotherapy.",
+        choices: [
+          "Start quad sets, straight-leg raises, and ankle pumps.",
+          "Rest the leg until the swelling settles completely.",
+          "Push hard into flexion beyond pain on day 1.",
+        ],
+        feedback: [
+          "Early activation restores function and venous return.",
+          "Prolonged rest raises the clot risk.",
+          "Forced flexion through pain tears the fresh repair and bleeds into the joint.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Drain management", description: "A drain was placed; 200 mL in 24 hours.",
+        choices: [
+          "Remove the drain at 24 hours.",
+          "Leave the drain in for a week.",
+          "Clamp the drain and leave it in.",
+        ],
+        feedback: [
+          "Early removal limits infection risk.",
+          "A long-standing drain is a route for bacteria into the joint replacement.",
+          "A clamped drain lets the blood collect into a hematoma.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Blood glucose control", description: "The patient has diabetes; glucose is 14 mmol/L.",
+        choices: [
+          "Use a variable insulin plan to keep glucose between 6 and 10 mmol/L.",
+          "Stop all diabetes medication until discharge.",
+          "Give large insulin boluses to normalize the glucose quickly.",
+        ],
+        feedback: [
+          "Good glucose control protects the wound and lowers infection risk.",
+          "Stopping treatment lets glucose soar, which impairs healing and invites infection.",
+          "Aggressive insulin causes hypoglycemia and, with low potassium, arrhythmias.",
+        ],
+        wrongComps: ["infection", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Home exercise program", description: "The patient is going home on day 3.",
+        choices: [
+          "Give a structured program for knee bending, straightening, and walking with a frame.",
+          "Tell the patient to rest the knee until the clinic visit.",
+          "Tell the patient to kneel on the new knee to stretch it.",
+        ],
+        feedback: [
+          "A home program maintains motion and prevents stiffness.",
+          "Resting at home stiffens the knee and raises the clot risk.",
+          "Kneeling early puts pressure on the fresh wound, which can split and bleed.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Fall precautions", description: "The patient lives alone.",
+        choices: [
+          "Arrange a walking frame, remove loose rugs, and check that the home is safe.",
+          "Advise walking without aids as soon as possible.",
+          "Advise staying in bed at home to avoid falls.",
+        ],
+        feedback: [
+          "Home safety prevents falls onto the new knee.",
+          "A fall onto the new knee can fracture around the implant and bleed.",
+          "Staying in bed raises the clot risk.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the review.",
+        choices: [
+          "Review at 6 weeks with an X-ray to check motion and the implant.",
+          "No review unless there is a problem.",
+          "Review only at 1 year.",
+        ],
+        feedback: [
+          "The 6-week review checks motion, the wound, and implant position.",
+          "Stiffness or low-grade infection goes unnoticed without review.",
+          "Waiting a year misses the window to treat stiffness.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
       {
         kind: "postop", title: "Plan mobilization", description: "Start the recovery pathway.",
         choices: [
@@ -1578,7 +1812,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       wrongStructures: ["the duodenum", "the right kidney"],
       test: "the critical view of safety and cholangiography when indicated",
       wrongTests: ["a routine liver biopsy", "an on-table ultrasound of the kidney"],
-      risks: ["hemorrhage", "infection", "nerve_injury", "hypoxia"],
+      risks: ["hemorrhage", "infection", "nerve_injury", "hypoxia", "fluid_overload", "cardiac_arrhythmia", "thrombosis", "anaphylaxis"],
       instrument: "a 30° laparoscope and a clip applier",
       position: "supine with the patient in reverse Trendelenburg with left tilt",
       wrongPositions: ["prone", "steep Trendelenburg"],
@@ -1710,15 +1944,132 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
       { kind: "verify", title: "Confirm the sponge count", description: "Complete the counts before closure.", f: { test: "the instrument and sponge count", wrongTests: ["a routine X-ray", "a CT scan"] } },
       { kind: "closure", title: "Close the port sites", description: "Close the fascia at the larger sites.", f: { structure: "the port site fascia" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Standard prophylaxis for laparoscopy." },
-      { kind: "postop", title: "Watch for port-site infection", description: "Monitor the port sites for erythema and drainage.", f: { test: "the port sites", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Post-op diet progression", description: "Advance the diet as tolerated.", f: { test: "the dietary tolerance", wrongTests: ["a routine X-ray", "a blood panel"] } },
-      { kind: "postop", title: "Biliary symptom warning", description: "Teach the warning signs of a bile duct problem.", f: { test: "the biliary warning signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Return to activity", description: "Define the lifting restrictions after laparoscopy.", f: { test: "the activity tolerance", wrongTests: ["a routine X-ray", "a stress test"] } },
-      { kind: "postop", title: "Review the pathology", description: "Plan the gallbladder pathology discussion.", f: { test: "the gallbladder pathology", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the post-operative review.", f: { test: "the recovery at follow-up", wrongTests: ["a routine MRI", "a blood panel"] } },
-      { kind: "postop", title: "Retained stone risk", description: "Discuss the risk of retained common duct stones and the signs.", f: { test: "the recurrent biliary signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the wound care and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Long-term dietary advice", description: "Discuss the long-term dietary changes after cholecystectomy.", f: { test: "the dietary plan", wrongTests: ["a routine blood panel", "an ultrasound"] } },
+      {
+        kind: "postop", title: "Watch for port-site infection", description: "Day 5: the umbilical port is red.",
+        choices: [
+          "Examine the wound, open and drain any pus, and give antibiotics if cellulitis spreads.",
+          "Cover it with a new dressing and ignore it.",
+          "Start long-term antibiotics for every red port site.",
+        ],
+        feedback: [
+          "Draining pus and treating spreading cellulitis controls port-site infection.",
+          "An undrained infection spreads into the abdominal wall.",
+          "Blanket antibiotics breed resistance, and each course carries an allergy risk.",
+        ],
+        wrongComps: ["infection", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Post-op diet progression", description: "The patient is nauseated on day 0.",
+        choices: [
+          "Start clear fluids and advance as tolerated with antiemetics.",
+          "Keep the patient nil by mouth for 3 days.",
+          "Give a large fatty meal to test the digestion.",
+        ],
+        feedback: [
+          "Early diet as tolerated is standard after laparoscopy.",
+          "Prolonged starvation delays recovery and dehydrates the patient.",
+          "A large fatty meal on day 0 triggers vomiting and aspiration risk.",
+        ],
+        wrongComps: ["fluid_overload", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Biliary symptom warning", description: "The patient is going home.",
+        choices: [
+          "Teach that jaundice, fever, or worsening pain need urgent review.",
+          "Tell the patient pain always settles by itself.",
+          "Tell the patient yellow skin is expected after gallbladder removal.",
+        ],
+        feedback: [
+          "Early review catches a bile leak or retained stone.",
+          "A bile leak causes worsening pain and peritonitis.",
+          "Jaundice signals bile duct obstruction or injury, which can progress to cholangitis.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Return to activity", description: "The patient asks about lifting.",
+        choices: [
+          "Normal activity as tolerated; avoid heavy lifting for 2 weeks.",
+          "Bed rest for 2 weeks.",
+          "Heavy lifting from the next day.",
+        ],
+        feedback: [
+          "Early activity speeds recovery after laparoscopy.",
+          "Bed rest raises the clot risk.",
+          "Heavy straining early can open a port-site hernia and bleed.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Review the pathology", description: "The gallbladder was sent for histology.",
+        choices: [
+          "Check the pathology, and review wound and bloods at the same visit.",
+          "Skip the visit — gallstone disease is always benign.",
+          "Recall the patient only if the pathology is abnormal.",
+        ],
+        feedback: [
+          "One review catches an incidental cancer and any late wound or bile problem.",
+          "Without a review, a smouldering collection or port-site infection goes unnoticed.",
+          "A pathology-only recall misses a late bile leak presenting with pain and fever.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the review.",
+        choices: [
+          "Review by phone or clinic at 2–6 weeks to check symptoms and the pathology.",
+          "No follow-up at all.",
+          "Review at 1 year only.",
+        ],
+        feedback: [
+          "A simple review confirms recovery and the pathology.",
+          "A late bile leak or infection goes unnoticed.",
+          "A year is too late for early complications.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Retained stone risk", description: "Liver tests were mildly raised before surgery.",
+        choices: [
+          "Explain that a retained duct stone can cause pain, jaundice, or fever, and needs ERCP.",
+          "Say retained stones never happen.",
+          "Order routine ERCP for everyone.",
+        ],
+        feedback: [
+          "Knowing the signs allows early ERCP if a stone was left.",
+          "A missed retained stone can cause cholangitis.",
+          "Routine ERCP adds risks of pancreatitis and bleeding.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Going home the same day.",
+        choices: [
+          "Give written wound care and warning signs: fever, jaundice, worsening pain, calf swelling.",
+          "Give no written advice.",
+          "Advise returning only if in severe pain.",
+        ],
+        feedback: [
+          "Clear instructions catch complications early.",
+          "Without advice, an early infection is reported late.",
+          "Waiting for severe pain delays treatment of a clot or leak.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Long-term dietary advice", description: "The patient asks about diet.",
+        choices: [
+          "Explain that most people eat normally; reduce fat if loose stools occur.",
+          "Advise a strict fat-free diet for life.",
+          "Advise fasting for a week to rest the bowel.",
+        ],
+        feedback: [
+          "Most patients need no long-term restrictions.",
+          "An unnecessary lifelong diet causes poor nutrition.",
+          "Fasting dehydrates and weakens the patient.",
+        ],
+        wrongComps: ["infection", "fluid_overload"],
+      },
       {
         kind: "postop", title: "Plan recovery", description: "Plan analgesia and discharge.",
         choices: [
@@ -1733,7 +2084,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["hypoxia", "infection"],
       },
-      { kind: "postop", title: "Watch for jaundice and pain", description: "These suggest a duct injury.", f: { test: "liver enzymes and bilirubin if symptoms develop", wrongTests: ["a routine chest X-ray", "a blood culture"] } },
+      {
+        kind: "postop", title: "Watch for jaundice and pain", description: "Day 2: new jaundice and upper abdominal pain.",
+        choices: [
+          "Check LFTs and arrange imaging for a bile leak or duct injury.",
+          "Discharge with painkillers.",
+          "Put it down to post-op gas pain.",
+        ],
+        feedback: [
+          "Early imaging finds a bile duct injury while it can be repaired.",
+          "A missed bile leak causes peritonitis.",
+          "A duct injury becomes cholangitis if ignored.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       {
         kind: "postop", title: "Diet and follow-up", description: "Plan the diet and clinic visit.",
         choices: [

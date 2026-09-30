@@ -26,7 +26,7 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
       wrongStructures: ["the femoral canal", "the vas deferens alone"],
       test: "a check for a contralateral hernia and reduction of the sac",
       wrongTests: ["an on-table ultrasound", "a barium enema"],
-      risks: ["hemorrhage", "nerve_injury", "infection", "thrombosis"],
+      risks: ["hemorrhage", "nerve_injury", "infection", "thrombosis", "fluid_overload", "cardiac_arrhythmia", "hypoxia", "anaphylaxis"],
       instrument: "a Babcock clamp and mesh",
       position: "supine with the affected groin exposed",
       wrongPositions: ["prone", "Trendelenburg with the head down"],
@@ -240,9 +240,48 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         wrongComps: ["infection", "hemorrhage"],
       },
       { kind: "dvt", title: "DVT prophylaxis", description: "The patient will be ambulatory but prophylaxis is still indicated." },
-      { kind: "postop", title: "Counsel on scrotal swelling", description: "Explain that scrotal swelling and bruising are common after groin repair.", f: { test: "the scrotum for swelling", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Discuss chronic pain risk", description: "Review the risk of chronic groin pain and the nerve-preservation steps taken.", f: { test: "the groin pain at follow-up", wrongTests: ["a routine nerve study", "a CT scan"] } },
-      { kind: "postop", title: "Return-to-work guidance", description: "Define lifting restrictions for the recovery period.", f: { test: "the lifting tolerance at follow-up", wrongTests: ["a routine X-ray", "a stress test"] } },
+      {
+        kind: "postop", title: "Counsel on scrotal swelling", description: "Day 1: the scrotum is bruised and mildly swollen.",
+        choices: [
+          "Explain that bruising and mild swelling are common, and advise support underwear and ice for a few days.",
+          "Tell the patient any scrotal swelling is dangerous and needs urgent imaging.",
+          "Say nothing — the swelling will settle and discussing it only causes worry.",
+        ],
+        feedback: [
+          "Expected bruising is explained, with clear advice on what would be abnormal.",
+          "Needless imaging adds contrast exposure and delays a normal recovery — some agents cause reactions.",
+          "Without advice, an enlarging, tense swelling from a hematoma is not reported.",
+        ],
+        wrongComps: ["anaphylaxis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Discuss chronic pain risk", description: "The patient asks about long-term groin pain.",
+        choices: [
+          "Explain that chronic pain affects about 1 in 10, which nerves were protected, and to report burning pain early.",
+          "Promise that chronic pain never happens after mesh repair.",
+          "Advise strong opioids for any groin pain after discharge.",
+        ],
+        feedback: [
+          "Honest counselling and early reporting allow nerve pain to be treated promptly.",
+          "False reassurance means new burning nerve pain is ignored until it becomes chronic.",
+          "Open-ended opioids at home risk sedation and respiratory depression.",
+        ],
+        wrongComps: ["nerve_injury", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Return-to-work guidance", description: "The patient works in an office and goes to the gym.",
+        choices: [
+          "Return to desk work within a week; avoid heavy lifting until comfortable, usually 2–4 weeks.",
+          "Stay off all work and activity for 3 months.",
+          "Return to heavy gym lifting the next day.",
+        ],
+        feedback: [
+          "Guided activity speeds recovery without stressing the repair.",
+          "Three months of inactivity brings no benefit and raises the clot risk.",
+          "Heavy straining on day 1 can tear the fresh repair and bleed into the wound.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
       {
         kind: "postop", title: "Plan analgesia and activity", description: "Set recovery expectations.",
         choices: [
@@ -257,8 +296,34 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         ],
         wrongComps: ["thrombosis", "infection"],
       },
-      { kind: "postop", title: "Monitor for hematoma and seroma", description: "These are the most common early complications.", f: { test: "the groin for swelling and the scrotum for hematoma", wrongTests: ["a routine CT scan", "a chest X-ray"] } },
-      { kind: "postop", title: "Watch for urinary retention", description: "Bladder distension is common after groin surgery.", f: { test: "urinary output and voiding", wrongTests: ["a creatinine panel", "a bladder ultrasound of the kidney"] } },
+      {
+        kind: "postop", title: "Monitor for hematoma and seroma", description: "The wound is slightly swollen at the day-7 check.",
+        choices: [
+          "Examine the swelling; observe a soft seroma, and review a tense or enlarging swelling the same day.",
+          "Aspirate every groin swelling in clinic as routine.",
+          "Ignore groin swelling unless the patient has a fever.",
+        ],
+        feedback: [
+          "Most seromas settle; tense or growing swellings need prompt review.",
+          "Routine aspiration of a seroma introduces bacteria onto the mesh.",
+          "An expanding hematoma can be missed while waiting for fever.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Watch for urinary retention", description: "Six hours after surgery the patient has not passed urine.",
+        choices: [
+          "Scan the bladder and catheterize if the volume is large, then trial without a catheter.",
+          "Give a large IV fluid bolus to encourage voiding.",
+          "Discharge and ask the patient to return if still unable to pass urine.",
+        ],
+        feedback: [
+          "Retention after groin surgery is common and treated with bladder scanning and catheterization.",
+          "More fluid overdistends the bladder and can overload an older patient's circulation.",
+          "Untreated retention stretches the bladder and becomes infected.",
+        ],
+        wrongComps: ["fluid_overload", "infection"],
+      },
       {
         kind: "postop", title: "Discharge and follow-up", description: "Define the clinic plan.",
         choices: [
@@ -294,7 +359,7 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
       wrongStructures: ["the parathyroid glands", "the trachea"],
       test: "nerve monitoring and a check of the parathyroid glands",
       wrongTests: ["a barium swallow", "an on-table MRI"],
-      risks: ["hypoxia", "nerve_injury", "hemorrhage", "infection"],
+      risks: ["hypoxia", "nerve_injury", "hemorrhage", "infection", "fluid_overload", "cardiac_arrhythmia", "thrombosis", "anaphylaxis"],
       instrument: "a bipolar cautery and nerve monitor",
       position: "supine with the neck extended",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -519,10 +584,62 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         wrongComps: ["infection", "hypoxia"],
       },
       { kind: "dvt", title: "DVT prophylaxis", description: "Standard prophylaxis applies to this elective case." },
-      { kind: "postop", title: "Check for stridor", description: "Stridor suggests laryngeal edema or a neck hematoma.", f: { test: "the airway for stridor", wrongTests: ["a routine chest X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Teach the signs of hypocalcemia", description: "The patient must recognize tingling and cramping after discharge.", f: { test: "the calcium symptoms", wrongTests: ["a routine ECG", "a CT scan"] } },
-      { kind: "postop", title: "Scar care", description: "Advise on scar management once the wound heals.", f: { test: "the scar appearance", wrongTests: ["a routine biopsy", "an ultrasound"] } },
-      { kind: "postop", title: "Arrange thyroid monitoring", description: "Plan the levothyroxine dose monitoring and follow-up.", f: { test: "thyroid function tests", wrongTests: ["a routine ultrasound", "a CT scan"] } },
+      {
+        kind: "postop", title: "Check for stridor", description: "Four hours post-op the patient is anxious with noisy breathing.",
+        choices: [
+          "Examine the neck at once; if it is tense, open the wound at the bedside and call for airway help.",
+          "Give a nebulizer and recheck in an hour.",
+          "Reassure the patient that anxiety causes noisy breathing after neck surgery.",
+        ],
+        feedback: [
+          "A neck hematoma compressing the airway needs immediate wound opening — minutes matter.",
+          "A nebulizer does nothing for a hematoma compressing the trachea — the airway closes.",
+          "Mistaking stridor for anxiety lets the hematoma keep expanding.",
+        ],
+        wrongComps: ["hypoxia", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Teach the signs of hypocalcemia", description: "The day-1 calcium is at the low end of normal.",
+        choices: [
+          "Teach tingling around the mouth and fingers and muscle cramps, and to come in if they occur.",
+          "Tell the patient low calcium only happens after a total thyroidectomy.",
+          "Start high-dose IV calcium for everyone before discharge.",
+        ],
+        feedback: [
+          "Recognizing early symptoms prevents tetany and dangerous arrhythmia.",
+          "Temporary parathyroid stunning happens after lobectomy too — untreated low calcium causes arrhythmias.",
+          "Routine IV calcium in a normocalcemic patient risks overload and vein injury.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "fluid_overload"],
+      },
+      {
+        kind: "postop", title: "Scar care", description: "The wound is healing well at 2 weeks.",
+        choices: [
+          "Massage and moisturize the healed scar and use sunscreen for a year.",
+          "Apply steroid cream on the fresh wound from day 1.",
+          "Pick off any crusts to speed healing.",
+        ],
+        feedback: [
+          "Simple scar care and sun protection give the best cosmetic result.",
+          "Steroid on an unhealed wound delays healing and invites infection.",
+          "Picking crusts opens the wound to infection.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Arrange thyroid monitoring", description: "A lobectomy was done; the pathology is pending.",
+        choices: [
+          "Check thyroid function at 6–8 weeks and discuss the pathology; completion surgery if malignant.",
+          "Start full-dose levothyroxine for life as routine.",
+          "No follow-up — the remaining lobe will cope.",
+        ],
+        feedback: [
+          "After lobectomy many patients stay euthyroid; testing and the pathology guide further treatment.",
+          "Full replacement after lobectomy can overtreat and trigger atrial fibrillation.",
+          "Skipping review misses a malignant result that needs completion surgery.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "infection"],
+      },
       {
         kind: "postop", title: "Monitor the airway", description: "Hematoma or laryngeal edema can threaten the airway.",
         choices: [
@@ -600,7 +717,7 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
       wrongStructures: ["the flexor retinaculum of the digits", "the palmar aponeurosis alone"],
       test: "a check of the motor branch and digital perfusion",
       wrongTests: ["an on-table nerve conduction study", "a wrist X-ray"],
-      risks: ["nerve_injury", "infection", "hemorrhage", "thrombosis"],
+      risks: ["nerve_injury", "infection", "hemorrhage", "thrombosis", "fluid_overload", "cardiac_arrhythmia", "hypoxia", "anaphylaxis"],
       instrument: "a #15 blade and a Ragnell retractor",
       position: "supine with the hand supinated on a hand table",
       wrongPositions: ["prone with the hand pronated", "lateral decubitus"],
@@ -759,11 +876,76 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
       { kind: "verify", title: "Confirm free passive flexion", description: "Passively flex the fingers to confirm the nerve is free.", f: { test: "free passive finger flexion", wrongTests: ["a nerve conduction study", "a wrist X-ray"] } },
       { kind: "closure", title: "Close the skin", description: "The ligament does not need repair — the skin only.", f: { structure: "the skin edges" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "A short hand case still warrants standard prophylaxis." },
-      { kind: "postop", title: "Splint positioning", description: "Define the postoperative splint and elevation.", f: { test: "the wrist position and elevation", wrongTests: ["a routine X-ray", "an ultrasound"] } },
-      { kind: "postop", title: "Explain sensory recovery", description: "Set expectations for the timeline of numbness resolution.", f: { test: "the sensory recovery timeline", wrongTests: ["a nerve study", "a CT scan"] } },
-      { kind: "postop", title: "Refer for hand therapy", description: "Early range-of-motion therapy prevents stiffness.", f: { test: "the finger range of motion", wrongTests: ["a routine splint check", "an ultrasound"] } },
-      { kind: "postop", title: "Return-to-work plan", description: "Define when the patient can return to manual work.", f: { test: "the grip and hand tolerance", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Teach the signs of wound infection", description: "Review erythema, drainage, and fever with the patient.", f: { test: "the wound for infection signs", wrongTests: ["a routine ultrasound", "a blood panel"] } },
+      {
+        kind: "postop", title: "Splint positioning", description: "Soft bulky dressing on; the patient asks about a splint.",
+        choices: [
+          "Use a soft dressing, elevate the hand, and move the fingers from day 1 — no rigid splint needed.",
+          "Immobilize the wrist in a rigid splint for 6 weeks.",
+          "Keep the hand hanging down to reduce stiffness.",
+        ],
+        feedback: [
+          "Early finger movement with elevation reduces swelling and stiffness; splinting adds no benefit.",
+          "Prolonged splinting stiffens the hand and the tendons adhere around the healing nerve.",
+          "A dependent hand swells, and the tight dressing can bleed and throb.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Explain sensory recovery", description: "The patient still has some numbness the next day.",
+        choices: [
+          "Explain that tingling improves over weeks, but long-standing numbness may take months or remain.",
+          "Promise all numbness will be gone by tomorrow.",
+          "Order urgent nerve conduction studies for the residual numbness.",
+        ],
+        feedback: [
+          "Realistic expectations prevent alarm and let a real new deficit stand out.",
+          "False promises mean a genuinely new weakness is dismissed as expected.",
+          "Early nerve studies are uninterpretable; a new deficit is what needs review.",
+        ],
+        wrongComps: ["nerve_injury", "infection"],
+      },
+      {
+        kind: "postop", title: "Refer for hand therapy", description: "The fingers are stiff at the 1-week check.",
+        choices: [
+          "Refer to hand therapy for tendon-gliding and scar exercises.",
+          "Advise keeping the hand still until the stiffness passes.",
+          "Start forceful gripping with a heavy grip trainer now.",
+        ],
+        feedback: [
+          "Guided exercises restore motion and limit scar adhesion.",
+          "Rest makes the stiffness and adhesions around the nerve worse.",
+          "Heavy gripping strains the healing wound and it can bleed or open.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Return-to-work plan", description: "The patient works on a construction site.",
+        choices: [
+          "Light duties at 2 weeks, heavy gripping and vibrating tools from about 6 weeks.",
+          "Return to heavy tools the day after surgery.",
+          "Stay off work for 6 months.",
+        ],
+        feedback: [
+          "A graded return matches wound and grip strength recovery.",
+          "Heavy tools on a fresh wound cause pain, bleeding, and wound breakdown.",
+          "Long inactivity weakens the hand and slows recovery.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Teach the signs of wound infection", description: "Sutures are due out at 10–14 days.",
+        choices: [
+          "Teach spreading redness, pus, and fever, and to keep the wound dry until the stitches are out.",
+          "Tell the patient to soak the hand in hot water daily.",
+          "Tell the patient a little pus is normal after hand surgery.",
+        ],
+        feedback: [
+          "Clear signs and a dry wound catch infection early.",
+          "Soaking a fresh wound softens it and lets bacteria in.",
+          "Pus is never normal — a hand infection spreads quickly along the tendon sheaths.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
       {
         kind: "postop", title: "Plan the dressing and activity", description: "Immobilize just enough to protect the wound.",
         choices: [

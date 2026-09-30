@@ -23,7 +23,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the pubic ramus", "the ischium"],
       test: "a trial reduction with stability and leg-length checks",
       wrongTests: ["an on-table MRI", "a stress radiograph"],
-      risks: ["thrombosis", "hemorrhage", "hypoxia", "nerve_injury", "cardiac_arrhythmia", "infection"],
+      risks: ["thrombosis", "hemorrhage", "hypoxia", "nerve_injury", "cardiac_arrhythmia", "infection", "fluid_overload", "anaphylaxis"],
       instrument: "a reamer and a broach",
       position: "lateral decubitus",
       wrongPositions: ["supine", "prone"],
@@ -194,15 +194,132 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         wrongComps: ["infection", "hemorrhage"],
       },
       { kind: "dvt", title: "DVT prophylaxis", description: "Hip arthroplasty is among the highest-risk procedures for thrombosis." },
-      { kind: "postop", title: "Watch for dislocation signs", description: "Teach the patient the dislocation precautions and the signs.", f: { test: "the hip position and the precautions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Monitor the wound", description: "Watch for drainage and infection signs.", f: { test: "the wound for drainage and erythema", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Check the leg pulses", description: "Confirm the distal pulses after the surgery.", f: { test: "the distal pulses", wrongTests: ["a routine X-ray", "a Doppler of the leg"] } },
-      { kind: "postop", title: "Cryotherapy and swelling control", description: "Define the swelling-control plan.", f: { test: "the leg swelling", wrongTests: ["a routine X-ray", "an ultrasound"] } },
-      { kind: "postop", title: "Home exercise program", description: "Provide the exercises for the recovery period.", f: { test: "the home exercise compliance", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Fall precautions", description: "Review the fall risks after a hip replacement.", f: { test: "the gait safety", wrongTests: ["a routine X-ray", "a balance test"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the 6-week review with an X-ray.", f: { test: "the X-ray and the range of motion at 6 weeks", wrongTests: ["a routine MRI", "a CT scan"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the medications, the precautions, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Return-to-activity plan", description: "Define the driving and activity restrictions.", f: { test: "the activity tolerance", wrongTests: ["a routine X-ray", "a stress test"] } },
+      {
+        kind: "postop", title: "Watch for dislocation signs", description: "The hip was done through a posterior approach.",
+        choices: [
+          "Teach the precautions — no deep bending past 90° or crossing the legs — and that sudden pain with a short, rotated leg needs urgent review.",
+          "Tell the patient the hip cannot dislocate once the wound heals.",
+          "Advise sleeping with the legs crossed for comfort.",
+        ],
+        feedback: [
+          "Precautions and warning signs reduce dislocation and speed its treatment.",
+          "A dislocated hip left unrecognized stretches the sciatic nerve.",
+          "Crossing the legs is exactly the position that dislocates a posterior-approach hip, stretching the sciatic nerve.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Monitor the wound", description: "Day 3: the wound is dry; the patient has diabetes.",
+        choices: [
+          "Check the wound daily and keep glucose controlled; review any ooze beyond day 5.",
+          "Leave the dressing untouched for 3 weeks.",
+          "Change the dressing twice a day as routine.",
+        ],
+        feedback: [
+          "Daily checks and glucose control lower periprosthetic infection risk.",
+          "A long-standing dressing hides a draining wound over the implant.",
+          "Frequent dressing changes expose the wound to bacteria.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Check the leg pulses", description: "Day 0 in recovery.",
+        choices: [
+          "Check the foot pulses, capillary refill, and sensation, and compare with the other leg.",
+          "Skip the check — hip surgery doesn't affect the pulses.",
+          "Check the pulses only at discharge.",
+        ],
+        feedback: [
+          "A baseline neurovascular exam catches vascular or nerve injury early.",
+          "A rare vascular injury bleeds unrecognized.",
+          "A late check misses a sciatic nerve palsy that could have been addressed.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Cryotherapy and swelling control", description: "Day 1: the thigh is swollen.",
+        choices: [
+          "Ice in cycles, elevation, and compression devices.",
+          "Keep ice on the bare skin continuously.",
+          "Keep the leg dependent to aid walking.",
+        ],
+        feedback: [
+          "Cold and compression reduce swelling safely.",
+          "Continuous ice burns the skin and the nearby superficial nerves.",
+          "A dependent leg swells, and venous pooling raises the clot risk.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Home exercise program", description: "Going home on day 2.",
+        choices: [
+          "Give a program of ankle pumps, gluteal squeezes, and walking with a frame.",
+          "Tell the patient to rest in bed until the clinic visit.",
+          "Tell the patient to do deep squats to regain motion.",
+        ],
+        feedback: [
+          "Guided exercise restores function and circulation.",
+          "Bed rest raises the clot risk.",
+          "Deep squats bend the hip past 90° and dislocate it, stretching the sciatic nerve.",
+        ],
+        wrongComps: ["thrombosis", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Fall precautions", description: "The patient lives alone.",
+        choices: [
+          "Arrange a frame, raised toilet seat, and a home safety check.",
+          "Advise walking without aids as soon as possible.",
+          "Advise staying in bed to avoid falls.",
+        ],
+        feedback: [
+          "Home adaptations prevent falls and dislocation.",
+          "A fall can fracture around the implant and bleed.",
+          "Staying in bed raises the clot risk.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the review.",
+        choices: [
+          "Review at 6 weeks with an X-ray to check the implant and gait.",
+          "No review unless there is a problem.",
+          "Review only at 1 year.",
+        ],
+        feedback: [
+          "The 6-week review checks the implant position and function.",
+          "Low-grade infection or loosening goes unnoticed.",
+          "A year is too late to address early problems.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Going home on day 2.",
+        choices: [
+          "Give written advice on precautions, the wound, calf swelling, breathlessness, and fever.",
+          "Give no written advice.",
+          "Tell the patient calf swelling is normal and can be ignored.",
+        ],
+        feedback: [
+          "Clear warning signs catch DVT and infection early.",
+          "Without advice, a wound infection is reported late.",
+          "Calf swelling can be a DVT — dismissing it risks a pulmonary embolus.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Return-to-activity plan", description: "The patient asks about driving.",
+        choices: [
+          "Drive after about 6 weeks, once off opioids and able to brake hard; low-impact activity only.",
+          "Drive tomorrow if the pain allows.",
+          "Avoid all activity for 6 months.",
+        ],
+        feedback: [
+          "Guided return protects the hip and others on the road.",
+          "Driving on opioids with a weak leg risks a crash and a dislocation.",
+          "Prolonged inactivity raises the clot risk.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
       {
         kind: "postop", title: "Plan mobilization and precautions", description: "Define the recovery pathway.",
         choices: [
@@ -266,7 +383,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the pectoralis major", "the ribs"],
       test: "specimen radiography and margin orientation",
       wrongTests: ["a routine mammogram of the other breast", "an on-table MRI"],
-      risks: ["hemorrhage", "infection", "nerve_injury"],
+      risks: ["hemorrhage", "infection", "nerve_injury", "fluid_overload", "cardiac_arrhythmia", "hypoxia", "thrombosis", "anaphylaxis"],
       instrument: "a needle-localization wire and a scalpel",
       position: "supine with the arm abducted",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -366,19 +483,188 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         wrongComps: ["infection", "hemorrhage"],
       },
       { kind: "dvt", title: "DVT prophylaxis", description: "Standard prophylaxis for a short breast case." },
-      { kind: "postop", title: "Watch for hematoma", description: "Monitor the breast for a developing hematoma.", f: { test: "the breast for swelling and bruising", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Arm and shoulder care", description: "Plan the arm exercises after the sentinel node biopsy.", f: { test: "the arm range of motion", wrongTests: ["a routine X-ray", "a nerve study"] } },
-      { kind: "postop", title: "Wound care", description: "Define the wound care for the breast and the axilla.", f: { test: "the wounds for infection signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Lymphedema education", description: "Teach the signs of lymphedema and the precautions.", f: { test: "the lymphedema warning signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Pain control", description: "Plan the analgesia for the breast and the axilla.", f: { test: "the pain scores", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Review the sentinel node result", description: "Plan the discussion of the node pathology.", f: { test: "the sentinel node pathology", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Breast self-examination guidance", description: "Review the surveillance and self-examination plan.", f: { test: "the surveillance plan", wrongTests: ["a routine mammogram", "a CT scan"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the pathology and the oncology plan.", f: { test: "the pathology and the oncology plan", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Genetic testing discussion", description: "Discuss genetic testing if the family history warrants it.", f: { test: "the genetic counseling plan", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the wound care, the medications, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Return to activity", description: "Define the lifting restrictions during recovery.", f: { test: "the activity tolerance", wrongTests: ["a routine X-ray", "a stress test"] } },
-      { kind: "postop", title: "Cosmetic expectations", description: "Set realistic expectations for the breast appearance.", f: { test: "the cosmetic expectations", wrongTests: ["a routine mammogram", "a CT scan"] } },
-      { kind: "postop", title: "Nutritional support", description: "Advise on nutrition to support wound healing.", f: { test: "the nutritional plan", wrongTests: ["a routine blood panel", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for hematoma", description: "Day 1: the breast is swollen and tense.",
+        choices: [
+          "Examine; if a tense, enlarging hematoma, return to theatre to evacuate it.",
+          "Aspirate the hematoma repeatedly in clinic.",
+          "Apply a tight bandage and discharge.",
+        ],
+        feedback: [
+          "An expanding hematoma needs evacuation and control of the bleeding.",
+          "Repeated aspiration introduces bacteria into the cavity.",
+          "A tight bandage doesn't stop an active bleed.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
+      {
+        kind: "postop", title: "Arm and shoulder care", description: "After sentinel node biopsy.",
+        choices: [
+          "Start gentle shoulder exercises from day 1, increasing over 2 weeks.",
+          "Keep the arm in a sling for 4 weeks.",
+          "Start heavy weight training right away.",
+        ],
+        feedback: [
+          "Early gentle movement prevents stiffness.",
+          "A sling stiffens the shoulder and raises the clot risk.",
+          "Heavy lifting early can bleed into the axilla.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "Breast and axillary wounds.",
+        choices: [
+          "Keep dry for 48 hours, wear a supportive bra, and watch for redness.",
+          "Soak in a bath from day 1.",
+          "Leave the dressings for 3 weeks.",
+        ],
+        feedback: [
+          "Support and simple care help healing.",
+          "Soaking fresh wounds lets bacteria in.",
+          "Old dressings hide an infection.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Lymphedema education", description: "After sentinel node biopsy.",
+        choices: [
+          "Explain the low but real lymphedema risk and to report arm swelling early.",
+          "Say lymphedema can't happen after sentinel biopsy.",
+          "Ban all use of the arm for life.",
+        ],
+        feedback: [
+          "Early reporting allows early treatment.",
+          "Missed early swelling becomes chronic, and a swollen arm is prone to cellulitis.",
+          "Disuse doesn't prevent lymphedema and stiffens the shoulder.",
+        ],
+        wrongComps: ["infection", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Pain control", description: "Pain 5/10.",
+        choices: [
+          "Regular paracetamol and an NSAID, with short-course opioid if needed.",
+          "Round-the-clock opioid for 2 weeks.",
+          "High-dose aspirin as the only analgesic.",
+        ],
+        feedback: [
+          "Multimodal analgesia is enough for most.",
+          "Long opioid use risks respiratory depression.",
+          "High-dose aspirin impairs platelets and bleeds into the cavity.",
+        ],
+        wrongComps: ["hypoxia", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Review the sentinel node result", description: "Pathology is back.",
+        choices: [
+          "Review margins and node status at the MDT and plan radiotherapy or further surgery.",
+          "Tell the patient the result only if they ask.",
+          "Skip the MDT and start chemotherapy for everyone.",
+        ],
+        feedback: [
+          "MDT review directs adjuvant treatment.",
+          "Positive margins left unaddressed let the cancer recur.",
+          "Chemotherapy without indication causes infection risk from neutropenia.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Breast self-examination guidance", description: "Surveillance plan.",
+        choices: [
+          "Annual mammography plus breast awareness, reporting new lumps promptly.",
+          "No imaging needed after lumpectomy.",
+          "Monthly CT scans.",
+        ],
+        feedback: [
+          "Standard surveillance catches recurrence early.",
+          "A recurrence is found late.",
+          "Frequent CT adds radiation and contrast reactions without benefit.",
+        ],
+        wrongComps: ["infection", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the review.",
+        choices: [
+          "Review at 1–2 weeks with the pathology and the oncology plan.",
+          "Review at 6 months.",
+          "No review — the GP will handle it.",
+        ],
+        feedback: [
+          "Early review delivers results and checks the wound.",
+          "A wound infection or seroma goes unnoticed.",
+          "Results must be discussed by the treating team.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Genetic testing discussion", description: "Mother had breast cancer at 45.",
+        choices: [
+          "Refer for genetic counselling given the family history; start no hormone therapy until reviewed.",
+          "Start combined HRT now for menopausal symptoms while testing is arranged.",
+          "Arrange risk-reducing mastectomy next week before any counselling.",
+        ],
+        feedback: [
+          "Counselling guides testing and prevention without adding risk now.",
+          "Estrogen-containing HRT after breast cancer is contraindicated and raises the clot risk.",
+          "Rushed extra surgery on fresh tissue adds bleeding and infection risk before the facts are known.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Going home the same day.",
+        choices: [
+          "Give written advice: wound care, arm exercises, fever, swelling, or calf pain.",
+          "Give no written advice.",
+          "Tell the patient breast swelling is always normal.",
+        ],
+        feedback: [
+          "Clear advice catches complications.",
+          "Infection is reported late.",
+          "A hematoma can be missed.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Return to activity", description: "The patient asks about the gym.",
+        choices: [
+          "Light activity immediately; heavy lifting after about 2 weeks.",
+          "Bed rest for a week.",
+          "Heavy upper-body weights next day.",
+        ],
+        feedback: [
+          "Graded activity aids recovery.",
+          "Bed rest raises the clot risk.",
+          "Heavy lifting early bleeds into the wound.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Cosmetic expectations", description: "The patient asks about appearance.",
+        choices: [
+          "Explain some change in shape is common and radiotherapy can alter it; revision is possible later.",
+          "Promise the breast will look unchanged.",
+          "Recommend immediate re-excision for appearance.",
+        ],
+        feedback: [
+          "Realistic expectations reduce distress.",
+          "Unmet expectations lead to unnecessary early surgery — and its infection risk.",
+          "Early re-operation adds surgical risk.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Nutritional support", description: "Diet advice.",
+        choices: [
+          "Balanced diet with adequate protein; no special supplements needed.",
+          "High-dose vitamin E and fish oil before radiotherapy.",
+          "Fast to 'starve the cancer'.",
+        ],
+        feedback: [
+          "A balanced diet supports healing.",
+          "High-dose vitamin E and fish oil impair clotting — the wound bleeds.",
+          "Fasting impairs healing and immunity.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       {
         kind: "postop", title: "Plan the pathology conversation", description: "Prepare for the margin and node results.",
         choices: [
@@ -442,7 +728,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the inner ear", "the eustachian tube orifice"],
       test: "a check of the graft position and ossicular continuity",
       wrongTests: ["an on-table audiogram", "a CT scan"],
-      risks: ["infection", "nerve_injury", "hemorrhage"],
+      risks: ["infection", "nerve_injury", "hemorrhage", "fluid_overload", "cardiac_arrhythmia", "hypoxia", "thrombosis", "anaphylaxis"],
       instrument: "a microscope and a pick",
       position: "supine with the head rotated",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -567,20 +853,202 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         wrongComps: ["infection", "hemorrhage"],
       },
       { kind: "dvt", title: "DVT prophylaxis", description: "Standard prophylaxis for a short ENT case." },
-      { kind: "postop", title: "Ear protection rules", description: "Review the water and pressure precautions.", f: { test: "the ear protection compliance", wrongTests: ["a routine audiogram", "a CT scan"] } },
-      { kind: "postop", title: "Sneeze and nose-blow rules", description: "Explain why nose-blowing must be avoided.", f: { test: "the eustachian tube pressure control", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Watch for graft infection", description: "Monitor for discharge and otorrhea.", f: { test: "the ear for discharge", wrongTests: ["a routine culture", "a CT scan"] } },
-      { kind: "postop", title: "Pain control", description: "Plan the analgesia for the ear.", f: { test: "the pain scores", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Balance and dizziness monitoring", description: "Watch for vertigo suggesting inner ear involvement.", f: { test: "the balance symptoms", wrongTests: ["a routine audiogram", "a CT scan"] } },
-      { kind: "postop", title: "Hearing aid consideration", description: "Discuss the hearing follow-up and the audiogram timing.", f: { test: "the follow-up audiogram", wrongTests: ["a routine CT scan", "a blood panel"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the otoscopy and the audiogram at follow-up.", f: { test: "the graft take and the audiogram", wrongTests: ["a routine MRI", "a CT scan"] } },
-      { kind: "postop", title: "Return to swimming", description: "Define when the ear can be exposed to water again.", f: { test: "the graft healing status", wrongTests: ["a routine audiogram", "a CT scan"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the ear care and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Long-term hearing expectations", description: "Set realistic expectations for the hearing outcome.", f: { test: "the hearing outcome expectations", wrongTests: ["a routine audiogram", "a CT scan"] } },
-      { kind: "postop", title: "Travel and pressure advice", description: "Advise on flying and pressure changes during healing.", f: { test: "the pressure-change precautions", wrongTests: ["a routine audiogram", "a CT scan"] } },
-      { kind: "postop", title: "Tinnitus counseling", description: "Discuss tinnitus expectations if present preoperatively.", f: { test: "the tinnitus symptoms", wrongTests: ["a routine audiogram", "a CT scan"] } },
-      { kind: "postop", title: "Ear cleaning rules", description: "Explain how to keep the ear clean safely.", f: { test: "the ear cleaning routine", wrongTests: ["a routine culture", "a CT scan"] } },
-      { kind: "postop", title: "Contact rules", description: "Advise against inserting anything into the ear.", f: { test: "the ear contact rules", wrongTests: ["a routine X-ray", "a CT scan"] } },
+      {
+        kind: "postop", title: "Ear protection rules", description: "Going home the same day.",
+        choices: [
+          "Keep the ear dry with a cotton ball and petroleum jelly when showering until the surgeon clears it.",
+          "Let water run into the ear when showering — it cleans the canal.",
+          "Flush the ear with water daily to keep it clean.",
+        ],
+        feedback: [
+          "A dry ear protects the graft from infection.",
+          "Water in the canal carries bacteria onto the fresh graft.",
+          "Flushing washes out the packing and infects the graft.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Sneeze and nose-blow rules", description: "The patient has hay fever.",
+        choices: [
+          "Sneeze with the mouth open and avoid nose-blowing for 2–3 weeks.",
+          "Blow the nose firmly to clear congestion.",
+          "Pinch the nose and hold in sneezes.",
+        ],
+        feedback: [
+          "Open-mouth sneezing avoids pressure on the graft.",
+          "Forceful blowing pushes air up the Eustachian tube and lifts the graft, and the canal bleeds.",
+          "Holding in sneezes drives pressure into the middle ear and displaces the graft.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
+      {
+        kind: "postop", title: "Watch for graft infection", description: "Day 7: smelly discharge from the ear.",
+        choices: [
+          "Review promptly, swab the discharge, and start antibiotic ear drops as directed.",
+          "Ignore the discharge — it is just melting packing.",
+          "Clean the canal deeply with a cotton bud.",
+        ],
+        feedback: [
+          "Early treatment of infection can save the graft.",
+          "Foul discharge is infection, not packing.",
+          "Cotton buds push infection deeper and tear the canal skin, which bleeds.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Pain control", description: "Pain 3/10.",
+        choices: [
+          "Regular paracetamol, with ibuprofen if needed.",
+          "Strong opioids around the clock for a week.",
+          "High-dose aspirin as the only analgesic.",
+        ],
+        feedback: [
+          "Simple analgesia is usually enough after tympanoplasty.",
+          "Round-the-clock opioids cause sedation and respiratory depression.",
+          "High-dose aspirin impairs platelets and the canal bleeds.",
+        ],
+        wrongComps: ["hypoxia", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Balance and dizziness monitoring", description: "Day 1: the patient reports spinning dizziness.",
+        choices: [
+          "Examine for nystagmus and facial weakness; persistent vertigo needs urgent ENT review.",
+          "Reassure that dizziness is always normal after ear surgery.",
+          "Give sedatives and discharge.",
+        ],
+        feedback: [
+          "Persistent vertigo can mean inner-ear injury that needs early treatment.",
+          "Missed inner-ear injury leads to permanent hearing loss and imbalance.",
+          "Sedation masks the symptoms and the patient can fall.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Hearing aid consideration", description: "The patient asks about hearing.",
+        choices: [
+          "Check an audiogram at about 3 months once the packing is gone.",
+          "Fit a hearing aid in the operated ear this week.",
+          "Test the hearing on day 1 with the packing in place.",
+        ],
+        feedback: [
+          "Hearing is assessed once the ear has healed.",
+          "A hearing aid mould in a fresh canal introduces infection.",
+          "Testing through packing gives a false result.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the review.",
+        choices: [
+          "Review at 2–3 weeks to remove packing and check the graft.",
+          "Review at 6 months only.",
+          "Remove the packing at home.",
+        ],
+        feedback: [
+          "Timed review checks the graft take and removes packing.",
+          "Infection or graft failure goes unnoticed.",
+          "Self-removal can pull the graft out and infect the ear.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Return to swimming", description: "The patient swims weekly.",
+        choices: [
+          "No swimming until the graft is confirmed healed, usually 6–8 weeks.",
+          "Swim next week with a swim cap.",
+          "Swim now — the graft is protected by the packing.",
+        ],
+        feedback: [
+          "Waiting for a healed graft prevents infection.",
+          "Water still enters the canal under a cap.",
+          "Packing soaks up pool water and infects the ear.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Going home the same day.",
+        choices: [
+          "Give written advice: keep the ear dry, no nose-blowing, return for discharge, severe pain, dizziness, or facial weakness.",
+          "Give no written advice.",
+          "Tell the patient facial weakness is expected.",
+        ],
+        feedback: [
+          "Clear advice catches infection and nerve injury early.",
+          "Without advice, infection is reported late.",
+          "Facial weakness can mean a facial nerve injury.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Long-term hearing expectations", description: "Setting expectations.",
+        choices: [
+          "Explain the aim is a closed, dry ear; hearing may improve but is not guaranteed.",
+          "Promise normal hearing.",
+          "Tell the patient hearing will get worse.",
+        ],
+        feedback: [
+          "Honest expectations improve satisfaction.",
+          "False promises lead to early re-operation and its risks.",
+          "Unwarranted pessimism is inaccurate.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Travel and pressure advice", description: "The patient plans to fly next week.",
+        choices: [
+          "Avoid flying for about 2 weeks; if unavoidable, use decongestants and swallow during descent.",
+          "Fly freely — the graft is secure.",
+          "Scuba dive after 2 weeks.",
+        ],
+        feedback: [
+          "Pressure changes can lift a fresh graft.",
+          "Cabin pressure changes can displace the graft and bleed.",
+          "Diving pressures injure the inner ear.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Tinnitus counseling", description: "Pre-existing tinnitus.",
+        choices: [
+          "Explain tinnitus may improve, stay, or rarely worsen; report sudden change.",
+          "Promise the tinnitus will stop.",
+          "Ignore tinnitus questions.",
+        ],
+        feedback: [
+          "Realistic advice and red flags help the patient.",
+          "A sudden worsening could signal inner-ear injury and is dismissed.",
+          "Unaddressed concerns delay reporting new symptoms.",
+        ],
+        wrongComps: ["nerve_injury", "infection"],
+      },
+      {
+        kind: "postop", title: "Ear cleaning rules", description: "The patient asks about wax.",
+        choices: [
+          "Clean only the outer ear with a cloth; no cotton buds in the canal.",
+          "Use cotton buds daily in the canal.",
+          "Use ear candles to draw out debris.",
+        ],
+        feedback: [
+          "Leaving the canal alone protects the graft.",
+          "Cotton buds tear the canal skin and push bacteria to the graft.",
+          "Ear candles can burn the canal and graft.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Contact rules", description: "Contact sport questions.",
+        choices: [
+          "Avoid contact sport and heavy straining for 4–6 weeks.",
+          "Resume rugby next week.",
+          "Heavy lifting from day 2.",
+        ],
+        feedback: [
+          "Avoiding trauma and straining protects the graft.",
+          "A blow to the ear can displace the graft and bleed.",
+          "Straining raises pressure and the canal bleeds.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
       {
         kind: "postop", title: "Plan the post-op course", description: "Define ear protection and monitoring.",
         choices: [
@@ -644,7 +1112,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the femoral neck", "the distal femur"],
       test: "fluoroscopic confirmation of the nail and the reduction",
       wrongTests: ["an on-table MRI", "a bone scan"],
-      risks: ["hemorrhage", "hypoxia", "infection", "nerve_injury", "thrombosis"],
+      risks: ["hemorrhage", "hypoxia", "infection", "nerve_injury", "thrombosis", "fluid_overload", "cardiac_arrhythmia", "anaphylaxis"],
       instrument: "an intramedullary nail and a guide wire",
       position: "supine on a traction table",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -815,16 +1283,146 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       { kind: "verify", title: "Confirm the screw lengths", description: "Check the locking screws do not protrude excessively.", f: { test: "the screw lengths and the positions", wrongTests: ["an on-table MRI", "a CT scan"] } },
       { kind: "closure", title: "Close the wounds", description: "Close the entry and screw sites.", f: { structure: "the entry wound and screw incisions" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Long-bone fractures carry a high thrombosis risk." },
-      { kind: "postop", title: "Watch for compartment syndrome", description: "Teach the early signs of compartment syndrome.", f: { test: "the leg for pain out of proportion and swelling", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Monitor the distal pulses", description: "Confirm the foot pulses and the capillary refill.", f: { test: "the distal pulses and the capillary refill", wrongTests: ["a routine X-ray", "a Doppler of the leg"] } },
-      { kind: "postop", title: "Pain control", description: "Plan the analgesia for the fracture pain.", f: { test: "the pain scores", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Wound care", description: "Define the wound care for the entry and screw sites.", f: { test: "the wounds for infection signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Watch for fat embolism signs", description: "Monitor for confusion, hypoxia, and petechiae.", f: { test: "the fat embolism warning signs", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Physiotherapy plan", description: "Start the early range-of-motion therapy.", f: { test: "the knee and hip range of motion", wrongTests: ["a routine X-ray", "a nerve study"] } },
-      { kind: "postop", title: "Weight-bearing plan", description: "Define the weight-bearing progression.", f: { test: "the weight-bearing tolerance", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the serial X-rays until union.", f: { test: "the fracture union on X-ray", wrongTests: ["a routine MRI", "a bone scan"] } },
-      { kind: "postop", title: "Hardware considerations", description: "Discuss the future hardware removal if symptomatic.", f: { test: "the hardware symptoms", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the weight-bearing plan and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for compartment syndrome", description: "Day 1: severe thigh pain not relieved by morphine.",
+        choices: [
+          "Examine for pain on passive stretch and tense compartments; measure pressures and decompress if raised.",
+          "Increase the morphine dose and recheck in 4 hours.",
+          "Elevate the leg high and wrap it tightly.",
+        ],
+        feedback: [
+          "Pain out of proportion is compartment syndrome until proven otherwise — fasciotomy saves the leg.",
+          "Masking the pain lets the muscle and nerves die.",
+          "Tight wrapping and high elevation lower perfusion and worsen compartment syndrome.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Monitor the distal pulses", description: "Day 0 in recovery.",
+        choices: [
+          "Check the foot pulses, capillary refill, and sensation hourly at first.",
+          "Check only at the morning ward round.",
+          "Skip the check — the fracture was closed.",
+        ],
+        feedback: [
+          "Early neurovascular checks catch vascular injury and compartment syndrome.",
+          "An arterial injury from the fracture or reaming can be missed for hours.",
+          "A closed fracture can still injure the vessels and nerves.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Pain control", description: "Pain 8/10 on day 1.",
+        choices: [
+          "Multimodal analgesia: paracetamol, regular opioid with monitoring, and a nerve block if available.",
+          "Opioid infusion without monitoring.",
+          "Paracetamol only — strong pain helps the patient stay still.",
+        ],
+        feedback: [
+          "Multimodal analgesia allows early movement safely.",
+          "An unmonitored opioid infusion depresses breathing.",
+          "Uncontrolled pain keeps the patient in bed and raises the clot risk.",
+        ],
+        wrongComps: ["hypoxia", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "Entry and locking-screw wounds.",
+        choices: [
+          "Keep the wounds dry and check them before discharge.",
+          "Leave the dressings untouched for 4 weeks.",
+          "Apply antibiotic ointment daily as routine.",
+        ],
+        feedback: [
+          "Simple wound care prevents infection.",
+          "Covered wounds hide an infection over the nail.",
+          "Topical antibiotics add no benefit and cause allergic reactions.",
+        ],
+        wrongComps: ["infection", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Watch for fat embolism signs", description: "Day 2: new confusion and SpO₂ 90%.",
+        choices: [
+          "Recognize fat embolism, give oxygen, support breathing, and escalate to critical care.",
+          "Put the confusion down to the opioids and stop them.",
+          "Give a large fluid bolus and recheck later.",
+        ],
+        feedback: [
+          "Fat embolism after a femoral fracture needs prompt respiratory support.",
+          "Mistaking fat embolism for opioid effect delays treatment while hypoxia worsens.",
+          "Fat embolism injures the lungs — a large bolus floods them.",
+        ],
+        wrongComps: ["hypoxia", "fluid_overload"],
+      },
+      {
+        kind: "postop", title: "Physiotherapy plan", description: "Day 1.",
+        choices: [
+          "Start knee and hip movement and walking with crutches.",
+          "Keep the leg immobilized for 6 weeks.",
+          "Start running drills in the first week.",
+        ],
+        feedback: [
+          "Early motion prevents stiffness and clots.",
+          "Immobilization raises the clot risk.",
+          "Running before union loads the nail and the screws can break.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Weight-bearing plan", description: "A stable, locked nail.",
+        choices: [
+          "Weight-bear as tolerated with crutches for a stable fracture pattern.",
+          "Non-weight-bearing for 3 months.",
+          "Full weight without aids from day 1.",
+        ],
+        feedback: [
+          "Stable nailed fractures tolerate early loading.",
+          "Prolonged non-weight-bearing raises the clot risk and weakens the leg.",
+          "Walking without aids risks a fall onto the fresh fracture.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the review.",
+        choices: [
+          "Review with X-rays at 6 weeks and every 6 weeks until union.",
+          "One review at 6 months.",
+          "No imaging unless there is pain.",
+        ],
+        feedback: [
+          "Serial X-rays track union and catch hardware failure.",
+          "A non-union or infection is missed.",
+          "Painless non-union still needs treatment.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Hardware considerations", description: "The patient asks if the nail will come out.",
+        choices: [
+          "Explain the nail usually stays; removal only if symptomatic after union.",
+          "Plan routine removal at 3 months.",
+          "Tell the patient the nail must come out within a year.",
+        ],
+        feedback: [
+          "Routine removal adds surgical risk without benefit.",
+          "Removal before union risks refracture and bleeding.",
+          "Unnecessary surgery adds infection risk.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Going home on day 4.",
+        choices: [
+          "Give written advice on crutches, the wound, calf pain, breathlessness, and fever.",
+          "Give only the crutch leaflet.",
+          "Tell the patient breathlessness is normal after a fracture.",
+        ],
+        feedback: [
+          "Clear warning signs catch clots and infection early.",
+          "Without wound advice, infection is reported late.",
+          "Breathlessness can be a pulmonary embolus.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
       {
         kind: "postop", title: "Plan mobilization", description: "Define weight-bearing.",
         choices: [
@@ -888,7 +1486,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the biceps tendon", "the subscapularis"],
       test: "probing the repair for security and footprint coverage",
       wrongTests: ["an on-table MRI", "a stress radiograph"],
-      risks: ["nerve_injury", "infection", "hemorrhage", "thrombosis"],
+      risks: ["nerve_injury", "infection", "hemorrhage", "thrombosis", "fluid_overload", "cardiac_arrhythmia", "hypoxia", "anaphylaxis"],
       instrument: "an arthroscope and suture anchors",
       position: "beach-chair or lateral decubitus",
       wrongPositions: ["prone", "supine with the arm adducted"],
@@ -1029,18 +1627,174 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       },
       { kind: "closure", title: "Close the portals", description: "Close the portal sites.", f: { structure: "the portal sites" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Standard prophylaxis for shoulder surgery." },
-      { kind: "postop", title: "Sling positioning", description: "Define the sling use and the passive motion plan.", f: { test: "the sling and the passive motion schedule", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Watch for stiffness", description: "Monitor the range of motion at the follow-up.", f: { test: "the passive range of motion", wrongTests: ["a routine MRI", "a CT scan"] } },
-      { kind: "postop", title: "Pain control", description: "Plan the analgesia and the cryotherapy.", f: { test: "the pain scores", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Wound care", description: "Define the portal wound care.", f: { test: "the portals for infection signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Home exercise program", description: "Provide the passive and assisted exercises.", f: { test: "the home exercise compliance", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Return-to-work plan", description: "Define the work restrictions based on the job.", f: { test: "the functional tolerance", wrongTests: ["a routine X-ray", "a stress test"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up to review motion and healing.", f: { test: "the motion and the healing at follow-up", wrongTests: ["a routine MRI", "a CT scan"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the sling use, the medications, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Long-term retear risk", description: "Discuss the retear risk and the protective strategies.", f: { test: "the retear risk factors", wrongTests: ["a routine MRI", "a CT scan"] } },
-      { kind: "postop", title: "Return-to-sport plan", description: "Define the sport-specific return criteria.", f: { test: "the sport readiness", wrongTests: ["a routine MRI", "a stress test"] } },
-      { kind: "postop", title: "Sleep positioning", description: "Advise on the sleeping position that protects the repair.", f: { test: "the sleep positioning", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Avoidance rules", description: "List the movements to avoid during healing.", f: { test: "the avoidance rules", wrongTests: ["a routine X-ray", "a CT scan"] } },
+      {
+        kind: "postop", title: "Sling positioning", description: "Going home the same day.",
+        choices: [
+          "Wear the sling with a small abduction pillow for about 6 weeks, removing it for elbow and hand exercises.",
+          "Remove the sling after 2 days.",
+          "Keep the arm strapped to the body without moving the elbow for 6 weeks.",
+        ],
+        feedback: [
+          "Protected positioning with elbow motion is standard after cuff repair.",
+          "Early removal stresses the repair and it can pull out, tearing the suprascapular vessels.",
+          "Total immobilization stiffens the elbow and the swollen arm raises the clot risk.",
+        ],
+        wrongComps: ["hemorrhage", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Watch for stiffness", description: "At 6 weeks the shoulder is stiff.",
+        choices: [
+          "Progress the physiotherapy with guided passive and active-assisted motion.",
+          "Manipulate the shoulder forcefully in clinic.",
+          "Advise resting the arm until the stiffness passes.",
+        ],
+        feedback: [
+          "Guided therapy restores motion without risking the repair.",
+          "Forceful manipulation can tear the repair and stretch the nerves.",
+          "Rest worsens the stiffness.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Pain control", description: "Pain 7/10 on day 1.",
+        choices: [
+          "Regular paracetamol, short-course NSAID if suitable, and oral opioid for breakthrough; ice packs.",
+          "Opioids around the clock for 6 weeks.",
+          "No pain relief — pain protects the repair.",
+        ],
+        feedback: [
+          "Multimodal analgesia allows rehab with little opioid.",
+          "Long opioid courses risk dependence and respiratory depression.",
+          "Uncontrolled pain prevents rehab and sleep.",
+        ],
+        wrongComps: ["hypoxia", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "Three small arthroscopic portals.",
+        choices: [
+          "Keep the portals dry for 48 hours, then shower; watch for redness or discharge.",
+          "Soak the shoulder in a bath from day 1.",
+          "Leave the dressings on for 3 weeks.",
+        ],
+        feedback: [
+          "Simple portal care prevents infection.",
+          "Soaking fresh portals lets bacteria in.",
+          "Dressings left for weeks hide an infection.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Home exercise program", description: "Week 1.",
+        choices: [
+          "Pendulum and passive exercises as taught, with elbow, wrist, and hand movement.",
+          "Active lifting of the arm overhead from week 1.",
+          "No exercises until 3 months.",
+        ],
+        feedback: [
+          "Passive motion protects the repair while preventing stiffness.",
+          "Active lifting early pulls the repair apart.",
+          "No movement leads to a frozen shoulder.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Return-to-work plan", description: "The patient works as a painter.",
+        choices: [
+          "Light one-handed work early; overhead work only after strength returns, around 4–6 months.",
+          "Return to overhead painting at 2 weeks.",
+          "Stay off work for a year.",
+        ],
+        feedback: [
+          "A graded return matches tendon healing.",
+          "Overhead work early re-tears the repair.",
+          "Long inactivity weakens the arm and slows recovery.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the review.",
+        choices: [
+          "Review at 2 weeks for the wounds and at 6 weeks to progress rehab.",
+          "One review at 6 months.",
+          "No review unless there is pain.",
+        ],
+        feedback: [
+          "Staged reviews catch stiffness and infection.",
+          "A late review misses early stiffness and infection.",
+          "Stiffness is often painless at first.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Going home the same day.",
+        choices: [
+          "Give written sling rules, wound care, and reasons to return: fever, spreading redness, numb hand.",
+          "Give no written advice.",
+          "Tell the patient a numb hand is normal after shoulder surgery.",
+        ],
+        feedback: [
+          "Clear advice catches infection and nerve problems.",
+          "Without advice, an infection is reported late.",
+          "A persistently numb hand can mean a nerve injury from the block or the surgery.",
+        ],
+        wrongComps: ["infection", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Long-term retear risk", description: "The patient asks about retear.",
+        choices: [
+          "Explain the retear risk rises with age and tear size; follow rehab and avoid early heavy lifting.",
+          "Promise the repair can never tear again.",
+          "Advise avoiding all shoulder use forever.",
+        ],
+        feedback: [
+          "Honest counselling improves adherence.",
+          "Overconfidence leads to early heavy use and retear.",
+          "Disuse causes stiffness and weakness.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Return-to-sport plan", description: "The patient plays tennis.",
+        choices: [
+          "Return to sport at about 6 months after strength testing.",
+          "Play tennis at 6 weeks.",
+          "Never play tennis again.",
+        ],
+        feedback: [
+          "Strength-tested return to tennis protects the healing tendon.",
+          "Serving at 6 weeks re-tears the cuff.",
+          "Most patients can return to sport after rehab.",
+        ],
+        wrongComps: ["nerve_injury", "thrombosis"],
+      },
+      {
+        kind: "postop", title: "Sleep positioning", description: "The patient can't sleep.",
+        choices: [
+          "Sleep semi-reclined with the sling on and a pillow behind the elbow.",
+          "Sleep lying on the operated shoulder.",
+          "Take the sling off to sleep flat.",
+        ],
+        feedback: [
+          "Semi-reclined sleep protects the repair and eases pain.",
+          "Lying on the shoulder compresses and stresses the repair.",
+          "Without the sling the arm falls and pulls the repair.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Avoidance rules", description: "List the movements to avoid.",
+        choices: [
+          "Avoid lifting, pushing, or reaching behind the back with the operated arm for 6 weeks.",
+          "Only avoid swimming.",
+          "No restrictions after the wounds heal.",
+        ],
+        feedback: [
+          "Clear rules protect the healing tendon.",
+          "Other movements can still pull the repair apart.",
+          "Wound healing doesn't mean the tendon has healed.",
+        ],
+        wrongComps: ["nerve_injury", "hemorrhage"],
+      },
       {
         kind: "postop", title: "Plan the sling and rehab", description: "Protect the repair during healing.",
         choices: [
@@ -1104,7 +1858,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the maxillary sinus", "the orbital rim"],
       test: "a check of the airway and the symmetry of the result",
       wrongTests: ["an on-table CT", "a rhinomanometry test"],
-      risks: ["hypoxia", "hemorrhage", "infection"],
+      risks: ["hypoxia", "hemorrhage", "infection", "fluid_overload", "cardiac_arrhythmia", "thrombosis", "anaphylaxis"],
       instrument: "a nasal speculum and a rasp",
       position: "supine with the head elevated",
       wrongPositions: ["prone", "Trendelenburg"],
@@ -1217,19 +1971,188 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         wrongComps: ["infection", "hypoxia"],
       },
       { kind: "dvt", title: "DVT prophylaxis", description: "Standard prophylaxis for nasal surgery." },
-      { kind: "postop", title: "Splint care", description: "Define the splint and the dressing care.", f: { test: "the splint and the dressing", wrongTests: ["a routine CT", "an X-ray"] } },
-      { kind: "postop", title: "Watch for bleeding", description: "Monitor for epistaxis in the first 24 hours.", f: { test: "the nasal bleeding", wrongTests: ["a routine CT", "a blood panel"] } },
-      { kind: "postop", title: "Sleep position", description: "Advise on the head elevation during sleep.", f: { test: "the sleep positioning", wrongTests: ["a routine CT", "an X-ray"] } },
-      { kind: "postop", title: "Glasses restriction", description: "Explain why glasses must not rest on the nose.", f: { test: "the glasses restriction", wrongTests: ["a routine CT", "a rhinomanometry test"] } },
-      { kind: "postop", title: "Pain control", description: "Plan the analgesia for the nose.", f: { test: "the pain scores", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Inspect for septal hematoma", description: "Inspect the septum for a hematoma at follow-up.", f: { test: "the septum for hematoma", wrongTests: ["a routine CT", "an X-ray"] } },
-      { kind: "postop", title: "Airway assessment", description: "Confirm the nasal airway is patent at the follow-up.", f: { test: "the nasal airway patency", wrongTests: ["a rhinomanometry test", "a CT scan"] } },
-      { kind: "postop", title: "Scar management", description: "Advise on the columellar scar care.", f: { test: "the columellar scar", wrongTests: ["a routine CT", "a biopsy"] } },
-      { kind: "postop", title: "Swelling expectations", description: "Set expectations for the swelling and the final result timeline.", f: { test: "the swelling expectations", wrongTests: ["a routine CT", "a rhinomanometry test"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the splint removal and the serial reviews.", f: { test: "the healing and the symmetry at follow-up", wrongTests: ["a routine CT", "a rhinomanometry test"] } },
-      { kind: "postop", title: "Return to activity", description: "Define the activity and the sun-exposure restrictions.", f: { test: "the activity tolerance", wrongTests: ["a routine CT", "a stress test"] } },
-      { kind: "postop", title: "Makeup and skin care", description: "Advise on the skin care during healing.", f: { test: "the skin care routine", wrongTests: ["a routine CT", "a biopsy"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the splint care, the medications, and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine CT", "an X-ray"] } },
+      {
+        kind: "postop", title: "Splint care", description: "External splint and internal splints in place.",
+        choices: [
+          "Keep the splint dry and in place for about a week until removal in clinic.",
+          "Remove the splint at home after 2 days.",
+          "Wet the splint in the shower daily.",
+        ],
+        feedback: [
+          "The splint supports the new shape while swelling settles.",
+          "Early removal lets the bones shift and the nose bleeds.",
+          "A wet splint loosens and harbors bacteria.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
+      {
+        kind: "postop", title: "Watch for bleeding", description: "Day 0: light ooze from the nose.",
+        choices: [
+          "Expect light ooze; sit up, apply gentle pressure, and seek help for a steady bleed.",
+          "Blow the nose to clear the clots.",
+          "Lie flat to stop the bleeding.",
+        ],
+        feedback: [
+          "Head-up and pressure control a normal ooze.",
+          "Blowing dislodges clots and restarts bleeding.",
+          "Lying flat raises nasal venous pressure and blood runs into the throat.",
+        ],
+        wrongComps: ["hemorrhage", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Sleep position", description: "The patient asks how to sleep.",
+        choices: [
+          "Sleep with the head elevated on two pillows for a week.",
+          "Sleep face-down to protect the nose.",
+          "Sleep flat without pillows.",
+        ],
+        feedback: [
+          "Elevation reduces swelling and bleeding.",
+          "Face-down sleep presses on the splint and shifts the bones.",
+          "Flat sleep increases swelling and nasal obstruction.",
+        ],
+        wrongComps: ["hemorrhage", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Glasses restriction", description: "The patient wears glasses.",
+        choices: [
+          "Tape the glasses to the forehead or use contacts for 4–6 weeks.",
+          "Wear glasses normally from day 1.",
+          "Wear heavy sunglasses over the splint.",
+        ],
+        feedback: [
+          "Taping avoids pressure on the healing nasal bones.",
+          "Glasses pressing on the bones shift them and cause bleeding.",
+          "Heavy frames press on the dorsum.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Pain control", description: "Pain 4/10.",
+        choices: [
+          "Regular paracetamol, with short-course opioid if needed.",
+          "Round-the-clock opioid for 2 weeks.",
+          "High-dose ibuprofen and aspirin together.",
+        ],
+        feedback: [
+          "Simple analgesia is usually enough.",
+          "Long opioid use with nasal packing risks respiratory depression.",
+          "Combined antiplatelet effects cause nosebleeds.",
+        ],
+        wrongComps: ["hypoxia", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Inspect for septal hematoma", description: "Day 3: the patient reports a blocked nose and pain.",
+        choices: [
+          "Inspect the septum; drain a hematoma promptly and pack.",
+          "Reassure — a blocked nose is just swelling.",
+          "Prescribe a nasal decongestant spray for 2 weeks.",
+        ],
+        feedback: [
+          "A septal hematoma must be drained to prevent abscess and cartilage loss.",
+          "An undrained hematoma becomes an abscess and destroys the cartilage.",
+          "Long decongestant use causes rebound obstruction; the hematoma remains.",
+        ],
+        wrongComps: ["infection", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Airway assessment", description: "Review at 1 week.",
+        choices: [
+          "Check nasal airflow on both sides after splint removal and plan saline rinses.",
+          "Skip the airway check — the operation was cosmetic.",
+          "Pack both nostrils for another week.",
+        ],
+        feedback: [
+          "Checking airflow confirms the functional repair.",
+          "The septal work was for breathing; obstruction goes unnoticed.",
+          "Unneeded packing blocks breathing and harbors infection.",
+        ],
+        wrongComps: ["hypoxia", "infection"],
+      },
+      {
+        kind: "postop", title: "Scar management", description: "The columellar scar is healing.",
+        choices: [
+          "Keep the scar clean, moisturize once healed, and use sunscreen.",
+          "Apply steroid cream on the fresh wound.",
+          "Scrub the scar daily.",
+        ],
+        feedback: [
+          "Simple care gives the best scar.",
+          "Steroid on an unhealed wound delays healing and invites infection.",
+          "Scrubbing opens the wound.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Swelling expectations", description: "The patient worries about swelling.",
+        choices: [
+          "Explain most swelling settles in weeks, but the final result takes up to a year.",
+          "Promise the final shape at 1 week.",
+          "Recommend revision at 1 month.",
+        ],
+        feedback: [
+          "Realistic expectations reduce distress.",
+          "Unrealistic expectations lead to early revision.",
+          "Early revision operates on swollen tissue, raising bleeding and infection risk.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange the reviews.",
+        choices: [
+          "Remove the splint at 1 week, then review at 1, 3, and 12 months.",
+          "One review at 1 year.",
+          "Remove the splint at home.",
+        ],
+        feedback: [
+          "Serial reviews catch problems and track the result.",
+          "Early problems like infection or hematoma are missed.",
+          "Self-removal can shift the bones and cause bleeding.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Return to activity", description: "The patient plays basketball.",
+        choices: [
+          "Avoid contact sport for 6 weeks and strenuous exercise for 2–3 weeks.",
+          "Return to basketball next week.",
+          "Strenuous gym workouts from day 2.",
+        ],
+        feedback: [
+          "Avoiding trauma protects the nasal bones.",
+          "A knock to the nose early displaces the bones and bleeds.",
+          "Straining raises blood pressure and causes a nosebleed.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Makeup and skin care", description: "The patient asks about makeup.",
+        choices: [
+          "Avoid makeup on the nose until the splint is off and incisions heal.",
+          "Apply heavy makeup under the splint edges.",
+          "Use exfoliating scrubs on the nose.",
+        ],
+        feedback: [
+          "Waiting protects the wounds.",
+          "Makeup under the splint irritates and infects the skin.",
+          "Scrubs damage fragile skin.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Going home the same day.",
+        choices: [
+          "Give written advice: splint care, head-up sleep, heavy bleeding, fever, or blocked nose with pain.",
+          "Give no written advice.",
+          "Tell the patient a fever is normal after nose surgery.",
+        ],
+        feedback: [
+          "Clear advice catches bleeding and septal hematoma.",
+          "Heavy bleeding is reported late.",
+          "Fever can mean a septal abscess or sinusitis.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       {
         kind: "postop", title: "Plan post-op airway monitoring", description: "Airway obstruction can develop after nasal surgery.",
         choices: [
@@ -1293,7 +2216,7 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       wrongStructures: ["the thyroid nodule", "the thymus"],
       test: "intraoperative PTH measurement",
       wrongTests: ["a routine ultrasound", "an on-table biopsy of the thyroid"],
-      risks: ["nerve_injury", "hemorrhage", "hypoxia", "infection"],
+      risks: ["nerve_injury", "hemorrhage", "hypoxia", "infection", "fluid_overload", "cardiac_arrhythmia", "thrombosis", "anaphylaxis"],
       instrument: "a nerve monitor and a fine dissector",
       position: "supine with the neck extended",
       wrongPositions: ["prone", "lateral decubitus"],
@@ -1407,19 +2330,188 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
       { kind: "verify", title: "Confirm the baseline PTH drop", description: "Re-measure the PTH to confirm the cure.", f: { test: "the intraoperative PTH drop", wrongTests: ["a routine ultrasound", "a calcium panel"] } },
       { kind: "closure", title: "Close the neck", description: "Close the strap muscles and skin.", f: { structure: "the strap muscles and skin" } },
       { kind: "dvt", title: "DVT prophylaxis", description: "Standard prophylaxis for a short neck case." },
-      { kind: "postop", title: "Watch for hungry-bone syndrome", description: "Monitor for profound hypocalcemia in the first days.", f: { test: "the calcium levels", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Calcium supplementation", description: "Plan the calcium and vitamin D supplementation.", f: { test: "the calcium supplement plan", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Voice assessment", description: "Confirm the voice is clear before discharge.", f: { test: "the voice quality", wrongTests: ["a routine laryngoscopy", "a CT scan"] } },
-      { kind: "postop", title: "Wound care", description: "Define the neck wound care.", f: { test: "the neck wound for infection signs", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Neck hematoma watch", description: "Watch for swelling and airway compromise.", f: { test: "the neck for swelling", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Pain control", description: "Plan the analgesia for the neck.", f: { test: "the pain scores", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Calcium monitoring plan", description: "Define the serial calcium checks after discharge.", f: { test: "the serial calcium plan", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Clinic follow-up", description: "Arrange the follow-up with the calcium and the pathology.", f: { test: "the calcium and the pathology at follow-up", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Bone density plan", description: "Discuss the bone density follow-up for hyperparathyroidism.", f: { test: "the bone density assessment", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Discharge instructions", description: "Summarize the calcium plan and the warning signs.", f: { test: "the discharge instructions", wrongTests: ["a routine X-ray", "a CT scan"] } },
-      { kind: "postop", title: "Recurrence surveillance", description: "Define the calcium surveillance for recurrence.", f: { test: "the calcium surveillance", wrongTests: ["a routine ultrasound", "a CT scan"] } },
-      { kind: "postop", title: "Kidney stone prevention", description: "Discuss the kidney stone risk and the hydration plan.", f: { test: "the hydration plan", wrongTests: ["a routine blood panel", "a CT scan"] } },
-      { kind: "postop", title: "Medication review", description: "Review the medications that affect calcium.", f: { test: "the medication list", wrongTests: ["a routine blood panel", "a CT scan"] } },
+      {
+        kind: "postop", title: "Watch for hungry-bone syndrome", description: "Day 2: tingling around the mouth; calcium low.",
+        choices: [
+          "Give IV calcium, start oral calcium and calcitriol, and monitor calcium and ECG.",
+          "Reassure — tingling after neck surgery is normal.",
+          "Give a fluid bolus and recheck tomorrow.",
+        ],
+        feedback: [
+          "Hungry-bone hypocalcemia needs aggressive replacement and monitoring.",
+          "Untreated severe hypocalcemia causes tetany and arrhythmias.",
+          "Fluids don't correct calcium and can overload the patient.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "fluid_overload"],
+      },
+      {
+        kind: "postop", title: "Calcium supplementation", description: "Post-op calcium normal.",
+        choices: [
+          "Short course of oral calcium with a planned check at 1 week.",
+          "High-dose IV calcium daily for a month.",
+          "No calcium and no checks.",
+        ],
+        feedback: [
+          "Short oral supplementation with a check is standard.",
+          "Excess IV calcium causes hypercalcemia and arrhythmias.",
+          "A late hypocalcemia is missed.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Voice assessment", description: "Day 1: the voice is hoarse.",
+        choices: [
+          "Arrange laryngoscopy to assess the vocal cords.",
+          "Ignore it — hoarseness always passes.",
+          "Prescribe voice rest for 3 months without review.",
+        ],
+        feedback: [
+          "Laryngoscopy confirms cord function and guides therapy.",
+          "An RLN injury is missed and not rehabilitated.",
+          "Voice rest without diagnosis delays treatment.",
+        ],
+        wrongComps: ["nerve_injury", "hypoxia"],
+      },
+      {
+        kind: "postop", title: "Wound care", description: "Neck wound.",
+        choices: [
+          "Keep the wound dry for 48 hours, then shower; watch for swelling and redness.",
+          "Soak the neck in a bath from day 1.",
+          "Leave the dressing for 3 weeks.",
+        ],
+        feedback: [
+          "Simple care prevents infection.",
+          "Soaking a fresh wound lets bacteria in.",
+          "Old dressings hide infection.",
+        ],
+        wrongComps: ["infection", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Neck hematoma watch", description: "Two hours post-op: the neck is swelling.",
+        choices: [
+          "Open the wound at the bedside if breathing is threatened, and call for help.",
+          "Apply a tight neck bandage.",
+          "Wait for the morning review.",
+        ],
+        feedback: [
+          "A neck hematoma can obstruct the airway within minutes.",
+          "A tight bandage worsens airway compression.",
+          "Delay lets the hematoma close the airway.",
+        ],
+        wrongComps: ["hypoxia", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Pain control", description: "Pain 3/10.",
+        choices: [
+          "Paracetamol, with a short NSAID course if suitable.",
+          "Round-the-clock opioid for a week.",
+          "High-dose aspirin.",
+        ],
+        feedback: [
+          "Simple analgesia is enough.",
+          "Long opioids depress breathing.",
+          "Aspirin raises the risk of a neck hematoma.",
+        ],
+        wrongComps: ["hypoxia", "hemorrhage"],
+      },
+      {
+        kind: "postop", title: "Calcium monitoring plan", description: "Discharge plan.",
+        choices: [
+          "Check calcium at 1 week and at 6 months.",
+          "No calcium checks.",
+          "Daily calcium checks for a year.",
+        ],
+        feedback: [
+          "Timed checks confirm cure and catch hypocalcemia.",
+          "Persistent disease or hypocalcemia is missed.",
+          "Excessive venesection adds infection risk without benefit.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "infection"],
+      },
+      {
+        kind: "postop", title: "Clinic follow-up", description: "Arrange review.",
+        choices: [
+          "Review at 2–6 weeks with calcium, PTH, and pathology.",
+          "No review.",
+          "Review at 2 years.",
+        ],
+        feedback: [
+          "Early review confirms cure and checks the voice.",
+          "Persistent disease goes unnoticed.",
+          "Two years is too late.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "nerve_injury"],
+      },
+      {
+        kind: "postop", title: "Bone density plan", description: "Pre-op osteoporosis.",
+        choices: [
+          "Repeat bone density in 1–2 years and treat osteoporosis if persistent.",
+          "No follow-up.",
+          "Start high-dose calcium for life regardless.",
+        ],
+        feedback: [
+          "Bone density often improves after cure; follow-up guides treatment.",
+          "Fracture risk goes unmanaged.",
+          "Blanket calcium can cause hypercalcemia.",
+        ],
+        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Discharge instructions", description: "Going home.",
+        choices: [
+          "Give advice: tingling or cramps, neck swelling, breathing trouble, or voice change need urgent review.",
+          "Give no written advice.",
+          "Tell the patient tingling is normal.",
+        ],
+        feedback: [
+          "Clear advice catches hypocalcemia and hematoma.",
+          "A hematoma is reported late.",
+          "Tingling is hypocalcemia and can progress to arrhythmia.",
+        ],
+        wrongComps: ["hemorrhage", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Recurrence surveillance", description: "Long-term plan.",
+        choices: [
+          "Annual calcium check.",
+          "No surveillance.",
+          "Monthly neck CT.",
+        ],
+        feedback: [
+          "Simple calcium checks detect recurrence.",
+          "Recurrence is missed.",
+          "Frequent CT adds radiation and contrast reactions.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "anaphylaxis"],
+      },
+      {
+        kind: "postop", title: "Kidney stone prevention", description: "Previous stones.",
+        choices: [
+          "Encourage good hydration and review stone risk.",
+          "Restrict fluids.",
+          "Start high-dose vitamin D for life.",
+        ],
+        feedback: [
+          "Hydration lowers stone risk.",
+          "Dehydration promotes stones and infection.",
+          "Excess vitamin D raises calcium.",
+        ],
+        wrongComps: ["infection", "cardiac_arrhythmia"],
+      },
+      {
+        kind: "postop", title: "Medication review", description: "On thiazide and lithium.",
+        choices: [
+          "Review the thiazide and lithium with the prescribers, switching the thiazide if calcium stays high.",
+          "Stop every regular medication, including the antihypertensives, at discharge.",
+          "Add calcium tablets and vitamin D on top of the thiazide.",
+        ],
+        feedback: [
+          "A planned review removes calcium-raising drugs safely.",
+          "Stopping antihypertensives abruptly causes rebound hypertension and tachyarrhythmia.",
+          "Extra calcium on a thiazide pushes calcium up and triggers arrhythmias.",
+        ],
+        wrongComps: ["cardiac_arrhythmia", "fluid_overload"],
+      },
       {
         kind: "postop", title: "Monitor calcium", description: "The remaining glands may be suppressed.",
         choices: [
