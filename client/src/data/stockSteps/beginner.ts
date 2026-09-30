@@ -122,7 +122,20 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
         ],
         wrongComps: ["infection", "hemorrhage"],
       },
-      { kind: "vessel", title: "Control bleeding at the deep ring", description: "Cremasteric or spermatic vessels may bleed here.", f: { vessel: "the cremasteric and spermatic vessels at the deep ring", wrongVessels: ["the femoral artery", "the inferior epigastric artery"] } },
+      {
+        kind: "vessel", title: "Control bleeding at the deep ring", description: "A cremasteric vessel is oozing at the deep ring.",
+        choices: [
+          "Control the cremasteric bleeder precisely with fine ligature, keeping the testicular vessels and vas in view.",
+          "Place a mass ligature around the cord to stop the ooze.",
+          "Cauterize blindly deep in the ring where the bleeding seems to be.",
+        ],
+        feedback: [
+          "The bleeder is controlled with the testicular vessels and vas preserved.",
+          "Mass ligation of the cord strangles the testicular vessels — the testis can thrombose and infarct.",
+          "Blind cautery in the ring can hit the inferior epigastric vessels and keep bleeding.",
+        ],
+        wrongComps: ["thrombosis", "hemorrhage"],
+      },
       {
         kind: "core", title: "Repair the floor of the canal", description: "Choose the repair for this defect.",
         choices: [
@@ -168,7 +181,20 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
       },
       { kind: "verify", title: "Confirm cord and testicular viability", description: "Make sure the cord is not twisted or compressed.", f: { test: "a check of the cord and testis position", wrongTests: ["an on-table ultrasound", "a Doppler of the leg"] } },
       { kind: "landmark", title: "Locate the deep ring", description: "The deep ring lies above the inguinal ligament, lateral to the epigastric vessels.", f: { landmark: "the deep ring above the inguinal ligament", wrongLandmarks: ["the femoral ring", "the superficial ring"] } },
-      { kind: "vessel", title: "Protect the inferior epigastric vessels", description: "The deep ring borders the inferior epigastric vessels.", f: { vessel: "the inferior epigastric vessels at the deep ring", wrongVessels: ["the femoral artery", "the superficial circumflex iliac artery"] } },
+      {
+        kind: "vessel", title: "Protect the inferior epigastric vessels", description: "The deep ring borders the inferior epigastric vessels.",
+        choices: [
+          "Identify the inferior epigastric vessels on the medial side of the deep ring and keep sutures and mesh fixation clear of them.",
+          "Anchor the mesh with a deep stitch through the tissue medial to the deep ring.",
+          "Divide the inferior epigastric vessels routinely to widen the ring.",
+        ],
+        feedback: [
+          "Seeing the vessels keeps every stitch clear of them.",
+          "A blind deep stitch medial to the ring skewers the inferior epigastric vessels — a rectus sheath hematoma follows.",
+          "Routine division is unnecessary and risks a bleed if the ligature slips.",
+        ],
+        wrongComps: ["hemorrhage", "infection"],
+      },
       { kind: "exposure", title: "Reduce the hernia contents", description: "Return the contents to the abdominal cavity gently.", f: { structure: "the hernia contents", landmark: "the deep ring" } },
       {
         kind: "verify", title: "Assess the contralateral side", description: "Ask whether a contralateral defect was noted preoperatively.",
@@ -715,7 +741,20 @@ export const BEGINNER_BANKS: ProcedureBank[] = [
       { kind: "landmark", title: "Identify the flexor tendons", description: "The tendons lie deep and ulnar to the nerve — note their position.", f: { landmark: "the flexor tendons beneath the ligament", wrongLandmarks: ["the thenar muscles", "the hypothenar fat"] } },
       { kind: "dissect", title: "Expose the ulnar border of the ligament", description: "Define the ulnar edge before any division.", f: { landmark: "the ulnar border of the transverse carpal ligament" } },
       { kind: "core", title: "Carry the release to the distal edge", description: "The release must extend to the distal ligament edge.", f: { structure: "the distal ligament edge", landmark: "the palmar fat pad" } },
-      { kind: "vessel", title: "Protect the ulnar artery", description: "The ulnar artery sits at the ulnar border of the tunnel.", f: { vessel: "the ulnar artery at the tunnel's ulnar border", wrongVessels: ["the radial artery", "the median artery"] } },
+      {
+        kind: "vessel", title: "Protect the ulnar artery", description: "The ulnar artery sits at the ulnar border of the tunnel.",
+        choices: [
+          "Divide the ligament along its radial side, staying away from the ulnar artery and nerve in Guyon's canal.",
+          "Divide the ligament along its ulnar edge to get a wider release.",
+          "Cauterize the tissue at the ulnar border to keep the field dry.",
+        ],
+        feedback: [
+          "Staying radial keeps the ulnar neurovascular bundle safe.",
+          "The ulnar edge is where the ulnar artery runs — cutting there risks lacerating it.",
+          "Cautery at the ulnar border can burn the ulnar nerve alongside the artery.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
       { kind: "bleed", title: "Manage a superficial arch injury", description: "A small bleed appears at the distal release.", f: { vessel: "the superficial palmar arch", wrongVessels: ["the deep palmar arch", "the radial artery"] } },
       { kind: "verify", title: "Confirm free passive flexion", description: "Passively flex the fingers to confirm the nerve is free.", f: { test: "free passive finger flexion", wrongTests: ["a nerve conduction study", "a wrist X-ray"] } },
       { kind: "closure", title: "Close the skin", description: "The ligament does not need repair — the skin only.", f: { structure: "the skin edges" } },

@@ -17,7 +17,7 @@ import { RESCUE_BANKS, tailorRescue } from "./index";
 // cholecystectomy hemorrhage (captured from /api/sim/complicate).
 const CORE_HEMORRHAGE_OPTIONS = ["packing", "cautery", "call_anesthesia", "intubate", "ligation", "imaging"].map((id) => ({ id }));
 // ...and for an appendectomy anaphylaxis.
-const CORE_ANAPHYLAXIS_OPTIONS = ["labs", "imaging", "oxygen_therapy", "call_anesthesia", "consult_specialist", "cricothyroidotomy", "intubate"].map((id) => ({ id }));
+const CORE_ANAPHYLAXIS_OPTIONS = ["fluid_resuscitation", "vasopressor", "epinephrine", "cardioversion", "call_anesthesia"].map((id) => ({ id }));
 
 describe("Core intervention mirror", () => {
   it("matches the server's intervention table exactly", () => {
@@ -126,7 +126,7 @@ describe("tailorRescue", () => {
     expect(t.options).toHaveLength(4);
   });
 
-  it("works for anaphylaxis, where Core offers several treating options", () => {
+  it("works for anaphylaxis, where epinephrine is the treating option", () => {
     const t = tailorRescue(RESCUE_BANKS, "appendectomy", "anaphylaxis", 0, CORE_ANAPHYLAXIS_OPTIONS, "decision_appendectomy_1")!;
     expect(t.options.filter((o) => o.correct)).toHaveLength(1);
     expect(t.options).toHaveLength(4);

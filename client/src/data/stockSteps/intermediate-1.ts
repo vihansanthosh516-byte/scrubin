@@ -670,7 +670,20 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["nerve_injury", "hemorrhage"],
       },
-      { kind: "vessel", title: "Protect the posterior structures", description: "The popliteal vessels sit just behind the tibia.", f: { vessel: "the popliteal vessels behind the posterior capsule", wrongVessels: ["the femoral artery", "the great saphenous vein"] } },
+      {
+        kind: "vessel", title: "Protect the posterior structures", description: "The popliteal artery and vein lie just behind the posterior capsule.",
+        choices: [
+          "Keep the knee flexed with a retractor behind the tibia and make the posterior cuts under direct vision, never plunging the saw.",
+          "Push the saw through the posterior cortex to finish the tibial cut cleanly.",
+          "Strip the posterior capsule off the femur with cautery to gain extra flexion space.",
+        ],
+        feedback: [
+          "A protected, controlled posterior cut keeps the saw away from the popliteal vessels.",
+          "Plunging through the posterior cortex can lacerate the popliteal artery — a limb-threatening bleed.",
+          "Deep cautery on the posterior capsule can burn the tibial and peroneal nerves just behind it.",
+        ],
+        wrongComps: ["hemorrhage", "nerve_injury"],
+      },
       {
         kind: "core", title: "Balance the gaps", description: "Achieve balanced flexion and extension.",
         choices: [

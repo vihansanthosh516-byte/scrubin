@@ -34,6 +34,18 @@ export interface TimelineBatchResult extends TimelineBatchState {
 const norm = (ev: any): string =>
   typeof ev === "string" ? ev : (ev && (ev.description || ev.message)) || JSON.stringify(ev);
 
+// A header per line so the log reads at a glance instead of a column of
+// identical "EVENT" labels.
+function classify(text: string): { type: string; severity: "info" | "warning" | "critical" } {
+  if (/^(🔴|💀)|CRITICAL FAILURE|died/i.test(text)) return { type: "Critical", severity: "critical" };
+  if (/^❌/.test(text)) return { type: "Mistake", severity: "critical" };
+  if (/^⚠️|COMPLICATION|DETERIORATING/i.test(text)) return { type: "Complication", severity: "warning" };
+  if (/^🧠/.test(text)) return { type: "Attending", severity: "info" };
+  if (/^✅|resolved/i.test(text)) return { type: "Progress", severity: "info" };
+  if (/^Patient profile/i.test(text)) return { type: "Patient", severity: "info" };
+  return { type: "Update", severity: "info" };
+}
+
 export function applyTimelineBatch(
   state: TimelineBatchState,
   incoming: unknown | undefined,
@@ -71,7 +83,9 @@ export function applyTimelineBatch(
     return {
       ...(obj ?? {}),
       tick: obj && obj.tick !== undefined ? obj.tick : currentTick,
-      type: obj?.type || "Event",
+      ...classify(norm(ev)),
+      ...(obj?.type ? { type: obj.type } : {}),
+      ...(obj?.severity ? { severity: obj.severity } : {}),
       description: norm(ev),
     };
   });

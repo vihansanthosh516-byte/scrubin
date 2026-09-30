@@ -101,7 +101,6 @@ export default function TimelinePanel() {
                 </div>
                 <div className="flex items-center gap-2 text-[10px] opacity-70">
                   {ev.timestamp && <span>{ev.timestamp}</span>}
-                  <span className="font-mono bg-white/60 dark:bg-black/20 px-1.5 py-0.5 rounded-sm">T:{ev.tick}</span>
                 </div>
               </div>
               <p className="text-sm mt-1">{ev.description}</p>

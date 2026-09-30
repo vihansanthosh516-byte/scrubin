@@ -349,6 +349,21 @@ function pick<T>(arr: T[], i: number): T {
   return arr[i % arr.length];
 }
 
+// The engine only knows eight complication types, so a ureteric, dural, or
+// bladder injury runs as the infection or bleed it leads to. Name the actual
+// injury in the crisis banner so the trainee sees what they did.
+const NAMED_INJURIES: [RegExp, string, string][] = [
+  [/ureter/i, "infection", "Ureteric injury — urine is leaking into the pelvis and an infected urinoma is forming."],
+  [/\b(CSF|dural?)\b/i, "infection", "Dural tear with a CSF leak — the leak is tracking out and meningitis is the danger."],
+  [/bladder|cystotomy|vesico/i, "infection", "Bladder injury — urine is leaking into the pelvis and the field is contaminated."],
+  [/\b(rectum|rectal|bowel|enterotomy|fecal)\b/i, "infection", "Bowel injury — enteric contents are spilling and peritonitis is developing."],
+];
+
+function namedInjury(feedback: string, comp: string): string | undefined {
+  const hit = NAMED_INJURIES.find(([re, c]) => c === comp && re.test(feedback));
+  return hit?.[2];
+}
+
 function buildStepChoices(
   step: StepDef,
   spec: StepSpec,
@@ -387,7 +402,7 @@ function buildStepChoices(
       isCorrect: false,
       complication: comp1,
       feedback: isTemplate ? prefix(fbWrong1) : fbWrong1,
-      consequence: step.consequences?.[0],
+      consequence: step.consequences?.[0] ?? namedInjury(fbWrong1, comp1),
       rescueKey: step.rescueVariants?.[0] ? `${comp1}:${step.rescueVariants[0]}` : undefined,
       effect: step.effects?.[1] ?? undefined,
     },
@@ -397,7 +412,7 @@ function buildStepChoices(
       isCorrect: false,
       complication: comp2,
       feedback: isTemplate ? prefix(fbWrong2) : fbWrong2,
-      consequence: step.consequences?.[1],
+      consequence: step.consequences?.[1] ?? namedInjury(fbWrong2, comp2),
       rescueKey: step.rescueVariants?.[1] ? `${comp2}:${step.rescueVariants[1]}` : undefined,
       effect: step.effects?.[2] ?? undefined,
     },

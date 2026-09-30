@@ -84,14 +84,14 @@ export type DecisionArchetypeType = (typeof DECISION_ARCHETYPES)[number];
 
 // ── Archetype→Complication mapping ──
 export const ARCHETYPE_COMPLICATION_MAP: Record<DecisionArchetypeType, ComplicationType[]> = {
-  AIRWAY_STABILITY:     ["hypoxia", "anaphylaxis"],
+  AIRWAY_STABILITY:     ["hypoxia"],
   HEMODYNAMIC_CONTROL:  ["hemorrhage", "cardiac_arrhythmia", "fluid_overload", "anaphylaxis"],
   BLEEDING_CONTROL:     ["hemorrhage"],
   INFECTION_MANAGEMENT: ["infection"],
   PAIN_MANAGEMENT:      ["nerve_injury"],
-  DIAGNOSTIC_STEP:      ["thrombosis", "nerve_injury"],
+  DIAGNOSTIC_STEP:      ["nerve_injury"],
   SURGICAL_DECISION:    ["nerve_injury"],
-  POST_OP_MONITORING:   ["infection", "thrombosis", "fluid_overload"],
+  POST_OP_MONITORING:   ["thrombosis"],
 };
 
 // ── Procedure-phase awareness ──

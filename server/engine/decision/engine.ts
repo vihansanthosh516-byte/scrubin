@@ -66,7 +66,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "intubate",
       label: "Intubate & secure airway",
-      treats: ["hypoxia", "anaphylaxis"],
+      treats: ["hypoxia"],
       vitalsEffect: { spo2: +8, heart_rate: -3, respiratory_rate: -4 },
       riskIfWrong: { spo2: -5, heart_rate: +10 },
       correctFeedback: "Airway secured successfully. SpO2 improving.",
@@ -84,7 +84,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "cricothyroidotomy",
       label: "Emergency cricothyroidotomy",
-      treats: ["anaphylaxis", "hypoxia"],
+      treats: ["hypoxia"],
       vitalsEffect: { spo2: +12, heart_rate: -5 },
       riskIfWrong: { spo2: -8, heart_rate: +15 },
       correctFeedback: "Surgical airway established. Patient stabilized.",
@@ -274,7 +274,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "imaging",
       label: "Order imaging (CT/X-ray)",
-      treats: ["thrombosis", "nerve_injury"],
+      treats: ["nerve_injury"],
       vitalsEffect: {},
       riskIfWrong: { heart_rate: +3 },
       correctFeedback: "Imaging reveals the key finding. Diagnosis clarified.",
@@ -283,7 +283,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "labs",
       label: "Draw stat labs (ABG, CBC, CMP)",
-      treats: ["infection", "thrombosis"],
+      treats: [],
       vitalsEffect: {},
       riskIfWrong: { heart_rate: +2 },
       correctFeedback: "Lab results confirm the clinical suspicion. Appropriate treatment can begin.",
@@ -350,7 +350,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "vitals_check",
       label: "Close vitals monitoring (q15min)",
-      treats: ["infection", "fluid_overload"],
+      treats: [],
       vitalsEffect: {},
       riskIfWrong: { heart_rate: +5 },
       correctFeedback: "Close monitoring detected the change early. Intervention initiated promptly.",
@@ -359,7 +359,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "doppler",
       label: "Doppler ultrasound for DVT",
-      treats: ["thrombosis"],
+      treats: [],
       vitalsEffect: {},
       riskIfWrong: { heart_rate: +3 },
       correctFeedback: "Doppler caught the clot early. Anticoagulation started.",
@@ -377,7 +377,7 @@ export const ARCHETYPE_INTERVENTIONS: Record<DecisionArchetypeType, ArchetypeInt
     {
       id: "serial_labs",
       label: "Serial labs (q6h Hgb, lactate)",
-      treats: ["infection", "fluid_overload", "hemorrhage"],
+      treats: [],
       vitalsEffect: {},
       riskIfWrong: { temperature: +0.2 },
       correctFeedback: "Serial labs trending in the right direction. Continue current management.",

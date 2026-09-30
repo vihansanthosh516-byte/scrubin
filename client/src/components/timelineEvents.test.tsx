@@ -12,7 +12,7 @@ describe("applyTimelineBatch (append-only contract)", () => {
   it("appends a fresh batch once, stamping tick-less strings with the current tick", () => {
     const r = applyTimelineBatch(base(), ["Patient profile: X"], 1);
     expect(r.added).toBe(1);
-    expect(r.timeline).toEqual([{ tick: 1, type: "Event", description: "Patient profile: X" }]);
+    expect(r.timeline).toEqual([{ tick: 1, type: "Patient", severity: "info", description: "Patient profile: X" }]);
     expect(r.lastLen).toBe(1);
   });
 

@@ -102,7 +102,7 @@ describe("Decision Option Count", () => {
   it("POST_OP_MONITORING always offers the treating options, incl. anticoagulation (4-8 total)", () => {
     // total-knee-replacement's archetype set is [PAIN_MANAGEMENT, POST_OP_MONITORING],
     // and only POST_OP_MONITORING maps to thrombosis — so the recovery archetype
-    // is deterministic. The treating options (doppler + anticoagulation) must be
+    // is deterministic. The treating option (anticoagulation — a Doppler only diagnoses) must be
     // offered in EVERY decision; decoys vary per seed so the total is 4-8.
     const procedure = getProcedure("total-knee-replacement");
     const VITALS = { spo2: 98, heart_rate: 72, bp_systolic: 120, bp_diastolic: 80, temperature: 37, respiratory_rate: 16 };
@@ -116,7 +116,6 @@ describe("Decision Option Count", () => {
       );
       const ids = decision.options.map((o) => o.id);
       expect(ids).toContain("anticoagulation");
-      expect(ids).toContain("doppler");
       expect(ids.length).toBeGreaterThanOrEqual(4);
       expect(ids.length).toBeLessThanOrEqual(8);
     }
@@ -209,7 +208,7 @@ describe("Decision Option Count", () => {
       );
       const ids = decision.options.map((o) => o.id).sort();
       sets.add(ids.join(","));
-      expect(ids.some((id) => id === "imaging" || id === "labs")).toBe(true); // treating always offered
+      expect(decision.options.some((o) => o.correctForComplications.includes("thrombosis"))).toBe(true); // treating always offered
     }
     expect(sets.size).toBeGreaterThan(5);
   });
@@ -259,13 +258,13 @@ describe("Decision Option Count", () => {
       const ids = decision.options.map((o) => o.id);
       expect(ids).not.toContain("exploration");
       expect(
-        ids.some((id) => ["doppler", "anticoagulation", "imaging", "labs"].includes(id)),
+        decision.options.some((o) => o.correctForComplications.includes("thrombosis")),
         `seed ${seed}: no treating option offered (${ids.join(",")})`
       ).toBe(true);
     }
 
-    // And in the OR (intra-op), imaging/labs treating options are offered when
-    // DIAGNOSTIC_STEP is the archetype (seed 7 picks it deterministically).
+    // Intra-op, a thrombosis still draws a real treatment (anticoagulation) —
+    // a diagnostic test never counts as the rescue.
     const intra = new DecisionEngine(new DeterministicRNG(7), procedure).generateDecision(
       10,
       VITALS,
@@ -273,8 +272,8 @@ describe("Decision Option Count", () => {
       "thrombosis",
       "Core Procedure"
     );
-    expect(intra.archetype).toBe("DIAGNOSTIC_STEP");
-    expect(intra.options.map((o) => o.id)).toContain("imaging");
+    expect(intra.options.some((o) => o.correctForComplications.includes("thrombosis"))).toBe(true);
+    expect(intra.options.filter((o) => ["imaging", "labs", "doppler"].includes(o.id)).every((o) => !o.correctForComplications.includes("thrombosis"))).toBe(true);
   });
 
   it("stock decisions prefer a phase-eligible archetype (pre-op forces AIRWAY_STABILITY)", () => {
