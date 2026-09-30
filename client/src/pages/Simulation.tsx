@@ -844,7 +844,7 @@ function SimulationPage() {
           <div className="w-20 h-20 bg-primary/10 rounded-sm flex items-center justify-center mx-auto mb-6 border border-primary/20">
             <Activity className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-[#191919] dark:text-[#EDEAE4] mb-2 uppercase tracking-tight">Start {PATIENT?.name || 'the'}'s Surgery</h1>
+          <h1 className="text-3xl font-bold text-[#191919] dark:text-[#EDEAE4] mb-2 uppercase tracking-tight">{PATIENT?.name ? `Start ${PATIENT.name}'s Surgery` : 'Start Surgery'}</h1>
           <p className="text-[#666059] dark:text-[#C2BBB0] mb-8">The ScrubIn Causal Engine will boot a simulation session for this procedure. Each run rolls a different patient: their ASA class and how sick they arrive are shown in the patient panel once the case starts.</p>
           {engineReconnecting && !startError && (
             <div className="p-3 mb-6 bg-[#3A2A0A]/10 border border-[#D99B26]/60 rounded-sm text-left animate-pulse">
