@@ -5,6 +5,8 @@ interface DashboardProps {
   scenario: any;
   /** Steps answered and projected case length, for branching stock cases. */
   steps?: { current: number; total: number };
+  /** Phase of the step being played, when the page knows it. */
+  phase?: string;
 }
 
 // Simple UI‑only stability calculation – does not affect engine state
@@ -34,7 +36,7 @@ function computeStability(vitals: any, baseline: any) {
   return "critical";
 }
 
-export default function OperatingRoomDashboard({ scenario, steps }: DashboardProps) {
+export default function OperatingRoomDashboard({ scenario, steps, phase }: DashboardProps) {
   const { currentTick, currentState, cognition } = useSimulationStore();
 
   const vitals = currentState?.vitals || {};
@@ -86,7 +88,7 @@ export default function OperatingRoomDashboard({ scenario, steps }: DashboardPro
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Card label="Procedure" value={scenario?.name ?? "-"} />
-        <Card label="Current Phase" value={(scenario?.phases || scenario?.PHASES || [])?.find((p: any) => p.id === (currentState?.pending_decision?.phase || currentState?.pendingDecision?.phase))?.name ?? "-"} />
+        <Card label="Current Phase" value={phase ?? (scenario?.phases || scenario?.PHASES || [])?.find((p: any) => p.id === (currentState?.pending_decision?.phase || currentState?.pendingDecision?.phase))?.name ?? "-"} />
         {steps ? (
           <>
             <Card label="Step" value={`${steps.current} of ${steps.total}`} />

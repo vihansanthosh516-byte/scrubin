@@ -186,6 +186,8 @@ function SimulationPage() {
   // The complication the trainee last answered correctly. The summary does not
   // offer "what would have treated it" for a treatment they already gave.
   const treatedRef = useRef<string | null>(null);
+  // Furthest surgical phase reached in this case (see stepPhase below).
+  const phaseRef = useRef<{ sim: string | null; rank: number }>({ sim: null, rank: -1 });
   // /tick calls spent on the current complication — Core kills after a fixed number.
   const [rescueTicks, setRescueTicks] = useState(0);
   const [clockNow, setClockNow] = useState(() => Date.now());
@@ -833,8 +835,8 @@ function SimulationPage() {
   const isStock = currentMode === "stock";
   const runnerCurrent = caseState ? runnerStep(caseBank, caseState) : null;
   const currentStockStep = runnerCurrent?.step ?? null;
-  // The phase follows the step being played; the engine's tick-based phase
-  // drifts after rescues and repairs.
+  // The phase follows the step being played (also during its rescue); the
+  // engine's tick-based phase drifts after rescues and repairs.
   const STEP_PHASE: Record<string, string> = {
     preop: "Pre-op", antibiotic: "Pre-op", position: "Pre-op",
     access: "Access", exposure: "Access",
@@ -842,7 +844,13 @@ function SimulationPage() {
     bleed: "Operation", verify: "Operation", vitals: "Operation",
     closure: "Closing", dvt: "Post-op", postop: "Post-op",
   };
-  const stepPhase = currentStockStep?.kind ? STEP_PHASE[currentStockStep.kind] : undefined;
+  const PHASE_ORDER = ["Pre-op", "Access", "Operation", "Closing", "Post-op"];
+  // Only ever move forward (a late exposure step is still the operation), and
+  // hold the last phase while no step is on screen. Resets with a new case.
+  if (phaseRef.current.sim !== simId) phaseRef.current = { sim: simId, rank: -1 };
+  const kindPhase = currentStockStep?.kind ? STEP_PHASE[currentStockStep.kind] : undefined;
+  if (kindPhase) phaseRef.current.rank = Math.max(phaseRef.current.rank, PHASE_ORDER.indexOf(kindPhase));
+  const stepPhase = phaseRef.current.rank >= 0 ? PHASE_ORDER[phaseRef.current.rank] : undefined;
 
   // Status badge for the patient card
   const statusBadge = isDeceased
@@ -1035,7 +1043,7 @@ function SimulationPage() {
                 </div>
                 <div className="min-w-0">
                   <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Phase</span>
-                  <span className="truncate block">{(isStock && stepPhase) || pendingDecision?.phaseLabel || pendingDecision?.procedurePhase || currentState?.procedure_phase || '—'}</span>
+                  <span className="truncate block">{stepPhase || pendingDecision?.phaseLabel || pendingDecision?.procedurePhase || currentState?.procedure_phase || '—'}</span>
                 </div>
                 <div className="min-w-0">
                   <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Step</span>
@@ -1399,7 +1407,7 @@ function SimulationPage() {
 
           {/* RIGHT COLUMN: OR STATUS + TIMELINE */}
           <div className="order-3 col-span-12 lg:order-none lg:col-span-3 flex min-h-0 flex-col gap-3 lg:overflow-y-auto lg:pr-1.5">
-            <OperatingRoomDashboard scenario={scenario} steps={caseState && caseLength ? { current: stepNow, total: caseLength } : undefined} />
+            <OperatingRoomDashboard scenario={scenario} phase={stepPhase} steps={caseState && caseLength ? { current: stepNow, total: caseLength } : undefined} />
 
             <div className="shrink-0 glass-card p-4">
               <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Procedure Timeline</h3>

@@ -1974,16 +1974,16 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         wrongComps: ["fluid_overload", "hypoxia"],
       },
       {
-        kind: "postop", title: "Biliary symptom warning", description: "The patient is going home.",
+        kind: "postop", title: "Port-site hernia advice", description: "The umbilical port was 12 mm.",
         choices: [
-          "Teach that jaundice, fever, or worsening pain need urgent review.",
-          "Tell the patient pain always settles by itself.",
-          "Tell the patient yellow skin is expected after gallbladder removal.",
+          "Avoid heavy lifting for 2 weeks and report a new bulge at the navel.",
+          "Do sit-ups from day 2 to strengthen the abdomen.",
+          "Ignore any bulge — it is just swelling.",
         ],
         feedback: [
-          "Early review catches a bile leak or retained stone.",
-          "Worsening pain can be a bleed from the liver bed — it needs assessment, not waiting.",
-          "Jaundice signals bile duct obstruction or injury, which can progress to cholangitis.",
+          "Avoiding strain while the fascia heals prevents a port-site hernia.",
+          "Early sit-ups strain the fresh fascial closure — it can tear and bleed.",
+          "An incarcerated port-site hernia can strangle bowel, which then perforates.",
         ],
         wrongComps: ["hemorrhage", "infection"],
       },

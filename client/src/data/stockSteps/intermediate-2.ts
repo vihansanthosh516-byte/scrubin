@@ -1342,18 +1342,18 @@ export const INTERMEDIATE_BANKS_2: ProcedureBank[] = [
         wrongComps: ["infection", "anaphylaxis"],
       },
       {
-        kind: "postop", title: "Watch for fat embolism signs", description: "Day 2: new confusion and SpO₂ 90%.",
+        kind: "postop", title: "Anemia after the fracture", description: "Day 2: Hb 82 g/L, the patient is dizzy on standing.",
         choices: [
-          "Recognize fat embolism, give oxygen, support breathing, and escalate to critical care.",
-          "Put the confusion down to the opioids and stop them.",
-          "Give a large fluid bolus and recheck later.",
+          "Recheck Hb, look for ongoing thigh bleeding, and transfuse if symptomatic or still falling.",
+          "Transfuse four units straight away to reach a normal Hb.",
+          "Ignore it — a femoral fracture always loses some blood.",
         ],
         feedback: [
-          "Fat embolism after a femoral fracture needs prompt respiratory support.",
-          "Mistaking fat embolism for opioid effect delays treatment while hypoxia worsens.",
-          "Fat embolism injures the lungs — a large bolus floods them.",
+          "A femoral shaft fracture can hide over a litre of blood in the thigh; symptomatic anemia needs assessment.",
+          "Large-volume transfusion without reassessment overloads the circulation.",
+          "Ongoing bleeding into the thigh goes unnoticed.",
         ],
-        wrongComps: ["hypoxia", "fluid_overload"],
+        wrongComps: ["fluid_overload", "hemorrhage"],
       },
       {
         kind: "postop", title: "Physiotherapy plan", description: "Day 1.",
