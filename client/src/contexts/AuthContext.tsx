@@ -24,6 +24,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   hasCompletedOnboarding: boolean;
   isReturningUser: boolean;
+  /** Signed in locally, but the database sign-in has lapsed — results can't sync until they sign in again. */
+  sessionExpired: boolean;
   confirmReturningUser: () => void;
   restartOnboarding: () => void;
   completeOnboarding: (data: { displayName: string; username?: string; profession?: string }) => void;
@@ -39,6 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [isReturningUser, setIsReturningUser] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -108,6 +111,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setHasCompletedOnboarding(onboarded);
           localStorage.setItem("scrubin_user", JSON.stringify(userData));
           localStorage.setItem("scrubin_last_user", JSON.stringify({ name: userData.name, login: userData.login }));
+        } else if (storedUser) {
+          // An email/Google account (Supabase id) with no live session: the
+          // app still shows them signed in, but the database will refuse
+          // their results until they sign in again.
+          try {
+            const id = JSON.parse(storedUser).id;
+            if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id))) setSessionExpired(true);
+          } catch {
+            /* ignore malformed user */
+          }
         }
       } catch (e) {
         console.error("Supabase session check failed", e);
@@ -366,6 +379,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         loading,
+        sessionExpired,
         loginWithGitHub,
         loginWithGoogle,
         logout,

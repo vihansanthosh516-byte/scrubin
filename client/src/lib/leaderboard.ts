@@ -154,3 +154,23 @@ export function getLocalSessions(userId: string): PersistedSession[] {
     return [];
   }
 }
+
+/**
+ * Push cases kept on this device into the database once the sign-in works
+ * again. Each one that goes through is removed from the device copy.
+ */
+export async function syncLocalSessions(userId: string): Promise<void> {
+  const pending = getLocalSessions(userId);
+  if (!pending.length) return;
+  const left: PersistedSession[] = [];
+  for (const row of pending) {
+    const { id: _id, created_at: _at, ...record } = row;
+    const { error } = await supabase.from("sessions").insert(record);
+    if (error) left.push(row);
+  }
+  try {
+    localStorage.setItem(localKey(userId), JSON.stringify(left));
+  } catch {
+    // Storage blocked — the rows simply stay pending.
+  }
+}

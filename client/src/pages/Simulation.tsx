@@ -147,7 +147,7 @@ function SimulationPage() {
   const stepsWrong = stepLog.filter((e) => e.startsWith("❌ Incorrect Step")).length;
   const stepAccuracy = stepsRight + stepsWrong > 0 ? Math.round((stepsRight / (stepsRight + stepsWrong)) * 100) : null;
 
-  const { user } = useAuth();
+  const { user, sessionExpired, logout } = useAuth();
   // Session started at wall-clock time — used for the sessions.time_seconds column.
   const [startedAt, setStartedAt] = useState<number | null>(null);
   // One-shot guard so the terminal effect records each sim exactly once.
@@ -870,6 +870,15 @@ function SimulationPage() {
               </p>
               <p className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] mt-0.5">
                 The engine is unreachable right now. Retrying automatically — press the button again once it is back.
+              </p>
+            </div>
+          )}
+          {sessionExpired && (
+            <div className="p-3 mb-6 bg-[#C27820]/8 border border-[#C27820]/40 rounded-sm text-left">
+              <p className="text-xs font-bold text-[#8A5A00] dark:text-[#E0B060]">Your sign-in has expired</p>
+              <p className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] mt-0.5">
+                Results from this case will stay on this device until you{" "}
+                <button className="underline font-semibold" onClick={() => { logout(); setLocation("/signin"); }}>sign in again</button>.
               </p>
             </div>
           )}

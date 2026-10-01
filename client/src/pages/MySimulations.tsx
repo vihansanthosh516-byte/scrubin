@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
-import { getUserSessions, getLocalSessions, PersistedSession } from "../lib/leaderboard";
+import { getUserSessions, getLocalSessions, syncLocalSessions, PersistedSession } from "../lib/leaderboard";
 import { API_BASE } from "../lib/api";
 
 export default function MySimulations() {
@@ -51,7 +51,7 @@ export default function MySimulations() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    getUserSessions(user.id).then((rows) => {
+    syncLocalSessions(user.id).then(() => getUserSessions(user.id)).then((rows) => {
       if (cancelled) return;
       const merged = [...rows, ...getLocalSessions(user.id)].sort((a, b) => b.created_at.localeCompare(a.created_at));
       setCompletedCases(merged);
