@@ -525,7 +525,10 @@ function SimulationPage() {
       // A tailored rescue option replaces Core's generic feedback line with its own.
       const decisionEvents: string[] = [
         // The client adds its own "✅ Complication resolved" line with the next step.
-        ...(data.events || []).filter((e: string) => e !== "Complication resolved" && !(picked?.feedback && CORE_GENERIC_FEEDBACK.has(e))),
+        ...(data.events || [])
+          .filter((e: string) => e !== "Complication resolved" && !(picked?.feedback && CORE_GENERIC_FEEDBACK.has(e)))
+          // Mark the pick's own feedback as right or wrong so the timeline labels it.
+          .map((e: string) => (e === data.decision_result?.feedback ? `${data.decision_result?.wasCorrect ? "✅" : "❌"} ${e}` : e)),
         ...(picked?.feedback ? [`${data.decision_result?.wasCorrect ? "✅" : "❌"} ${picked.feedback}`] : []),
       ];
 
@@ -1221,6 +1224,7 @@ function SimulationPage() {
                           scenarioName={PATIENT?.name ? `${PATIENT.name}'s Surgery` : 'Simulation'}
                           onViewDebrief={() => setCompletionTab("debrief")}
                           isDeceased={isDeceased}
+                          phase={stepPhase}
                         />
                       </>
                     )}

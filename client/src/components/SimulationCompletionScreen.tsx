@@ -6,13 +6,15 @@ interface Props {
   scenarioName: string;
   onViewDebrief?: () => void;
   isDeceased?: boolean;
+  /** Phase of the last step played — the engine's tick-based phase can run ahead of it. */
+  phase?: string;
 }
 
-export default function SimulationCompletionScreen({ scenarioName, onViewDebrief, isDeceased }: Props) {
+export default function SimulationCompletionScreen({ scenarioName, onViewDebrief, isDeceased, phase }: Props) {
   const { currentState, currentTick, simId } = useSimulationStore();
 
   const status = currentState?.status || "Completed";
-  const finalPhase = currentState?.pendingDecision?.phase || currentState?.procedure_phase || "Complete";
+  const finalPhase = phase || currentState?.pendingDecision?.phase || currentState?.procedure_phase || "Complete";
   const finalPatientStatus = isDeceased
     ? "Deceased"
     : (currentState?.patient_status || currentState?.vitals_status || "Discharged");
