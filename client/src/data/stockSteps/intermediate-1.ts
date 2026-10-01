@@ -1018,7 +1018,7 @@ export const INTERMEDIATE_BANKS_1: ProcedureBank[] = [
         ],
         wrongComps: ["thrombosis", "infection"],
       },
-      { kind: "postop", title: "DVT prophylaxis", description: "Knee arthroplasty has a high thrombosis risk." },
+      { kind: "dvt", title: "DVT prophylaxis", description: "Knee arthroplasty has a high thrombosis risk." },
       {
         kind: "postop", title: "Monitor the wound", description: "Watch for infection and wound complications.",
         choices: [
