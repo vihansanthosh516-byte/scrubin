@@ -88,6 +88,9 @@ export interface MonitorReadout {
   rr?: number;
   capno_shape?: "none" | "normal" | "obstructive" | "curare_cleft";
   fio2?: number;
+  fi_sevo?: number;
+  et_sevo?: number | null;
+  mac?: number | null;
   temp?: number;
   bis?: number;
   tof?: { count: number; ratio: number | null } | null;

@@ -327,7 +327,7 @@ function FluidsMonitorsPanel({ state, act }: { state: CaseState; act: (a: Action
   ];
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Section title="Monitors" right={<OrButton onClick={() => act({ type: "monitor", attach: ["ecg", "spo2", "nibp", "etco2", "temp"] })}>All standard</OrButton>}>
+      <Section title="Monitors" right={<OrButton onClick={() => act({ type: "monitor", attach: ["ecg", "spo2", "nibp", "etco2", "temp", "bis"] })}>All standard</OrButton>}>
         <div className="flex flex-wrap gap-1.5">
           {mons.map(([k, label]) => (
             <OrButton key={k} active={attached.has(k)} onClick={() => act({ type: "monitor", ...(attached.has(k) ? { detach: [k] } : { attach: [k] }) })}>

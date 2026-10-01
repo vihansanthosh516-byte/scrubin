@@ -53,7 +53,7 @@ export const engineApi = {
   listCases: (userId: string) => request<SavedCase[]>(`/users/${encodeURIComponent(userId)}/cases`),
   deleteCase: (caseId: string) => request<{ ok: boolean }>(`/cases/${caseId}`, { method: "DELETE" }),
   replay: (caseId: string, everyS = 5) => request<ReplayData>(`/cases/${caseId}/replay?every_s=${everyS}`),
-  debrief: (caseId: string) => request<Debrief>(`/cases/${caseId}/debrief`),
+  debrief: (caseId: string, end = false) => request<Debrief>(`/cases/${caseId}/debrief${end ? "?end=true" : ""}`),
   transcribe: async (audio: Blob): Promise<string> => {
     const form = new FormData();
     form.append("audio", audio, "speech.webm");
@@ -84,6 +84,10 @@ export function useOrConnection(caseId: string | null): OrConnection {
   const refCounter = useRef(1);
 
   useEffect(() => {
+    // A new case starts with a clean log — the previous case's lines don't carry over.
+    setComms([]);
+    setState(null);
+    setLastParse(null);
     if (!caseId) return;
     let closed = false;
     let retry: number | undefined;

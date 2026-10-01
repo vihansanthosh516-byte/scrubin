@@ -43,7 +43,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
 
   const domains = Array.from(new Set(debrief.items.map((i) => i.domain)));
   const trend = debrief.trend.map((p) => ({ ...p, min: p.t / 60 }));
-  const outcomeLabel = { pacu: "Extubated → PACU", death: "Patient died", in_progress: "Case ended early" }[debrief.outcome] ?? debrief.outcome;
+  const outcomeLabel = { pacu: "Extubated → PACU", death: "Patient died", in_progress: "Case ended early", surgery_complete: "Operation complete — handed over to anesthesia" }[debrief.outcome] ?? debrief.outcome;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">

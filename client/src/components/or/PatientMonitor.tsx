@@ -275,12 +275,18 @@ export function PatientMonitor({ readout, alarms, paused, muted }: Props) {
           <Numeric label="EtCO₂" unit="mmHg" color={COLORS.co2} value={a.has("etco2") ? (r?.etco2 ?? "—") : undefined} alarm={alarm("etco2") || alarm("apnea")} sub={a.has("etco2") && r?.rr != null ? `RR ${r.rr}` : undefined} />
           <div className="grid grid-cols-2 divide-x divide-white/10">
             <Numeric small label="Temp" unit="°C" color="#E2E8F0" value={a.has("temp") ? r?.temp : undefined} alarm={alarm("temp")} />
-            <Numeric small label="BIS" unit="" color={COLORS.bis} value={a.has("bis") ? r?.bis : undefined} />
+            <Numeric small label="BIS" unit="" color={COLORS.bis} value={a.has("bis") ? r?.bis : undefined} sub={a.has("bis") ? undefined : "sensor off"} />
           </div>
           <div className="grid grid-cols-2 divide-x divide-white/10">
             <Numeric small label="Ppeak" unit="cmH₂O" color="#E2E8F0" value={r?.peak_pressure ?? undefined} alarm={alarm("peak_pressure")} />
             <Numeric small label="FiO₂" unit="%" color="#E2E8F0" value={r?.fio2} />
           </div>
+          {r?.fi_sevo != null && (r.fi_sevo > 0 || (r.et_sevo ?? 0) > 0) && (
+            <div className="grid grid-cols-2 divide-x divide-white/10">
+              <Numeric small label="Sevo Fi/Et" unit="%" color="#A7F3D0" value={`${r.fi_sevo.toFixed(1)}/${r.et_sevo != null ? r.et_sevo.toFixed(1) : "—"}`} />
+              <Numeric small label="MAC" unit="" color="#A7F3D0" value={r.mac != null ? r.mac.toFixed(2) : undefined} />
+            </div>
+          )}
           {r?.tof && (
             <div className="px-3 py-1.5 text-[11px] text-muted-foreground">
               TOF {r.tof.count}/4{r.tof.ratio != null ? ` · ratio ${r.tof.ratio.toFixed(2)}` : ""}

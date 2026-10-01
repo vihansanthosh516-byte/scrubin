@@ -665,11 +665,16 @@ class Case:
             self.event(k, **{kk: vv for kk, vv in e.items() if kk != "kind"})
             speaker = "anesthesia" if self.role == "surgeon" else "system"
             if k == "tube_placed":
+                self._flags["tube_t"] = self.t
                 txt = f"Grade {e['view']} view. Tube passed, cuff up, {self.airway.ett_size:g} at {e['depth_cm']:g} cm."
                 self.say(speaker, txt if speaker != "system" else f"You see a grade {e['view']} view and pass the tube. Cuff inflated at {e['depth_cm']:g} cm.", kind="finding")
             elif k == "intubation_failed":
                 reason = {"patient_awake": "The patient gags and bites down — far too light.", "not_relaxed": "Jaw is tight and the cords are moving — not relaxed enough.", "no_view": f"Grade {e['view']} view — can't see the cords. Unable to pass the tube."}[e["reason"]]
                 self.say(speaker, reason, kind="finding")
+                if self.role == "anesthesia" and self.airway.attempts >= 2 and not self._flags.get("das_prompt"):
+                    # Difficult Airway Society: stop after repeated failures, oxygenate, get help.
+                    self._flags["das_prompt"] = True
+                    self.say("attending", "That's two failed attempts. Stop and oxygenate — mask with an oral airway or put in an LMA — and I'm coming in to help.")
             elif k == "lma_placed":
                 self.say(speaker, f"LMA size {e['size']} in, cuff up.", kind="finding")
             elif k == "lma_failed":
@@ -710,7 +715,8 @@ class Case:
                 continue
             # The room knows a laryngoscopy (or a CO2 trace still showing) isn't
             # a lost airway — don't call "no CO2" over it.
-            if alarm == "apnea" and (aw.attempt is not None or (readout.get("etco2") or 0) > 10):
+            if alarm == "apnea" and (aw.attempt is not None or (readout.get("etco2") or 0) > 10
+                                     or self.t - self._flags.get("tube_t", -1e9) < 30):
                 continue
             self._alarm_cooldown[alarm] = self.t
             msg = {

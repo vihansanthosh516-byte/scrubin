@@ -93,6 +93,8 @@ class Effects:
     # Components kept so stimulus response can be evaluated later.
     ce_prop: float = 0.0
     sevo_mac: float = 0.0
+    fi_sevo: float = 0.0  # inspired sevo % (gas analyser)
+    et_sevo: float = 0.0  # end-tidal sevo %
 
 
 @dataclass
@@ -183,6 +185,7 @@ class Pharmacology:
         ce_mid = self.ce("midazolam")
         sevo = self.volatile.mac_fraction
         e.ce_prop, e.sevo_mac, e.mac = ce_prop, sevo, self.volatile.et_mac
+        e.fi_sevo, e.et_sevo = self.volatile.fi, self.volatile.fa
 
         # Opioids expressed as remifentanil-equivalent effect-site conc.
         naloxone = self.ce("naloxone")

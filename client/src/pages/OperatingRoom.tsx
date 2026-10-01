@@ -30,6 +30,15 @@ export default function OperatingRoom() {
   const [startError, setStartError] = useState<string | null>(null);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [created, setCreated] = useState<CreateCaseResponse | null>(null);
+  // Anything scrolled into view lands below the sticky case bar, not under it.
+  useEffect(() => {
+    const el = document.documentElement;
+    const prev = el.style.scrollPaddingTop;
+    el.style.scrollPaddingTop = "170px";
+    return () => {
+      el.style.scrollPaddingTop = prev;
+    };
+  }, []);
   const [creating, setCreating] = useState(false);
   const [debrief, setDebrief] = useState<Debrief | null>(null);
   const [voices, setVoices] = useState(true);
@@ -82,7 +91,7 @@ export default function OperatingRoom() {
   const endCase = useCallback(async () => {
     if (!created) return;
     conn.control({ paused: true });
-    const d = await engineApi.debrief(created.case_id);
+    const d = await engineApi.debrief(created.case_id, true);
     setDebrief(d);
     // Record every case the trainee closes with a debrief, ended early or not.
     if (user && !recorded && d.score != null) {
@@ -312,7 +321,7 @@ export default function OperatingRoom() {
             <PatientMonitor readout={state.monitor} alarms={state.alarms} paused={state.paused} muted={muted} />
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
               <Sign label="Patient" value={state.patient_signs.consciousness} />
-              <Sign label="Breathing" value={state.patient_signs.breathing} alert={state.patient_signs.breathing !== "breathing"} />
+              <Sign label="Breathing" value={state.patient_signs.breathing === "breathing" ? "spontaneous" : state.patient_signs.breathing} alert={state.patient_signs.breathing !== "breathing"} />
               {state.patient_signs.moving && <Sign label="" value="moving" alert />}
               {state.patient_signs.fasciculating && <Sign label="" value="fasciculating" />}
               <Sign label="Airway" value={state.airway.device.replace("_", " ")} />

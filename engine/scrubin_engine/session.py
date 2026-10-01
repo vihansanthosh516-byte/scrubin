@@ -197,7 +197,11 @@ class Session:
             "targets": ", ".join(c.procedure.spec["targets"]) if c.procedure else "none",
         }
 
-    def debrief(self) -> dict:
+    def debrief(self, end: bool = False) -> dict:
+        if end and self.case.status != "ended":
+            # "End & debrief": the trainee closed the case — it is no longer resumable.
+            self.case.status = "ended"
+            self.case.event("case_ended", by="trainee")
         d = build_debrief(self.case)
         if self.store is not None:
             self.store.save(id=self.id, user_id=self.user_id, scenario=self.scenario_id, role=self.role, seed=self.seed,

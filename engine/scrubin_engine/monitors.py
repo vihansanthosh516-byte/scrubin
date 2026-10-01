@@ -109,7 +109,9 @@ class Monitors:
             out["rr"] = round(airway.delivered_rr) if flowing else 0
             out["capno_shape"] = airway.capno_shape
             out["fio2"] = round(machine.circuit_fio2 * 100)
-            out["et_sevo"] = None
+            out["et_sevo"] = round(eff.et_sevo, 1) if flowing else None
+            out["fi_sevo"] = round(eff.fi_sevo, 1)
+            out["mac"] = round(eff.mac, 2) if flowing else None
         elif "etco2" in a:
             out["etco2"] = None
             out["capno_shape"] = "none"

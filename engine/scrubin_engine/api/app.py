@@ -204,10 +204,10 @@ async def control(case_id: str, body: Control) -> dict:
 
 
 @router.get("/cases/{case_id}/debrief")
-async def debrief(case_id: str) -> dict:
+async def debrief(case_id: str, end: bool = False) -> dict:
     live = store.get(case_id)
     if live is not None:
-        return live.debrief()
+        return live.debrief(end=end)
     rec = store.db.get(case_id)
     if rec is None:
         raise HTTPException(404, "case not found")
