@@ -118,12 +118,39 @@ export async function recordSession(record: SessionRecord, user: {
   name: string;
   login: string;
   avatar_url?: string | null;
-}) {
+}): Promise<"saved" | "local"> {
   try {
     await upsertUser(user);
     const { error } = await supabase.from("sessions").insert(record);
-    if (error) console.error("Failed to record session:", error);
+    if (!error) return "saved";
+    console.error("Failed to record session:", error);
   } catch (err) {
     console.error("Failed to record session:", err);
+  }
+  // The database refuses the row when the sign-in has lapsed (row-level
+  // security checks auth.uid()), so keep the case on this device instead of
+  // losing it — My Simulations merges these in.
+  saveLocalSession(record);
+  return "local";
+}
+
+const localKey = (userId: string) => `scrubin_local_sessions_${userId}`;
+
+function saveLocalSession(record: SessionRecord) {
+  try {
+    const list: PersistedSession[] = JSON.parse(localStorage.getItem(localKey(record.user_id)) || "[]");
+    list.unshift({ ...record, id: `local-${Date.now()}`, created_at: new Date().toISOString() } as PersistedSession);
+    localStorage.setItem(localKey(record.user_id), JSON.stringify(list.slice(0, 100)));
+  } catch {
+    // Storage blocked — nothing more we can do.
+  }
+}
+
+/** Completed cases kept on this device because the database refused them. */
+export function getLocalSessions(userId: string): PersistedSession[] {
+  try {
+    return JSON.parse(localStorage.getItem(localKey(userId)) || "[]");
+  } catch {
+    return [];
   }
 }

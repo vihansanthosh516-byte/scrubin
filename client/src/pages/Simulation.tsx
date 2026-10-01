@@ -152,6 +152,8 @@ function SimulationPage() {
   const [startedAt, setStartedAt] = useState<number | null>(null);
   // One-shot guard so the terminal effect records each sim exactly once.
   const [recordedSessionId, setRecordedSessionId] = useState<string | null>(null);
+  // Where the finished case ended up: the account record, or this device only.
+  const [recordResult, setRecordResult] = useState<"saving" | "saved" | "local" | null>(null);
 
   const [isStarting, setIsStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
@@ -330,6 +332,7 @@ function SimulationPage() {
       ? "Complicated"
       : "Successful";
     setRecordedSessionId(simId);
+    setRecordResult("saving");
     void recordSession(
       {
         user_id: user.id,
@@ -348,7 +351,7 @@ function SimulationPage() {
         login: user.login,
         avatar_url: user.avatar_url,
       }
-    );
+    ).then(setRecordResult);
   }, [simId, isCompleted, user, currentState, procId, scenario, startedAt, recordedSessionId]);
 
   const rescueMode = (currentState?.mode || "").toLowerCase();
@@ -930,7 +933,13 @@ function SimulationPage() {
                 would only add a resumable "active" copy to My Simulations. */}
             {isCompleted ? (
               <span className="px-3 py-1.5 rounded-sm border border-border text-xs font-bold text-muted-foreground flex items-center gap-2">
-                <Save className="w-3 h-3" /> {user ? "Saved to My Simulations" : "Sign in to save results"}
+                <Save className="w-3 h-3" /> {!user
+                  ? "Sign in to save results"
+                  : recordResult === "saved"
+                  ? "Saved to My Simulations"
+                  : recordResult === "local"
+                  ? "Saved on this device — sign in again to sync"
+                  : "Saving…"}
               </span>
             ) : (
             <button
