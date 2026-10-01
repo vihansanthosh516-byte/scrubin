@@ -1,0 +1,21 @@
+# Render's free tier sleeps a service after 15 idle minutes, and the first
+# request after that fails while it boots ("Initialization Failed"). Pinging
+# every 10 minutes keeps the API and the engine awake 10am–9pm US Central.
+# Both share Render's 750 free hours a month, so they cannot stay up 24/7:
+# 2 services × 11 h × 31 days ≈ 680 h, leaving headroom for off-hours use.
+name: Keep Render awake
+
+on:
+  schedule:
+    - cron: "*/10 15-23,0-1 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping API and engine
+        run: |
+          curl -fsS -m 90 https://scrubin-api.onrender.com/ -o /dev/null || echo "API ping failed"
+          curl -fsS -m 90 https://scrubin-core.onrender.com/health -o /dev/null || echo "Engine ping failed"
