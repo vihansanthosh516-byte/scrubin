@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useSimulationStore } from "../state/simulationStore";
 import { 
   ShieldCheck, Activity, Clock, Play, AlertTriangle, 
@@ -222,6 +222,9 @@ export default function MySimulations() {
                 <span className="text-[10px] font-mono-data px-2 py-0.5 rounded-full bg-background/60 border border-border text-muted-foreground">
                   {completedCases.length} on record
                 </span>
+                <Link href="/or/cases" className="ml-auto text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground">
+                  Real-time OR cases &amp; replays →
+                </Link>
               </div>
               <div className="grid gap-2.5">
                 {completedCases.map((c) => {
@@ -272,7 +275,7 @@ export default function MySimulations() {
             </div>
           )}
 
-        {sessions.length === 0 ? (
+        {sessions.length === 0 && completedCases.length > 0 ? null : sessions.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

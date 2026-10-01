@@ -79,7 +79,11 @@ class Procedure:
         c = self.case
         h = c.patient.hidden
         if name == "anesthetized":
-            return c.eff.bis < 65 and c.airway.device in ("ett", "lma")
+            # Asleep with a confirmed airway: a tube in the esophagus, or one
+            # that hasn't shown CO2 yet, is not a secured airway to prep around.
+            aw = c.airway
+            return (c.eff.bis < 65 and aw.device in ("ett", "lma") and getattr(aw, "ett_location", "trachea") != "esophagus"
+                    and aw.capno_shape != "none")
         if name == "relaxed":
             return c.eff.tof_count <= 2
         if name == "antibiotics_given":
@@ -193,6 +197,19 @@ class Procedure:
             c.say("scrub", "Sorry, which step do you want to do?")
             return {"ok": False, "error": "unknown surgical step"}
         if self.running is not None and not task.get("priority"):
+            if task["id"] == self.running.task["id"]:
+                c.say("scrub", f"Already on it — {task['name'].lower()}.")
+                return {"ok": True, "already_running": task["id"]}
+            # Refuse now if the step needs more than the current one will provide —
+            # queueing it would promise a step that can't happen yet.
+            will_set = set(self.running.task.get("sets") or [])
+            missing = [f for f in task.get("requires") or [] if not self.flag(f) and f not in self.flags and f not in will_set]
+            if missing:
+                ok, why = self.can_start(task)
+                if not ok:
+                    c.say("scrub", why)
+                    self._near_miss(task, why)
+                    return {"ok": False, "error": why}
             if len(self.queue) >= 3:
                 c.say("scrub", f"One thing at a time — still on: {self.running.task['name'].lower()}.")
                 return {"ok": False, "error": "busy"}
@@ -203,6 +220,7 @@ class Procedure:
         ok, why = self.can_start(task)
         if not ok:
             c.say("scrub", why)
+            self._near_miss(task, why)
             return {"ok": False, "error": why}
         allowed = task.get("instruments")
         instrument = act.instrument
@@ -384,6 +402,12 @@ class Procedure:
         if tid == "secure_base":
             instr = "endoloop" if not c.patient.hidden.get("perforated") else "stapler"
         self.start(nxt, instr, None)
+
+    def _near_miss(self, task: dict, why: str) -> None:
+        """A blocked step is something the trainee almost did — the debrief shows it."""
+        note = f"Near miss: tried to {task['name'].lower()} too early — {why}"
+        if note not in self.notes:
+            self.notes.append(note)
 
     def _next_auto_task(self) -> Optional[dict]:
         tasks = sorted((t for t in self.spec["tasks"] if t.get("auto_order")), key=lambda t: t["auto_order"])

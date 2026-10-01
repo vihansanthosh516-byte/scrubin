@@ -84,7 +84,8 @@ export default function OperatingRoom() {
     conn.control({ paused: true });
     const d = await engineApi.debrief(created.case_id);
     setDebrief(d);
-    if (user && !recorded && state?.status === "ended") {
+    // Record every case the trainee closes with a debrief, ended early or not.
+    if (user && !recorded && d.score != null) {
       setRecorded(true);
       recordSession(user, created.scenario.id, created.scenario.name, d);
     }
@@ -188,8 +189,8 @@ export default function OperatingRoom() {
 
   return (
     <div className="min-h-screen pt-24 pb-6 px-3 lg:px-5 bg-background">
-      {/* top bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 py-3">
+      {/* top bar — sticky under the site header so End & debrief stays reachable */}
+      <div className="sticky top-[72px] z-30 bg-background/95 backdrop-blur flex flex-wrap items-center justify-between gap-3 py-3">
         <div>
           <div className="text-[11px] uppercase tracking-[0.18em] text-primary">
             {role === "anesthesia" ? "You are the anesthesiologist" : "You are the surgeon"} · {conn.connected ? "live" : "reconnecting…"}

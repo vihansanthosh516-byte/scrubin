@@ -165,6 +165,13 @@ class Session:
         leftover: list[str] = []
         for part in parts:
             general = parse_clause(part)
+            # "Desufflate" / "let the gas out" is the surgeon's own closing step,
+            # not a request to stop the operation.
+            if general.actions and general.actions[0].get("intent") == "stop_surgery":
+                own = parse_surgical(part, proc.spec, proc)
+                if own is not None:
+                    actions.append(own)
+                    continue
             if general.actions and general.actions[0]["type"] in ("position", "say", "confirm", "assess"):
                 actions.extend(general.actions)
                 continue

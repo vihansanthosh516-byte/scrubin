@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_BASE } from "@/lib/api";
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Debrief } from "@/engine/types";
 import { fmtTime } from "./AnesthesiaStation";
@@ -11,7 +12,7 @@ const GRADE_STYLE = {
 } as const;
 
 const HIDDEN_LABELS: Record<string, (v: any) => string> = {
-  cormack_lehane: (v) => `Laryngoscopy view: Cormack–Lehane grade ${v}`,
+  cormack_lehane: (v) => `Laryngoscopy view with a Macintosh blade: Cormack–Lehane grade ${v} (a video laryngoscope usually shows one grade better)`,
   difficult_mask: (v) => (v ? "Difficult mask ventilation" : "Easy mask ventilation"),
   reactive_airway: (v) => (v ? "Reactive airways (asthma) — bronchospasm-prone" : "Airways not reactive today"),
   gastric_volume_ml: (v) => `Gastric contents ~${v} mL`,
@@ -27,7 +28,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/evaluate", {
+    fetch(`${API_BASE}/api/evaluate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ procedureName, debrief: { ...debrief, trend: undefined, timeline: undefined } }),
@@ -117,7 +118,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
             {notes ? (
               <p className="text-sm whitespace-pre-line leading-relaxed">{notes}</p>
             ) : notesError ? (
-              <p className="text-xs text-muted-foreground">AI attending notes unavailable (check GROQ_API_KEY). The structured debrief is complete without them.</p>
+              <p className="text-xs text-muted-foreground">AI attending notes are unavailable right now. The structured debrief is complete without them.</p>
             ) : (
               <p className="text-xs text-muted-foreground">Writing notes…</p>
             )}
@@ -135,6 +136,16 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
               ))}
             </ul>
           </div>
+          {debrief.surgery.notes.length > 0 && (
+            <div className="glass-card p-4">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">What almost went wrong</div>
+              <ul className="text-sm space-y-1">
+                {debrief.surgery.notes.map((n, i) => (
+                  <li key={`n${i}`}>{n}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="glass-card p-4">
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Timeline</div>
             <div className="max-h-[360px] overflow-y-auto space-y-0.5 text-xs font-mono-data">

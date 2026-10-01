@@ -148,3 +148,26 @@ def test_capnogram_check_waits_for_breaths():
     assert r.get("pending_s")
     c.run(10)
     assert "capnogram" in c.comms[-1]["text"].lower() or "co2" in c.comms[-1]["text"].lower()
+
+
+def test_desufflate_is_the_surgeons_step_not_stop_surgery():
+    from scrubin_engine.session import Session
+
+    s = Session("t", "appendectomy", "surgeon", 3, surgeon_case())
+    for text in ["desufflate", "let the gas out"]:
+        actions, _ = s._surgeon_parse(text)
+        assert actions and actions[0]["type"] == "surgical" and actions[0]["params"]["task_id"] == "desufflate"
+    actions, _ = s._surgeon_parse("stop the surgery")
+    assert actions[0].get("intent") == "stop_surgery"
+
+
+def test_ai_anesthesiologist_doses_on_its_own_and_runs_the_code():
+    c = surgeon_case()
+    r = c.submit({"type": "drug", "drug": "propofol"})
+    assert r.get("delegated") and not any("How much" in m["text"] for m in c.comms)
+    r = c.submit({"type": "airway", "maneuver": "extubate"})
+    assert r.get("delegated") and c.airway.device == "ett"  # the surgeon can't pull the tube
+    c.body.rhythm = "pea"
+    c.run(5)
+    assert c.body.cpr
+    assert any("starting CPR" in m["text"] for m in c.comms)

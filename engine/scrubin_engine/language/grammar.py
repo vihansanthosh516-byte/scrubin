@@ -219,7 +219,7 @@ def parse_clause(raw: str) -> ParseResult:
     # --- volatile ------------------------------------------------------
     gas_as_volatile = _has(t, "gas") and re.search(r"\d|\boff\b|\bup\b|\bdown\b|\bon\b", t) and not re.search(r"liter|litre|flow|fresh gas|gas machine", t)
     if (_has(t, "sevo", "sevoflurane", "sevoflourane", "volatile", "vaporizer", "vapouriser") or gas_as_volatile) and not _has(t, "blood gas", "abg"):
-        if re.search(r"\boff\b|turn (it |the \w+ )?off|close", t):
+        if re.search(r"\boff\b|turn (it |the \w+ )?off|close|\b(stop|discontinue|cut)\b", t):
             add(type="volatile", percent=0.0)
             return r
         m = re.search(NUM + r"\s*(%|percent)?", t)

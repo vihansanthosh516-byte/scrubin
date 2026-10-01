@@ -148,6 +148,10 @@ class Case:
         # Role routing: a surgeon's anesthesia orders go to the anesthesia agent.
         performer = act.actor
         if self.role == "surgeon" and kind in ANESTHESIA_ACTIONS and act.actor == "trainee":
+            # The AI anesthesiologist owns the anesthetic: it decides and doses.
+            # The surgeon can still help run a code.
+            if self.autopilot is not None and kind not in ("cpr", "defibrillate"):
+                return self.autopilot.request(act)
             performer = "anesthesia"
         handler = getattr(self, f"_do_{kind}")
         if kind == "confirm":
@@ -315,6 +319,8 @@ class Case:
         m = act.maneuver
         eff = self.eff
         if aw.attempt is not None and m not in ("mask_on",):
+            if performer == "trainee":
+                self.say("system", f"Still on laryngoscopy — about {max(1, round(aw.attempt.remaining_s))} s to go.", kind="sign")
             return {"ok": False, "error": "laryngoscopy in progress"}
         if m == "mask_on":
             aw.attempt = None
@@ -357,6 +363,8 @@ class Case:
             self.event("laryngoscopy", laryngoscope=act.laryngoscope or "mac4", attempt=aw.attempts)
             if performer != "trainee":
                 self.say(performer, "Going in with the laryngoscope.")
+            else:
+                self.say("system", f"Laryngoscope in — about {round(aw.attempt.remaining_s)} s to view the cords and pass the tube. No ventilation meanwhile.", kind="sign")
         elif m == "lma":
             aw.insert_lma(act.lma_size or 5, eff)
         elif m in ("extubate", "remove_lma"):
@@ -699,6 +707,10 @@ class Case:
         self.monitors.update_alarms(readout)
         for alarm in self.monitors.new_alarms:
             if self._alarm_cooldown.get(alarm, -1e9) + 60 > self.t:
+                continue
+            # The room knows a laryngoscopy (or a CO2 trace still showing) isn't
+            # a lost airway — don't call "no CO2" over it.
+            if alarm == "apnea" and (aw.attempt is not None or (readout.get("etco2") or 0) > 10):
                 continue
             self._alarm_cooldown[alarm] = self.t
             msg = {

@@ -147,6 +147,10 @@ def build_debrief(case) -> dict[str, Any]:
     started = ("induction" in case._flags) if case.role == "anesthesia" else (case.metrics.incision_t is not None)
     if started:
         items = anesthesia_items(case) if case.role == "anesthesia" else surgeon_items(case)
+        if case.outcome is None:
+            # Stopping partway can't earn a perfect score for a case not finished.
+            items.append(_item("Case", "Case completion", POOR, "The case was ended before the patient reached recovery.",
+                               "Finish the case — closure, emergence and handover are part of the operation."))
     else:
         what = "induction" if case.role == "anesthesia" else "the incision"
         items = [_item("Case", "Case ended early", NA, f"The case ended before {what}, so there is nothing to evaluate yet.")]

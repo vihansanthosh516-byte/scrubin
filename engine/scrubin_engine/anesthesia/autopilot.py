@@ -16,6 +16,12 @@ from typing import Any
 
 from .. import actions as A
 
+ARREST = ("pea", "asystole", "vf")
+DEPTH_DRUGS = {"propofol", "fentanyl", "remifentanil", "midazolam", "ketamine", "sevoflurane", "morphine", "hydromorphone"}
+RELAXANTS = {"rocuronium", "vecuronium", "succinylcholine", "cisatracurium"}
+PRESSORS = {"phenylephrine", "ephedrine", "epinephrine", "norepinephrine", "vasopressin"}
+ANTIBIOTICS = {"cefazolin", "metronidazole", "clindamycin", "gentamicin", "vancomycin", "ampicillin"}
+
 
 @dataclass
 class Autopilot:
@@ -54,17 +60,100 @@ class Autopilot:
             self.act({"type": "drug", "drug": "rocuronium", "dose": 20})
             return True
         if re.search(r"deeper|moving|light", text):
-            self.act({"type": "drug", "drug": "propofol", "dose": 40})
-            self.act({"type": "volatile", "percent": min(3.5, self.case.machine.sevo_dial + 0.5)})
+            self.hear_deeper()
             return True
         return False
 
     # ------------------------------------------------------------------
+    def request(self, act) -> dict:
+        """An anesthesia order from the trainee-surgeon. The anesthesiologist owns
+        the anesthetic: it decides and doses, it never asks the surgeon how much."""
+        c, b = self.case, self.case.body
+        kind = act.type
+        after_induction = self.phase in ("maintenance", "closing")
+        if kind == "drug":
+            drug = act.drug
+            if drug in DEPTH_DRUGS:
+                if after_induction:
+                    self.hear_deeper()
+                    self.say("Taking him deeper.")
+                else:
+                    self.say("I'll induce as soon as he's preoxygenated.")
+            elif drug in RELAXANTS:
+                if after_induction:
+                    self.act({"type": "drug", "drug": "rocuronium", "dose": 20})
+                    self.say("More rocuronium going in.")
+                else:
+                    self.say("The relaxant goes in with induction.")
+            elif drug in PRESSORS:
+                if b.rhythm in ARREST:
+                    self.say("We're running the code — epi is on schedule.")
+                elif b.hr < 60:
+                    self.act({"type": "drug", "drug": "ephedrine", "dose": 10})
+                    self.say("Ephedrine 10 for the pressure.")
+                else:
+                    self.act({"type": "drug", "drug": "phenylephrine", "dose": 100})
+                    self.say("Phenylephrine 100 for the pressure.")
+            elif drug in ANTIBIOTICS:
+                if self.last.get("antibiotics"):
+                    self.say("Antibiotics are already in.")
+                else:
+                    self._antibiotics()
+            else:
+                self.say("I'll take care of the anesthetic drugs — tell me what you're seeing.")
+            return {"ok": True, "delegated": True}
+        if kind == "fluid":
+            self.act({"type": "fluid", "fluid": "lactated_ringers", "volume_ml": 500})
+            self.say("Running a 500 bolus of LR.")
+            return {"ok": True, "delegated": True}
+        self.say("I've got the airway and the ventilator — tell me what you need.")
+        return {"ok": True, "delegated": True}
+
+    def hear_deeper(self) -> None:
+        self.act({"type": "drug", "drug": "propofol", "dose": 40})
+        self.act({"type": "volatile", "percent": min(3.5, self.case.machine.sevo_dial + 0.5)})
+
+    def _antibiotics(self) -> None:
+        c = self.case
+        self.act({"type": "drug", "drug": "cefazolin", "dose": 3 if c.patient.weight_kg >= 120 else 2, "unit": "g"})
+        self.act({"type": "drug", "drug": "metronidazole", "dose": 500})
+        self.last["antibiotics"] = c.t
+        self.say("Cefazolin and metronidazole are in — penicillin allergy was hives, so cefazolin is fine.")
+
+    def _rescue(self) -> bool:
+        """Arrest and hypoxia come before the plan. Returns True while a code runs."""
+        c = self.case
+        b, aw = c.body, c.airway
+        if b.rhythm in ARREST:
+            if not b.cpr:
+                self.say("No pulse — starting CPR. Epi 1 milligram, and get the defibrillator.")
+                self.act({"type": "cpr", "on": True})
+                if aw.device != "ett":
+                    self.act({"type": "airway", "maneuver": "mask_on"})
+                    self.act({"type": "bag", "on": True})
+                self.act({"type": "gas", "o2_flow": 10, "air_flow": 0})
+                self.act({"type": "volatile", "percent": 0})
+            if self.every("code_epi", 180):
+                self.act({"type": "drug", "drug": "epinephrine", "dose": 1000})
+            if b.rhythm == "vf" and self.every("shock", 120):
+                self.act({"type": "defibrillate", "joules": 200})
+            return True
+        induced = self.phase in ("induced", "intubating", "rescue_mask", "confirm_tube", "emergence", "done")
+        if induced and aw.device != "ett" and b.sao2 < 0.90 and self.every("desat", 30):
+            self.say(f"Sats are {round(b.sao2 * 100)} — bagging him.")
+            self.act({"type": "gas", "o2_flow": 10, "air_flow": 0})
+            self.act({"type": "airway", "maneuver": "mask_on"})
+            self.act({"type": "airway", "maneuver": "oral_airway"})
+            self.act({"type": "bag", "on": True})
+        return False
+
     def step(self, dt: float) -> None:
         c = self.case
         eff, b, aw, m = c.eff, c.body, c.airway, c.machine
         p = self.phase
         proc = c.procedure
+        if self._rescue():
+            return
 
         if p == "setup" and c.t >= 5:
             self.say("Hi Marcus, I'm Dr. Okafor from anesthesia. We'll put some monitors on and give you some oxygen.")
@@ -108,8 +197,10 @@ class Autopilot:
             self.say(f"Tube confirmed — sustained CO2, equal breath sounds. 7.5 at 22 at the teeth.")
             self.act({"type": "volatile", "percent": 2.5})
             self.act({"type": "gas", "o2_flow": 1, "air_flow": 1})
-            self.act({"type": "drug", "drug": "cefazolin", "dose": 3 if c.patient.weight_kg >= 120 else 2, "unit": "g"})
-            self.act({"type": "drug", "drug": "metronidazole", "dose": 500})
+            if not self.last.get("antibiotics"):
+                self.act({"type": "drug", "drug": "cefazolin", "dose": 3 if c.patient.weight_kg >= 120 else 2, "unit": "g"})
+                self.act({"type": "drug", "drug": "metronidazole", "dose": 500})
+                self.last["antibiotics"] = c.t
             self.act({"type": "drug", "drug": "ondansetron", "dose": 4})
             self.act({"type": "drug", "drug": "dexamethasone", "dose": 8})
             self.act({"type": "warming", "on": True})
