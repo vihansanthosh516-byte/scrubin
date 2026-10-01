@@ -19,6 +19,8 @@ export interface StockStep {
   title: string;
   description: string;
   choices: StockChoice[];
+  /** Step kind from the bank (preop, access, core, closure, postop…) — drives the phase label. */
+  kind?: string;
 }
 
 /**

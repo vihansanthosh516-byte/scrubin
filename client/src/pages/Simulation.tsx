@@ -833,6 +833,16 @@ function SimulationPage() {
   const isStock = currentMode === "stock";
   const runnerCurrent = caseState ? runnerStep(caseBank, caseState) : null;
   const currentStockStep = runnerCurrent?.step ?? null;
+  // The phase follows the step being played; the engine's tick-based phase
+  // drifts after rescues and repairs.
+  const STEP_PHASE: Record<string, string> = {
+    preop: "Pre-op", antibiotic: "Pre-op", position: "Pre-op",
+    access: "Access", exposure: "Access",
+    dissect: "Operation", core: "Operation", vessel: "Operation", nerve: "Operation",
+    bleed: "Operation", verify: "Operation", vitals: "Operation",
+    closure: "Closing", dvt: "Post-op", postop: "Post-op",
+  };
+  const stepPhase = currentStockStep?.kind ? STEP_PHASE[currentStockStep.kind] : undefined;
 
   // Status badge for the patient card
   const statusBadge = isDeceased
@@ -1025,7 +1035,7 @@ function SimulationPage() {
                 </div>
                 <div className="min-w-0">
                   <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Phase</span>
-                  <span className="truncate block">{pendingDecision?.phaseLabel || pendingDecision?.procedurePhase || currentState?.procedure_phase || '—'}</span>
+                  <span className="truncate block">{(isStock && stepPhase) || pendingDecision?.phaseLabel || pendingDecision?.procedurePhase || currentState?.procedure_phase || '—'}</span>
                 </div>
                 <div className="min-w-0">
                   <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Step</span>

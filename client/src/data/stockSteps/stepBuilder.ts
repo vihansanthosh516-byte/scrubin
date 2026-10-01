@@ -543,6 +543,7 @@ function pickDescription(d: string | string[], seed: string): string {
 export function buildStep(bank: ProcedureBank, def: StepDef, stepId: string, stepIndex: number, seed: string): StockStep {
   return {
     id: stepId,
+    kind: def.kind,
     title: def.title,
     description: pickDescription(def.description, `${seed}:${stepId}:desc`),
     choices: shuffleChoices(balanceLengths(buildStepChoices(def, bank.spec, stepIndex, stepId), stepId, def.kind), seededRandom(`${seed}:${stepId}`)),
