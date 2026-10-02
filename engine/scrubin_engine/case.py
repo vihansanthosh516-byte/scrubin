@@ -666,12 +666,15 @@ class Case:
             speaker = "anesthesia" if self.role == "surgeon" else "system"
             if k == "tube_placed":
                 self._flags["tube_t"] = self.t
+                self._flags["failed_tubes"] = 0
+                self._flags["das_prompt"] = False
                 txt = f"Grade {e['view']} view. Tube passed, cuff up, {self.airway.ett_size:g} at {e['depth_cm']:g} cm."
                 self.say(speaker, txt if speaker != "system" else f"You see a grade {e['view']} view and pass the tube. Cuff inflated at {e['depth_cm']:g} cm.", kind="finding")
             elif k == "intubation_failed":
                 reason = {"patient_awake": "The patient gags and bites down — far too light.", "not_relaxed": "Jaw is tight and the cords are moving — not relaxed enough.", "no_view": f"Grade {e['view']} view — can't see the cords. Unable to pass the tube."}[e["reason"]]
                 self.say(speaker, reason, kind="finding")
-                if self.role == "anesthesia" and self.airway.attempts >= 2 and not self._flags.get("das_prompt"):
+                self._flags["failed_tubes"] = self._flags.get("failed_tubes", 0) + 1
+                if self.role == "anesthesia" and self._flags["failed_tubes"] >= 2 and not self._flags.get("das_prompt"):
                     # Difficult Airway Society: stop after repeated failures, oxygenate, get help.
                     self._flags["das_prompt"] = True
                     self.say("attending", "That's two failed attempts. Stop and oxygenate — mask with an oral airway or put in an LMA — and I'm coming in to help.")

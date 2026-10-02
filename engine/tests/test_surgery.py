@@ -171,3 +171,12 @@ def test_ai_anesthesiologist_doses_on_its_own_and_runs_the_code():
     c.run(5)
     assert c.body.cpr
     assert any("starting CPR" in m["text"] for m in c.comms)
+
+
+def test_surgeon_asking_to_induce_starts_induction_after_a_minute_of_preox():
+    from scrubin_engine.factory import build_case
+
+    c = build_case("appendectomy", "surgeon", 3)
+    c.run(80)  # monitors on, ~75 s of preoxygenation
+    c.submit({"type": "say", "to": "anesthesia", "text": "Let's induce now"})
+    assert any("inducing now" in m["text"] for m in c.comms)

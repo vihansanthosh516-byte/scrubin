@@ -59,6 +59,9 @@ class Autopilot:
         if re.search(r"relax|paraly|tight", text):
             self.act({"type": "drug", "drug": "rocuronium", "dose": 20})
             return True
+        if re.search(r"\binduc|put (him|her|them) to sleep|go to sleep|let's (go|start)|ready to start", text):
+            if self.induce_now():
+                return True
         if re.search(r"deeper|moving|light", text):
             self.hear_deeper()
             return True
@@ -73,7 +76,9 @@ class Autopilot:
         after_induction = self.phase in ("maintenance", "closing")
         if kind == "drug":
             drug = act.drug
-            if drug in DEPTH_DRUGS:
+            if drug in DEPTH_DRUGS and self.induce_now():
+                pass
+            elif drug in DEPTH_DRUGS:
                 if after_induction:
                     self.hear_deeper()
                     self.say("Taking him deeper.")
@@ -108,6 +113,19 @@ class Autopilot:
             return {"ok": True, "delegated": True}
         self.say("I've got the airway and the ventilator — tell me what you need.")
         return {"ok": True, "delegated": True}
+
+    def induce_now(self) -> bool:
+        """The surgeon asks to get going: once a minute of preoxygenation is done,
+        start the induction rather than waiting out the full three minutes."""
+        if self.phase == "preox" and self.in_phase >= 60:
+            self.say("Okay — inducing now. Rapid sequence: fentanyl, propofol, rocuronium.")
+            self.act({"type": "drug", "drug": "fentanyl", "dose": 150})
+            self.goto("fentanyl")
+            return True
+        if self.phase in ("setup", "preox"):
+            self.say("Still preoxygenating — I'll induce in about a minute.")
+            return True
+        return False
 
     def hear_deeper(self) -> None:
         self.act({"type": "drug", "drug": "propofol", "dose": 40})

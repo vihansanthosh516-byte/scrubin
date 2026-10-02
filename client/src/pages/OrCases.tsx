@@ -103,7 +103,7 @@ function CaseRow({ c, children, onDelete }: { c: SavedCase; children: React.Reac
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="font-semibold">
-            {c.scenario_name} · {c.role === "anesthesia" ? "Anesthesiologist" : "Surgeon"}
+            {c.scenario_name || (c.scenario === "appendectomy" ? "Laparoscopic Appendectomy" : c.scenario)} · {c.role === "anesthesia" ? "Anesthesiologist" : "Surgeon"}
           </div>
           <div className="text-xs text-muted-foreground">
             {when(c.updated_at)} · {outcomeLabel(c)} · case time {fmtTime(c.sim_t)}

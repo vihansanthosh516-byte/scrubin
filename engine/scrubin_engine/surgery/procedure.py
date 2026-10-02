@@ -147,6 +147,14 @@ class Procedure:
         return True, ""
 
     def start(self, task: dict, instrument: Optional[str] = None, target: Optional[str] = None) -> None:
+        if task["id"] == "desufflate":
+            # Steps meant to happen with the camera in are lost once the gas is out.
+            missed = [t["name"].lower() for t in self.spec["tasks"]
+                      if t.get("auto_order") and t["auto_order"] < task.get("auto_order", 99)
+                      and t["id"] not in self.done and t["id"] != task["id"]
+                      and set(t.get("requires") or []) & {"camera_in", "insufflated"}]
+            if missed:
+                self.notes.append("Skipped before desufflating: " + ", ".join(missed) + ".")
         dur = float(task.get("duration_s", 60))
         dur *= H.duration_factor(self, task)
         self.running = Running(task, dur, dur, instrument, target, self.case.t)
@@ -323,6 +331,8 @@ class Procedure:
             return
         # Progress: stalls if the patient moves or the field is bleeding.
         r = self.running
+        if self.mode == "auto" and self._unsafe_to_operate():
+            return
         if c.body.movement > 0.3:
             r.moved = True
             return
@@ -340,8 +350,19 @@ class Procedure:
         start = self._wait.setdefault(key, self.case.t)
         return self.case.t - start >= seconds
 
+    def _unsafe_to_operate(self) -> bool:
+        """An AI surgeon stops cutting when the patient is awake without a secured
+        airway or desaturating — the airway comes first."""
+        c = self.case
+        awake = c.eff.bis > 80 and c.airway.device not in ("ett", "lma")
+        open_case = "incised" in self.flags and "skin_closed" not in self.flags and not self.finished
+        return open_case and (c.body.sao2 < 0.88 or awake)
+
     def _auto(self, dt: float) -> None:
         c = self.case
+        if self._unsafe_to_operate():
+            self.surgeon_says("I'm holding — tell me when he's asleep and oxygenating again.", key="hold_airway", every_s=60)
+            return
         if self.finished or self.paused:
             return
         if c.t > 45 and "greeted" not in self.flags:
@@ -436,7 +457,8 @@ class Procedure:
                 "name": t["name"],
                 "done": t["id"] in self.done,
                 "available": ok,
-                "blocked": None if ok else why,
+                "blocked": None if ok else ("Skipped — the camera is out now." if "desufflate" in self.done and t["id"] not in self.done
+                                            and set(t.get("requires") or []) & {"camera_in", "insufflated"} else why),
                 "instruments": t.get("instruments", []),
                 "optional": not bool(t.get("auto_order")),
             })
