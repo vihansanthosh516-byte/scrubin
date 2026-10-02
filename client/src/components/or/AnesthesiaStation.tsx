@@ -84,7 +84,7 @@ function DrugCart({ state, drugs, patient, act }: Props) {
                 {groups[label].map((d) => (
                   <OrButton key={d.id} active={selected?.id === d.id} onClick={() => setSelected(d)} title={d.notes}>
                     <span className="font-semibold">{d.name}</span>
-                    <span className="ml-1 text-[10px] text-muted-foreground">{d.concentration}</span>
+                    <span className="ml-1 text-[10px] text-muted-foreground">{/\/mL/.test(d.concentration) ? d.concentration : `${d.concentration} vial`}</span>
                   </OrButton>
                 ))}
               </div>

@@ -134,8 +134,11 @@ class SupabaseCaseStore:
         with self._lock:
             rows, self._pending = list(self._pending.values()), {}
         for row in rows:
+            # Leave out unknown score/debrief so the upsert keeps what's already stored —
+            # after a restart the cache is empty and None would wipe the saved values.
+            body = {k: v for k, v in row.items() if not (k in ("score", "debrief") and v is None)}
             try:
-                r = self._http.post(self.base, json=row, params={"on_conflict": "id"},
+                r = self._http.post(self.base, json=body, params={"on_conflict": "id"},
                                     headers={"Prefer": "resolution=merge-duplicates,return=minimal"})
                 r.raise_for_status()
             except Exception as e:  # keep it for the next flush rather than lose it

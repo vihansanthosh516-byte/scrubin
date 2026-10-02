@@ -351,17 +351,17 @@ class Procedure:
         return self.case.t - start >= seconds
 
     def _unsafe_to_operate(self) -> bool:
-        """An AI surgeon stops cutting when the patient is awake without a secured
-        airway or desaturating — the airway comes first."""
+        """An AI surgeon stops while the abdomen is open and the patient has no
+        secured airway or is desaturating — the airway comes first."""
         c = self.case
-        awake = c.eff.bis > 80 and c.airway.device not in ("ett", "lma")
+        no_airway = c.airway.device not in ("ett", "lma")
         open_case = "incised" in self.flags and "skin_closed" not in self.flags and not self.finished
-        return open_case and (c.body.sao2 < 0.88 or awake)
+        return open_case and (c.body.sao2 < 0.88 or no_airway)
 
     def _auto(self, dt: float) -> None:
         c = self.case
         if self._unsafe_to_operate():
-            self.surgeon_says("I'm holding — tell me when he's asleep and oxygenating again.", key="hold_airway", every_s=60)
+            self.surgeon_says("I'm holding — the airway's not secure. Tell me when he's intubated and oxygenating again.", key="hold_airway", every_s=60)
             return
         if self.finished or self.paused:
             return

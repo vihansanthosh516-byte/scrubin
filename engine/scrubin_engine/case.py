@@ -162,6 +162,7 @@ class Case:
                 return check
         if kind == "surgical":
             return handler(act, performer, confirmed) or {"ok": True}
+        self._confirmed = confirmed
         result = handler(act, performer) if kind != "say" else handler(act)
         return result or {"ok": True}
 
@@ -368,6 +369,14 @@ class Case:
         elif m == "lma":
             aw.insert_lma(act.lma_size or 5, eff)
         elif m in ("extubate", "remove_lma"):
+            unsafe = eff.tof_ratio < 0.9 or eff.bis < 70
+            if performer == "trainee" and unsafe and not getattr(self, "_confirmed", False):
+                why = []
+                if eff.tof_ratio < 0.9:
+                    why.append(f"still paralysed (TOF ratio {eff.tof_ratio:.2f})")
+                if eff.bis < 70:
+                    why.append(f"still deeply asleep (BIS {round(eff.bis)})")
+                return self._ask_confirm(act, "attending", f"Hold on — he's {' and '.join(why)}. Pull the tube anyway?")
             prev = aw.remove_device()
             self.machine.mode = "manual"
             self.machine.bagging = False
@@ -805,7 +814,7 @@ class Case:
             "comms": [c for c in self.comms if c["id"] > since_comms],
             "patient_signs": {
                 "consciousness": eff.consciousness if eff.consciousness in ("awake", "sedated") else "unresponsive",
-                "breathing": "apneic" if self.body.spont_ve == 0 else ("obstructed" if self.airway.obstruction > 0.5 and self.airway.device in ("none", "face_mask", "nasal_cannula") else "breathing"),
+                "breathing": "apneic" if self.body.spont_ve == 0 and self.tick > 0 else ("obstructed" if self.airway.obstruction > 0.5 and self.airway.device in ("none", "face_mask", "nasal_cannula") else "breathing"),
                 "moving": self.body.movement > 0.25,
                 "fasciculating": eff.fasciculating,
             },

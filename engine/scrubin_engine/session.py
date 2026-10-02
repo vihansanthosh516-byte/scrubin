@@ -171,6 +171,12 @@ class Session:
         actions: list[dict] = []
         leftover: list[str] = []
         for part in parts:
+            low = part.lower()
+            # A surgeon asking about "the pressure" means blood pressure, and the
+            # anesthesiologist answers it — not the ventilator readout.
+            if re.search(r"\bpressure|\bbp\b", low) and not re.search(r"airway|peak|plateau|vent|insuffl|iap|abdom", low):
+                actions.append({"type": "say", "to": "anesthesia", "text": part})
+                continue
             general = parse_clause(part)
             # "Desufflate" / "let the gas out" is the surgeon's own closing step,
             # not a request to stop the operation.
