@@ -65,6 +65,19 @@ class Autopilot:
         if re.search(r"deeper|moving|light", text):
             self.hear_deeper()
             return True
+        if re.search(r"pressure|\bbp\b|pressor", text) and self.phase in ("maintenance", "closing"):
+            b = self.case.body
+            drug, dose = ("ephedrine", 10) if b.hr < 60 else ("phenylephrine", 100)
+            self.act({"type": "drug", "drug": drug, "dose": dose})
+            self.say(f"Pressure's {round(b.sbp)}/{round(b.dbp)} — {drug} {dose} going in.")
+            return True
+        if getattr(act, "to", None) == "anesthesia":
+            # Anything else addressed to anesthesia gets a status report, not a question back.
+            c, b = self.case, self.case.body
+            self.say(f"Sats {round(b.sao2 * 100)}, pressure {round(b.sbp)}/{round(b.dbp)}, heart rate {round(b.hr)}"
+                     + (f", BIS {round(c.eff.bis)}" if self.phase in ("maintenance", "closing") else "")
+                     + " — I've got the anesthetic.")
+            return True
         return False
 
     # ------------------------------------------------------------------

@@ -7,6 +7,8 @@ and so replay exactly.
 
 from __future__ import annotations
 
+import re
+
 import asyncio
 import secrets
 import time
@@ -140,6 +142,11 @@ class Session:
                 source = "surgical"
             else:
                 actions = []  # partly understood: let the LLM read the whole sentence
+        if not actions and self.role == "surgeon" and ANESTHESIA_ASK.search(text.lower()):
+            # Requests about the anesthetic go to the anesthesiologist, who decides
+            # the drugs and doses — the language model must not ask the surgeon.
+            actions = [{"type": "say", "to": "anesthesia", "text": text}]
+            source = "grammar"
         if not actions:
             result = await interpret(text, self._context())
             actions, clarification, reply, source = result.actions, result.clarification, result.reply, result.source
@@ -209,6 +216,10 @@ class Session:
                             log=self.case.log, score=d.get("score"), debrief=d)
             self._saved_tick, self._saved_status = self.case.tick, self.case.status
         return d
+
+
+ANESTHESIA_ASK = re.compile(r"\binduc|put (him|her|them) (to sleep|under)|go to sleep|anesthe|anaesthe|deeper|\blight\b|relax|paraly"
+                           r"|blood pressure|\bbp\b|pressure('s| is) low|pressor|intubat|airway|ventilat|\bsats?\b|oxygen")
 
 
 def rebuild_case(record: dict, until_tick: Optional[int] = None, on_tick=None) -> Case:

@@ -180,3 +180,16 @@ def test_surgeon_asking_to_induce_starts_induction_after_a_minute_of_preox():
     c.run(80)  # monitors on, ~75 s of preoxygenation
     c.submit({"type": "say", "to": "anesthesia", "text": "Let's induce now"})
     assert any("inducing now" in m["text"] for m in c.comms)
+
+
+def test_surgeon_free_text_about_anesthesia_never_asks_the_surgeon_for_drugs():
+    import asyncio
+
+    from scrubin_engine.factory import build_case
+    from scrubin_engine.session import Session
+
+    s = Session("t", "appendectomy", "surgeon", 3, build_case("appendectomy", "surgeon", 3))
+    s.case.run(80)
+    r = asyncio.run(s.utterance("let's induce now"))
+    assert r["source"] == "grammar" and not r["clarification"]
+    assert any("inducing now" in m["text"] for m in s.case.comms)
