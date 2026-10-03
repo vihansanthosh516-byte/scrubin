@@ -67,7 +67,7 @@ export interface PersistedSession {
   procedure_id: string;
   procedure_name: string;
   score: number;
-  outcome: "Successful" | "Complicated" | "Critical";
+  outcome: "Successful" | "Complicated" | "Critical" | "Incomplete";
   time_seconds: number;
   decisions_correct: number;
   decisions_total: number;
@@ -99,7 +99,7 @@ export interface SessionRecord {
   procedure_id: string;
   procedure_name: string;
   score: number;
-  outcome: "Successful" | "Complicated" | "Critical";
+  outcome: "Successful" | "Complicated" | "Critical" | "Incomplete";
   time_seconds: number;
   decisions_correct: number;
   decisions_total: number;

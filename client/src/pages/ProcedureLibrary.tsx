@@ -183,8 +183,20 @@ export default function ProcedureLibrary() {
       if (difficulty && difficulty !== "All") params.append("difficulty", difficulty);
       if (category && category !== "All") params.append("category", category);
 
-      const res = await fetch(`${API_BASE}/api/procedures/search?${params.toString()}`);
-      if (!res.ok) throw new Error('Failed to fetch procedures');
+      // The free servers sleep when idle and answer 502 while waking (~1 min) — keep trying before giving up.
+      let res: Response | null = null;
+      for (let attempt = 0; attempt < 6; attempt++) {
+        try {
+          res = await fetch(`${API_BASE}/api/procedures/search?${params.toString()}`);
+          if (res.ok) break;
+        } catch {
+          res = null;
+        }
+        if (attempt === 0) setError("Waking the server — this can take up to a minute…");
+        await new Promise((r) => setTimeout(r, 10000));
+      }
+      if (!res || !res.ok) throw new Error('Failed to fetch procedures');
+      setError(null);
 
       const data = await res.json();
       const list = (Array.isArray(data) ? data : data.procedures || data.scenarios || []).map((p: any) => {

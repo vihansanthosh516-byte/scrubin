@@ -116,7 +116,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
           <div className="glass-card p-4">
             <div className="text-xs uppercase tracking-wider text-sage dark:text-[#5E8C74] mb-2">Attending notes</div>
             {notes ? (
-              <p className="text-sm whitespace-pre-line leading-relaxed">{notes}</p>
+              <p className="text-sm whitespace-pre-line leading-relaxed">{plainNotes(notes)}</p>
             ) : notesError ? (
               <p className="text-xs text-muted-foreground">AI attending notes are unavailable right now. The structured debrief is complete without them.</p>
             ) : (
@@ -164,6 +164,16 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
   );
 }
 
+/** The AI writes markdown; show it as clean text (no **, #, or backticks). */
+function plainNotes(md: string): string {
+  return md
+    .replace(/^#{1,6}\s*/gm, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/__(.+?)__/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^\s*[-*]\s+/gm, "• ");
+}
+
 function describe(e: { kind: string; [k: string]: any }): string {
   switch (e.kind) {
     case "drug":
@@ -175,7 +185,9 @@ function describe(e: { kind: string; [k: string]: any }): string {
     case "complication":
       return `⚠ ${e.name}${e.source ? ` (${e.source})` : ""}`;
     case "surgery_task_start":
-      return `▸ ${String(e.task).replace(/_/g, " ")}${e.instrument ? ` — ${e.instrument}` : ""}`;
+      return `▸ ${String(e.task).replace(/_/g, " ")}${e.instrument ? ` — ${String(e.instrument).replace(/_(\d+)$/, " $1 mm").replace(/_/g, " ")}` : ""}`;
+    case "position":
+      return `position — ${String(e.position ?? "").replace(/_/g, " ")}`;
     case "say":
       return `“${e.intent?.replace(/_/g, " ")}”`;
     case "extubation":

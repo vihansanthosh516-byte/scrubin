@@ -22,7 +22,14 @@ export async function recordSession(
       procedure_name: procedureName,
       score: debrief.score,
       // The label is what happened to the patient; how well it was done is the score.
-      outcome: debrief.outcome === "death" ? "Critical" : complications > 0 ? "Complicated" : "Successful",
+      outcome:
+        debrief.outcome === "death"
+          ? "Critical"
+          : complications > 0
+            ? "Complicated"
+            : debrief.outcome === "pacu" || debrief.outcome === "surgery_complete"
+              ? "Successful"
+              : "Incomplete",
       time_seconds: Math.round(debrief.duration_min * 60),
       decisions_correct: graded.filter((i) => i.grade === "good").length,
       decisions_total: graded.length,

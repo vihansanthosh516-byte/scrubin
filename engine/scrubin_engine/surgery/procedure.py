@@ -429,6 +429,8 @@ class Procedure:
 
     def _near_miss(self, task: dict, why: str) -> None:
         """A blocked step is something the trainee almost did — the debrief shows it."""
+        if task["id"] in self.done or why.startswith("Waiting on"):
+            return  # a repeat click or a step queued behind the running one isn't a near miss
         note = f"Near miss: tried to {task['name'].lower()} too early — {why}"
         if note not in self.notes:
             self.notes.append(note)
