@@ -217,6 +217,10 @@ class Case:
             return self._ask_confirm(act, who, f"{self._fmt(amount, d.unit)} of {d.name.lower()}? That's {per_kg_s} {d.unit}/kg — well above the usual {self._fmt(lo, d.unit)}–{self._fmt(hi, d.unit)}. Are you sure?")
         if lo > 0 and amount < 0.2 * lo:
             return self._ask_confirm(act, who, f"Just {self._fmt(amount, d.unit)} of {d.name.lower()}? Usual is {self._fmt(lo, d.unit)}–{self._fmt(hi, d.unit)}. Confirm?")
+        if d.id == "propofol" and self.role == "anesthesia" and "induction" not in self._flags and amount >= 0.8 * lo:
+            fao2 = self.body.lung_o2_ml / max(300.0, self.body.frc)
+            if fao2 < 0.75:
+                return self._ask_confirm(act, "attending", f"Hold on, {self.patient.first_name} is only preoxygenated to about {fao2:.0%} (aim for 90%). Apnoea will desaturate quickly. Induce anyway?")
         if "penicillin" in d.tags and any("penicillin" in a for a in self.patient.allergies):
             return self._ask_confirm(act, "circulator", f"Heads up — {self.patient.he} has a penicillin allergy listed. Still want {d.name}?")
         return None

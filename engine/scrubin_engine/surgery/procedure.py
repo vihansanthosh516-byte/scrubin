@@ -71,6 +71,7 @@ class Procedure:
     _wait: dict = field(default_factory=dict)
     _vagal_s: float = 0.0
     finished: bool = False
+    _relax_asked: int = 0
 
     # ------------------------------------------------------------------
     # flags
@@ -391,8 +392,13 @@ class Procedure:
                 self.start(self.spec["task_by_id"]["control_bleeding"], "clip_applier", "bleeder")
             return
         if self.running is not None:
-            if not self.flag("relaxed") and self.iap > 5 and self.running.task.get("stimulus", 0) >= 0.2:
-                self.surgeon_says(f"The abdomen's tight and {c.patient.he}'s pushing against the gas — can I get more relaxation?", key="relax", every_s=180)
+            if not self.flag("relaxed") and self.iap > 5 and self.iap_target > 5 and self.running.task.get("stimulus", 0) >= 0.2:
+                asked = self._relax_asked
+                gap = 180 * (2 ** min(asked, 3))  # asks again less and less often
+                if self.case.t - self._cool.get("relax", -1e9) >= gap or "relax" not in self._cool:
+                    self._relax_asked += 1
+                    self._cool.pop("relax", None)
+                    self.surgeon_says(f"The abdomen's tight and {c.patient.he}'s pushing against the gas — can I get more relaxation?", key="relax", every_s=gap)
             return
         nxt = self._next_auto_task()
         if nxt is None:

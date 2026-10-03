@@ -161,3 +161,17 @@ def test_no_text_from_other_procedures_or_patients(seed):
     text = " ".join(m["text"] for m in c.comms) + " ".join(c.procedure.findings + c.procedure.notes + c.procedure.occult)
     assert not LEAKS.search(text), LEAKS.search(text)
     assert not re.search(r"\b(she|her)\b", text, re.I), re.search(r"\b(she|her)\b", text, re.I)
+
+
+def test_inducing_before_preoxygenation_is_challenged():
+    c = build_case("inguinal_hernia", "anesthesia", 2)
+    c.submit({"type": "monitor", "attach": ["ecg", "spo2", "nibp", "etco2", "bis"]})
+    c.submit({"type": "gas", "o2_flow": 10})
+    c.submit({"type": "airway", "maneuver": "mask_on"})
+    c.run(10)
+    r = c.submit({"type": "drug", "drug": "propofol", "dose": 150})
+    assert r.get("needs_confirmation") and "preoxygenated" in r["question"]
+    c.submit({"type": "confirm", "accept": False})
+    c.run(200)
+    r = c.submit({"type": "drug", "drug": "propofol", "dose": 150})
+    assert not r.get("needs_confirmation")

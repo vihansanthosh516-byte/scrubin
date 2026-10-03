@@ -431,8 +431,8 @@ tasks:
   - id: inspect_hemostasis
     name: Inspect hemostasis
     verbs: [check hemostasis, inspect, look for bleeding, hemostasis]
-    requires: [camera_in]
-    blocked: "Need the camera in."
+    requires: [camera_in, anastomosed]
+    blocked: "Not yet: the main operative steps come first."
     duration_s: 60
     stimulus: 0.1
     sets: [hemostasis_checked]
@@ -456,7 +456,7 @@ tasks:
   - id: desufflate
     name: Desufflate
     verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
-    requires: [insufflated]
+    requires: [insufflated, anastomosed]
     blocked: "The abdomen isn't insufflated."
     duration_s: 60
     stimulus: 0.2
@@ -468,7 +468,8 @@ tasks:
   - id: count
     name: Sponge / needle / instrument count
     verbs: [count, sponge count, do the count, counts]
-    requires: []
+    requires: [anastomosed]
+    blocked: "Not yet: the main operative steps come first."
     duration_s: 60
     stimulus: 0.0
     sets: [counted]

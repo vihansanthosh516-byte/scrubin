@@ -164,8 +164,11 @@ def build_debrief(case) -> dict[str, Any]:
         op_done = case.role == "surgeon" and case.procedure is not None and case.procedure.finished
         if case.outcome is None and not op_done:
             # Stopping partway can't earn a perfect score for a case not finished.
-            items.append(_item("Case", "Case completion", POOR, "The case was ended before the patient reached recovery.",
-                               "Finish the case — closure, emergence and handover are part of the operation."))
+            surgery_done = case.procedure is not None and case.procedure.finished
+            items.append(_item("Case", "Case completion", POOR,
+                               "Surgery finished, but emergence and extubation weren't completed before the case was ended." if surgery_done
+                               else "The case was ended before the patient reached recovery.",
+                               "Finish the case: reverse the block, wake the patient and extubate (the case closes itself once they are awake, breathing and extubated). Emergence and handover are part of the anesthetic."))
     else:
         what = "induction" if case.role == "anesthesia" else "the incision"
         items = [_item("Case", "Case ended early", NA, f"The case ended before {what}, so there is nothing to evaluate yet.")]

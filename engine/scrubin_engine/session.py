@@ -248,6 +248,7 @@ def rebuild_case(record: dict, until_tick: Optional[int] = None, on_tick=None) -
 def replay_frames(record: dict, every_s: float = 5.0) -> dict:
     """Monitor frames for the replay viewer, one every `every_s` of sim time."""
     frames: list[dict] = []
+    every_s = max(every_s, float(record.get("sim_t") or 0) / 1200.0)  # long cases: keep the replay quick to build
     every = max(1, int(round(every_s / DT)))
     last_comm = [0]
 
