@@ -160,7 +160,7 @@ function DrugCart({ state, drugs, patient, act }: Props) {
             )}
           </>
         ) : (
-          <div className="text-sm text-muted-foreground">Pick a syringe. Doses are never pre-filled — you decide.</div>
+          <div className="text-sm text-muted-foreground">Pick a syringe. The usual starting dose is filled in — check it and change it as needed.</div>
         )}
         {Object.keys(state.infusions).length > 0 && (
           <Section title="Running infusions">

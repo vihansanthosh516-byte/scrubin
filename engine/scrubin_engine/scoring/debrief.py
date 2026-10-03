@@ -126,8 +126,9 @@ def _safety_items(case) -> list[dict]:
         tout = m.time_out_t
         notes = " ".join(case.procedure.notes) if case.procedure else ""
         led_by_circ = "Circulator had to lead" in notes
-        items.append(_item("Safety", "Surgical time-out", GOOD if tout is not None and tout <= m.incision_t and not led_by_circ else FAIR if tout is not None else POOR,
-                           "Time-out completed before incision." + (" (Circulator had to lead it.)" if led_by_circ else "") if tout is not None else "No time-out before incision.",
+        items.append(_item("Safety", "Surgical time-out", GOOD if tout is not None and tout <= m.incision_t and not led_by_circ else FAIR if tout is not None and tout <= m.incision_t else POOR,
+                           ("Time-out done after the incision — it has to come first." if tout is not None and m.incision_t is not None and tout > m.incision_t
+                            else "Time-out completed before incision." + (" (Circulator had to lead it.)" if led_by_circ else "")) if tout is not None else "No time-out before incision.",
                            "The WHO checklist time-out reduces wrong-site surgery and missed antibiotics."))
     pen = [e for e in _events(case, "drug") if e["drug"] in ("piperacillin_tazobactam", "ampicillin_sulbactam")]
     if pen:
@@ -160,7 +161,7 @@ def build_debrief(case) -> dict[str, Any]:
     score = round(100 * sum(weights[i["grade"]] for i in graded) / len(graded)) if graded else None
     if case.outcome == "death":
         score = min(score or 0, 10)
-    timeline = [e for e in case.events if e["kind"] in (
+    timeline = [{k: round(v, 3) if isinstance(v, float) else v for k, v in e.items()} for e in case.events if e["kind"] in (
         "drug", "infusion", "volatile", "laryngoscopy", "tube_placed", "intubation_failed", "lma_placed", "extubation",
         "complication", "incision", "surgery_task_start", "surgery_complete", "position", "fluid", "loss_of_consciousness",
         "apnea", "patient_moved", "case_complete", "death", "say", "assess", "monitors")]

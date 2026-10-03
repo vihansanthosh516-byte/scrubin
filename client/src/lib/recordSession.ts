@@ -14,17 +14,19 @@ export async function recordSession(
 ): Promise<void> {
   if (debrief.score == null) return; // ended before anything happened
   const graded = debrief.items.filter((i) => i.grade !== "n/a");
+  const complications = debrief.timeline.filter((e) => e.kind === "complication").length;
   await recordSessionRow(
     {
       user_id: user.id,
       procedure_id: procedureId,
       procedure_name: procedureName,
       score: debrief.score,
-      outcome: debrief.outcome === "death" ? "Critical" : debrief.score >= 70 ? "Successful" : "Complicated",
+      // The label is what happened to the patient; how well it was done is the score.
+      outcome: debrief.outcome === "death" ? "Critical" : complications > 0 ? "Complicated" : "Successful",
       time_seconds: Math.round(debrief.duration_min * 60),
       decisions_correct: graded.filter((i) => i.grade === "good").length,
       decisions_total: graded.length,
-      complications_count: debrief.timeline.filter((e) => e.kind === "complication").length,
+      complications_count: complications,
     },
     user,
   );
