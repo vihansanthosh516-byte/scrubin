@@ -1,0 +1,506 @@
+# Robotic-assisted radical prostatectomy as a task graph (same rules as appendectomy.yaml).
+#
+# Teaching core: hours in steep Trendelenburg (airway, face, eyes, peak pressures; handled by
+# the engine), no table moves once the robot is docked, the dorsal venous complex is
+# suture-ligated before it is divided, a nerve-sparing decision matched to the cancer,
+# rectal injury risk at the posterior plane, and a urethrovesical anastomosis checked with a
+# leak test.
+
+id: radical_prostatectomy
+name: Robotic Radical Prostatectomy
+
+label: robotic-assisted radical prostatectomy
+expected: "Expected duration about three and a half hours, modest blood loss expected."
+hemostasis_ok: "DVC stitch secure, pedicles dry, anastomosis watertight."
+thermal_organ: rectum
+bleeding_teaching: "Suture-ligate the dorsal venous complex before dividing it, use clips rather than energy near the neurovascular bundles, and keep the pneumoperitoneum up while you work."
+bag_name: entrapment bag
+positions: [steep_trendelenburg]
+position:
+  before: [dock_robot, explore]
+  words: "steep Trendelenburg, arms tucked and the legs in low lithotomy"
+  set: steep_trendelenburg
+challenge_by:
+  dvc_ligated: attending
+  leak_tested: attending
+  foley_in: circulator
+  undocked: circulator
+auto_instruments:
+  place_foley: foley
+  dock_robot: robot
+  drop_bladder: monopolar_scissors
+  endopelvic_fascia: monopolar_scissors
+  dvc_ligate: needle_driver
+  bladder_neck: monopolar_scissors
+  seminal_vesicles: bipolar
+  denonvilliers: scissors
+  spare_nerves: clip_applier
+  wide_excision: bipolar
+  divide_urethra: monopolar_scissors
+  bag: endobag
+  anastomose: needle_driver
+  leak_test: foley
+  undock_robot: robot
+final_checks: [prostatectomy]
+
+instruments:
+  scalpel:            {name: "#11 scalpel"}
+  veress:             {name: Veress needle}
+  hasson:             {name: Hasson trocar (open entry)}
+  trocar_12:          {name: 12 mm trocar}
+  trocar_5:           {name: 5 mm trocar}
+  camera:             {name: 30° laparoscope}
+  grasper:            {name: Atraumatic grasper}
+  maryland:           {name: Maryland dissector}
+  hook_cautery:       {name: Hook electrocautery, hemostatic: true, thermal: true}
+  harmonic:           {name: Harmonic scalpel, hemostatic: true, thermal: true}
+  scissors:           {name: Laparoscopic scissors}
+  clip_applier:       {name: Clip applier, hemostatic: true}
+  ligasure:           {name: LigaSure vessel sealer, hemostatic: true, thermal: true}
+  suction_irrigator:  {name: Suction-irrigator}
+  needle_driver:      {name: Needle driver}
+  sponge:             {name: Raytec sponge, counted: true}
+  robot:              {name: Robotic platform (da Vinci)}
+  monopolar_scissors: {name: Monopolar curved scissors, hemostatic: true, thermal: true}
+  bipolar:            {name: Bipolar forceps, hemostatic: true, thermal: true}
+  endobag:            {name: Entrapment bag}
+  foley:              {name: Foley catheter}
+
+targets:
+  umbilicus: [umbilicus, umbilical, belly button, navel]
+  abdomen: [abdomen, peritoneum, abdominal cavity]
+  adhesions: [adhesions, adhesion, omentum]
+  bleeder: [bleeder, bleeding, bleeding vessel, bleeding point, ooze]
+  fascia: [fascia, fascial defect, port site]
+  skin: [skin, incisions, wounds]
+
+  retzius: [retzius, space of retzius, bladder, prevesical space]
+  endopelvic: [endopelvic fascia, endopelvic]
+  dvc: [dorsal venous complex, dvc, dorsal vein complex, santorini, santorini's plexus]
+  bladder_neck: [bladder neck]
+  seminal: [seminal vesicles, vas deferens, vas, seminal vesicle]
+  posterior: [denonvilliers, posterior plane, rectum, posterior dissection]
+  nerves: [neurovascular bundles, nerves, nerve bundles, bundles]
+  urethra: [urethra, apex, apical dissection]
+  prostate: [prostate, specimen, gland]
+  anastomosis: [anastomosis, urethrovesical, vesicourethral]
+
+tasks:
+  - id: prep
+    name: Prep and drape
+    verbs: [prep, drape, prep and drape, prepping]
+    requires: [anesthetized]
+    blocked: "The patient isn't asleep with a secured airway yet."
+    duration_s: 300
+    stimulus: 0.05
+    sets: [prepped]
+    start: "Prepping with chlorhexidine and draping."
+    auto_order: 1
+
+  - id: place_foley
+    name: Place the Foley catheter
+    verbs: [place the foley, foley, catheter, catheterize, put in the foley, insert the foley]
+    instruments: [foley]
+    requires: [anesthetized]
+    blocked: "The patient isn't asleep with a secured airway yet."
+    duration_s: 90
+    stimulus: 0.1
+    sets: [foley_in, bladder_empty]
+    start: "20 Fr Foley catheter in, balloon up, the bladder is empty."
+    auto_order: 2
+
+  - id: incision
+    name: Umbilical skin incision
+    verbs: [incise, incision, cut, make an incision, skin incision]
+    targets: [umbilicus]
+    instruments: [scalpel]
+    requires: [prepped]
+    blocked: "We haven't prepped and draped."
+    soft_requires:
+      time_out_done: "We haven't done a time-out."
+      antibiotics_given: "Antibiotics aren't in yet — the guidelines say within 60 minutes before incision."
+      anesthesia_ready: "Anesthesia hasn't said we're okay to start."
+    duration_s: 40
+    stimulus: 0.85
+    sets: [incised]
+    start: "Knife to skin — umbilical incision."
+    hooks: [record_incision]
+    auto_order: 3
+
+  - id: open_access
+    name: Open (Hasson) entry
+    verbs: [hasson, open entry, open access, enter the abdomen, get into the abdomen, access]
+    instruments: [hasson]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [veress_access]
+    duration_s: 180
+    stimulus: 0.6
+    sets: [access, camera_port]
+    start: "Dissecting down to fascia, opening the peritoneum under vision. Hasson in."
+    auto_order: 4
+
+  - id: veress_access
+    name: Veress needle entry
+    verbs: [veress, insert the veress, needle entry]
+    instruments: [veress]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [open_access]
+    duration_s: 45
+    stimulus: 0.5
+    sets: [access, veress_in]
+    hooks: [veress_placement]
+    start: "Veress in — drop test."
+
+  - id: insufflate
+    name: Insufflate CO2
+    verbs: [insufflate, gas on, pneumoperitoneum, start the gas, co2 on, insufflation]
+    requires: [access]
+    blocked: "No access to the peritoneum yet."
+    duration_s: 90
+    stimulus: 0.5
+    vagal: 0.6
+    iap: 15
+    sets: [insufflated]
+    hooks: [insufflation_checks]
+    start: "Insufflating to 15."
+    auto_order: 5
+
+  - id: umbilical_trocar
+    name: 12 mm umbilical trocar (after Veress)
+    verbs: [umbilical port, camera port, 12 mm port, place the umbilical trocar]
+    targets: [umbilicus]
+    instruments: [trocar_12]
+    requires: [insufflated, veress_in]
+    blocked: "Insufflate through the Veress first (or use open entry)."
+    duration_s: 45
+    stimulus: 0.6
+    sets: [camera_port]
+    hooks: [blind_trocar_risk]
+    start: "12 mm trocar at the umbilicus."
+
+  - id: camera_in
+    name: Camera in
+    verbs: [camera in, scope in, look inside, insert the camera, laparoscope in]
+    instruments: [camera]
+    requires: [camera_port, insufflated]
+    blocked: "Need a camera port and pneumoperitoneum first."
+    duration_s: 20
+    stimulus: 0.1
+    sets: [camera_in]
+    start: "Camera in."
+    auto_order: 6
+
+  - id: working_ports
+    name: Robotic ports (camera, three 8 mm arm ports) and a 12 mm assistant port
+    verbs: [working ports, place ports, 5 mm ports, ports, place the trocars, trocars, robot ports]
+    targets: [abdomen]
+    instruments: [trocar_12, trocar_5]
+    requires: [camera_in]
+    blocked: "Place working ports under direct vision — camera first."
+    duration_s: 240
+    stimulus: 0.6
+    sets: [working_ports]
+    start: "Camera port and three robotic arm ports across the lower abdomen, a 12 mm assistant port on the right."
+    auto_order: 7
+
+  - id: dock_robot
+    name: Dock the robot
+    verbs: [dock the robot, dock, bring in the robot, robot in, docking]
+    instruments: [robot]
+    requires: [working_ports, positioned]
+    blocked: "Get the patient into steep Trendelenburg before docking: the table can't be moved once the robot is docked."
+    duration_s: 300
+    stimulus: 0.1
+    sets: [docked]
+    start: "Patient cart rolled in and docked to all four ports. The table stays where it is now."
+    auto_order: 8
+
+  - id: explore
+    name: Survey the pelvis
+    verbs: [explore, look around, survey, diagnostic laparoscopy, inspect the abdomen, look at the pelvis, inspect the pelvis]
+    requires: [camera_in, docked]
+    blocked: "Can't see anything without the camera."
+    duration_s: 90
+    stimulus: 0.2
+    sets: [explored]
+    hooks: [reveal_prostate_findings, exposure_check]
+    start: "Surveying the pelvis from the console: bladder, rectum, vas and the iliac vessels."
+    auto_order: 9
+
+  - id: drop_bladder
+    name: Drop the bladder and open the space of Retzius
+    verbs: [drop the bladder, open the space of retzius, develop the space of retzius, enter the space of retzius, retzius, take down the bladder]
+    targets: [retzius]
+    instruments: [monopolar_scissors, bipolar, scissors]
+    requires: [explored, docked]
+    blocked: "Survey the pelvis from the console first."
+    duration_s: 720
+    stimulus: 0.3
+    sets: [retzius_open]
+    start: "Taking down the bladder off the anterior abdominal wall and opening the space of Retzius."
+    auto_order: 10
+
+  - id: endopelvic_fascia
+    name: Clear the fat and incise the endopelvic fascia
+    verbs: [incise the endopelvic fascia, endopelvic fascia, clear the fat, clear the prostate, open the endopelvic fascia]
+    targets: [endopelvic]
+    instruments: [monopolar_scissors, bipolar, scissors]
+    requires: [retzius_open]
+    blocked: "Open the space of Retzius first."
+    duration_s: 480
+    stimulus: 0.3
+    sets: [endopelvic_open]
+    start: "Clearing the periprostatic fat and opening the endopelvic fascia on both sides, down to the puboprostatic ligaments."
+    auto_order: 11
+
+  - id: dvc_ligate
+    name: Suture-ligate the dorsal venous complex
+    verbs: [ligate the dorsal venous complex, suture the dvc, stitch the dvc, ligate the dvc, control the dvc, dorsal venous complex, dvc stitch, oversew the dvc]
+    targets: [dvc]
+    instruments: [needle_driver]
+    requires: [endopelvic_open]
+    blocked: "Open the endopelvic fascia first."
+    duration_s: 300
+    stimulus: 0.3
+    sets: [dvc_ligated]
+    hooks: [dvc_stitch]
+    start: "Passing a 0 V-Loc stitch under the dorsal venous complex and tying it down, ahead of any division."
+    auto_order: 12
+
+  - id: bladder_neck
+    name: Divide the bladder neck
+    verbs: [divide the bladder neck, bladder neck, transect the bladder neck, open the bladder neck]
+    targets: [bladder_neck]
+    instruments: [monopolar_scissors, bipolar, scissors]
+    requires: [endopelvic_open]
+    blocked: "Open the endopelvic fascia first."
+    duration_s: 720
+    stimulus: 0.3
+    sets: [bladder_neck_open]
+    hooks: [bladder_neck_risk]
+    start: "Identifying the bladder neck by the Foley balloon and dividing it in layers, sparing the ureteric orifices."
+    auto_order: 13
+
+  - id: seminal_vesicles
+    name: Dissect the vas and seminal vesicles
+    verbs: [dissect the seminal vesicles, seminal vesicles, dissect the vas, divide the vas, posterior dissection of the vesicles, free the vesicles]
+    targets: [seminal]
+    instruments: [bipolar, monopolar_scissors, scissors, clip_applier]
+    requires: [bladder_neck_open]
+    blocked: "Divide the bladder neck first."
+    duration_s: 900
+    stimulus: 0.3
+    sets: [sv_done]
+    start: "Dividing the vasa and lifting the seminal vesicles, clipping the vesicle arteries."
+    auto_order: 14
+
+  - id: denonvilliers
+    name: Develop the plane behind Denonvilliers' fascia
+    verbs: [denonvilliers, develop the posterior plane, posterior plane, dissect off the rectum, open denonvilliers, develop the plane behind]
+    targets: [posterior]
+    instruments: [scissors, monopolar_scissors, bipolar, grasper]
+    requires: [sv_done]
+    blocked: "Dissect the vas and seminal vesicles first."
+    duration_s: 720
+    stimulus: 0.3
+    sets: [posterior_plane]
+    hooks: [rectal_risk, capsule_view]
+    start: "Opening Denonvilliers' fascia and sweeping the rectum off the back of the prostate in the avascular plane."
+    auto_order: 15
+
+  - id: spare_nerves
+    name: Nerve-sparing release of the neurovascular bundles
+    verbs: [spare the nerves, nerve sparing, nerve-sparing, preserve the nerves, release the neurovascular bundles, athermal dissection, spare the bundles, save the nerves]
+    targets: [nerves]
+    instruments: [clip_applier, scissors, bipolar, monopolar_scissors, harmonic]
+    requires: [posterior_plane]
+    blocked: "Develop the posterior plane first."
+    exclusive_with: [wide_excision]
+    exclusive_msg: "The pedicle decision is made ({other})."
+    duration_s: 1800
+    stimulus: 0.3
+    sets: [pedicles_done, nerves_spared]
+    hooks: [nerve_decision]
+    start: "Releasing the neurovascular bundles from the prostate with clips and cold scissors, no energy."
+    auto_order: 16
+    auto_if: ["hidden.ece=false"]
+
+  - id: wide_excision
+    name: Wide excision (non-nerve-sparing) of the pedicles
+    verbs: [wide excision, non nerve sparing, non-nerve-sparing, sacrifice the nerves, take the bundles, wide resection, remove the bundles]
+    targets: [nerves]
+    instruments: [bipolar, monopolar_scissors, clip_applier, harmonic]
+    requires: [posterior_plane]
+    blocked: "Develop the posterior plane first."
+    exclusive_with: [spare_nerves]
+    exclusive_msg: "The pedicle decision is made ({other})."
+    duration_s: 1080
+    stimulus: 0.3
+    sets: [pedicles_done, nerves_taken]
+    hooks: [nerve_decision]
+    start: "Taking the pedicles widely on the side of the cancer, with the neurovascular bundle left on the specimen."
+    auto_order: 17
+    auto_if: ["hidden.ece=true"]
+
+  - id: divide_urethra
+    name: Divide the dorsal venous complex and urethra (free the prostate)
+    verbs: [divide the urethra, transect the urethra, divide the dvc, free the prostate, apical dissection, release the prostate, divide the dorsal venous complex]
+    targets: [urethra]
+    instruments: [monopolar_scissors, scissors]
+    requires: [pedicles_done]
+    blocked: "Control the pedicles first."
+    soft_requires:
+      dvc_ligated: "The dorsal venous complex isn't ligated yet. Dividing it unsecured bleeds a lot."
+    duration_s: 540
+    stimulus: 0.3
+    sets: [prostate_free]
+    hooks: [dvc_division]
+    start: "Dividing the dorsal venous complex over the stitch and then the urethra, with a sharp cut and the apex in view."
+    auto_order: 18
+
+  - id: bag
+    name: Place the prostate in an entrapment bag
+    verbs: [bag, place the prostate in a bag, entrapment bag, endobag, bag the specimen, specimen bag]
+    instruments: [endobag]
+    requires: [prostate_free]
+    blocked: "The prostate is still attached."
+    duration_s: 180
+    stimulus: 0.2
+    sets: [bagged]
+    start: "Prostate and vesicles in the entrapment bag, tail out of the assistant port."
+    auto_order: 19
+
+  - id: anastomose
+    name: Urethrovesical anastomosis
+    verbs: [urethrovesical anastomosis, vesicourethral anastomosis, anastomosis, suture the urethra, reconstruct, van velthoven, sew the bladder to the urethra, join the bladder to the urethra]
+    targets: [anastomosis]
+    instruments: [needle_driver]
+    requires: [prostate_free, foley_in]
+    blocked: "Free the prostate first (and have the Foley in)."
+    duration_s: 1800
+    stimulus: 0.3
+    sets: [uv_anastomosis]
+    hooks: [uv_anastomosis_risk]
+    start: "Running 3-0 barbed sutures, urethra to bladder neck, posterior wall first, with the Foley across the anastomosis."
+    auto_order: 20
+
+  - id: leak_test
+    name: Leak test (fill the bladder through the Foley)
+    verbs: [leak test, fill the bladder, test the anastomosis, saline test, check the anastomosis, check for a leak, test for a leak]
+    instruments: [foley]
+    requires: [uv_anastomosis]
+    blocked: "There's no anastomosis to test yet."
+    duration_s: 180
+    stimulus: 0.1
+    sets: [leak_tested]
+    hooks: [leak_test_uv]
+    start: "Filling the bladder with 200 mL of saline through the Foley and watching the anastomosis."
+    auto_order: 21
+
+  - id: remove_specimen
+    name: Extract the prostate
+    verbs: [remove the specimen, extract the prostate, take the prostate out, remove the prostate, deliver the specimen, extract]
+    requires: [uv_anastomosis]
+    blocked: "Finish the anastomosis first."
+    duration_s: 300
+    stimulus: 0.5
+    sets: [specimen_out]
+    hooks: [specimen_contamination]
+    start: "Extending the camera port incision and delivering the bagged prostate."
+    auto_order: 22
+
+  - id: undock_robot
+    name: Undock the robot
+    verbs: [undock the robot, undock, robot out, take the robot away, remove the robot]
+    instruments: [robot]
+    requires: [docked]
+    blocked: "The robot isn't docked."
+    duration_s: 180
+    stimulus: 0.1
+    clears: [docked]
+    sets: [undocked]
+    start: "Instruments out, patient cart backed away. The table can move again."
+    auto_order: 23
+
+  - id: inspect_hemostasis
+    name: Inspect hemostasis
+    verbs: [check hemostasis, inspect, look for bleeding, hemostasis]
+    requires: [camera_in]
+    blocked: "Need the camera in."
+    duration_s: 60
+    stimulus: 0.1
+    sets: [hemostasis_checked]
+    hooks: [reveal_occult]
+    start: "Checking for bleeding with the pressure dropped to 5."
+    auto_order: 24
+
+  - id: control_bleeding
+    name: Control bleeding
+    verbs: [control, cauterize, clip the bleeder, stop the bleeding, get control, hemostasis on the bleeder, apply pressure]
+    targets: [bleeder]
+    instruments: [clip_applier, hook_cautery, harmonic, ligasure, grasper, sponge]
+    requires: [bleeding]
+    blocked: "There's no active bleeding."
+    duration_s: 60
+    stimulus: 0.3
+    hooks: [control_bleeder]
+    start: "Getting control of the bleeder."
+    priority: true
+
+  - id: desufflate
+    name: Desufflate
+    verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
+    requires: [insufflated]
+    blocked: "The abdomen isn't insufflated."
+    duration_s: 60
+    stimulus: 0.2
+    iap: 0
+    clears: [insufflated, camera_in]
+    start: "Ports out under vision, letting the gas out."
+    auto_order: 25
+
+  - id: count
+    name: Sponge / needle / instrument count
+    verbs: [count, sponge count, do the count, counts]
+    requires: []
+    duration_s: 60
+    stimulus: 0.0
+    sets: [counted]
+    hooks: [count_result]
+    start: "Counting."
+    auto_order: 26
+
+  - id: close_fascia
+    name: Close the port-site fascia
+    verbs: [close the fascia, close fascia, fascial closure, close the port site, suture the fascia]
+    targets: [fascia]
+    instruments: [needle_driver]
+    requires: [specimen_out]
+    blocked: "Get the prostate out first."
+    soft_requires:
+      not_insufflated: "We're still insufflated."
+      counted: "Count isn't done yet."
+      undocked: "The robot is still docked."
+      leak_tested: "We haven't leak-tested the urethrovesical anastomosis."
+    duration_s: 300
+    stimulus: 0.5
+    sets: [fascia_closed]
+    start: "Closing the extraction wound and the 12 mm port-site fascia with 0 PDS."
+    hooks: [closing_cue]
+    auto_order: 27
+
+  - id: close_skin
+    name: Close skin
+    verbs: [close skin, close the skin, skin closure, subcuticular, close]
+    targets: [skin]
+    instruments: [needle_driver]
+    requires: [fascia_closed]
+    blocked: "Close the fascia first."
+    duration_s: 360
+    stimulus: 0.35
+    sets: [skin_closed]
+    hooks: [finish]
+    start: "Subcuticular 4-0 Monocryl, then dressings."
+    auto_order: 28

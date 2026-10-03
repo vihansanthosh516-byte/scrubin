@@ -525,6 +525,9 @@ class Case:
                       "lateral_decubitus": "lateral decubitus, flank broken, axillary roll in"}
 
     def _do_position(self, act: A.Position, performer: str) -> dict:
+        if self.procedure is not None and "docked" in self.procedure.flags and act.position != self.position:
+            self.say("circulator", "The robot is docked, so the table can't move. It has to be undocked first.")
+            return {"ok": False, "error": "robot docked"}
         self.position = act.position
         self.load.trendelenburg_deg = self.POSITION_ANGLE.get(act.position, self.load.trendelenburg_deg if act.position in ("left_tilt", "right_tilt") else 0.0)
         self.load.lateral_flank = act.position == "lateral_decubitus"

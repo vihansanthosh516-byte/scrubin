@@ -184,7 +184,7 @@ async def transcribe(audio: bytes, filename: str = "speech.webm", timeout_s: flo
         return None
     prompt = ("Operating room orders: propofol, fentanyl, remifentanil, rocuronium, succinylcholine, sugammadex, "
               "neostigmine, glycopyrrolate, phenylephrine, ephedrine, sevoflurane, cefazolin, metronidazole, "
-              "PEEP, tidal volume, laryngoscope, bougie, LMA, Trendelenburg, trocar, Veress, mesoappendix, endoloop, cholecystectomy, cystic duct, Calot, critical view of safety.")
+              "PEEP, tidal volume, laryngoscope, bougie, LMA, Trendelenburg, trocar, Veress, mesoappendix, endoloop, cholecystectomy, cystic duct, Calot, critical view of safety, TAPP, epigastric vessels, iliopubic tract, Cooper's ligament, sigmoid colectomy, IMA, ureter, splenic flexure, anastomosis, hysterectomy, uterine manipulator, colpotomy, vaginal cuff, nephrectomy, renal hilum, prostatectomy, dorsal venous complex, urethrovesical, lateral decubitus.")
     files = {"file": (filename, audio, "audio/webm")}
     data = {"model": STT_MODEL, "prompt": prompt, "language": "en", "temperature": "0"}
     try:

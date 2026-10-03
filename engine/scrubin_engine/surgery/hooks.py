@@ -19,11 +19,13 @@ LAPAROSCOPIC = {"explore", "lyse_adhesions", "mobilize_cecum", "grasp_appendix",
                 "sweep_bowel", "medial_dissect", "identify_ureter", "divide_ima", "lateral_mobilize", "assess_reach", "mobilize_flexure", "divide_distal",
                 "place_anvil", "anastomose", "leak_test",
                 "round_ligaments", "adnexa", "bladder_flap", "open_broad_ligament", "uterine_arteries", "colpotomy", "close_cuff",
-                "reflect_colon", "kocher_duodenum", "mobilize_spleen", "expose_hilum", "survey_hilum", "isolate_artery", "isolate_vein", "spare_adrenal", "take_adrenal", "free_kidney"}
+                "reflect_colon", "kocher_duodenum", "mobilize_spleen", "expose_hilum", "survey_hilum", "isolate_artery", "isolate_vein", "spare_adrenal", "take_adrenal", "free_kidney",
+                "drop_bladder", "endopelvic_fascia", "dvc_ligate", "bladder_neck", "seminal_vesicles", "denonvilliers", "spare_nerves", "wide_excision", "divide_urethra", "anastomose"}
 NEEDS_EXPOSURE = {"explore", "grasp_appendix", "mobilize_cecum", "window", "divide_meso", "retract_fundus", "dissect_triangle", "dissect_liver_bed",
                   "incise_peritoneum", "develop_flap", "reduce_sac", "sweep_bowel", "medial_dissect", "identify_ureter", "divide_ima", "lateral_mobilize",
                   "mobilize_flexure", "divide_distal", "round_ligaments", "adnexa", "bladder_flap", "open_broad_ligament", "uterine_arteries",
-                  "reflect_colon", "kocher_duodenum", "mobilize_spleen", "expose_hilum", "isolate_artery", "isolate_vein", "free_kidney"}
+                  "reflect_colon", "kocher_duodenum", "mobilize_spleen", "expose_hilum", "isolate_artery", "isolate_vein", "free_kidney",
+                  "drop_bladder", "endopelvic_fascia", "dvc_ligate", "bladder_neck", "seminal_vesicles", "denonvilliers", "spare_nerves", "wide_excision", "divide_urethra"}
 
 
 def _rng(proc: "Procedure"):
@@ -56,6 +58,8 @@ def duration_factor(proc: "Procedure", task: dict) -> float:
         f *= 1.3
     if tid in ("expose_hilum", "free_kidney", "isolate_vein") and h.get("bulky_tumor"):
         f *= 1.3
+    if tid in ("drop_bladder", "bladder_neck", "seminal_vesicles", "divide_urethra") and h.get("large_gland"):
+        f *= 1.25
     return f
 
 
@@ -765,3 +769,110 @@ def end_free_risk(proc, task, r):
         proc.occult.append("Tumour capsule breached while freeing the bulky kidney (positive margin and a risk of seeding).")
     if rng.random() < 0.08:
         _bleed(proc, 60.0, "lumbar vessel", "Lumbar vessel bleeding." if proc.mode == "auto" else "A lumbar vein behind the kidney is bleeding.")
+
+
+# --- robotic radical prostatectomy ------------------------------------------
+
+def end_reveal_prostate_findings(proc, task, r):
+    h = proc.case.patient.hidden
+    parts = ["Large prostate with a prominent median lobe pushing into the bladder base." if h.get("large_gland")
+             else "Average-sized prostate, bladder and pelvic sidewalls look normal."]
+    parts.append("Both vasa and the iliac vessels are in their usual places; no pelvic nodes are enlarged.")
+    proc.findings = parts
+    proc.case.say(_speaker(proc), " ".join(parts), kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_dvc_stitch(proc, task, r):
+    h = proc.case.patient.hidden
+    if _rng(proc).random() < (0.2 if h.get("dvc_fragile") else 0.03) + (0.1 if r.moved else 0.0):
+        _bleed(proc, 120.0, "dorsal venous complex", "The needle caught the dorsal venous complex: bleeding! Raising the pressure to 20." if proc.mode == "auto"
+               else "The needle tears a branch of the dorsal venous complex and dark blood wells up.")
+
+
+def end_bladder_neck_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    if _rng(proc).random() < (0.1 if h.get("large_gland") else 0.02):
+        proc.occult.append("Injury to a ureteric orifice at the bladder neck (hydronephrosis and flank pain after the catheter is removed).")
+
+
+def end_rectal_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    thermal = _instrument(proc, r).get("thermal")
+    p = (0.12 if h.get("rectal_adherent") else 0.01) + (0.03 if thermal else 0.0) + (0.05 if r.moved else 0.0)
+    if rng.random() < p:
+        if rng.random() < 0.6:
+            proc.case.say(_speaker(proc), "Rectal injury: stool in the field. Irrigating, two-layer repair and an omental flap; I'll check it with air and saline." if proc.mode == "auto"
+                          else "Stool appears in the field: a small anterior rectal wall injury. Repaired in two layers with an omental flap.", kind="speech" if proc.mode == "auto" else "finding")
+            proc.notes.append("Rectal injury during the posterior dissection, recognised and repaired in two layers.")
+        else:
+            proc.occult.append("Unrecognised rectal injury at the posterior dissection (pelvic sepsis or a rectourethral fistula within days to weeks).")
+
+
+def end_capsule_view(proc, task, r):
+    h = proc.case.patient.hidden
+    txt = ("The posterolateral capsule on the left is thickened and the neurovascular bundle is stuck to it: suspicious for extraprostatic extension." if h.get("ece")
+           else "The capsule is smooth and the neurovascular bundles peel away cleanly: no sign of extraprostatic extension.")
+    proc.findings = proc.findings + [txt]
+    proc.case.say(_speaker(proc), txt, kind="speech" if proc.mode == "auto" else "finding")
+
+
+def start_nerve_decision(proc, task):
+    if proc.mode == "trainee":
+        proc.case.say("attending", "Nerve-sparing only if the cancer is inside the capsule and he has good erections to protect. If the capsule looks involved, take the bundle widely.")
+
+
+def end_nerve_decision(proc, task, r):
+    h = proc.case.patient.hidden
+    ece = bool(h.get("ece"))
+    ins = _instrument(proc, r)
+    if task["id"] == "spare_nerves":
+        if ece:
+            proc.occult.append("Positive surgical margin: the cancer extended outside the capsule on the side where the bundle was spared (higher risk of biochemical recurrence).")
+            proc.notes.append("Nerve-sparing was chosen despite a capsule suspicious for extraprostatic extension.")
+        if ins.get("thermal") and _rng(proc).random() < 0.6:
+            proc.occult.append("Thermal injury to the neurovascular bundles from energy used during the nerve-sparing dissection (erectile dysfunction despite the attempt to spare).")
+            proc.notes.append("Energy was used near the neurovascular bundles; clips and cold scissors are the athermal choice.")
+        if not h.get("good_erectile_function"):
+            proc.notes.append("Nerve-sparing offers little to a man who already has poor erections.")
+    elif not ece and h.get("good_erectile_function"):
+        proc.notes.append("Wide excision when the capsule was clear and he had good erections: nerve-sparing was possible (needless loss of potency).")
+    if r.moved:
+        proc.notes.append("The patient moved during the pedicle dissection.")
+
+
+def end_dvc_division(proc, task, r):
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    if "dvc_ligated" not in proc.flags:
+        proc.notes.append("The dorsal venous complex was divided without being suture-ligated first.")
+        _bleed(proc, 400.0, "dorsal venous complex", "The dorsal venous complex is pouring! Pressure up to 20, suction!" if proc.mode == "auto"
+               else "Dark blood floods the pelvis: the unsecured dorsal venous complex is bleeding heavily.")
+    elif rng.random() < (0.15 if h.get("dvc_fragile") else 0.05):
+        _bleed(proc, 80.0, "dorsal venous complex stitch", "Ooze from the DVC stump; adding a stitch." if proc.mode == "auto"
+               else "The dorsal venous complex stump is oozing past the stitch.")
+
+
+def end_uv_anastomosis_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    p = 0.2 + (0.1 if h.get("large_gland") else 0.0) + (0.1 if r.moved else 0.0)
+    if _rng(proc).random() < p:
+        proc.flags.add("uv_defect")
+
+
+def end_leak_test_uv(proc, task, r):
+    if "uv_defect" in proc.flags:
+        proc.flags.discard("uv_defect")
+        proc.case.say(_speaker(proc), "Saline is leaking at the posterior anastomosis. Two more interrupted sutures and retesting: now dry." if proc.mode == "auto"
+                      else "Saline beads at the posterior wall of the anastomosis: a leak. Two interrupted sutures, and the retest is dry.", kind="speech" if proc.mode == "auto" else "finding")
+        proc.notes.append("The leak test found a urethrovesical leak, which was repaired (the test paid off).")
+    else:
+        proc.case.say(_speaker(proc), "Bladder filled to 200 mL: the anastomosis is watertight." if proc.mode == "auto" else "200 mL in the bladder and the anastomosis is dry.",
+                      kind="speech" if proc.mode == "auto" else "finding")
+
+
+def final_prostatectomy(proc):
+    if "leak_test" not in proc.done:
+        proc.notes.append("The urethrovesical anastomosis was never leak-tested.")
+    if "uv_defect" in proc.flags:
+        proc.occult.append("Urethrovesical anastomotic leak, not detected because no leak test was done (urine leak, pelvic urinoma, prolonged catheter and an anastomotic stricture later).")
