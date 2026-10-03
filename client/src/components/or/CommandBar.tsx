@@ -31,6 +31,7 @@ const SURGEON_EXAMPLES: Record<string, string[]> = {
   inguinal_hernia: ["prep and drape", "empty the bladder", "hasson entry", "insufflate", "identify the epigastric vessels", "incise the peritoneum", "reduce the sac", "tack the mesh to Cooper's ligament"],
   sigmoid_colectomy: ["prep and drape", "hasson entry", "insufflate", "sweep the small bowel", "medial to lateral dissection", "identify the left ureter", "divide the IMA with the ligasure", "air leak test"],
   total_hysterectomy: ["prep and drape", "place the uterine manipulator", "hasson entry", "insufflate", "divide the round ligaments", "develop the bladder flap", "identify the ureter", "coagulate the uterine arteries"],
+  radical_nephrectomy: ["prep and drape", "hasson entry", "insufflate", "reflect the colon", "expose the hilum", "survey the hilum", "clip the renal artery", "staple the renal vein"],
 };
 
 interface Props {

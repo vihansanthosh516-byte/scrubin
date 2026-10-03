@@ -6,6 +6,7 @@ export const ENGINE_SCENARIO: Record<string, string> = {
   "inguinal-hernia": "inguinal_hernia",
   "sigmoid-colectomy": "sigmoid_colectomy",
   "total-hysterectomy": "total_hysterectomy",
+  "radical-nephrectomy": "radical_nephrectomy",
 };
 
 export const SCENARIO_NAME: Record<string, string> = {
@@ -14,6 +15,7 @@ export const SCENARIO_NAME: Record<string, string> = {
   inguinal_hernia: "Laparoscopic Inguinal Hernia Repair (TAPP)",
   sigmoid_colectomy: "Laparoscopic Sigmoid Colectomy",
   total_hysterectomy: "Total Laparoscopic Hysterectomy",
+  radical_nephrectomy: "Laparoscopic Radical Nephrectomy",
 };
 
 /** Procedure name for an engine scenario id (falls back to the id). */

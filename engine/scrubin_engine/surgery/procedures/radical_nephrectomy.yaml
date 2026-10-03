@@ -1,0 +1,506 @@
+# Laparoscopic radical nephrectomy (lateral decubitus) as a task graph (same rules as appendectomy.yaml).
+#
+# Teaching core: flank position, mobilize the colon, clear the organ on the tumour side
+# (duodenum and liver on the right, spleen on the left), then the hilum: survey for an
+# accessory renal artery, ARTERY BEFORE VEIN, then the adrenal decision. Dividing the vein
+# first, or missing a second artery, engorges the kidney and bleeds; sparing an involved
+# adrenal (or taking a clear one) shows up in the debrief.
+
+id: radical_nephrectomy
+name: Laparoscopic Radical Nephrectomy
+
+label: laparoscopic radical nephrectomy
+expected: "Expected duration about three hours, blood loss should be modest if the hilum is controlled in the right order."
+hemostasis_ok: "Hilum stumps secure, renal fossa dry, adrenal bed and colon mesentery intact."
+thermal_organ: colon
+bleeding_teaching: "Control the renal artery before the renal vein, look for a second renal artery, and keep the dissection outside Gerota's fascia away from the duodenum, liver or spleen."
+bag_name: entrapment bag
+positions: [lateral_decubitus]
+position:
+  before: [prep, incision]
+  words: "lateral decubitus with the flank broken and the axillary roll in"
+  set: lateral_decubitus
+challenge_by:
+  artery_divided: attending
+  adrenal_decided: attending
+auto_instruments:
+  reflect_colon: hook_cautery
+  kocher_duodenum: harmonic
+  mobilize_spleen: harmonic
+  expose_hilum: maryland
+  survey_hilum: maryland
+  isolate_artery: maryland
+  clip_renal_artery: vascular_stapler
+  clip_accessory: clip_applier
+  isolate_vein: maryland
+  clip_renal_vein: vascular_stapler
+  spare_adrenal: harmonic
+  take_adrenal: harmonic
+  free_kidney: harmonic
+  bag: endobag
+
+instruments:
+  scalpel:            {name: "#11 scalpel"}
+  veress:             {name: Veress needle}
+  hasson:             {name: Hasson trocar (open entry)}
+  trocar_12:          {name: 12 mm trocar}
+  trocar_5:           {name: 5 mm trocar}
+  camera:             {name: 30° laparoscope}
+  grasper:            {name: Atraumatic grasper}
+  maryland:           {name: Maryland dissector}
+  hook_cautery:       {name: Hook electrocautery, hemostatic: true, thermal: true}
+  harmonic:           {name: Harmonic scalpel, hemostatic: true, thermal: true}
+  scissors:           {name: Laparoscopic scissors}
+  clip_applier:       {name: Clip applier, hemostatic: true}
+  ligasure:           {name: LigaSure vessel sealer, hemostatic: true, thermal: true}
+  suction_irrigator:  {name: Suction-irrigator}
+  needle_driver:      {name: Needle driver}
+  sponge:             {name: Raytec sponge, counted: true}
+  vascular_stapler:   {name: Vascular stapler, hemostatic: true}
+  endobag:            {name: Entrapment bag}
+  liver_retractor:    {name: Liver retractor}
+
+targets:
+  umbilicus: [umbilicus, umbilical, belly button, navel]
+  abdomen: [abdomen, peritoneum, abdominal cavity]
+  adhesions: [adhesions, adhesion, omentum]
+  bleeder: [bleeder, bleeding, bleeding vessel, bleeding point, ooze]
+  fascia: [fascia, fascial defect, port site]
+  skin: [skin, incisions, wounds]
+
+  colon: [colon, white line, toldt, line of toldt, hepatic flexure, splenic flexure]
+  duodenum: [duodenum, kocher]
+  spleen: [spleen, splenocolic ligament]
+  hilum: [hilum, renal hilum, renal pedicle, pedicle]
+  renal_artery: [renal artery, artery]
+  accessory_artery: [accessory artery, accessory renal artery, second artery, second renal artery]
+  renal_vein: [renal vein, vein]
+  adrenal: [adrenal, adrenal gland, suprarenal]
+  kidney: [kidney, gerota, gerota's fascia, specimen]
+
+tasks:
+  - id: prep
+    name: Prep and drape
+    verbs: [prep, drape, prep and drape, prepping]
+    requires: [anesthetized, positioned]
+    blocked: "The patient isn't asleep and turned into the lateral decubitus position yet (flank up, axillary roll in)."
+    duration_s: 300
+    stimulus: 0.05
+    sets: [prepped]
+    start: "Prepping with chlorhexidine and draping."
+    auto_order: 1
+
+  - id: incision
+    name: Skin incision (camera port, lateral rectus)
+    verbs: [incise, incision, cut, make an incision, skin incision]
+    targets: [umbilicus]
+    instruments: [scalpel]
+    requires: [prepped]
+    blocked: "We haven't prepped and draped."
+    soft_requires:
+      time_out_done: "We haven't done a time-out."
+      antibiotics_given: "Antibiotics aren't in yet — the guidelines say within 60 minutes before incision."
+      anesthesia_ready: "Anesthesia hasn't said we're okay to start."
+    duration_s: 40
+    stimulus: 0.85
+    sets: [incised]
+    start: "Knife to skin — small incision at the lateral border of the rectus for the camera port."
+    hooks: [record_incision]
+    auto_order: 2
+
+  - id: open_access
+    name: Open (Hasson) entry
+    verbs: [hasson, open entry, open access, enter the abdomen, get into the abdomen, access]
+    instruments: [hasson]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [veress_access]
+    duration_s: 180
+    stimulus: 0.6
+    sets: [access, camera_port]
+    start: "Dissecting down to fascia, opening the peritoneum under vision. Hasson in."
+    auto_order: 3
+
+  - id: veress_access
+    name: Veress needle entry
+    verbs: [veress, insert the veress, needle entry]
+    instruments: [veress]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [open_access]
+    duration_s: 45
+    stimulus: 0.5
+    sets: [access, veress_in]
+    hooks: [veress_placement]
+    start: "Veress in — drop test."
+
+  - id: insufflate
+    name: Insufflate CO2
+    verbs: [insufflate, gas on, pneumoperitoneum, start the gas, co2 on, insufflation]
+    requires: [access]
+    blocked: "No access to the peritoneum yet."
+    duration_s: 90
+    stimulus: 0.5
+    vagal: 0.6
+    iap: 15
+    sets: [insufflated]
+    hooks: [insufflation_checks]
+    start: "Insufflating to 15."
+    auto_order: 4
+
+  - id: umbilical_trocar
+    name: 12 mm umbilical trocar (after Veress)
+    verbs: [umbilical port, camera port, 12 mm port, place the umbilical trocar]
+    targets: [umbilicus]
+    instruments: [trocar_12]
+    requires: [insufflated, veress_in]
+    blocked: "Insufflate through the Veress first (or use open entry)."
+    duration_s: 45
+    stimulus: 0.6
+    sets: [camera_port]
+    hooks: [blind_trocar_risk]
+    start: "12 mm trocar at the umbilicus."
+
+  - id: camera_in
+    name: Camera in
+    verbs: [camera in, scope in, look inside, insert the camera, laparoscope in]
+    instruments: [camera]
+    requires: [camera_port, insufflated]
+    blocked: "Need a camera port and pneumoperitoneum first."
+    duration_s: 20
+    stimulus: 0.1
+    sets: [camera_in]
+    start: "Camera in."
+    auto_order: 5
+
+  - id: working_ports
+    name: Working ports (12 mm and two 5 mm along the lateral rectus, one 5 mm subcostal)
+    verbs: [working ports, place ports, 5 mm ports, ports, place the trocars, trocars, flank ports]
+    targets: [abdomen]
+    instruments: [trocar_12, trocar_5]
+    requires: [camera_in]
+    blocked: "Place working ports under direct vision — camera first."
+    duration_s: 180
+    stimulus: 0.6
+    sets: [working_ports]
+    start: "Ports along the lateral edge of the rectus and one subcostal, under direct vision, in the flank-up position."
+    auto_order: 6
+
+  - id: explore
+    name: Diagnostic laparoscopy
+    verbs: [explore, look around, survey, diagnostic laparoscopy, inspect the abdomen, look at the kidney, inspect the kidney]
+    requires: [camera_in]
+    blocked: "Can't see anything without the camera."
+    duration_s: 90
+    stimulus: 0.2
+    sets: [explored]
+    hooks: [reveal_kidney_findings, exposure_check]
+    start: "Surveying the abdomen: colon, liver, spleen, the tumour-bearing kidney."
+    auto_order: 7
+
+  - id: lyse_adhesions
+    name: Take down adhesions
+    verbs: [lyse adhesions, take down adhesions, adhesiolysis, free the omentum, sweep the omentum, adhesions]
+    targets: [adhesions]
+    instruments: [grasper, maryland, hook_cautery, scissors, harmonic]
+    requires: [explored, working_ports, adhesions]
+    blocked: "No adhesions to take down (or you haven't explored / placed ports)."
+    duration_s: 240
+    stimulus: 0.35
+    clears: [adhesions]
+    hooks: [thermal_bowel_risk]
+    start: "Taking down adhesions between the colon and the sidewall."
+    auto_order: 8
+    auto_if: [adhesions]
+
+  - id: reflect_colon
+    name: Reflect the colon medially (white line of Toldt)
+    verbs: [reflect the colon, mobilize the colon, white line of toldt, incise the white line, medialize the colon, medial reflection, drop the colon]
+    targets: [colon]
+    instruments: [hook_cautery, harmonic, scissors, ligasure]
+    requires: [explored, working_ports, no_adhesions]
+    blocked: "Explore, place the ports and take down any adhesions first."
+    duration_s: 420
+    stimulus: 0.3
+    sets: [colon_reflected]
+    hooks: [thermal_bowel_risk, reflect_risk]
+    start: "Incising the white line of Toldt and reflecting the colon and its mesentery medially, off Gerota's fascia."
+    auto_order: 9
+
+  - id: kocher_duodenum
+    name: Kocher the duodenum and retract the liver (right side)
+    verbs: [kocher, kocher the duodenum, mobilize the duodenum, retract the liver, liver retraction, liver retractor]
+    targets: [duodenum]
+    instruments: [harmonic, hook_cautery, scissors, liver_retractor, grasper]
+    requires: [colon_reflected, hidden.side=right]
+    blocked: "That's for a right-sided tumour; on this side the spleen is the neighbour."
+    duration_s: 300
+    stimulus: 0.3
+    sets: [organ_cleared]
+    hooks: [right_organ_risk]
+    start: "Kocherizing the duodenum off the vena cava and lifting the right lobe of the liver on a retractor."
+    auto_order: 10
+    auto_if: ["hidden.side=right"]
+
+  - id: mobilize_spleen
+    name: Divide the splenocolic ligament and drop the spleen (left side)
+    verbs: [mobilize the spleen, splenocolic ligament, drop the spleen, divide the splenocolic, spleen]
+    targets: [spleen]
+    instruments: [harmonic, hook_cautery, scissors, ligasure]
+    requires: [colon_reflected, hidden.side=left]
+    blocked: "That's for a left-sided tumour; on this side the duodenum and liver are the neighbours."
+    duration_s: 360
+    stimulus: 0.3
+    sets: [organ_cleared]
+    hooks: [left_organ_risk]
+    start: "Dividing the splenocolic and splenorenal ligaments so the spleen and pancreatic tail fall medially."
+    auto_order: 11
+    auto_if: ["hidden.side=left"]
+
+  - id: expose_hilum
+    name: Lift the kidney and expose the hilum
+    verbs: [expose the hilum, lift the kidney, find the hilum, dissect the hilum, expose the renal hilum, identify the hilum, hilum]
+    targets: [hilum]
+    instruments: [maryland, grasper, harmonic, hook_cautery]
+    requires: [organ_cleared]
+    blocked: "Clear the duodenum and liver (right) or the spleen (left) first."
+    duration_s: 360
+    stimulus: 0.3
+    sets: [hilum_exposed]
+    hooks: [hilum_view]
+    start: "Following the gonadal vein and ureter up to the lower pole, lifting the kidney and exposing the hilum."
+    auto_order: 12
+
+  - id: survey_hilum
+    name: Survey the hilum for an accessory renal artery
+    verbs: [survey the hilum, look for an accessory artery, check for a second artery, check for accessory arteries, second renal artery, accessory renal artery, check the hilum anatomy]
+    targets: [accessory_artery]
+    requires: [hilum_exposed]
+    blocked: "Expose the hilum first."
+    duration_s: 90
+    stimulus: 0.15
+    sets: [hilum_surveyed]
+    hooks: [accessory_check]
+    start: "Looking behind the vein and above and below the main trunk for a second renal artery."
+    auto_order: 13
+
+  - id: isolate_artery
+    name: Dissect and isolate the renal artery
+    verbs: [isolate the artery, isolate the renal artery, dissect the artery, expose the renal artery, identify the renal artery, dissect the renal artery]
+    targets: [renal_artery]
+    instruments: [maryland, grasper, hook_cautery]
+    requires: [hilum_exposed]
+    blocked: "Expose the hilum first."
+    duration_s: 360
+    stimulus: 0.3
+    sets: [artery_isolated]
+    start: "Isolating the renal artery behind and above the vein with a right-angle."
+    auto_order: 14
+
+  - id: clip_renal_artery
+    name: Clip and divide the renal artery
+    verbs: [clip the artery, clip the renal artery, divide the artery, divide the renal artery, ligate the artery, staple the artery, take the artery]
+    targets: [renal_artery]
+    instruments: [vascular_stapler, clip_applier]
+    requires: [artery_isolated]
+    blocked: "Isolate the renal artery first."
+    duration_s: 120
+    stimulus: 0.3
+    sets: [artery_divided]
+    hooks: [artery_division]
+    start: "Three clips on the patient side and two on the specimen side of the renal artery, then dividing it."
+    auto_order: 15
+
+  - id: clip_accessory
+    name: Clip and divide the accessory renal artery
+    verbs: [clip the accessory artery, divide the accessory artery, clip the second artery, divide the second renal artery, accessory renal artery]
+    targets: [accessory_artery]
+    instruments: [clip_applier, vascular_stapler]
+    requires: [accessory_found]
+    blocked: "No accessory artery has been seen."
+    duration_s: 120
+    stimulus: 0.3
+    sets: [accessory_divided]
+    start: "Clipping and dividing the accessory renal artery."
+    auto_order: 16
+    auto_if: [accessory_found]
+
+  - id: isolate_vein
+    name: Dissect and isolate the renal vein
+    verbs: [isolate the vein, isolate the renal vein, dissect the vein, expose the renal vein, identify the renal vein, dissect the renal vein]
+    targets: [renal_vein]
+    instruments: [maryland, grasper, hook_cautery]
+    requires: [hilum_exposed]
+    blocked: "Expose the hilum first."
+    duration_s: 240
+    stimulus: 0.3
+    sets: [vein_isolated]
+    start: "Isolating the renal vein, with the gonadal and adrenal tributaries in view."
+    auto_order: 17
+
+  - id: clip_renal_vein
+    name: Staple and divide the renal vein
+    verbs: [staple the vein, staple the renal vein, divide the vein, divide the renal vein, clip the renal vein, take the vein, transect the vein, clip the vein]
+    targets: [renal_vein]
+    instruments: [vascular_stapler, clip_applier]
+    requires: [vein_isolated]
+    blocked: "Isolate the renal vein first."
+    soft_requires:
+      artery_divided: "The renal artery isn't divided yet. If the vein goes first the kidney engorges and can tear."
+    duration_s: 120
+    stimulus: 0.3
+    sets: [vein_divided]
+    hooks: [vein_division]
+    start: "Firing the vascular stapler across the renal vein."
+    auto_order: 18
+
+  - id: spare_adrenal
+    name: Spare the adrenal gland
+    verbs: [spare the adrenal, adrenal sparing, preserve the adrenal, dissect off the adrenal, save the adrenal, leave the adrenal]
+    targets: [adrenal]
+    instruments: [harmonic, hook_cautery, ligasure, scissors]
+    requires: [vein_divided]
+    blocked: "Control the hilum first."
+    exclusive_with: [take_adrenal]
+    exclusive_msg: "The adrenal decision is already made ({other})."
+    duration_s: 300
+    stimulus: 0.3
+    sets: [adrenal_decided, adrenal_spared]
+    hooks: [adrenal_decision]
+    start: "Dissecting the upper pole off the adrenal along the fat plane, leaving the gland in place."
+    auto_order: 19
+    auto_if: ["hidden.adrenal_involved=false"]
+
+  - id: take_adrenal
+    name: Take the adrenal with the specimen
+    verbs: [take the adrenal, adrenalectomy, remove the adrenal, include the adrenal, ipsilateral adrenalectomy, resect the adrenal]
+    targets: [adrenal]
+    instruments: [harmonic, hook_cautery, ligasure, clip_applier]
+    requires: [vein_divided]
+    blocked: "Control the hilum first."
+    exclusive_with: [spare_adrenal]
+    exclusive_msg: "The adrenal decision is already made ({other})."
+    duration_s: 420
+    stimulus: 0.3
+    sets: [adrenal_decided, adrenal_taken]
+    hooks: [adrenal_decision]
+    start: "Dividing the adrenal vein and keeping the gland within Gerota's fascia with the specimen."
+    auto_order: 20
+    auto_if: ["hidden.adrenal_involved=true"]
+
+  - id: free_kidney
+    name: Free the kidney in Gerota's fascia and divide the ureter
+    verbs: [free the kidney, mobilize the kidney, divide the ureter, dissect outside gerota's fascia, free the specimen, take the kidney, gerota]
+    targets: [kidney]
+    instruments: [harmonic, hook_cautery, ligasure, scissors, clip_applier]
+    requires: [adrenal_decided]
+    blocked: "Control the hilum and decide about the adrenal first."
+    duration_s: 600
+    stimulus: 0.3
+    sets: [kidney_free]
+    hooks: [free_risk]
+    start: "Freeing the kidney outside Gerota's fascia, clipping and dividing the ureter at the lower pole."
+    auto_order: 21
+
+  - id: bag
+    name: Place the kidney in an entrapment bag
+    verbs: [bag, place the kidney in a bag, entrapment bag, endobag, bag the kidney, specimen bag]
+    instruments: [endobag]
+    requires: [kidney_free]
+    blocked: "The kidney is still attached."
+    duration_s: 180
+    stimulus: 0.2
+    sets: [bagged]
+    start: "Kidney in the entrapment bag."
+    auto_order: 22
+
+  - id: remove_specimen
+    name: Extract the kidney
+    verbs: [remove the specimen, extract the kidney, take the kidney out, remove the kidney, deliver the specimen, extract]
+    requires: [kidney_free]
+    blocked: "Free the kidney first."
+    duration_s: 300
+    stimulus: 0.5
+    sets: [specimen_out]
+    hooks: [specimen_contamination]
+    start: "Extending the lowest port site and delivering the bagged kidney."
+    auto_order: 23
+
+  - id: inspect_hemostasis
+    name: Inspect hemostasis
+    verbs: [check hemostasis, inspect, look for bleeding, hemostasis]
+    requires: [camera_in]
+    blocked: "Need the camera in."
+    duration_s: 60
+    stimulus: 0.1
+    sets: [hemostasis_checked]
+    hooks: [reveal_occult]
+    start: "Checking for bleeding with the pressure dropped to 5."
+    auto_order: 24
+
+  - id: control_bleeding
+    name: Control bleeding
+    verbs: [control, cauterize, clip the bleeder, stop the bleeding, get control, hemostasis on the bleeder, apply pressure]
+    targets: [bleeder]
+    instruments: [clip_applier, hook_cautery, harmonic, ligasure, grasper, sponge]
+    requires: [bleeding]
+    blocked: "There's no active bleeding."
+    duration_s: 60
+    stimulus: 0.3
+    hooks: [control_bleeder]
+    start: "Getting control of the bleeder."
+    priority: true
+
+  - id: desufflate
+    name: Desufflate
+    verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
+    requires: [insufflated]
+    blocked: "The abdomen isn't insufflated."
+    duration_s: 60
+    stimulus: 0.2
+    iap: 0
+    clears: [insufflated, camera_in]
+    start: "Ports out under vision, letting the gas out."
+    auto_order: 25
+
+  - id: count
+    name: Sponge / needle / instrument count
+    verbs: [count, sponge count, do the count, counts]
+    requires: []
+    duration_s: 60
+    stimulus: 0.0
+    sets: [counted]
+    hooks: [count_result]
+    start: "Counting."
+    auto_order: 26
+
+  - id: close_fascia
+    name: Close fascia
+    verbs: [close the fascia, close fascia, fascial closure, close the port site, suture the fascia]
+    targets: [fascia]
+    instruments: [needle_driver]
+    requires: [specimen_out]
+    blocked: "Get the kidney out first."
+    soft_requires:
+      not_insufflated: "We're still insufflated."
+      counted: "Count isn't done yet."
+    duration_s: 300
+    stimulus: 0.5
+    sets: [fascia_closed]
+    start: "Closing the extraction wound and the 12 mm port-site fascia with 0 PDS."
+    hooks: [closing_cue]
+    auto_order: 27
+
+  - id: close_skin
+    name: Close skin
+    verbs: [close skin, close the skin, skin closure, subcuticular, close]
+    targets: [skin]
+    instruments: [needle_driver]
+    requires: [fascia_closed]
+    blocked: "Close the fascia first."
+    duration_s: 360
+    stimulus: 0.35
+    sets: [skin_closed]
+    hooks: [finish]
+    start: "Subcuticular 4-0 Monocryl, then dressings."
+    auto_order: 28
