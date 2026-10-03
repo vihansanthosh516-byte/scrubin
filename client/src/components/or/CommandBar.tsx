@@ -155,8 +155,8 @@ export function CommandBar({ onSubmit, lastParse, role, scenario }: Props) {
     role === "anesthesia"
       ? ["put on standard monitors", "preoxygenate", "fentanyl 100", "propofol 150 and roc 100", "intubate with the video laryngoscope", "volume control 500 by 14 peep 6", "sevo 2.5 percent", "listen to the chest"]
       : scenario === "cholecystectomy"
-        ? ["prep and drape", "time out", "incision at the umbilicus", "hasson entry", "insufflate", "camera in", "retract the fundus", "confirm the critical view of safety", "clip the cystic duct"]
-        : ["prep and drape", "time out", "incision at the umbilicus", "hasson entry", "insufflate", "camera in", "divide the mesoappendix with the ligasure", "clip the bleeder"];
+        ? ["prep and drape", "incision at the umbilicus", "hasson entry", "insufflate", "camera in", "retract the fundus", "confirm the critical view of safety", "clip the cystic duct"]
+        : ["prep and drape", "incision at the umbilicus", "hasson entry", "insufflate", "camera in", "divide the mesoappendix with the ligasure", "clip the bleeder"];
 
   return (
     <div className="rounded-sm border border-border bg-card p-3 space-y-2">
@@ -204,7 +204,7 @@ export function CommandBar({ onSubmit, lastParse, role, scenario }: Props) {
       </div>
       <div className="flex flex-wrap gap-1">
         {examples.map((ex) => (
-          <button key={ex} type="button" onClick={() => setText(ex)} className="text-[10px] px-2 py-0.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-border">
+          <button key={ex} type="button" onClick={() => onSubmit(ex)} title="Send this order" className="text-[10px] px-2 py-0.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-border">
             {ex}
           </button>
         ))}

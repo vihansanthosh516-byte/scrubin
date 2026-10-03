@@ -96,7 +96,11 @@ export function SurgeonStation({ state, act, say }: Props) {
   // A wrong instrument is sent on purpose: the scrub tech explains why it won't work.
   const perform = (taskId: string) => {
     act({ type: "surgical", verb: taskId, params: { task_id: taskId }, ...(instrument ? { instrument } : {}) });
+    setInstrument(null); // the scrub hands it over for that step; pick again for the next one
   };
+  // One button per instrument, even if two ids share a name.
+  const instrumentList = Object.entries(s.instruments).filter(([, name], i, all) => all.findIndex(([, n]) => n === name) === i);
+  const chole = isChole(state);
   const visible = s.tasks.filter((t) => !t.done && (t.available || !t.optional));
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -105,11 +109,16 @@ export function SurgeonStation({ state, act, say }: Props) {
         {s.findings.length > 0 && <div className="text-xs text-amber-warm">{s.findings.join(" ")}</div>}
         <Section title="Instrument (scrub hands you…)">
           <div className="flex flex-wrap gap-1">
-            {Object.entries(s.instruments).map(([id, name]) => (
+            {instrumentList.map(([id, name]) => (
               <OrButton key={id} active={instrument === id} tone="teal" onClick={() => setInstrument(instrument === id ? null : id)}>
                 {name}
               </OrButton>
             ))}
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            {instrument
+              ? `${s.instruments[instrument]} ready — now click a step to use it. Steps it fits are marked.`
+              : "Optional: pick an instrument, then a step. Without one, the scrub hands you the usual instrument."}
           </div>
         </Section>
       </div>
@@ -127,7 +136,10 @@ export function SurgeonStation({ state, act, say }: Props) {
                 } ${s.running?.task === t.id ? "bg-sage/10" : ""}`}
               >
                 <span>{t.name}</span>
-                <span className="text-[10px]">{t.available ? "ready" : "blocked"}</span>
+                <span className="text-[10px]">
+                  {instrument && t.instruments.includes(instrument) ? "✓ fits · " : ""}
+                  {s.running?.task === t.id ? "in progress" : t.available ? "ready" : "blocked"}
+                </span>
               </button>
             ))}
           </div>
@@ -138,9 +150,13 @@ export function SurgeonStation({ state, act, say }: Props) {
         <Section title="Talk to the team">
           <div className="flex flex-wrap gap-1.5">
             <OrButton onClick={() => act({ type: "say", intent: "time_out", text: "Let's do a time-out." })}>Time-out</OrButton>
-            <OrButton onClick={() => act({ type: "position", position: "left_side_down" })}>Trendelenburg, left side down</OrButton>
+            {chole ? (
+              <OrButton onClick={() => act({ type: "position", position: "reverse_trendelenburg" })}>Reverse Trendelenburg</OrButton>
+            ) : (
+              <OrButton onClick={() => act({ type: "position", position: "left_side_down" })}>Trendelenburg, left side down</OrButton>
+            )}
             <OrButton onClick={() => say("Can I get more relaxation please?")}>More relaxation</OrButton>
-            <OrButton onClick={() => say("He's moving, can you get him deeper?")}>Deeper please</OrButton>
+            <OrButton onClick={() => say("The patient's moving, can you go deeper?")}>Deeper please</OrButton>
             <OrButton onClick={() => act({ type: "assess", what: "ask_surgeon" })}>Status</OrButton>
             <OrButton onClick={() => act({ type: "position", position: "level" })}>Level the table</OrButton>
           </div>
