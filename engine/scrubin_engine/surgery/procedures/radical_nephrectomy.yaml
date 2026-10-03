@@ -9,7 +9,7 @@
 id: radical_nephrectomy
 name: Laparoscopic Radical Nephrectomy
 
-label: laparoscopic radical nephrectomy
+label: "laparoscopic {side} radical nephrectomy"
 expected: "Expected duration about three hours, blood loss should be modest if the hilum is controlled in the right order."
 hemostasis_ok: "Hilum stumps secure, renal fossa dry, adrenal bed and colon mesentery intact."
 thermal_organ: colon
@@ -233,7 +233,7 @@ tasks:
     targets: [duodenum]
     instruments: [harmonic, hook_cautery, scissors, liver_retractor, grasper]
     requires: [colon_reflected, hidden.side=right]
-    blocked: "That's for a right-sided tumour; on this side the spleen is the neighbour."
+    blocked: "Not yet: reflect the colon first, and note this step only applies to right-sided tumours."
     duration_s: 300
     stimulus: 0.3
     sets: [organ_cleared]
@@ -248,7 +248,7 @@ tasks:
     targets: [spleen]
     instruments: [harmonic, hook_cautery, scissors, ligasure]
     requires: [colon_reflected, hidden.side=left]
-    blocked: "That's for a left-sided tumour; on this side the duodenum and liver are the neighbours."
+    blocked: "Not yet: reflect the colon first, and note this step only applies to left-sided tumours."
     duration_s: 360
     stimulus: 0.3
     sets: [organ_cleared]

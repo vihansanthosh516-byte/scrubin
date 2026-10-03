@@ -124,6 +124,13 @@ def parse_clause(raw: str) -> ParseResult:
         a["utterance"] = raw.strip()
         r.actions.append(a)
 
+    # --- narration, not an order: "cefazolin 2 g given", "I already gave the roc" ---
+    if re.search(r"\b(given|gave|pushed|administered|already (in|given|gave)|went in|was given|has been given|have been given|is in now)\b", t) and not re.match(
+        r"^(please |can you |could you |let'?s |go ahead and |i want you to |i'?d like you to )?(give|push|draw|administer|start|add|hang|run|bolus)\b", t
+    ):
+        add(type="say", text=raw.strip())
+        return r
+
     # --- confirmations --------------------------------------------------
     if re.fullmatch(r"(yes|yeah|yep|confirm(ed)?|i'?m sure|correct|affirmative|do it|go ahead|that'?s right|yes,? (i'?m )?sure)\.?", t):
         add(type="confirm", accept=True)

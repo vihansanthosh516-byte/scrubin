@@ -295,7 +295,7 @@ const ALL_30: ProcedureDefinition[] = [
   name: "Total Hysterectomy",
   category: "intermediate",
   specialty: "OB/GYN",
-  description: "Total abdominal hysterectomy for fibroids. Ureter and vessel identification critical.",
+  description: "Total laparoscopic hysterectomy for fibroids. Ureter and vessel identification critical.",
   patient: {
     name: "Patricia M.", age: 46, sex: "Female", weight: "75 kg", bloodType: "AB+",
     admission: "Large uterine fibroids causing menorrhagia and anemia",

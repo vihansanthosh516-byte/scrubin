@@ -137,6 +137,9 @@ def user_cases(user_id: str) -> list[dict]:
             r.update(tick=live.case.tick, sim_t=live.case.t, status=live.case.status, outcome=live.case.outcome)
             if r.get("score") is None and live.case.status == "ended":
                 r["score"] = build_debrief(live.case).get("score")
+        if r.get("score") is None and r.get("status") == "ended":
+            rec = store.db.get(r["id"]) or {}
+            r["score"] = (rec.get("debrief") or {}).get("score")
     return rows
 
 

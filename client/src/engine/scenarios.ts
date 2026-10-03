@@ -10,6 +10,9 @@ export const ENGINE_SCENARIO: Record<string, string> = {
   "radical-prostatectomy": "radical_prostatectomy",
 };
 
+// Saved cases resume with the engine's scenario id, so those resolve too.
+for (const id of ["inguinal_hernia", "sigmoid_colectomy", "total_hysterectomy", "radical_nephrectomy", "radical_prostatectomy"]) ENGINE_SCENARIO[id] = id;
+
 export const SCENARIO_NAME: Record<string, string> = {
   appendectomy: "Laparoscopic Appendectomy",
   cholecystectomy: "Laparoscopic Cholecystectomy",

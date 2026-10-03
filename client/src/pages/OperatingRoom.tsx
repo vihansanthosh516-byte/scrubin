@@ -163,7 +163,7 @@ export default function OperatingRoom() {
             <RoleCard
               icon={<Syringe className="w-6 h-6" />}
               title="Anesthesiologist"
-              text="Induce, secure the airway, keep him asleep and stable while the AI surgeon operates, then wake him up safely."
+              text="Induce, secure the airway, keep the patient asleep and stable while the AI surgeon operates, then wake them up safely."
               disabled={creating || engineUp !== true}
               onClick={() => begin("anesthesia")}
             />

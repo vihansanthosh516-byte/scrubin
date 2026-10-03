@@ -309,7 +309,7 @@ tasks:
     stimulus: 0.3
     sets: [mesh_fixed]
     hooks: [mesh_fixation]
-    start: "Fixing the mesh to Cooper's ligament and the anterior abdominal wall, above the iliopubic tract only."
+    start: "Fixing the mesh."
     auto_order: 15
 
   - id: close_peritoneum

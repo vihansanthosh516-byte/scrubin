@@ -100,3 +100,13 @@ def test_playtest_regressions():
     assert [a["type"] for a in parse("let's preoxygenate him by mask at 10 liters").actions] == ["gas", "airway"]
     assert parse("trendelenburg with the left side down").actions[0]["position"] == "left_side_down"
     assert all(a["type"] != "bag" for a in parse("deliver the bagged specimen").actions)
+
+
+def test_narration_about_given_drugs_is_not_an_order():
+    from scrubin_engine.language.grammar import parse
+
+    for text in ["cefazolin 2 g given", "I already gave the rocuronium 50 mg", "Rocuronium 25 mg IV given at 65:35, you should feel relaxation in about a minute"]:
+        r = parse(text)
+        assert all(a["type"] == "say" for a in r.actions), (text, r.actions)
+    r = parse("give cefazolin 2 g")
+    assert r.actions and r.actions[0]["type"] == "drug"

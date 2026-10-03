@@ -390,6 +390,10 @@ def end_mesh_placement(proc, task, r):
 
 
 def start_mesh_fixation(proc, task):
+    r = proc.running
+    where = {"triangle_doom": "Tacks going in below the iliopubic tract, next to the iliac vessels (triangle of doom).",
+             "triangle_pain": "Tacks going in lateral to the vessels, below the iliopubic tract (triangle of pain)."}.get(r.target if r else None)
+    proc.surgeon_says(where or "Fixing the mesh to Cooper's ligament and the anterior abdominal wall, above the iliopubic tract only.")
     if proc.mode == "trainee":
         proc.case.say("attending", "Tacks above the iliopubic tract only: Cooper's ligament and the rectus. Not below, not lateral to the vessels.", )
 

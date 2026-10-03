@@ -443,7 +443,11 @@ class Procedure:
 
     @property
     def label(self) -> str:
-        return self.spec.get("label", self.spec["name"].lower())
+        label = self.spec.get("label", self.spec["name"].lower())
+        try:
+            return label.format(**self.case.patient.hidden)
+        except (KeyError, IndexError, ValueError):
+            return label
 
     def _allergy_line(self) -> str:
         a = self.case.patient.allergies
