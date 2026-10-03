@@ -818,7 +818,7 @@ class Case:
             "comms": [c for c in self.comms if c["id"] > since_comms],
             "patient_signs": {
                 "consciousness": eff.consciousness if eff.consciousness in ("awake", "sedated") else "unresponsive",
-                "breathing": "apneic" if self.body.spont_ve == 0 and self.tick > 0 else ("obstructed" if self.airway.obstruction > 0.5 and self.airway.device in ("none", "face_mask", "nasal_cannula") else "breathing"),
+                "breathing": "ventilated" if self.airway.device in ("ett", "lma") and self.machine.mode in ("vcv", "pcv") else "apneic" if self.body.spont_ve == 0 and self.tick > 0 else ("obstructed" if self.airway.obstruction > 0.5 and self.airway.device in ("none", "face_mask", "nasal_cannula") else "breathing"),
                 "moving": self.body.movement > 0.25,
                 "fasciculating": eff.fasciculating,
             },

@@ -96,7 +96,8 @@ export function SurgeonStation({ state, act, say }: Props) {
   // A wrong instrument is sent on purpose: the scrub tech explains why it won't work.
   const perform = (taskId: string) => {
     act({ type: "surgical", verb: taskId, params: { task_id: taskId }, ...(instrument ? { instrument } : {}) });
-    setInstrument(null); // the scrub hands it over for that step; pick again for the next one
+    // The scrub hands it over for that step; a blocked step keeps the pick for the next try.
+    if (s.tasks.find((t) => t.id === taskId)?.available) setInstrument(null);
   };
   // One button per instrument, even if two ids share a name.
   const instrumentList = Object.entries(s.instruments).filter(([, name], i, all) => all.findIndex(([, n]) => n === name) === i);

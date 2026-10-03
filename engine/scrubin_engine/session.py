@@ -123,6 +123,9 @@ class Session:
             return self.case.submit(action)
         except Exception as exc:  # validation errors etc.
             return {"ok": False, "error": str(exc)}
+        finally:
+            # Save every order at once: if the engine restarts, a rebuilt case must not lose it.
+            self.persist()
 
     async def utterance(self, text: str) -> dict:
         """Free text / transcribed speech from the trainee."""
@@ -132,6 +135,7 @@ class Session:
             return {"ok": False}
         c = self.case
         c.record_say("trainee", text, kind="trainee")
+        self.persist()
         actions: list[dict] = []
         clarification = None
         reply = None

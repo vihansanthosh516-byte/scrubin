@@ -81,6 +81,8 @@ export function useOrConnection(caseId: string | null): OrConnection {
   const [lastParse, setLastParse] = useState<OrConnection["lastParse"]>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const pendingText = useRef<Map<number, string>>(new Map());
+  const outbox = useRef<unknown[]>([]);
+  const lastTick = useRef(0);
   const refCounter = useRef(1);
 
   useEffect(() => {
@@ -88,6 +90,8 @@ export function useOrConnection(caseId: string | null): OrConnection {
     setComms([]);
     setState(null);
     setLastParse(null);
+    lastTick.current = 0;
+    outbox.current = [];
     if (!caseId) return;
     let closed = false;
     let retry: number | undefined;
@@ -96,7 +100,12 @@ export function useOrConnection(caseId: string | null): OrConnection {
     const connect = () => {
       const ws = new WebSocket(wsUrl(`/cases/${caseId}/ws`));
       wsRef.current = ws;
-      ws.onopen = () => setConnected(true);
+      ws.onopen = () => {
+        setConnected(true);
+        // Orders given while the line was down go out now instead of vanishing.
+        const queued = outbox.current.splice(0);
+        queued.forEach((p) => ws.send(JSON.stringify(p)));
+      };
       ws.onclose = () => {
         setConnected(false);
         if (!closed) retry = window.setTimeout(connect, 1500);
@@ -104,6 +113,12 @@ export function useOrConnection(caseId: string | null): OrConnection {
       ws.onmessage = (ev) => {
         const msg = JSON.parse(ev.data);
         if (msg.type === "state") {
+          if (msg.tick < lastTick.current) {
+            // The engine restarted and rebuilt the case: start the transcript over from its copy.
+            seen.clear();
+            setComms([]);
+          }
+          lastTick.current = msg.tick;
           setState(msg as CaseState);
           const fresh = (msg.comms as CommsMessage[]).filter((c) => !seen.has(c.id));
           if (fresh.length) {
@@ -128,6 +143,7 @@ export function useOrConnection(caseId: string | null): OrConnection {
   const send = useCallback((payload: unknown) => {
     const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload));
+    else if (outbox.current.length < 20) outbox.current.push(payload);
   }, []);
 
   const act = useCallback((action: Action) => send({ type: "action", action }), [send]);

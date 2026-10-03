@@ -332,7 +332,7 @@ export default function OperatingRoom() {
             <PatientMonitor readout={state.monitor} alarms={state.alarms} paused={state.paused} muted={muted} />
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
               <Sign label="Patient" value={state.patient_signs.consciousness} />
-              <Sign label="Breathing" value={state.patient_signs.breathing === "breathing" ? "spontaneous" : state.patient_signs.breathing} alert={state.patient_signs.breathing !== "breathing"} />
+              <Sign label="Breathing" value={state.patient_signs.breathing === "breathing" ? "spontaneous" : state.patient_signs.breathing} alert={!["breathing", "ventilated"].includes(state.patient_signs.breathing)} />
               {state.patient_signs.moving && <Sign label="" value="moving" alert />}
               {state.patient_signs.fasciculating && <Sign label="" value="fasciculating" />}
               <Sign label="Airway" value={state.airway.device.replace("_", " ")} />
