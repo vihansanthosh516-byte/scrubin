@@ -244,7 +244,7 @@ class Procedure:
         if not confirmed:
             for flag, warning in (task.get("soft_requires") or {}).items():
                 if not self.flag(flag):
-                    who = "circulator" if flag in ("time_out_done", "antibiotics_given", "counted") else "anesthesia"
+                    who = "circulator" if flag in ("time_out_done", "antibiotics_given", "counted") else "attending" if flag == "cvs" else "anesthesia"
                     act2 = act.model_copy(update={"params": {**(act.params or {}), "task_id": task["id"]}, "instrument": instrument})
                     return c._ask_confirm(act2, who, warning + " Do you want to proceed anyway?")
         if task.get("priority") and self.running is not None:
@@ -393,7 +393,7 @@ class Procedure:
                     return
                 c.metrics.time_out_t = c.t
                 self.notes.append("Circulator had to lead the time-out; anesthesia didn't respond.")
-                c.say("circulator", f"I'll run it: {c.patient.name}, {self.label}. {self._allergy_line()} " + ("Antibiotics in." if self.flag("antibiotics_given") else "Antibiotics are NOT in."))
+                c.say("circulator", f"I'll run it: {c.patient.name}, {c.patient.age}, {self.label}. {self._allergy_line()} " + ("Antibiotics in." if self.flag("antibiotics_given") else "Antibiotics are NOT in."))
             if not self.flag("antibiotics_given"):
                 self.surgeon_says("Have antibiotics gone in? I'd like them in before I cut.", key="ask_abx")
                 if not self._waited("abx", 120):

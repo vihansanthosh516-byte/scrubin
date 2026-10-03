@@ -61,6 +61,9 @@ export default function OrReplay() {
       </div>
     );
   }
+  if (data && !frame) {
+    return <div className="min-h-screen pt-28 text-center text-sm text-muted-foreground">This case has no recorded frames to replay yet.</div>;
+  }
   if (!data || !frame) {
     return (
       <div className="min-h-screen pt-28 flex justify-center gap-2 text-sm text-muted-foreground">

@@ -242,6 +242,11 @@ def _spill(proc, how):
     proc.notes.append("Gallbladder perforated — spilled stones should be retrieved and the field irrigated.")
 
 
+def start_triangle_risk(proc, task):
+    if proc.mode == "trainee":
+        proc.case.say("attending", "Take your time here. I want to see the critical view of safety before anything gets clipped.")
+
+
 def end_triangle_risk(proc, task, r):
     h = proc.case.patient.hidden
     rng = _rng(proc)
@@ -255,6 +260,8 @@ def end_triangle_risk(proc, task, r):
 
 
 def end_confirm_cvs(proc, task, r):
+    if proc.mode == "trainee":
+        proc.case.say("attending", "Good — that's a critical view. Two structures only. Go ahead and clip.")
     msg = ("Critical view of safety: hepatocystic triangle cleared, lower third of the cystic plate exposed, "
            "two and only two structures entering the gallbladder.")
     proc.case.say("surgeon" if proc.mode == "auto" else "system", msg, **({} if proc.mode == "auto" else {"kind": "finding"}))

@@ -40,7 +40,7 @@ def anesthesia_items(case) -> list[dict]:
                            "ASA standards require continuous oxygenation, ventilation, circulation and temperature monitoring before induction."))
         fao2 = ind["fao2"]
         items.append(_item("Preparation", "Preoxygenation",
-                           GOOD if fao2 >= 0.8 else (FAIR if fao2 >= 0.6 else POOR),
+                           GOOD if fao2 >= 0.9 else (FAIR if fao2 >= 0.75 else POOR),
                            f"Alveolar O2 fraction at induction was {fao2:.0%}.",
                            "Aim for end-tidal O2 ≥ 90%. In an obese patient the FRC is small, so apnoea without preoxygenation desaturates in about a minute."))
     # --- airway / RSI -----------------------------------------------------
@@ -178,6 +178,8 @@ def build_debrief(case) -> dict[str, Any]:
         "timeline": timeline,
         "trend": case.trend,
         "hidden": case.patient.hidden,
+        "patient": {"age": case.patient.age, "sex": case.patient.sex, "weight_kg": case.patient.weight_kg,
+                    "allergies": list(case.patient.allergies), "comorbidities": list(case.patient.comorbidities)},
         "surgery": {
             "notes": case.procedure.notes if case.procedure else [],
             "occult": case.procedure.occult if case.procedure else [],

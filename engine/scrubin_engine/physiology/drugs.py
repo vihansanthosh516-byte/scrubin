@@ -178,8 +178,8 @@ DRUGS: dict[str, DrugDef] = {
         # --- adjuncts (charted; negligible acute physiology) -------------
         DrugDef("ondansetron", "Ondansetron", "mg", "antiemetic", ("zofran",), "2 mg/mL", usual_fixed=(4.0, 8.0)),
         DrugDef("dexamethasone", "Dexamethasone", "mg", "steroid", ("decadron", "dex"), "4 mg/mL", usual_fixed=(4.0, 10.0)),
-        DrugDef("acetaminophen", "Acetaminophen", "mg", "analgesic", ("ofirmev", "tylenol", "paracetamol"), "10 mg/mL", usual_fixed=(650.0, 1000.0)),
-        DrugDef("ketorolac", "Ketorolac", "mg", "analgesic", ("toradol",), "30 mg/mL", usual_fixed=(15.0, 30.0)),
+        DrugDef("acetaminophen", "Acetaminophen", "mg", "analgesic", ("ofirmev", "tylenol", "paracetamol"), "10 mg/mL", usual_fixed=(1000.0, 1000.0)),
+        DrugDef("ketorolac", "Ketorolac", "mg", "analgesic", ("toradol",), "30 mg/mL", usual_fixed=(30.0, 30.0)),
     ]
 }
 

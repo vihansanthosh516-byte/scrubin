@@ -121,7 +121,10 @@ class Case:
 
     def say(self, who: str, text: str, kind: str = "speech") -> None:
         self._comms_seq += 1
-        self.comms.append({"id": self._comms_seq, "t": round(self.t, 1), "from": who, "name": TEAM_NAMES.get(who, who), "text": text, "kind": kind})
+        name = TEAM_NAMES.get(who, who)
+        if who == "attending":  # the trainee's own attending: a surgeon for the surgeon, an anesthesiologist otherwise
+            name = "Dr. Hale (attending surgeon)" if self.role == "surgeon" else "Dr. Brandt (attending anesthesiologist)"
+        self.comms.append({"id": self._comms_seq, "t": round(self.t, 1), "from": who, "name": name, "text": text, "kind": kind})
 
     def record_say(self, who: str, text: str, kind: str = "speech") -> None:
         """Speech that isn't produced by the deterministic engine (the trainee's words,

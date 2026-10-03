@@ -151,9 +151,12 @@ class Autopilot:
     def _antibiotics(self) -> None:
         c = self.case
         self._give_prophylaxis()
+        self.say(self._abx_line())
+
+    def _abx_line(self) -> str:
         names = " and ".join(d.capitalize() if i == 0 else d for i, d in enumerate(self._prophylaxis_drugs()))
-        pcn = any("penicillin" in a for a in c.patient.allergies)
-        self.say(f"{names} {'are' if ' and ' in names else 'is'} in" + (" — penicillin allergy was hives, so cefazolin is fine." if pcn else "."))
+        pcn = any("penicillin" in a for a in self.case.patient.allergies)
+        return f"{names} {'are' if ' and ' in names else 'is'} in" + (" — penicillin allergy was hives, so cefazolin is fine." if pcn else ".")
 
     def _prophylaxis_drugs(self) -> list[str]:
         return ["cefazolin", "metronidazole"] if self.case.scenario_id == "appendectomy" else ["cefazolin"]
@@ -247,7 +250,7 @@ class Autopilot:
             self.act({"type": "drug", "drug": "ondansetron", "dose": 4})
             self.act({"type": "drug", "drug": "dexamethasone", "dose": 8})
             self.act({"type": "warming", "on": True})
-            self.say("Cefazolin and metronidazole are in — penicillin allergy was hives, so cefazolin is fine. We're ready whenever you are; you'll want a time-out.")
+            self.say(self._abx_line() + " We're ready whenever you are; you'll want a time-out.")
             if proc is not None:
                 proc.flags.add("anesthesia_ready")
             self.baseline_hr = b.hr

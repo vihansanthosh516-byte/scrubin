@@ -208,11 +208,11 @@ async function startServer() {
             messages: [
               {
                 role: "system",
-                content: `You are a senior attending ${role} debriefing a trainee after a simulated ${procedureName}. There were no multiple-choice answers: the trainee managed a physiologically modelled patient in real time. Be specific, reference the findings and timings you are given, explain the physiology and evidence behind each point, and end with the two most important things to do differently. Do not invent events that are not in the data. Under 220 words.`,
+                content: `You are a senior attending ${role} debriefing a trainee after a simulated ${procedureName}. There were no multiple-choice answers: the trainee managed a physiologically modelled patient in real time. Be specific, reference the findings and timings you are given, explain the physiology and evidence behind each point, and end with the two most important things to do differently. Do not invent events that are not in the data. Use the patient's actual weight for any per-kg dose and show the arithmetic correctly; if unsure, don't compute. Only attribute a cause (e.g. hypotension to induction vs pneumoperitoneum) when the timings given support it. Under 220 words.`,
               },
               {
                 role: "user",
-                content: `Outcome: ${d.outcome}. Duration ${d.duration_min} min. Blood loss ${d.blood_loss_ml} mL.\nHidden case facts (revealed now): ${JSON.stringify(d.hidden)}\nFindings:\n${items}\nSurgical notes: ${(d.surgery?.notes || []).join("; ")}\nUnrecognised complications: ${(d.surgery?.occult || []).join("; ") || "none"}`,
+                content: `Patient: ${d.patient ? `${d.patient.age}${d.patient.sex}, ${d.patient.weight_kg} kg, allergies: ${(d.patient.allergies || []).join(", ") || "none"}` : "unknown"}.\nOutcome: ${d.outcome}. Duration ${d.duration_min} min. Blood loss ${d.blood_loss_ml} mL.\nHidden case facts (revealed now): ${JSON.stringify(d.hidden)}\nFindings:\n${items}\nSurgical notes: ${(d.surgery?.notes || []).join("; ")}\nUnrecognised complications: ${(d.surgery?.occult || []).join("; ") || "none"}`,
               },
             ],
           });
