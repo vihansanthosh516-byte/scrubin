@@ -38,6 +38,20 @@ class PatientSpec:
     # Hidden truths (never sent to the client until debrief).
     hidden: dict = field(default_factory=dict)
 
+    # --- pronouns (for what the team says) ----------------------------------
+
+    @property
+    def he(self) -> str:
+        return "he" if self.sex == "M" else "she"
+
+    @property
+    def him(self) -> str:
+        return "him" if self.sex == "M" else "her"
+
+    @property
+    def first_name(self) -> str:
+        return self.name.split()[0]
+
     # --- anthropometrics -------------------------------------------------
 
     @property

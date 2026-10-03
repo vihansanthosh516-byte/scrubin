@@ -43,6 +43,7 @@ export default function OrReplay() {
   }, [playing, rate, data]);
 
   const frame = data?.frames[idx];
+  const procName = data?.scenario === "cholecystectomy" ? "Laparoscopic Cholecystectomy" : "Laparoscopic Appendectomy";
   const comms = useMemo(() => (data ? data.frames.slice(0, idx + 1).flatMap((f) => f.comms) : []), [data, idx]);
   const markers = useMemo(() => {
     if (!data || !data.frames.length) return [];
@@ -80,7 +81,7 @@ export default function OrReplay() {
           <div>
             <div className="text-[11px] uppercase tracking-[0.18em] text-primary">Replay · {data.role === "anesthesia" ? "Anesthesiologist" : "Surgeon"}</div>
             <div className="text-lg font-bold">
-              Laparoscopic Appendectomy
+              {procName}
             </div>
           </div>
           <Link href="/or/cases" className="text-sm text-muted-foreground hover:text-foreground">
@@ -132,7 +133,7 @@ export default function OrReplay() {
           <CommsLog comms={comms} voices={false} />
         </div>
       </div>
-      <DebriefView debrief={data.debrief} procedureName="Laparoscopic Appendectomy" onRestart={() => (window.location.href = "/simulation?proc=appendectomy")} />
+      <DebriefView debrief={data.debrief} procedureName={procName} onRestart={() => (window.location.href = `/simulation?proc=${data.scenario ?? "appendectomy"}`)} />
     </div>
   );
 }

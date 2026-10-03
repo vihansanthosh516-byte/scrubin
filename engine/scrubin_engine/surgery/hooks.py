@@ -12,8 +12,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from .procedure import Procedure, Running
 
-LAPAROSCOPIC = {"explore", "lyse_adhesions", "mobilize_cecum", "grasp_appendix", "window", "divide_meso", "secure_base", "divide_appendix", "bag", "irrigate"}
-NEEDS_EXPOSURE = {"explore", "grasp_appendix", "mobilize_cecum", "window", "divide_meso"}
+LAPAROSCOPIC = {"explore", "lyse_adhesions", "mobilize_cecum", "grasp_appendix", "window", "divide_meso", "secure_base", "divide_appendix", "bag", "irrigate",
+                "retract_fundus", "dissect_triangle", "clip_duct", "clip_artery", "divide_cystic", "dissect_liver_bed"}
+NEEDS_EXPOSURE = {"explore", "grasp_appendix", "mobilize_cecum", "window", "divide_meso", "retract_fundus", "dissect_triangle", "dissect_liver_bed"}
 
 
 def _rng(proc: "Procedure"):
@@ -36,6 +37,8 @@ def duration_factor(proc: "Procedure", task: dict) -> float:
         f *= 1.3
     if tid == "mobilize_cecum" and h.get("adhesions"):
         f *= 1.2
+    if tid in ("dissect_triangle", "dissect_liver_bed") and h.get("acute_inflammation"):
+        f *= 1.5
     return f
 
 
@@ -66,7 +69,7 @@ def start_insufflation_checks(proc, task):
             proc.flags.add("subq_emphysema")
             proc.occult.append("Preperitoneal insufflation (high opening pressure ignored): subcutaneous emphysema, extra CO2 absorption.")
     if not proc.flag("relaxed"):
-        proc.surgeon_says("Pressure's climbing but the abdomen isn't expanding — he's not relaxed.", key="relax_insuff")
+        proc.surgeon_says(f"Pressure's climbing but the abdomen isn't expanding — {c.patient.he}'s not relaxed.", key="relax_insuff")
 
 
 def end_blind_trocar_risk(proc, task, r):
@@ -145,7 +148,7 @@ def end_thermal_bowel_risk(proc, task, r):
         p += 0.15
     if p and _rng(proc).random() < p:
         proc.flags.add("thermal_injury")
-        proc.occult.append("Unrecognised thermal injury to the cecum.")
+        proc.occult.append(f"Unrecognised thermal injury to the {proc.spec.get('thermal_organ', 'cecum')}.")
 
 
 def end_base_technique(proc, task, r):
@@ -169,12 +172,13 @@ def end_irrigation_effect(proc, task, r):
 
 def end_reveal_occult(proc, task, r):
     c = proc.case
-    txt = "Stump secure, mesoappendix dry."
+    txt = proc.spec.get("hemostasis_ok", "Stump secure, mesoappendix dry.")
     if "thermal_injury" in proc.flags and _rng(proc).random() < 0.6:
         proc.flags.discard("thermal_injury")
         proc.occult = [o for o in proc.occult if "thermal" not in o]
-        proc.notes.append("Thermal cecal injury recognised on inspection and oversewn.")
-        txt = "Blanched area on the cecum — thermal injury. Oversewing it."
+        organ = proc.spec.get("thermal_organ", "cecum")
+        proc.notes.append(f"Thermal {organ} injury recognised on inspection and oversewn.")
+        txt = f"Blanched area on the {organ} — thermal injury. Oversewing it."
     who = "surgeon" if proc.mode == "auto" else "system"
     c.say(who, txt)
 
@@ -212,6 +216,69 @@ def end_finish(proc, task, r):
     if "counted" not in proc.flags:
         proc.notes.append("Closed without a completed count (retained item risk).")
     if proc.mode == "auto":
-        proc.surgeon_says("All done. Thanks everyone — he's all yours.")
+        proc.surgeon_says(f"All done. Thanks everyone — {c.patient.he}'s all yours.")
     else:
-        c.say("anesthesia", "Nice work. I'll wake him up.")
+        c.say("anesthesia", f"Nice work. I'll wake {c.patient.him} up.")
+
+
+# --- laparoscopic cholecystectomy ----------------------------------------
+
+def end_reveal_gb_findings(proc, task, r):
+    h = proc.case.patient.hidden
+    parts = ["Gallbladder is distended, thick-walled and oedematous — acute cholecystitis." if h.get("acute_inflammation")
+             else "Gallbladder with stones, mild chronic wall thickening."]
+    if h.get("adhesions"):
+        parts.append("Omentum and duodenum are stuck to the gallbladder.")
+    proc.findings = parts
+    who = "surgeon" if proc.mode == "auto" else "system"
+    proc.case.say(who, " ".join(parts), kind="finding" if who == "system" else "speech")
+
+
+def _spill(proc, how):
+    if "spillage" in proc.flags:
+        return
+    proc.flags.add("spillage")
+    proc.case.say("surgeon" if proc.mode == "auto" else "system", f"The gallbladder tears {how} — bile and a few stones spill out.")
+    proc.notes.append("Gallbladder perforated — spilled stones should be retrieved and the field irrigated.")
+
+
+def end_triangle_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    if r.instrument == "hook_cautery" and h.get("posterior_cystic_artery") and rng.random() < 0.4:
+        _bleed(proc, 90.0, "cystic artery", "Bleeder from a posterior cystic artery branch! Suction!" if proc.mode == "auto"
+               else "Pulsatile bleeding from behind the cystic duct — a posterior branch of the cystic artery.")
+    if rng.random() < (0.25 if h.get("acute_inflammation") else 0.08):
+        _spill(proc, "at the neck")
+    if r.moved:
+        proc.notes.append("The patient moved during dissection of the hepatocystic triangle.")
+
+
+def end_confirm_cvs(proc, task, r):
+    msg = ("Critical view of safety: hepatocystic triangle cleared, lower third of the cystic plate exposed, "
+           "two and only two structures entering the gallbladder.")
+    proc.case.say("surgeon" if proc.mode == "auto" else "system", msg, **({} if proc.mode == "auto" else {"kind": "finding"}))
+
+
+def start_clip_risk(proc, task):
+    """Clipping before the critical view is how bile duct injuries happen."""
+    if "cvs" in proc.flags:
+        return
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    proc.notes.append(f"{task['name']} clipped without a critical view of safety.")
+    if task["id"] == "clip_duct" and rng.random() < (0.5 if h.get("acute_inflammation") else 0.25):
+        proc.flags.add("bile_duct_injury")
+        proc.occult.append("Common bile duct clipped and divided — mistaken for the cystic duct (classic laparoscopic bile duct injury).")
+    if task["id"] == "clip_artery" and rng.random() < 0.15:
+        proc.occult.append("Right hepatic artery clipped — mistaken for the cystic artery.")
+
+
+def end_liver_bed_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    thermal = _instrument(proc, r).get("thermal")
+    if rng.random() < (0.3 if h.get("acute_inflammation") else 0.12) + (0.15 if r.moved else 0.0):
+        _spill(proc, "off the liver bed")
+    if rng.random() < (0.15 if thermal else 0.4):
+        _bleed(proc, 60.0, "liver bed", "Liver bed is oozing — need the hook on it." if proc.mode == "auto" else "The gallbladder fossa is oozing steadily.")

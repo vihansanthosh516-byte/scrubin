@@ -98,9 +98,9 @@ class Autopilot:
             elif drug in DEPTH_DRUGS:
                 if after_induction:
                     self.hear_deeper()
-                    self.say("Taking him deeper.")
+                    self.say(f"Taking {self.case.patient.him} deeper.")
                 else:
-                    self.say("I'll induce as soon as he's preoxygenated.")
+                    self.say(f"I'll induce as soon as {self.case.patient.he}'s preoxygenated.")
             elif drug in RELAXANTS:
                 if after_induction:
                     self.act({"type": "drug", "drug": "rocuronium", "dose": 20})
@@ -150,10 +150,20 @@ class Autopilot:
 
     def _antibiotics(self) -> None:
         c = self.case
+        self._give_prophylaxis()
+        names = " and ".join(d.capitalize() if i == 0 else d for i, d in enumerate(self._prophylaxis_drugs()))
+        pcn = any("penicillin" in a for a in c.patient.allergies)
+        self.say(f"{names} {'are' if ' and ' in names else 'is'} in" + (" — penicillin allergy was hives, so cefazolin is fine." if pcn else "."))
+
+    def _prophylaxis_drugs(self) -> list[str]:
+        return ["cefazolin", "metronidazole"] if self.case.scenario_id == "appendectomy" else ["cefazolin"]
+
+    def _give_prophylaxis(self) -> None:
+        c = self.case
         self.act({"type": "drug", "drug": "cefazolin", "dose": 3 if c.patient.weight_kg >= 120 else 2, "unit": "g"})
-        self.act({"type": "drug", "drug": "metronidazole", "dose": 500})
+        if "metronidazole" in self._prophylaxis_drugs():
+            self.act({"type": "drug", "drug": "metronidazole", "dose": 500})
         self.last["antibiotics"] = c.t
-        self.say("Cefazolin and metronidazole are in — penicillin allergy was hives, so cefazolin is fine.")
 
     def _rescue(self) -> bool:
         """Arrest and hypoxia come before the plan. Returns True while a code runs."""
@@ -175,7 +185,7 @@ class Autopilot:
             return True
         induced = self.phase in ("induced", "intubating", "rescue_mask", "confirm_tube", "emergence", "done")
         if induced and aw.device != "ett" and b.sao2 < 0.90 and self.every("desat", 30):
-            self.say(f"Sats are {round(b.sao2 * 100)} — bagging him.")
+            self.say(f"Sats are {round(b.sao2 * 100)} — bagging {c.patient.him}.")
             self.act({"type": "gas", "o2_flow": 10, "air_flow": 0})
             self.act({"type": "airway", "maneuver": "mask_on"})
             self.act({"type": "airway", "maneuver": "oral_airway"})
@@ -191,7 +201,7 @@ class Autopilot:
             return
 
         if p == "setup" and c.t >= 5:
-            self.say("Hi Marcus, I'm Dr. Okafor from anesthesia. We'll put some monitors on and give you some oxygen.")
+            self.say(f"Hi {c.patient.first_name}, I'm Dr. Okafor from anesthesia. We'll put some monitors on and give you some oxygen.")
             self.act({"type": "monitor", "attach": ["ecg", "spo2", "nibp", "etco2", "temp", "bis"]})
             self.act({"type": "gas", "o2_flow": 10, "air_flow": 0})
             self.act({"type": "airway", "maneuver": "mask_on"})
@@ -233,9 +243,7 @@ class Autopilot:
             self.act({"type": "volatile", "percent": 2.5})
             self.act({"type": "gas", "o2_flow": 1, "air_flow": 1})
             if not self.last.get("antibiotics"):
-                self.act({"type": "drug", "drug": "cefazolin", "dose": 3 if c.patient.weight_kg >= 120 else 2, "unit": "g"})
-                self.act({"type": "drug", "drug": "metronidazole", "dose": 500})
-                self.last["antibiotics"] = c.t
+                self._give_prophylaxis()
             self.act({"type": "drug", "drug": "ondansetron", "dose": 4})
             self.act({"type": "drug", "drug": "dexamethasone", "dose": 8})
             self.act({"type": "warming", "on": True})
@@ -264,7 +272,7 @@ class Autopilot:
             if b.spont_ve > 0.3 * b.ve0 and m.bagging:
                 self.act({"type": "bag", "on": False})
             if eff.bis > 80 and eff.tof_ratio > 0.9 and b.spont_ve > 0.5 * b.ve0:
-                self.say("He's awake, following commands, good tidal volumes. Extubating.")
+                self.say(f"{c.patient.he.capitalize()}'s awake, following commands, good tidal volumes. Extubating.")
                 self.act({"type": "airway", "maneuver": "extubate"})
                 self.act({"type": "airway", "maneuver": "nasal_cannula", "flow": 4})
                 self.goto("done")

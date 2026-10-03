@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Action, CaseState } from "@/engine/types";
 import { OrButton, Section } from "./controls";
+import CholeScope, { isChole } from "./CholeScope";
 
 interface Props {
   state: CaseState;
@@ -18,7 +19,9 @@ function ScopeView({ state }: { state: CaseState }) {
   const insufflating = s.iap > 1;
   return (
     <div className="relative aspect-[16/9] rounded-sm overflow-hidden border border-border bg-black">
-      {cameraIn ? (
+      {cameraIn && isChole(state) ? (
+        <CholeScope state={state} />
+      ) : cameraIn ? (
         <svg viewBox="0 0 320 180" className="w-full h-full">
           <defs>
             <radialGradient id="scope" cx="50%" cy="50%" r="60%">

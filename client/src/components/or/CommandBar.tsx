@@ -28,6 +28,7 @@ interface Props {
   onSubmit: (text: string) => void;
   lastParse: { text: string; ok: boolean; source: string; clarification: string | null } | null;
   role: "anesthesia" | "surgeon";
+  scenario?: string;
 }
 
 /**
@@ -35,7 +36,7 @@ interface Props {
  * to talk — push-to-talk, like a real OR where you call out orders.
  * Uses the browser's speech recognition; falls back to server-side Whisper.
  */
-export function CommandBar({ onSubmit, lastParse, role }: Props) {
+export function CommandBar({ onSubmit, lastParse, role, scenario }: Props) {
   const [text, setText] = useState("");
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
@@ -153,7 +154,9 @@ export function CommandBar({ onSubmit, lastParse, role }: Props) {
   const examples =
     role === "anesthesia"
       ? ["put on standard monitors", "preoxygenate", "fentanyl 100", "propofol 150 and roc 100", "intubate with the video laryngoscope", "volume control 500 by 14 peep 6", "sevo 2.5 percent", "listen to the chest"]
-      : ["prep and drape", "time out", "incision at the umbilicus", "hasson entry", "insufflate", "camera in", "divide the mesoappendix with the ligasure", "clip the bleeder"];
+      : scenario === "cholecystectomy"
+        ? ["prep and drape", "time out", "incision at the umbilicus", "hasson entry", "insufflate", "camera in", "retract the fundus", "confirm the critical view of safety", "clip the cystic duct"]
+        : ["prep and drape", "time out", "incision at the umbilicus", "hasson entry", "insufflate", "camera in", "divide the mesoappendix with the ligasure", "clip the bleeder"];
 
   return (
     <div className="rounded-sm border border-border bg-card p-3 space-y-2">

@@ -213,7 +213,7 @@ class Case:
         if lo > 0 and amount < 0.2 * lo:
             return self._ask_confirm(act, who, f"Just {self._fmt(amount, d.unit)} of {d.name.lower()}? Usual is {self._fmt(lo, d.unit)}–{self._fmt(hi, d.unit)}. Confirm?")
         if "penicillin" in d.tags and any("penicillin" in a for a in self.patient.allergies):
-            return self._ask_confirm(act, "circulator", f"Heads up — he has a penicillin allergy listed. Still want {d.name}?")
+            return self._ask_confirm(act, "circulator", f"Heads up — {self.patient.he} has a penicillin allergy listed. Still want {d.name}?")
         return None
 
     @staticmethod
@@ -376,7 +376,7 @@ class Case:
                     why.append(f"still paralysed (TOF ratio {eff.tof_ratio:.2f})")
                 if eff.bis < 70:
                     why.append(f"still deeply asleep (BIS {round(eff.bis)})")
-                return self._ask_confirm(act, "attending", f"Hold on — he's {' and '.join(why)}. Pull the tube anyway?")
+                return self._ask_confirm(act, "attending", f"Hold on — {self.patient.he}'s {' and '.join(why)}. Pull the tube anyway?")
             prev = aw.remove_device()
             self.machine.mode = "manual"
             self.machine.bagging = False
@@ -522,7 +522,8 @@ class Case:
             handled = self.autopilot.hear(act)
         if not handled and act.intent == "time_out":
             abx = "Antibiotics are in." if self.metrics.antibiotic_t is not None else "Antibiotics are NOT in yet."
-            self.say("circulator", f"Time-out: {self.patient.name}, laparoscopic appendectomy, right side. Allergy: penicillin. {abx}")
+            label = self.procedure.label if self.procedure is not None else self.scenario_id
+            self.say("circulator", f"Time-out: {self.patient.name}, {label}. " + (f"Allergy: {', '.join(self.patient.allergies)}. " if self.patient.allergies else "No known allergies. ") + abx)
         return {"ok": True}
 
     def _do_surgical(self, act: A.Surgical, performer: str, confirmed: bool = False) -> dict:
@@ -747,7 +748,7 @@ class Case:
                 self._alarm_cooldown["movement"] = self.t
                 self.metrics.patient_movements += 1
                 self.event("patient_moved")
-                self.say("surgeon", "He's moving! Can we get him deeper?")
+                self.say("surgeon", f"{self.patient.he.capitalize()}'s moving! Can we get {self.patient.him} deeper?")
 
         # Emergence complete: extubated, awake, breathing, oxygenating.
         if self.status == "emergence" and self.outcome is None:

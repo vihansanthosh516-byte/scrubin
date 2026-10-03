@@ -49,10 +49,12 @@ def anesthesia_items(case) -> list[dict]:
     wt = case.patient.weight_kg
     if ind:
         rsi_ok = sux or roc >= 1.0 * (case.patient.ibw_kg + 0.4 * (wt - case.patient.ibw_kg))
-        items.append(_item("Airway", "Rapid sequence for a full stomach",
-                           GOOD if rsi_ok and case.body.stomach_air_ml < 200 else (FAIR if rsi_ok or case.body.stomach_air_ml < 200 else POOR),
+        full = case.scenario.get("full_stomach", True)
+        items.append(_item("Airway", "Rapid sequence for a full stomach" if full else "Neuromuscular blockade for intubation",
+                           (GOOD if rsi_ok and case.body.stomach_air_ml < 200 else (FAIR if rsi_ok or case.body.stomach_air_ml < 200 else POOR)) if full
+                           else (GOOD if (sux or roc > 0) and case.body.stomach_air_ml < 400 else FAIR),
                            f"Relaxant at induction: {'succinylcholine' if sux else f'rocuronium {roc:.0f} mg'}. Gastric air insufflated: {case.body.stomach_air_ml:.0f} mL.",
-                           "Acute appendicitis with vomiting = aspiration risk. Use succinylcholine or high-dose rocuronium (1.2 mg/kg) and avoid high-pressure mask ventilation."))
+                           case.scenario.get("airway_teaching", "Acute appendicitis with vomiting = aspiration risk. Use succinylcholine or high-dose rocuronium (1.2 mg/kg) and avoid high-pressure mask ventilation.")))
     placed = _first(case, "tube_placed")
     if placed:
         checked = any(e["kind"] == "assess" and e["what"] in ("check_capnogram", "auscultate") and e["t"] >= placed["t"] for e in case.events)
@@ -91,7 +93,7 @@ def anesthesia_items(case) -> list[dict]:
         awake = e.get("bis", 0) > 75
         items.append(_item("Emergence", "Extubation criteria", GOOD if ratio >= 0.9 and awake else (FAIR if ratio >= 0.7 else POOR),
                            f"At extubation: TOF ratio {ratio:.2f}, BIS {e.get('bis')}.",
-                           "Extubate a full-stomach patient awake, with TOF ratio ≥ 0.9 — residual blockade causes airway obstruction and aspiration."))
+                           "Extubate awake, with TOF ratio ≥ 0.9 — residual blockade causes airway obstruction and aspiration."))
     return items
 
 
@@ -109,7 +111,7 @@ def surgeon_items(case) -> list[dict]:
             items.append(_item("Technique", "Operative time", GOOD if op_min < 60 else FAIR if op_min < 90 else POOR, f"Incision to close: {op_min:.0f} min."))
         items.append(_item("Technique", "Blood loss", GOOD if case.body.blood_loss_ml < 100 else FAIR if case.body.blood_loss_ml < 400 else POOR,
                            f"Estimated blood loss {case.body.blood_loss_ml:.0f} mL.",
-                           "Divide the mesoappendix with an energy device, stapler or clips; the appendiceal artery runs in it."))
+                           p.spec.get("bleeding_teaching", "Divide the mesoappendix with an energy device, stapler or clips; the appendiceal artery runs in it.")))
     return items
 
 

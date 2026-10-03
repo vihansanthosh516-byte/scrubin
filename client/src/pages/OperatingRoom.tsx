@@ -14,14 +14,25 @@ import { recordSession } from "@/lib/recordSession";
 import ClassicSimulation from "./Simulation";
 import type { Catalog, CreateCaseResponse, Debrief, Role } from "@/engine/types";
 
-const SUPPORTED = new Set(["appendectomy"]);
+/** Library ids the real-time engine models, mapped to its scenario ids. */
+const ENGINE_SCENARIO: Record<string, string> = {
+  appendectomy: "appendectomy",
+  cholecystectomy: "cholecystectomy",
+  "lap-cholecystectomy": "cholecystectomy",
+};
+const SCENARIO_NAME: Record<string, string> = {
+  appendectomy: "Laparoscopic Appendectomy",
+  cholecystectomy: "Laparoscopic Cholecystectomy",
+};
 const SPEEDS = [0.5, 1, 2, 5, 10];
 
 type Stage = "intro" | "or" | "debrief";
 
 export default function OperatingRoom() {
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
-  const procId = params.get("proc") || "appendectomy";
+  const libraryId = params.get("proc") || "appendectomy";
+  const procId = ENGINE_SCENARIO[libraryId] ?? libraryId;
+  const procName = SCENARIO_NAME[procId] ?? "Laparoscopic Appendectomy";
   const resumeId = params.get("case");
   const { user } = useAuth();
   const [recorded, setRecorded] = useState(false);
@@ -103,7 +114,7 @@ export default function OperatingRoom() {
   }, [created, conn, user, recorded, state?.status]);
 
   // Procedures the real-time engine doesn't model yet keep the classic simulation.
-  if (!SUPPORTED.has(procId)) {
+  if (!ENGINE_SCENARIO[libraryId]) {
     return <ClassicSimulation />;
   }
 
@@ -112,7 +123,7 @@ export default function OperatingRoom() {
       <div className="min-h-screen pt-20">
         <DebriefView
           debrief={debrief}
-          procedureName={created?.scenario.name ?? "Laparoscopic Appendectomy"}
+          procedureName={created?.scenario.name ?? procName}
           onRestart={() => {
             setDebrief(null);
             setCreated(null);
@@ -130,7 +141,7 @@ export default function OperatingRoom() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="space-y-2">
             <div className="text-xs uppercase tracking-[0.2em] text-primary">Real-time operating room</div>
             <h1 className="text-4xl font-bold">
-              Laparoscopic Appendectomy
+              {procName}
             </h1>
             <p className="text-muted-foreground max-w-2xl">
               No multiple choice. The patient runs on a physiological model with real drug pharmacology. Speak or type orders, use the equipment, and
@@ -176,7 +187,7 @@ export default function OperatingRoom() {
               icon={<ListChecks className="w-6 h-6" />}
               title="Multiple choice"
               text="The classic case: pick one of three moves at each step. Mistakes cause real complications and repair operations."
-              onClick={() => (window.location.href = `/simulation/classic?proc=${procId}`)}
+              onClick={() => (window.location.href = `/simulation/classic?proc=${libraryId}`)}
             />
           </div>
           <div className="flex gap-4 text-xs text-muted-foreground">
@@ -328,7 +339,7 @@ export default function OperatingRoom() {
               <Sign label="Table" value={state.position.replace(/_/g, " ")} />
               {state.surgery && <Sign label="IAP" value={`${state.surgery.iap.toFixed(0)} mmHg`} />}
             </div>
-            <CommandBar onSubmit={conn.say} lastParse={conn.lastParse} role={role} />
+            <CommandBar onSubmit={conn.say} lastParse={conn.lastParse} role={role} scenario={procId} />
           </div>
           <div className="space-y-4">
             <div className="glass-card p-4">

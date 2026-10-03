@@ -107,7 +107,7 @@ class Procedure:
         if name == "bleeding":
             return bool(self.bleeders)
         if name == "positioned":
-            return c.position in ("trendelenburg", "left_side_down")
+            return c.position in self.spec.get("positions", ("trendelenburg", "left_side_down"))
         return name in self.flags
 
     # ------------------------------------------------------------------
@@ -257,9 +257,9 @@ class Procedure:
         c = self.case
         if act.intent == "time_out":
             abx = "Antibiotics are in." if self.flag("antibiotics_given") else "Antibiotics are NOT in."
-            c.say("circulator", f"Time-out: {c.patient.name}, 28, laparoscopic appendectomy. Allergy: penicillin, hives. {abx} Everyone agree?")
+            c.say("circulator", f"Time-out: {c.patient.name}, {c.patient.age}, {self.label}. {self._allergy_line()} {abx} Everyone agree?")
             if self.mode == "auto":
-                self.surgeon_says("Agree. Expected duration about an hour, minimal blood loss expected.")
+                self.surgeon_says(f"Agree. {self.spec.get('expected', 'Expected duration about an hour, minimal blood loss expected.')}")
             return True
         if act.intent == "ready_for_incision":
             self.flags.add("anesthesia_ready")
@@ -364,13 +364,13 @@ class Procedure:
     def _auto(self, dt: float) -> None:
         c = self.case
         if self._unsafe_to_operate():
-            self.surgeon_says("I'm holding — the airway's not secure. Tell me when he's intubated and oxygenating again.", key="hold_airway", every_s=60)
+            self.surgeon_says(f"I'm holding — the airway's not secure. Tell me when {c.patient.he}'s intubated and oxygenating again.", key="hold_airway", every_s=60)
             return
         if self.finished or self.paused:
             return
         if c.t > 45 and "greeted" not in self.flags:
             self.flags.add("greeted")
-            self.surgeon_says("Morning everyone. Laparoscopic appendectomy — let me know when he's asleep and the airway's secure.")
+            self.surgeon_says(f"Morning everyone. {self.label[0].upper() + self.label[1:]} — let me know when {c.patient.he}'s asleep and the airway's secure.")
         if self.bleeders and (self.running is None or not self.running.task.get("priority")):
             if self._waited("react_bleed", 15):
                 self._wait.pop("react_bleed", None)
@@ -379,7 +379,7 @@ class Procedure:
             return
         if self.running is not None:
             if not self.flag("relaxed") and self.iap > 5 and self.running.task.get("stimulus", 0) >= 0.2:
-                self.surgeon_says("The abdomen's tight and he's pushing against the gas — can I get more relaxation?", key="relax", every_s=180)
+                self.surgeon_says(f"The abdomen's tight and {c.patient.he}'s pushing against the gas — can I get more relaxation?", key="relax", every_s=180)
             return
         nxt = self._next_auto_task()
         if nxt is None:
@@ -393,7 +393,7 @@ class Procedure:
                     return
                 c.metrics.time_out_t = c.t
                 self.notes.append("Circulator had to lead the time-out; anesthesia didn't respond.")
-                c.say("circulator", "I'll run it: Marcus T., laparoscopic appendectomy, penicillin allergy. " + ("Antibiotics in." if self.flag("antibiotics_given") else "Antibiotics are NOT in."))
+                c.say("circulator", f"I'll run it: {c.patient.name}, {self.label}. {self._allergy_line()} " + ("Antibiotics in." if self.flag("antibiotics_given") else "Antibiotics are NOT in."))
             if not self.flag("antibiotics_given"):
                 self.surgeon_says("Have antibiotics gone in? I'd like them in before I cut.", key="ask_abx")
                 if not self._waited("abx", 120):
@@ -407,13 +407,14 @@ class Procedure:
                     return
                 self.flags.add("anesthesia_ready")
                 self.notes.append("Surgeon started without a clear 'go ahead' from anesthesia.")
-        if tid in ("explore", "grasp_appendix", "mobilize_cecum") and not self.flag("positioned"):
-            self.surgeon_says("Can we get Trendelenburg and left side down, please?", key="ask_position")
+        pos = self.spec.get("position", {})
+        if tid in pos.get("before", ("explore", "grasp_appendix", "mobilize_cecum")) and not self.flag("positioned"):
+            words = pos.get("words", "Trendelenburg, left side down")
+            self.surgeon_says(f"Can we get {words}, please?", key="ask_position")
             if not self._waited("position", 50):
                 return
-            c.say("circulator", "I've got the table — Trendelenburg, left side down.")
-            c._do_position(A.Position(position="left_side_down"), "circulator")
-            c.load.trendelenburg_deg = 15.0
+            c.say("circulator", f"I've got the table — {words}.")
+            c._do_position(A.Position(position=pos.get("set", "left_side_down")), "circulator")
             self.notes.append("Table position request went unanswered; circulator positioned the patient.")
         if tid == "count" and c.position != "level":
             c._do_position(A.Position(position="level"), "circulator")
@@ -421,11 +422,20 @@ class Procedure:
         if not ok:
             return
         instr = (nxt.get("instruments") or [None])[0]
+        instr = (self.spec.get("auto_instruments") or {}).get(tid, instr)
         if tid == "divide_meso":
             instr = "harmonic"
         if tid == "secure_base":
             instr = "endoloop" if not c.patient.hidden.get("perforated") else "stapler"
         self.start(nxt, instr, None)
+
+    @property
+    def label(self) -> str:
+        return self.spec.get("label", self.spec["name"].lower())
+
+    def _allergy_line(self) -> str:
+        a = self.case.patient.allergies
+        return f"Allergy: {', '.join(a)}." if a else "No known allergies."
 
     def _near_miss(self, task: dict, why: str) -> None:
         """A blocked step is something the trainee almost did — the debrief shows it."""

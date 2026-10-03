@@ -84,12 +84,14 @@ def scenarios() -> list[dict]:
 
 @router.get("/catalog")
 def catalog() -> dict:
-    spec = load_spec("appendectomy")
+    instruments: dict = {}
+    for sid in SCENARIOS:
+        instruments.update({k: v["name"] for k, v in load_spec(sid)["instruments"].items()})
     return {
         "drugs": [d.public() for d in DRUGS.values()],
         "fluids": list(FLUIDS),
         "speeds": list(SPEEDS),
-        "instruments": {k: v["name"] for k, v in spec["instruments"].items()},
+        "instruments": instruments,
     }
 
 

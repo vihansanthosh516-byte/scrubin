@@ -1,0 +1,407 @@
+# Laparoscopic cholecystectomy as a task graph (same rules as appendectomy.yaml).
+#
+# The teaching core is the SAGES Safe Cholecystectomy programme: establish the
+# critical view of safety (CVS) before clipping or cutting anything. Clipping
+# without it is allowed (the team pushes back) but carries a hidden bile duct
+# injury risk that only shows in the debrief.
+
+id: cholecystectomy
+name: Laparoscopic Cholecystectomy
+label: laparoscopic cholecystectomy
+expected: "Expected duration about an hour and a half, minimal blood loss expected."
+hemostasis_ok: "Clips secure, no bile leak, liver bed dry."
+thermal_organ: duodenum
+bleeding_teaching: "Dissect the hepatocystic triangle with care, clip the cystic artery before dividing it, and keep the hook on the gallbladder side of the cystic plate."
+positions: [reverse_trendelenburg, left_tilt]
+position:
+  before: [explore, retract_fundus, dissect_triangle]
+  words: "reverse Trendelenburg, right side up"
+  set: reverse_trendelenburg
+auto_instruments:
+  dissect_triangle: maryland
+  dissect_liver_bed: hook_cautery
+  remove_specimen: null
+
+instruments:
+  scalpel:            {name: "#11 scalpel"}
+  veress:             {name: Veress needle}
+  hasson:             {name: Hasson trocar (open entry)}
+  trocar_12:          {name: 12 mm trocar}
+  trocar_5:           {name: 5 mm trocar}
+  camera:             {name: 30° laparoscope}
+  grasper:            {name: Atraumatic grasper}
+  maryland:           {name: Maryland dissector}
+  hook_cautery:       {name: Hook electrocautery, hemostatic: true, thermal: true}
+  harmonic:           {name: Harmonic scalpel, hemostatic: true, thermal: true}
+  scissors:           {name: Laparoscopic scissors}
+  clip_applier:       {name: Clip applier, hemostatic: true}
+  endobag:            {name: Specimen retrieval bag}
+  suction_irrigator:  {name: Suction-irrigator}
+  needle_driver:      {name: Needle driver}
+  sponge:             {name: Raytec sponge, counted: true}
+
+targets:
+  umbilicus: [umbilicus, umbilical, belly button, navel]
+  epigastric: [epigastric, epigastrium, subxiphoid]
+  subcostal: [subcostal, right upper quadrant, ruq, right flank]
+  abdomen: [abdomen, peritoneum, abdominal cavity]
+  gallbladder: [gallbladder, gall bladder, fundus]
+  triangle: [triangle, calot, hepatocystic triangle, infundibulum, neck]
+  cystic_duct: [cystic duct, duct]
+  cystic_artery: [cystic artery, artery]
+  liver_bed: [liver bed, gallbladder fossa, cystic plate, fossa]
+  adhesions: [adhesions, adhesion, omentum, duodenum]
+  bleeder: [bleeder, bleeding, bleeding vessel, bleeding point, ooze]
+  fascia: [fascia, fascial defect, port site]
+  skin: [skin, incisions, wounds]
+
+tasks:
+  - id: prep
+    name: Prep and drape
+    verbs: [prep, drape, prep and drape, prepping]
+    requires: [anesthetized]
+    blocked: "The patient isn't asleep with a secured airway yet."
+    duration_s: 300
+    stimulus: 0.05
+    sets: [prepped]
+    start: "Prepping with chlorhexidine and draping."
+    auto_order: 1
+
+  - id: incision
+    name: Umbilical skin incision
+    verbs: [incise, incision, cut, make an incision, skin incision]
+    targets: [umbilicus]
+    instruments: [scalpel]
+    requires: [prepped]
+    blocked: "We haven't prepped and draped."
+    soft_requires:
+      time_out_done: "We haven't done a time-out."
+      antibiotics_given: "Antibiotics aren't in yet — the guidelines say within 60 minutes before incision."
+      anesthesia_ready: "Anesthesia hasn't said we're okay to start."
+    duration_s: 40
+    stimulus: 0.85
+    sets: [incised]
+    start: "Knife to skin — umbilical incision."
+    hooks: [record_incision]
+    auto_order: 3
+
+  - id: open_access
+    name: Open (Hasson) entry
+    verbs: [hasson, open entry, open access, enter the abdomen, get into the abdomen, access]
+    instruments: [hasson]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [veress_access]
+    duration_s: 180
+    stimulus: 0.6
+    sets: [access, camera_port]
+    start: "Dissecting down to fascia, opening the peritoneum under vision. Hasson in."
+    auto_order: 4
+
+  - id: veress_access
+    name: Veress needle entry
+    verbs: [veress, insert the veress, needle entry]
+    instruments: [veress]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [open_access]
+    duration_s: 45
+    stimulus: 0.5
+    sets: [access, veress_in]
+    hooks: [veress_placement]
+    start: "Veress in — drop test."
+
+  - id: insufflate
+    name: Insufflate CO2
+    verbs: [insufflate, gas on, pneumoperitoneum, start the gas, co2 on, insufflation]
+    requires: [access]
+    blocked: "No access to the peritoneum yet."
+    duration_s: 90
+    stimulus: 0.5
+    vagal: 0.6
+    iap: 15
+    sets: [insufflated]
+    hooks: [insufflation_checks]
+    start: "Insufflating to 15."
+    auto_order: 5
+
+  - id: umbilical_trocar
+    name: 12 mm umbilical trocar (after Veress)
+    verbs: [umbilical port, camera port, 12 mm port, place the umbilical trocar]
+    targets: [umbilicus]
+    instruments: [trocar_12]
+    requires: [insufflated, veress_in]
+    blocked: "Insufflate through the Veress first (or use open entry)."
+    duration_s: 45
+    stimulus: 0.6
+    sets: [camera_port]
+    hooks: [blind_trocar_risk]
+    start: "12 mm trocar at the umbilicus."
+
+  - id: camera_in
+    name: Camera in
+    verbs: [camera in, scope in, look inside, insert the camera, laparoscope in]
+    instruments: [camera]
+    requires: [camera_port, insufflated]
+    blocked: "Need a camera port and pneumoperitoneum first."
+    duration_s: 20
+    stimulus: 0.1
+    sets: [camera_in]
+    start: "Camera in."
+    auto_order: 6
+
+  - id: working_ports
+    name: Working ports (epigastric 12 mm + two right subcostal 5 mm)
+    verbs: [working ports, place ports, 5 mm ports, ports, place the trocars, trocars, epigastric port]
+    targets: [epigastric, subcostal]
+    instruments: [trocar_12, trocar_5]
+    requires: [camera_in]
+    blocked: "Place working ports under direct vision — camera first."
+    duration_s: 150
+    stimulus: 0.6
+    sets: [working_ports]
+    start: "Epigastric 12 mm and two right subcostal 5 mm ports under direct vision."
+    auto_order: 7
+
+  - id: explore
+    name: Diagnostic laparoscopy
+    verbs: [explore, look around, survey, diagnostic laparoscopy, inspect the abdomen, find the gallbladder]
+    requires: [camera_in]
+    blocked: "Can't see anything without the camera."
+    duration_s: 90
+    stimulus: 0.2
+    sets: [explored]
+    hooks: [reveal_gb_findings, exposure_check]
+    start: "Surveying the abdomen — liver, gallbladder, duodenum."
+    auto_order: 8
+
+  - id: lyse_adhesions
+    name: Take down adhesions to the gallbladder
+    verbs: [lyse adhesions, take down adhesions, adhesiolysis, free the omentum, sweep the omentum]
+    targets: [adhesions]
+    instruments: [grasper, maryland, hook_cautery, scissors]
+    requires: [explored, working_ports, adhesions]
+    blocked: "No adhesions to take down (or you haven't explored / placed ports)."
+    duration_s: 240
+    stimulus: 0.35
+    clears: [adhesions]
+    hooks: [thermal_bowel_risk]
+    start: "Sweeping the omentum and duodenum off the gallbladder — staying on the gallbladder wall."
+    auto_order: 9
+    auto_if: [adhesions]
+
+  - id: retract_fundus
+    name: Retract the fundus over the liver
+    verbs: [retract, grasp the fundus, elevate the gallbladder, retract the fundus, push the fundus up, cephalad retraction]
+    targets: [gallbladder]
+    instruments: [grasper]
+    requires: [explored, working_ports, no_adhesions]
+    blocked: "You can't get a clean grip yet — explore, place ports and take down any adhesions first."
+    duration_s: 45
+    stimulus: 0.25
+    sets: [fundus_retracted]
+    hooks: [exposure_check]
+    start: "Fundus up over the liver, infundibulum retracted laterally."
+    auto_order: 10
+
+  - id: dissect_triangle
+    name: Dissect the hepatocystic triangle
+    verbs: [dissect, dissect the triangle, calot, open the peritoneum, strip the peritoneum, clear the triangle, dissect the infundibulum]
+    targets: [triangle]
+    instruments: [maryland, hook_cautery]
+    requires: [fundus_retracted]
+    blocked: "Retract the fundus first — you need the triangle opened up to see anything."
+    duration_s: 420
+    stimulus: 0.35
+    sets: [triangle_dissected]
+    hooks: [triangle_risk]
+    start: "Opening the peritoneum front and back over the infundibulum, clearing the hepatocystic triangle."
+    auto_order: 11
+
+  - id: confirm_cvs
+    name: Confirm the critical view of safety
+    verbs: [critical view, critical view of safety, cvs, confirm the anatomy, two structures, confirm cvs, show the critical view]
+    requires: [triangle_dissected]
+    blocked: "There's no critical view to confirm yet — dissect the hepatocystic triangle first."
+    duration_s: 30
+    stimulus: 0.1
+    sets: [cvs]
+    hooks: [confirm_cvs]
+    start: "Pausing to confirm the critical view of safety."
+    auto_order: 12
+
+  - id: clip_duct
+    name: Clip the cystic duct
+    verbs: [clip the duct, clip the cystic duct, clip duct, ligate the cystic duct]
+    targets: [cystic_duct]
+    instruments: [clip_applier]
+    requires: [triangle_dissected]
+    blocked: "You haven't dissected the triangle — you can't be sure what you're clipping."
+    soft_requires:
+      cvs: "We haven't confirmed a critical view of safety."
+    duration_s: 60
+    stimulus: 0.2
+    sets: [duct_clipped]
+    hooks: [clip_risk]
+    start: "Two clips on the cystic duct towards the patient, one towards the gallbladder."
+    auto_order: 13
+
+  - id: clip_artery
+    name: Clip the cystic artery
+    verbs: [clip the artery, clip the cystic artery, clip artery, ligate the cystic artery]
+    targets: [cystic_artery]
+    instruments: [clip_applier]
+    requires: [triangle_dissected]
+    blocked: "You haven't dissected the triangle — you can't be sure what you're clipping."
+    soft_requires:
+      cvs: "We haven't confirmed a critical view of safety."
+    duration_s: 60
+    stimulus: 0.2
+    sets: [artery_clipped]
+    hooks: [clip_risk]
+    start: "Clips on the cystic artery."
+    auto_order: 14
+
+  - id: divide_cystic
+    name: Divide the cystic duct and artery
+    verbs: [divide, cut, transect, cut between the clips, divide the duct, divide the artery]
+    targets: [cystic_duct, cystic_artery]
+    instruments: [scissors]
+    requires: [duct_clipped, artery_clipped]
+    blocked: "Clip both the cystic duct and the cystic artery before you cut."
+    duration_s: 45
+    stimulus: 0.2
+    sets: [cystic_divided]
+    start: "Dividing the duct and artery between the clips."
+    auto_order: 15
+
+  - id: dissect_liver_bed
+    name: Take the gallbladder off the liver bed
+    verbs: [take it off the liver, liver bed, dissect off the liver, remove from the liver bed, dissect the gallbladder off]
+    targets: [liver_bed, gallbladder]
+    instruments: [hook_cautery, harmonic]
+    requires: [cystic_divided]
+    blocked: "Divide the cystic duct and artery first."
+    duration_s: 480
+    stimulus: 0.3
+    sets: [gb_free]
+    hooks: [liver_bed_risk]
+    start: "Taking the gallbladder off the cystic plate with the hook, staying in the right plane."
+    auto_order: 16
+
+  - id: bag
+    name: Bag the specimen
+    verbs: [bag, endobag, put it in a bag, specimen bag]
+    instruments: [endobag]
+    requires: [gb_free]
+    blocked: "The gallbladder is still attached."
+    duration_s: 90
+    stimulus: 0.2
+    sets: [bagged]
+    start: "Gallbladder in the bag."
+    auto_order: 17
+
+  - id: remove_specimen
+    name: Remove specimen
+    verbs: [remove the specimen, extract, take it out, remove the gallbladder, deliver the specimen]
+    requires: [gb_free]
+    blocked: "Nothing to remove yet."
+    duration_s: 120
+    stimulus: 0.55
+    sets: [specimen_out]
+    hooks: [specimen_contamination]
+    start: "Delivering the gallbladder through the umbilical port."
+    auto_order: 18
+
+  - id: irrigate
+    name: Irrigate and suction
+    verbs: [irrigate, wash out, suction, lavage]
+    instruments: [suction_irrigator]
+    requires: [camera_in]
+    blocked: "Need the camera in."
+    duration_s: 240
+    stimulus: 0.2
+    sets: [irrigated]
+    hooks: [irrigation_effect]
+    start: "Irrigating the right upper quadrant, retrieving spilled stones."
+    auto_order: 19
+    auto_if: [spillage]
+
+  - id: inspect_hemostasis
+    name: Inspect hemostasis
+    verbs: [check hemostasis, inspect, look for bleeding, check the stump, hemostasis]
+    requires: [camera_in]
+    blocked: "Need the camera in."
+    duration_s: 60
+    stimulus: 0.1
+    sets: [hemostasis_checked]
+    hooks: [reveal_occult]
+    start: "Checking the clips and the liver bed under reduced pressure."
+    auto_order: 20
+
+  - id: control_bleeding
+    name: Control bleeding
+    verbs: [control, cauterize, clip the bleeder, stop the bleeding, get control, hemostasis on the bleeder, apply pressure]
+    targets: [bleeder]
+    instruments: [clip_applier, hook_cautery, harmonic, ligasure, grasper, sponge]
+    requires: [bleeding]
+    blocked: "There's no active bleeding."
+    duration_s: 60
+    stimulus: 0.3
+    hooks: [control_bleeder]
+    start: "Getting control of the bleeder."
+    priority: true
+
+  - id: desufflate
+    name: Desufflate
+    verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
+    requires: [insufflated]
+    blocked: "The abdomen isn't insufflated."
+    duration_s: 60
+    stimulus: 0.2
+    iap: 0
+    clears: [insufflated, camera_in]
+    start: "Ports out under vision, letting the gas out."
+    auto_order: 21
+
+  - id: count
+    name: Sponge / needle / instrument count
+    verbs: [count, sponge count, do the count, counts]
+    requires: []
+    duration_s: 60
+    stimulus: 0.0
+    sets: [counted]
+    hooks: [count_result]
+    start: "Counting."
+    auto_order: 22
+
+  - id: close_fascia
+    name: Close umbilical fascia
+    verbs: [close the fascia, close fascia, fascial closure, close the port site, suture the fascia]
+    targets: [fascia]
+    instruments: [needle_driver]
+    requires: [specimen_out]
+    blocked: "Get the specimen out first."
+    soft_requires:
+      not_insufflated: "We're still insufflated."
+      counted: "Count isn't done yet."
+    duration_s: 300
+    stimulus: 0.5
+    sets: [fascia_closed]
+    start: "Closing the umbilical and epigastric fascia with 0 Vicryl."
+    hooks: [closing_cue]
+    auto_order: 23
+
+  - id: close_skin
+    name: Close skin
+    verbs: [close skin, close the skin, skin closure, subcuticular, close]
+    targets: [skin]
+    instruments: [needle_driver]
+    requires: [fascia_closed]
+    blocked: "Close the fascia first."
+    duration_s: 360
+    stimulus: 0.35
+    sets: [skin_closed]
+    hooks: [finish]
+    start: "Subcuticular 4-0 Monocryl, then dressings."
+    auto_order: 24

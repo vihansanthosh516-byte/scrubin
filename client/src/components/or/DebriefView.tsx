@@ -18,6 +18,8 @@ const HIDDEN_LABELS: Record<string, (v: any) => string> = {
   gastric_volume_ml: (v) => `Gastric contents ~${v} mL`,
   appendix_position: (v) => `Appendix position: ${v}`,
   perforated: (v) => (v ? "Appendix was perforated" : "Appendix not perforated"),
+  acute_inflammation: (v) => (v ? "Acutely inflamed gallbladder (harder dissection)" : "Chronically inflamed gallbladder, no acute inflammation"),
+  posterior_cystic_artery: (v) => (v ? "Posterior cystic artery branch behind the duct" : "Single anterior cystic artery"),
   accessory_appendiceal_artery: (v) => (v ? "Accessory appendiceal artery present" : "Standard arterial anatomy"),
   adhesions: (v) => (v ? "Omental adhesions" : "No adhesions"),
 };

@@ -49,7 +49,8 @@ def parse_surgical(text: str, spec: dict, proc: Optional[Procedure] = None) -> O
     task = match_task_text(spec, t, proc)
     if task is None:
         return None
-    instrument = _find(t, INSTRUMENT_ALIASES)
+    # "cut between the clips" names where to cut, not the instrument
+    instrument = _find(re.sub(r"between (the )?clips?", "", t), INSTRUMENT_ALIASES)
     target = None
     for tg, aliases in spec["targets"].items():
         if any(re.search(rf"(?<![a-z]){re.escape(a)}(?![a-z])", t) for a in aliases):
