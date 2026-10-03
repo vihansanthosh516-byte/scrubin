@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Action, CaseState } from "@/engine/types";
 import { OrButton, Section } from "./controls";
-import CholeScope, { isChole } from "./CholeScope";
+import { procedureScope, tablePosition } from "./procedureScopes";
 
 interface Props {
   state: CaseState;
@@ -19,8 +19,8 @@ function ScopeView({ state }: { state: CaseState }) {
   const insufflating = s.iap > 1;
   return (
     <div className="relative aspect-[16/9] rounded-sm overflow-hidden border border-border bg-black">
-      {cameraIn && isChole(state) ? (
-        <CholeScope state={state} />
+      {cameraIn && procedureScope(state) ? (
+        procedureScope(state)
       ) : cameraIn ? (
         <svg viewBox="0 0 320 180" className="w-full h-full">
           <defs>
@@ -101,7 +101,7 @@ export function SurgeonStation({ state, act, say }: Props) {
   };
   // One button per instrument, even if two ids share a name.
   const instrumentList = Object.entries(s.instruments).filter(([, name], i, all) => all.findIndex(([, n]) => n === name) === i);
-  const chole = isChole(state);
+  const tablePos = tablePosition(state);
   const visible = s.tasks.filter((t) => !t.done && (t.available || !t.optional));
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -151,11 +151,7 @@ export function SurgeonStation({ state, act, say }: Props) {
         <Section title="Talk to the team">
           <div className="flex flex-wrap gap-1.5">
             <OrButton onClick={() => act({ type: "say", intent: "time_out", text: "Let's do a time-out." })}>Time-out</OrButton>
-            {chole ? (
-              <OrButton onClick={() => act({ type: "position", position: "reverse_trendelenburg" })}>Reverse Trendelenburg</OrButton>
-            ) : (
-              <OrButton onClick={() => act({ type: "position", position: "left_side_down" })}>Trendelenburg, left side down</OrButton>
-            )}
+            <OrButton onClick={() => act({ type: "position", position: tablePos.position } as Action)}>{tablePos.label}</OrButton>
             <OrButton onClick={() => say("Can I get more relaxation please?")}>More relaxation</OrButton>
             <OrButton onClick={() => say("The patient's moving, can you go deeper?")}>Deeper please</OrButton>
             <OrButton onClick={() => act({ type: "assess", what: "ask_surgeon" })}>Status</OrButton>

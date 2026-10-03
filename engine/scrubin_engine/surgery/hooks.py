@@ -7,14 +7,17 @@ cases stay reproducible.
 
 from __future__ import annotations
 
+import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from .procedure import Procedure, Running
 
 LAPAROSCOPIC = {"explore", "lyse_adhesions", "mobilize_cecum", "grasp_appendix", "window", "divide_meso", "secure_base", "divide_appendix", "bag", "irrigate",
-                "retract_fundus", "dissect_triangle", "clip_duct", "clip_artery", "divide_cystic", "dissect_liver_bed"}
-NEEDS_EXPOSURE = {"explore", "grasp_appendix", "mobilize_cecum", "window", "divide_meso", "retract_fundus", "dissect_triangle", "dissect_liver_bed"}
+                "retract_fundus", "dissect_triangle", "clip_duct", "clip_artery", "divide_cystic", "dissect_liver_bed",
+                "identify_landmarks", "incise_peritoneum", "develop_flap", "reduce_sac", "parietalize", "place_mesh", "fix_mesh", "close_peritoneum"}
+NEEDS_EXPOSURE = {"explore", "grasp_appendix", "mobilize_cecum", "window", "divide_meso", "retract_fundus", "dissect_triangle", "dissect_liver_bed",
+                  "incise_peritoneum", "develop_flap", "reduce_sac"}
 
 
 def _rng(proc: "Procedure"):
@@ -161,7 +164,7 @@ def end_base_technique(proc, task, r):
 
 def end_specimen_contamination(proc, task, r):
     if "bagged" not in proc.flags:
-        proc.notes.append("Specimen removed without a retrieval bag (port-site infection risk).")
+        proc.notes.append(f"Specimen removed without a {proc.spec.get('bag_name', 'retrieval bag')} (port-site infection risk).")
         if proc.case.patient.hidden.get("perforated"):
             proc.flags.add("wound_contaminated")
 
@@ -215,6 +218,8 @@ def end_finish(proc, task, r):
     c.event("surgery_complete")
     if "counted" not in proc.flags:
         proc.notes.append("Closed without a completed count (retained item risk).")
+    for name in proc.spec.get("final_checks", []):
+        getattr(sys.modules[__name__], f"final_{name}")(proc)
     if proc.mode == "auto":
         proc.surgeon_says(f"All done. Thanks everyone — {c.patient.he}'s all yours.")
     else:
@@ -289,3 +294,103 @@ def end_liver_bed_risk(proc, task, r):
         _spill(proc, "off the liver bed")
     if rng.random() < (0.15 if thermal else 0.4):
         _bleed(proc, 60.0, "liver bed", "Liver bed is oozing — need the hook on it." if proc.mode == "auto" else "The gallbladder fossa is oozing steadily.")
+
+
+# --- laparoscopic inguinal hernia (TAPP) -----------------------------------
+
+def _speaker(proc) -> str:
+    return "surgeon" if proc.mode == "auto" else "system"
+
+
+def end_reveal_hernia_findings(proc, task, r):
+    h = proc.case.patient.hidden
+    kind = h.get("hernia_type", "indirect")
+    parts = [("Right indirect hernia: the sac enters the deep ring lateral to the inferior epigastric vessels." if kind == "indirect"
+              else "Right direct hernia: a bulge through the floor of the inguinal canal, medial to the inferior epigastric vessels.")]
+    parts.append("The left groin has a small defect too." if h.get("contralateral_defect") else "The left groin is intact.")
+    if h.get("prior_pelvic_surgery"):
+        parts.append("There are old pelvic adhesions from a previous operation, tethering the bladder dome.")
+    proc.findings = parts
+    proc.case.say(_speaker(proc), " ".join(parts), kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_landmarks(proc, task, r):
+    msg = ("Landmarks: median and medial umbilical ligaments, inferior epigastric vessels, the deep ring and the cord. "
+           "Below the iliopubic tract: triangle of doom (iliac vessels) medially, triangle of pain (nerves) laterally. Staying above it.")
+    if proc.mode == "trainee":
+        proc.case.say("attending", "Good. Epigastrics, ligaments, cord. Nothing below the iliopubic tract gets a tack or a clip.")
+        proc.case.say("system", msg, kind="finding")
+    else:
+        proc.case.say("surgeon", msg)
+
+
+def start_peritoneal_flap_risk(proc, task):
+    if "landmarks_identified" in proc.flags:
+        return
+    proc.notes.append("Peritoneum incised before identifying the inferior epigastric vessels, the vas and the iliac vessels.")
+    if _rng(proc).random() < 0.2:
+        _bleed(proc, 90.0, "inferior epigastric vessels", "Bleeding from the inferior epigastric vessels! Suction!" if proc.mode == "auto"
+               else "Brisk bleeding from the inferior epigastric artery — it was under the incision.")
+
+
+def end_flap_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    if "bladder_empty" not in proc.flags:
+        p = 0.45 + (0.2 if h.get("prior_pelvic_surgery") else 0.0)
+        proc.notes.append("The bladder wasn't emptied before the pelvic dissection.")
+        if rng.random() < p:
+            proc.occult.append("Bladder injury: the full bladder dome was cut or cauterised during the flap dissection and not recognised "
+                               "(haematuria, urinoma, a leaking cystotomy after discharge).")
+    elif h.get("prior_pelvic_surgery") and rng.random() < 0.1:
+        proc.case.say(_speaker(proc), "The bladder dome is stuck down — small serosal tear. Oversewing it, catheter stays in overnight." if proc.mode == "auto"
+                      else "The bladder dome is stuck down and the serosa tears. Oversewn, with a catheter overnight.", kind="speech" if proc.mode == "auto" else "finding")
+        proc.notes.append("Bladder serosal injury in adhesions, recognised and repaired.")
+    if h.get("corona_mortis") and rng.random() < (0.5 if r.instrument not in ("harmonic",) else 0.15):
+        _bleed(proc, 60.0, "corona mortis", "Bleeder from an aberrant pubic vessel — the corona mortis!" if proc.mode == "auto"
+               else "Dark blood wells up along Cooper's ligament — an aberrant vessel, the corona mortis.")
+    if r.moved:
+        proc.notes.append("The patient moved during the preperitoneal dissection.")
+
+
+def end_reduce_sac_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    thermal = _instrument(proc, r).get("thermal")
+    p = (0.25 if h.get("vas_adherent") else 0.02) * (2.0 if thermal else 1.0) + (0.1 if r.moved else 0.0)
+    if _rng(proc).random() < min(0.8, p):
+        proc.occult.append("Vas deferens injured while reducing the sac" + (" with energy" if thermal else "") +
+                           " (testicular pain, swelling, or a subfertility problem later).")
+    if h.get("hernia_type") == "direct":
+        proc.case.say(_speaker(proc), "Direct defect: inverting the pseudosac rather than dividing it.", kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_mesh_placement(proc, task, r):
+    if "parietalized" not in proc.flags:
+        proc.notes.append("Mesh placed over a cord that wasn't parietalized: it can fold and roll (early recurrence).")
+        if _rng(proc).random() < 0.4:
+            proc.occult.append("Mesh folded over the cord: early recurrence.")
+
+
+def start_mesh_fixation(proc, task):
+    if proc.mode == "trainee":
+        proc.case.say("attending", "Tacks above the iliopubic tract only: Cooper's ligament and the rectus. Not below, not lateral to the vessels.", )
+
+
+def end_mesh_fixation(proc, task, r):
+    rng = _rng(proc)
+    if r.target == "triangle_doom":
+        proc.notes.append("Mesh tacks placed in the triangle of doom (external iliac vessels).")
+        if rng.random() < 0.5:
+            _bleed(proc, 140.0, "external iliac branch", "A tack went through a vessel by the iliacs — dark blood in the pelvis!" if proc.mode == "auto"
+                   else "Dark blood wells up around the tack by the iliac vessels.")
+        if rng.random() < 0.55:
+            proc.occult.append("Tack through the external iliac vessels (triangle of doom): delayed bleeding or pseudoaneurysm.")
+    elif r.target == "triangle_pain":
+        proc.notes.append("Mesh tacks placed in the triangle of pain (lateral femoral cutaneous and genitofemoral nerves).")
+        if rng.random() < 0.75:
+            proc.occult.append("Tack entrapped the lateral femoral cutaneous / genitofemoral nerve (triangle of pain): chronic groin pain and numbness of the thigh.")
+
+
+def final_hernia(proc):
+    if "peritoneum_closed" not in proc.flags:
+        proc.occult.append("Peritoneal flap left open: the mesh is exposed to bowel (adhesions, small-bowel obstruction, mesh erosion).")

@@ -163,7 +163,7 @@ class Airway:
 
     # ---------------- per-step delivery --------------------------------
 
-    def deliver(self, dt_s: float, spont_ve: float, spont_rr: float, eff: Effects, machine: Machine, vd_anat_ml: float, iap: float, stim_response: float) -> Ventilation:
+    def deliver(self, dt_s: float, spont_ve: float, spont_rr: float, eff: Effects, machine: Machine, vd_anat_ml: float, iap: float, stim_response: float, tilt_deg: float = 0.0) -> Ventilation:
         v = Ventilation()
         self.events = []
 
@@ -187,7 +187,7 @@ class Airway:
         patency_unprotected = min(1.0, tone + support) if eff.bis < 80 else 1.0
         self.obstruction = 1.0 - patency_unprotected
 
-        compliance = self.compliance * (1.0 - 0.018 * max(0.0, iap)) * (0.6 if self.ett_location == "right_mainstem" and self.device == "ett" else 1.0)
+        compliance = self.compliance * (1.0 - 0.018 * max(0.0, iap)) * (1.0 - 0.012 * max(0.0, tilt_deg - 15.0)) * (0.6 if self.ett_location == "right_mainstem" and self.device == "ett" else 1.0)
         compliance = max(12.0, compliance)
         resistance = self.resistance * (1.0 + 5.0 * self.bronchospasm) + (4.0 if self.device == "ett" and self.ett_size and self.ett_size < 7.0 else 0.0)
 

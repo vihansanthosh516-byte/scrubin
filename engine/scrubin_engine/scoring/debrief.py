@@ -27,6 +27,10 @@ def _first(case, kind: str, **match) -> dict | None:
     return None
 
 
+def m_steep(case) -> float:
+    return case.metrics.sec_steep
+
+
 def anesthesia_items(case) -> list[dict]:
     m, items = case.metrics, []
     ind = case._flags.get("induction")
@@ -55,6 +59,13 @@ def anesthesia_items(case) -> list[dict]:
                            else (GOOD if (sux or roc > 0) and case.body.stomach_air_ml < 400 else FAIR),
                            f"Relaxant at induction: {'succinylcholine' if sux else f'rocuronium {roc:.0f} mg'}. Gastric air insufflated: {case.body.stomach_air_ml:.0f} mL.",
                            case.scenario.get("airway_teaching", "Acute appendicitis with vomiting = aspiration risk. Use succinylcholine or high-dose rocuronium (1.2 mg/kg) and avoid high-pressure mask ventilation.")))
+    if m_steep(case) > 1800:
+        hrs = case.metrics.sec_steep / 3600
+        edema = case.face_edema
+        items.append(_item("Ventilation", "Steep Trendelenburg", GOOD if edema < 0.3 else FAIR if edema < 0.8 else POOR,
+                           f"{hrs:.1f} h head-down at 25 degrees or more; facial/airway swelling {round(edema * 100)}%; peak airway pressure {case.airway.peak_pressure:.0f} cmH2O at the end.",
+                           "Hours of steep head-down raise peak pressures (less compliant chest), swell the face and airway and raise intraocular pressure: "
+                           "protect and tape the eyes, watch the peak pressures and EtCO2, keep the head neutral and do a cuff-leak test before extubating."))
     placed = _first(case, "tube_placed")
     if placed:
         checked = any(e["kind"] == "assess" and e["what"] in ("check_capnogram", "auscultate") and e["t"] >= placed["t"] for e in case.events)

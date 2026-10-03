@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { scenarioName } from "@/engine/scenarios";
 import { Link, useParams } from "wouter";
 import { Loader2, Pause, Play } from "lucide-react";
 import { fmtTime } from "@/components/or/AnesthesiaStation";
@@ -43,7 +44,7 @@ export default function OrReplay() {
   }, [playing, rate, data]);
 
   const frame = data?.frames[idx];
-  const procName = data?.scenario === "cholecystectomy" ? "Laparoscopic Cholecystectomy" : "Laparoscopic Appendectomy";
+  const procName = scenarioName(data?.scenario);
   const comms = useMemo(() => (data ? data.frames.slice(0, idx + 1).flatMap((f) => f.comms) : []), [data, idx]);
   const markers = useMemo(() => {
     if (!data || !data.frames.length) return [];

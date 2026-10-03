@@ -81,7 +81,7 @@ Each action is a JSON object with a "type" field. Allowed types and fields:
 - airway: {"type":"airway","maneuver":one of [mask_on, mask_off, jaw_thrust_on, jaw_thrust_off, oral_airway, nasal_airway, remove_adjuncts, two_hand_mask_on, two_hand_mask_off, cricoid_on, cricoid_off, nasal_cannula, intubate, lma, extubate, remove_lma, reposition_tube, suction], "laryngoscope":"mac3"|"mac4"|"miller2"|"video"|null, "bougie":bool|null, "tube_size":n|null, "depth_cm":n|null, "lma_size":n|null, "flow":n|null}
 - fluid: {"type":"fluid","fluid":"lactated_ringers"|"normal_saline"|"albumin_5"|"prbc","volume_ml":number}
 - monitor: {"type":"monitor","attach":[ecg,spo2,nibp,etco2,temp,bis,tof,art_line],"cycle_nibp":bool,"nibp_interval_s":n|null}
-- assess: {"type":"assess","what":"auscultate"|"check_tof"|"check_capnogram"|"look"|"check_abg"|"ask_surgeon"|"check_airway_pressure"}
+- assess: {"type":"assess","what":"auscultate"|"check_tof"|"check_capnogram"|"look"|"check_abg"|"ask_surgeon"|"check_airway_pressure"|"cuff_leak"}
 - cpr: {"type":"cpr","on":bool};  defibrillate: {"type":"defibrillate","joules":n}
 - position: {"type":"position","position":"supine"|"trendelenburg"|"reverse_trendelenburg"|"left_side_down"|"level"}
 - warming: {"type":"warming","on":bool}

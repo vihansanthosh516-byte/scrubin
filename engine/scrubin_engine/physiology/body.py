@@ -88,6 +88,7 @@ class SurgicalLoad:
 
     iap_mmhg: float = 0.0  # intra-abdominal (insufflation) pressure
     trendelenburg_deg: float = 0.0  # + head down, - head up
+    lateral_flank: bool = False  # lateral decubitus with the flank broken
     stimulus: float = 0.0  # noxious intensity 0..1
     vagal_stimulus: float = 0.0  # peritoneal stretch etc.
     bleeding_ml_min: float = 0.0
@@ -290,6 +291,7 @@ class Body:
         preload -= 0.012 * max(0.0, load.iap_mmhg - 8.0)  # caval compression
         preload += 0.006 * load.trendelenburg_deg  # head-down improves, head-up reduces
         preload -= 0.01 * max(0.0, vent.mean_paw - 5.0)
+        preload -= 0.05 if load.lateral_flank else 0.0  # kidney rest compresses the vena cava
         preload += 0.08 * s_svr  # venoconstriction mobilises stressed volume
         preload = max(0.05, preload)
         starling = preload if preload < 1.0 else 1.0 + 0.3 * (1.0 - exp(-(preload - 1.0) / 0.3))
@@ -343,6 +345,8 @@ class Body:
         if anesthetized:
             shunt_target += (0.05 + 0.006 * obese) * max(0.2, 1.0 - 0.09 * vent.peep)
         shunt_target += 0.004 * max(0.0, load.iap_mmhg - 8.0)
+        shunt_target += 0.03 if load.lateral_flank else 0.0  # dependent lung
+        shunt_target += 0.0015 * max(0.0, load.trendelenburg_deg - 15.0)  # steep head-down
         shunt_target += vent.extra_shunt
         self.shunt += (min(0.6, shunt_target) - self.shunt) * (1.0 - exp(-dt_s / 60.0))
 

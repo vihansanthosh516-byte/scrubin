@@ -11,19 +11,10 @@ import { SurgeonStation } from "@/components/or/SurgeonStation";
 import { useAuth } from "@/contexts/AuthContext";
 import { engineApi, useOrConnection, wakeEngine } from "@/engine/client";
 import { recordSession } from "@/lib/recordSession";
+import { ENGINE_SCENARIO, SCENARIO_NAME } from "@/engine/scenarios";
 import ClassicSimulation from "./Simulation";
 import type { Catalog, CreateCaseResponse, Debrief, Role } from "@/engine/types";
 
-/** Library ids the real-time engine models, mapped to its scenario ids. */
-const ENGINE_SCENARIO: Record<string, string> = {
-  appendectomy: "appendectomy",
-  cholecystectomy: "cholecystectomy",
-  "lap-cholecystectomy": "cholecystectomy",
-};
-const SCENARIO_NAME: Record<string, string> = {
-  appendectomy: "Laparoscopic Appendectomy",
-  cholecystectomy: "Laparoscopic Cholecystectomy",
-};
 const SPEEDS = [0.5, 1, 2, 5, 10];
 
 type Stage = "intro" | "or" | "debrief";

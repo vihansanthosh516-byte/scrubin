@@ -106,6 +106,10 @@ class Procedure:
             return h.get("appendix_position") != "retrocecal" or "mobilize_cecum" in self.done
         if name == "bleeding":
             return bool(self.bleeders)
+        if name.startswith("hidden."):  # "hidden.key" (truthy) or "hidden.key=value"
+            key, _, want = name[7:].partition("=")
+            val = h.get(key)
+            return str(val).lower() == want.lower() if want else bool(val)
         if name == "positioned":
             return c.position in self.spec.get("positions", ("trendelenburg", "left_side_down"))
         return name in self.flags
@@ -243,10 +247,15 @@ class Procedure:
             return {"ok": False, "error": "wrong instrument"}
         if not instrument and allowed:
             instrument = allowed[0]
+        danger = task.get("danger")
+        if danger and not confirmed and act.target in danger["targets"] and (not danger.get("instruments") or instrument in danger["instruments"]):
+            act2 = act.model_copy(update={"params": {**(act.params or {}), "task_id": task["id"]}, "instrument": instrument})
+            return c._ask_confirm(act2, "attending", danger["text"] + " Do you want to proceed anyway?")
         if not confirmed:
             for flag, warning in (task.get("soft_requires") or {}).items():
                 if not self.flag(flag):
-                    who = "circulator" if flag in ("time_out_done", "antibiotics_given", "counted") else "attending" if flag == "cvs" else "anesthesia"
+                    who = ((self.spec.get("challenge_by") or {}).get(flag)
+                           or ("circulator" if flag in ("time_out_done", "antibiotics_given", "counted", "bladder_empty") else "attending" if flag == "cvs" else "anesthesia"))
                     act2 = act.model_copy(update={"params": {**(act.params or {}), "task_id": task["id"]}, "instrument": instrument})
                     return c._ask_confirm(act2, who, warning + " Do you want to proceed anyway?")
         if task.get("priority") and self.running is not None:

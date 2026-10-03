@@ -65,6 +65,7 @@ class Metrics:
     intubation_attempts: int = 0
     esophageal_unrecognized_s: float = 0.0
     patient_movements: int = 0
+    sec_steep: float = 0.0  # time head-down 25 degrees or more
 
     def public(self) -> dict:
         return {k: (round(v, 3) if isinstance(v, float) else v) for k, v in self.__dict__.items()}
@@ -372,13 +373,15 @@ class Case:
         elif m == "lma":
             aw.insert_lma(act.lma_size or 5, eff)
         elif m in ("extubate", "remove_lma"):
-            unsafe = eff.tof_ratio < 0.9 or eff.bis < 70
+            unsafe = eff.tof_ratio < 0.9 or eff.bis < 70 or (m == "extubate" and self.face_edema >= 0.5 and not self._flags.get("cuff_leak_done"))
             if performer == "trainee" and unsafe and not getattr(self, "_confirmed", False):
                 why = []
                 if eff.tof_ratio < 0.9:
                     why.append(f"still paralysed (TOF ratio {eff.tof_ratio:.2f})")
                 if eff.bis < 70:
                     why.append(f"still deeply asleep (BIS {round(eff.bis)})")
+                if self.face_edema >= 0.5 and not self._flags.get("cuff_leak_done"):
+                    why.append(f"swollen around the airway after {self.metrics.sec_steep / 3600:.1f} h head-down with no cuff-leak test")
                 return self._ask_confirm(act, "attending", f"Hold on — {self.patient.he}'s {' and '.join(why)}. Pull the tube anyway?")
             prev = aw.remove_device()
             self.machine.mode = "manual"
@@ -452,6 +455,18 @@ class Case:
             }[shape] if aw.capnography else "No capnography connected."
             self.say("system", txt, kind="finding")
             return {"ok": True, "finding": txt}
+        if w == "cuff_leak":
+            self._flags["cuff_leak_done"] = True
+            if aw.device != "ett":
+                txt = "There's no tube to test."
+            elif self.face_edema >= 0.8:
+                txt = "Cuff down: barely any air leaks around the tube. The airway is swollen from the head-down time — give dexamethasone and wait, or keep the tube in."
+            elif self.face_edema >= 0.5:
+                txt = "Cuff down: a reduced leak around the tube — some airway swelling from the head-down time, but air is moving."
+            else:
+                txt = "Cuff down: a good audible leak around the tube."
+            self.say("system", txt, kind="finding")
+            return {"ok": True, "finding": txt}
         if w == "look":
             parts = []
             if eff.consciousness == "awake":
@@ -502,11 +517,18 @@ class Case:
             self.say("circulator", "Shock delivered.")
         return {"ok": True}
 
+    POSITION_ANGLE = {"trendelenburg": 15.0, "left_side_down": 15.0, "reverse_trendelenburg": -15.0, "steep_trendelenburg": 28.0,
+                      "steep_trendelenburg_right_down": 28.0}
+    POSITION_WORDS = {"trendelenburg": "Trendelenburg", "reverse_trendelenburg": "reverse Trendelenburg", "left_side_down": "Trendelenburg, left side down", "steep_trendelenburg": "steep Trendelenburg",
+                      "steep_trendelenburg_right_down": "steep Trendelenburg, right side down",
+                      "lateral_decubitus": "lateral decubitus, flank broken, axillary roll in"}
+
     def _do_position(self, act: A.Position, performer: str) -> dict:
         self.position = act.position
-        self.load.trendelenburg_deg = {"trendelenburg": 15.0, "left_side_down": 15.0, "reverse_trendelenburg": -15.0}.get(act.position, self.load.trendelenburg_deg if act.position in ("left_tilt", "right_tilt") else 0.0)
+        self.load.trendelenburg_deg = self.POSITION_ANGLE.get(act.position, self.load.trendelenburg_deg if act.position in ("left_tilt", "right_tilt") else 0.0)
+        self.load.lateral_flank = act.position == "lateral_decubitus"
         self.event("position", position=act.position)
-        self.say("circulator", "Table Trendelenburg, left side down." if act.position == "left_side_down" else f"Table {act.position.replace('_', ' ')}.")
+        self.say("circulator", f"Table {self.POSITION_WORDS.get(act.position, act.position.replace('_', ' '))}.")
         return {"ok": True}
 
     def _do_warming(self, act: A.Warming, performer: str) -> dict:
@@ -571,7 +593,7 @@ class Case:
         # Ventilation.
         spont_ve, spont_rr = self.body.spontaneous_drive(eff)
         self.body.spont_ve, self.body.spont_rr = spont_ve, spont_rr
-        vent = aw.deliver(dt, spont_ve, spont_rr, eff, self.machine, self.body.vd_anat, load.iap_mmhg, self.stim_response)
+        vent = aw.deliver(dt, spont_ve, spont_rr, eff, self.machine, self.body.vd_anat, load.iap_mmhg, self.stim_response, load.trendelenburg_deg)
         vent.extra_shunt += 0.25 * self.aspirated
         self.body.stomach_air_ml += aw.gastric_insufflation_ml_min * dt / 60.0
 
@@ -698,12 +720,22 @@ class Case:
             elif k == "laryngospasm_resolved":
                 self.say("system", "The stridor settles; air is moving again.", kind="finding")
 
+    @property
+    def face_edema(self) -> float:
+        """0..1: facial and airway swelling from hours of steep head-down positioning."""
+        return min(1.0, self.metrics.sec_steep / (3 * 3600.0))
+
     def _narrate(self, dt: float, eff) -> None:
         b, aw = self.body, self.airway
+        edema = self.face_edema
+        if edema >= 0.3 and not self._flags.get("edema_noted") and self.load.trendelenburg_deg >= 25.0:
+            self._flags["edema_noted"] = True
+            self.event("complication", name="facial_edema")
+            self.say("circulator", f"{self.patient.first_name}'s face is getting puffy and the conjunctivae look swollen after {self.metrics.sec_steep / 3600:.1f} hours head-down. Eyes are still taped and padded.")
         # Patient speech when awake.
         if eff.consciousness == "awake" and not self._flags.get("said_hello"):
             self._flags["said_hello"] = True
-            self.say("patient", "Is this going to hurt? My stomach is killing me.")
+            self.say("patient", self.scenario.get("awake_line", "Is this going to hurt? My stomach is killing me."))
         if eff.consciousness != "awake" and not self._flags.get("lost_consciousness"):
             self._flags["lost_consciousness"] = True
             self.event("loss_of_consciousness", bis=round(eff.bis))
@@ -772,6 +804,8 @@ class Case:
     def _accumulate(self, dt: float, eff) -> None:
         m, b = self.metrics, self.body
         m.seconds += dt
+        if self.load.trendelenburg_deg >= 25.0:
+            m.sec_steep += dt
         if b.map < 65:
             m.sec_map_low += dt
         if b.map < 55:

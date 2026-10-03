@@ -24,6 +24,13 @@ function getRecognizer(): SpeechRecognitionLike | null {
   return r;
 }
 
+/** Surgeon example chips per engine scenario. */
+const SURGEON_EXAMPLES: Record<string, string[]> = {
+  appendectomy: ["prep and drape", "incision at the umbilicus", "hasson entry", "insufflate", "camera in", "divide the mesoappendix with the ligasure", "clip the bleeder"],
+  cholecystectomy: ["prep and drape", "incision at the umbilicus", "hasson entry", "insufflate", "camera in", "retract the fundus", "confirm the critical view of safety", "clip the cystic duct"],
+  inguinal_hernia: ["prep and drape", "empty the bladder", "hasson entry", "insufflate", "identify the epigastric vessels", "incise the peritoneum", "reduce the sac", "tack the mesh to Cooper's ligament"],
+};
+
 interface Props {
   onSubmit: (text: string) => void;
   lastParse: { text: string; ok: boolean; source: string; clarification: string | null } | null;
@@ -154,9 +161,7 @@ export function CommandBar({ onSubmit, lastParse, role, scenario }: Props) {
   const examples =
     role === "anesthesia"
       ? ["put on standard monitors", "preoxygenate", "fentanyl 100", "propofol 150 and roc 100", "intubate with the video laryngoscope", "volume control 500 by 14 peep 6", "sevo 2.5 percent", "listen to the chest"]
-      : scenario === "cholecystectomy"
-        ? ["prep and drape", "incision at the umbilicus", "hasson entry", "insufflate", "camera in", "retract the fundus", "confirm the critical view of safety", "clip the cystic duct"]
-        : ["prep and drape", "incision at the umbilicus", "hasson entry", "insufflate", "camera in", "divide the mesoappendix with the ligasure", "clip the bleeder"];
+      : SURGEON_EXAMPLES[scenario ?? ""] ?? SURGEON_EXAMPLES.appendectomy;
 
   return (
     <div className="rounded-sm border border-border bg-card p-3 space-y-2">

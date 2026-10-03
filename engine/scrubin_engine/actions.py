@@ -95,7 +95,7 @@ class Monitor(_Base):
 
 class Assess(_Base):
     type: Literal["assess"] = "assess"
-    what: Literal["auscultate", "check_tof", "check_capnogram", "look", "check_abg", "ask_surgeon", "check_airway_pressure"]
+    what: Literal["auscultate", "check_tof", "check_capnogram", "look", "check_abg", "ask_surgeon", "check_airway_pressure", "cuff_leak"]
 
 
 class Cpr(_Base):
@@ -110,7 +110,7 @@ class Defibrillate(_Base):
 
 class Position(_Base):
     type: Literal["position"] = "position"
-    position: Literal["supine", "trendelenburg", "reverse_trendelenburg", "left_tilt", "right_tilt", "left_side_down", "level"]
+    position: Literal["supine", "trendelenburg", "steep_trendelenburg", "steep_trendelenburg_right_down", "lateral_decubitus", "reverse_trendelenburg", "left_tilt", "right_tilt", "left_side_down", "level"]
 
 
 class Warming(_Base):

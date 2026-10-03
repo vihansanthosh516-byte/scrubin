@@ -168,6 +168,9 @@ def parse_clause(raw: str) -> ParseResult:
     if re.search(r"train.of.(four|4)|\btof\b|twitch", t) and not re.search(r"attach|put on|place", t):
         add(type="assess", what="check_tof")
         return r
+    if _has(t, "cuff leak", "leak test the cuff", "deflate the cuff and listen"):
+        add(type="assess", what="cuff_leak")
+        return r
     if re.search(r"(check|look at|see|any|do we have|is there) (the )?(co2|capno\w*|end.?tidal|waveform)|confirm (tube|placement)|is the tube in", t):
         add(type="assess", what="check_capnogram")
         return r
@@ -202,6 +205,15 @@ def parse_clause(raw: str) -> ParseResult:
     # --- positioning / warming -----------------------------------------
     if _has(t, "reverse trendelenburg", "reverse trend", "head up"):
         add(type="position", position="reverse_trendelenburg")
+        return r
+    if _has(t, "lateral decubitus", "flank position", "flank break", "flex the table", "on his side", "on her side", "full lateral", "kidney position", "kidney rest"):
+        add(type="position", position="lateral_decubitus")
+        return r
+    if _has(t, "steep") and _has(t, "trendelenburg", "head down", "trend") and _has(t, "right side down", "right tilt", "tilt right", "roll right"):
+        add(type="position", position="steep_trendelenburg_right_down")
+        return r
+    if _has(t, "steep trendelenburg", "steep trend", "steep head down", "maximum trendelenburg", "full trendelenburg", "30 degrees head down", "25 degrees head down"):
+        add(type="position", position="steep_trendelenburg")
         return r
     if _has(t, "left side down", "left tilt", "tilt left", "roll left", "roll him to the left", "roll her to the left", "left side down"):
         add(type="position", position="left_side_down")

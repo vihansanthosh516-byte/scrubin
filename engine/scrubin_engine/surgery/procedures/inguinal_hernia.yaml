@@ -1,0 +1,406 @@
+# Laparoscopic TAPP inguinal hernia repair as a task graph (same rules as appendectomy.yaml).
+#
+# Teaching core: identify the landmarks (inferior epigastric vessels, the triangle of
+# doom with the iliac vessels, the triangle of pain with the nerves) before dissecting;
+# reduce the sac without hurting the vas or the cord; empty the bladder first; fix the
+# mesh only above the iliopubic tract; close the peritoneal flap over the mesh.
+# Tacks in the danger zones are challenged by the attending and leave a hidden nerve
+# or vessel injury that only shows in the debrief.
+
+id: inguinal_hernia
+name: Laparoscopic Inguinal Hernia Repair (TAPP)
+
+label: laparoscopic right inguinal hernia repair (TAPP)
+expected: "Expected duration about an hour, minimal blood loss expected."
+hemostasis_ok: "Flap dry, mesh flat, no bleeding from the epigastric vessels or Cooper's ligament."
+thermal_organ: bowel
+bleeding_teaching: "Stay in the avascular preperitoneal plane, identify the inferior epigastric vessels and look for the corona mortis, and never tack or clip below the iliopubic tract."
+bag_name: retrieval bag
+positions: [trendelenburg]
+position:
+  before: [explore, identify_landmarks]
+  words: "Trendelenburg"
+  set: trendelenburg
+challenge_by:
+  landmarks_identified: attending
+  bladder_empty: circulator
+  parietalized: attending
+  peritoneum_closed: attending
+auto_instruments:
+  reduce_sac: grasper
+  develop_flap: maryland
+  incise_peritoneum: scissors
+  fix_mesh: tacker
+  close_peritoneum: needle_driver
+  empty_bladder: foley
+final_checks: [hernia]
+
+instruments:
+  scalpel:            {name: "#11 scalpel"}
+  veress:             {name: Veress needle}
+  hasson:             {name: Hasson trocar (open entry)}
+  trocar_12:          {name: 12 mm trocar}
+  trocar_5:           {name: 5 mm trocar}
+  camera:             {name: 30° laparoscope}
+  grasper:            {name: Atraumatic grasper}
+  maryland:           {name: Maryland dissector}
+  hook_cautery:       {name: Hook electrocautery, hemostatic: true, thermal: true}
+  harmonic:           {name: Harmonic scalpel, hemostatic: true, thermal: true}
+  scissors:           {name: Laparoscopic scissors}
+  clip_applier:       {name: Clip applier, hemostatic: true}
+  ligasure:           {name: LigaSure vessel sealer, hemostatic: true, thermal: true}
+  suction_irrigator:  {name: Suction-irrigator}
+  needle_driver:      {name: Needle driver}
+  sponge:             {name: Raytec sponge, counted: true}
+  foley:              {name: Foley catheter}
+  tacker:             {name: Absorbable tacker}
+  glue:               {name: Fibrin glue applier}
+  mesh:               {name: Macroporous polypropylene mesh (15 x 10 cm)}
+
+targets:
+  umbilicus: [umbilicus, umbilical, belly button, navel]
+  abdomen: [abdomen, peritoneum, abdominal cavity]
+  adhesions: [adhesions, adhesion, omentum]
+  bleeder: [bleeder, bleeding, bleeding vessel, bleeding point, ooze]
+  fascia: [fascia, fascial defect, port site]
+  skin: [skin, incisions, wounds]
+
+  epigastric_vessels: [epigastric vessels, inferior epigastrics, inferior epigastric, epigastrics]
+  landmarks: [landmarks, anatomy, ligaments, umbilical ligaments, cord, vas]
+  deep_ring: [deep ring, internal ring, hernia defect, defect, hernia]
+  sac: [sac, hernia sac, peritoneal sac]
+  cooper: [cooper, coopers ligament, cooper's ligament, pubic tubercle]
+  rectus: [rectus, anterior abdominal wall, above the line, above the iliopubic tract]
+  triangle_doom: [triangle of doom, doom, iliac vessels, external iliac, below the iliopubic tract near the vessels, medial to the vas]
+  triangle_pain: [triangle of pain, pain, lateral to the vessels, lateral to the cord, the nerves, nerve zone, inferior to the iliopubic tract, below the iliopubic tract]
+  peritoneum: [peritoneum, peritoneal flap, flap]
+
+tasks:
+  - id: prep
+    name: Prep and drape
+    verbs: [prep, drape, prep and drape, prepping]
+    requires: [anesthetized]
+    blocked: "The patient isn't asleep with a secured airway yet."
+    duration_s: 300
+    stimulus: 0.05
+    sets: [prepped]
+    start: "Prepping with chlorhexidine and draping."
+    auto_order: 1
+
+  - id: empty_bladder
+    name: Empty the bladder (Foley / straight cath)
+    verbs: [empty the bladder, foley, catheterize, straight cath, drain the bladder, bladder]
+    instruments: [foley]
+    requires: [anesthetized]
+    blocked: "The patient isn't asleep with a secured airway yet."
+    duration_s: 60
+    stimulus: 0.05
+    sets: [bladder_empty]
+    start: "Straight cath — the bladder is empty."
+    auto_order: 2
+
+  - id: incision
+    name: Umbilical skin incision
+    verbs: [incise, incision, cut, make an incision, skin incision]
+    targets: [umbilicus]
+    instruments: [scalpel]
+    requires: [prepped]
+    blocked: "We haven't prepped and draped."
+    soft_requires:
+      time_out_done: "We haven't done a time-out."
+      antibiotics_given: "Antibiotics aren't in yet — the guidelines say within 60 minutes before incision."
+      anesthesia_ready: "Anesthesia hasn't said we're okay to start."
+    duration_s: 40
+    stimulus: 0.85
+    sets: [incised]
+    start: "Knife to skin — umbilical incision."
+    hooks: [record_incision]
+    auto_order: 3
+
+  - id: open_access
+    name: Open (Hasson) entry
+    verbs: [hasson, open entry, open access, enter the abdomen, get into the abdomen, access]
+    instruments: [hasson]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [veress_access]
+    duration_s: 180
+    stimulus: 0.6
+    sets: [access, camera_port]
+    start: "Dissecting down to fascia, opening the peritoneum under vision. Hasson in."
+    auto_order: 4
+
+  - id: veress_access
+    name: Veress needle entry
+    verbs: [veress, insert the veress, needle entry]
+    instruments: [veress]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [open_access]
+    duration_s: 45
+    stimulus: 0.5
+    sets: [access, veress_in]
+    hooks: [veress_placement]
+    start: "Veress in — drop test."
+
+  - id: insufflate
+    name: Insufflate CO2
+    verbs: [insufflate, gas on, pneumoperitoneum, start the gas, co2 on, insufflation]
+    requires: [access]
+    blocked: "No access to the peritoneum yet."
+    duration_s: 90
+    stimulus: 0.5
+    vagal: 0.6
+    iap: 15
+    sets: [insufflated]
+    hooks: [insufflation_checks]
+    start: "Insufflating to 15."
+    auto_order: 5
+
+  - id: umbilical_trocar
+    name: 12 mm umbilical trocar (after Veress)
+    verbs: [umbilical port, camera port, 12 mm port, place the umbilical trocar]
+    targets: [umbilicus]
+    instruments: [trocar_12]
+    requires: [insufflated, veress_in]
+    blocked: "Insufflate through the Veress first (or use open entry)."
+    duration_s: 45
+    stimulus: 0.6
+    sets: [camera_port]
+    hooks: [blind_trocar_risk]
+    start: "12 mm trocar at the umbilicus."
+
+  - id: camera_in
+    name: Camera in
+    verbs: [camera in, scope in, look inside, insert the camera, laparoscope in]
+    instruments: [camera]
+    requires: [camera_port, insufflated]
+    blocked: "Need a camera port and pneumoperitoneum first."
+    duration_s: 20
+    stimulus: 0.1
+    sets: [camera_in]
+    start: "Camera in."
+    auto_order: 6
+
+  - id: working_ports
+    name: Working ports (two 5 mm ports lateral to the rectus at umbilical level)
+    verbs: [working ports, place ports, 5 mm ports, ports, place the trocars, trocars, lateral ports]
+    targets: [abdomen]
+    instruments: [trocar_12, trocar_5]
+    requires: [camera_in]
+    blocked: "Place working ports under direct vision — camera first."
+    duration_s: 120
+    stimulus: 0.6
+    soft_requires:
+      bladder_empty: "The bladder hasn't been emptied — a full bladder rides up into the field."
+    sets: [working_ports]
+    start: "Two 5 mm ports at the umbilical level lateral to the rectus, under vision, clear of the epigastric vessels."
+    auto_order: 7
+
+  - id: explore
+    name: Diagnostic laparoscopy
+    verbs: [explore, look around, survey, diagnostic laparoscopy, inspect the abdomen, look at the groin, find the hernia, inspect the groin]
+    requires: [camera_in]
+    blocked: "Can't see anything without the camera."
+    duration_s: 90
+    stimulus: 0.2
+    sets: [explored]
+    hooks: [reveal_hernia_findings, exposure_check]
+    start: "Looking at both groins — hernia defect, cord, vessels."
+    auto_order: 8
+
+  - id: identify_landmarks
+    name: Identify the landmarks (epigastric vessels, ligaments, cord)
+    verbs: [identify landmarks, identify the landmarks, identify the epigastric vessels, find the epigastric vessels, identify the anatomy, landmarks, identify the epigastrics, see the anatomy]
+    targets: [epigastric_vessels, landmarks]
+    requires: [explored]
+    blocked: "Explore the groin first."
+    duration_s: 45
+    stimulus: 0.1
+    sets: [landmarks_identified]
+    hooks: [landmarks]
+    start: "Identifying the median and medial umbilical ligaments, the inferior epigastric vessels, the deep ring and the cord."
+    auto_order: 9
+
+  - id: incise_peritoneum
+    name: Incise the peritoneum above the defect
+    verbs: [incise the peritoneum, open the peritoneum, peritoneal incision, make the flap, start the flap, cut the peritoneum, create the peritoneal flap]
+    targets: [peritoneum]
+    instruments: [scissors, hook_cautery, harmonic]
+    requires: [working_ports, explored]
+    blocked: "Place the working ports and look at the groin first."
+    soft_requires:
+      landmarks_identified: "We haven't identified the inferior epigastric vessels, the vas and the iliac vessels."
+    duration_s: 90
+    stimulus: 0.3
+    sets: [peritoneum_open]
+    hooks: [peritoneal_flap_risk]
+    start: "Incising the peritoneum about 3 cm above the defect, from the medial umbilical ligament out to the anterior superior iliac spine."
+    auto_order: 10
+
+  - id: develop_flap
+    name: Develop the preperitoneal space
+    verbs: [develop the flap, develop the space, dissect the flap, preperitoneal dissection, dissect the preperitoneal space, drop the bladder, expose cooper, dissect to cooper]
+    targets: [cooper, peritoneum]
+    instruments: [maryland, grasper, scissors, harmonic]
+    requires: [peritoneum_open]
+    blocked: "Open the peritoneum first."
+    duration_s: 420
+    stimulus: 0.3
+    sets: [flap_developed]
+    hooks: [flap_risk]
+    start: "Developing the avascular plane down to Cooper's ligament, staying out of the triangles of doom and pain."
+    auto_order: 11
+
+  - id: reduce_sac
+    name: Reduce the hernia sac
+    verbs: [reduce the sac, reduce the hernia, reduce the hernia sac, pull the sac, dissect the sac, free the sac, reduction of the sac]
+    targets: [sac, deep_ring]
+    instruments: [grasper, maryland, scissors, hook_cautery, harmonic]
+    requires: [flap_developed]
+    blocked: "Develop the preperitoneal space first so you can see the cord."
+    duration_s: 300
+    stimulus: 0.35
+    sets: [sac_reduced]
+    hooks: [reduce_sac_risk]
+    start: "Gentle traction on the sac, peeling it off the cord, keeping the vas and the testicular vessels intact."
+    auto_order: 12
+
+  - id: parietalize
+    name: Parietalize the cord
+    verbs: [parietalize, parietalise, skeletonize the cord, skeletonise the cord, clear the cord, flatten the cord]
+    targets: [landmarks]
+    instruments: [maryland, grasper]
+    requires: [sac_reduced]
+    blocked: "Reduce the sac first."
+    duration_s: 120
+    stimulus: 0.25
+    sets: [parietalized]
+    start: "Parietalizing the cord so the mesh can lie flat under it."
+    auto_order: 13
+
+  - id: place_mesh
+    name: Place the mesh
+    verbs: [place the mesh, mesh, insert the mesh, deploy the mesh, unroll the mesh, cover the defect]
+    instruments: [mesh]
+    requires: [sac_reduced]
+    blocked: "Reduce the sac before you place the mesh."
+    soft_requires:
+      parietalized: "The cord isn't parietalized — the mesh will fold over it."
+    duration_s: 120
+    stimulus: 0.25
+    sets: [mesh_placed]
+    hooks: [mesh_placement]
+    start: "15 x 10 cm macroporous mesh unrolled over the myopectineal orifice: direct, indirect and femoral spaces covered."
+    auto_order: 14
+
+  - id: fix_mesh
+    name: Fix the mesh
+    verbs: [tack, tack the mesh, fix the mesh, fixate the mesh, secure the mesh, glue the mesh, fixation]
+    targets: [cooper, rectus, triangle_doom, triangle_pain]
+    instruments: [tacker, glue]
+    requires: [mesh_placed]
+    blocked: "Place the mesh first."
+    danger:
+      targets: [triangle_doom, triangle_pain]
+      instruments: [tacker]
+      text: "Hold on — that's below the iliopubic tract. The triangle of doom holds the external iliac vessels and the triangle of pain holds the lateral femoral cutaneous and genitofemoral nerves; a tack there means bleeding or chronic groin pain."
+    duration_s: 150
+    stimulus: 0.3
+    sets: [mesh_fixed]
+    hooks: [mesh_fixation]
+    start: "Fixing the mesh to Cooper's ligament and the anterior abdominal wall, above the iliopubic tract only."
+    auto_order: 15
+
+  - id: close_peritoneum
+    name: Close the peritoneal flap
+    verbs: [close the peritoneum, close the flap, close the peritoneal flap, suture the flap, peritoneal closure, tack the flap closed]
+    targets: [peritoneum]
+    instruments: [needle_driver, tacker]
+    requires: [mesh_fixed]
+    blocked: "Fix the mesh before you close the flap."
+    duration_s: 300
+    stimulus: 0.3
+    sets: [peritoneum_closed]
+    start: "Closing the peritoneal flap over the mesh with a running barbed suture, so no mesh touches the bowel."
+    auto_order: 16
+
+  - id: inspect_hemostasis
+    name: Inspect hemostasis
+    verbs: [check hemostasis, inspect, look for bleeding, hemostasis]
+    requires: [camera_in]
+    blocked: "Need the camera in."
+    duration_s: 60
+    stimulus: 0.1
+    sets: [hemostasis_checked]
+    hooks: [reveal_occult]
+    start: "Checking for bleeding with the pressure dropped to 5."
+    auto_order: 17
+
+  - id: control_bleeding
+    name: Control bleeding
+    verbs: [control, cauterize, clip the bleeder, stop the bleeding, get control, hemostasis on the bleeder, apply pressure]
+    targets: [bleeder]
+    instruments: [clip_applier, hook_cautery, harmonic, ligasure, grasper, sponge]
+    requires: [bleeding]
+    blocked: "There's no active bleeding."
+    duration_s: 60
+    stimulus: 0.3
+    hooks: [control_bleeder]
+    start: "Getting control of the bleeder."
+    priority: true
+
+  - id: desufflate
+    name: Desufflate
+    verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
+    requires: [insufflated]
+    blocked: "The abdomen isn't insufflated."
+    duration_s: 60
+    stimulus: 0.2
+    iap: 0
+    clears: [insufflated, camera_in]
+    start: "Ports out under vision, letting the gas out."
+    auto_order: 18
+
+  - id: count
+    name: Sponge / needle / instrument count
+    verbs: [count, sponge count, do the count, counts]
+    requires: []
+    duration_s: 60
+    stimulus: 0.0
+    sets: [counted]
+    hooks: [count_result]
+    start: "Counting."
+    auto_order: 19
+
+  - id: close_fascia
+    name: Close fascia
+    verbs: [close the fascia, close fascia, fascial closure, close the port site, suture the fascia]
+    targets: [fascia]
+    instruments: [needle_driver]
+    requires: [mesh_fixed]
+    blocked: "Fix the mesh first."
+    soft_requires:
+      not_insufflated: "We're still insufflated."
+      counted: "Count isn't done yet."
+      peritoneum_closed: "The peritoneal flap isn't closed — the mesh is exposed to the bowel."
+    duration_s: 300
+    stimulus: 0.5
+    sets: [fascia_closed]
+    start: "Closing the 12 mm port-site fascia with 0 Vicryl."
+    hooks: [closing_cue]
+    auto_order: 20
+
+  - id: close_skin
+    name: Close skin
+    verbs: [close skin, close the skin, skin closure, subcuticular, close]
+    targets: [skin]
+    instruments: [needle_driver]
+    requires: [fascia_closed]
+    blocked: "Close the fascia first."
+    duration_s: 360
+    stimulus: 0.35
+    sets: [skin_closed]
+    hooks: [finish]
+    start: "Subcuticular 4-0 Monocryl, then dressings."
+    auto_order: 21

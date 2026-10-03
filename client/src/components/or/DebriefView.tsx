@@ -22,6 +22,11 @@ const HIDDEN_LABELS: Record<string, (v: any) => string> = {
   posterior_cystic_artery: (v) => (v ? "Posterior cystic artery branch behind the duct" : "Single anterior cystic artery"),
   accessory_appendiceal_artery: (v) => (v ? "Accessory appendiceal artery present" : "Standard arterial anatomy"),
   adhesions: (v) => (v ? "Omental adhesions" : "No adhesions"),
+  hernia_type: (v) => `Hernia type: ${v}`,
+  vas_adherent: (v) => (v ? "Vas deferens adherent to the sac (easy to injure)" : "Vas separate from the sac"),
+  corona_mortis: (v) => (v ? "Corona mortis (aberrant pubic vessel) present" : "No aberrant pubic vessel"),
+  contralateral_defect: (v) => (v ? "Small left-sided defect as well" : "Left groin intact"),
+  prior_pelvic_surgery: (v) => (v ? "Prior pelvic surgery: bladder dome tethered by adhesions" : "No pelvic adhesions"),
 };
 
 export function DebriefView({ debrief, procedureName, onRestart }: { debrief: Debrief; procedureName: string; onRestart: () => void }) {

@@ -159,7 +159,7 @@ class Autopilot:
         return f"{names} {'are' if ' and ' in names else 'is'} in" + (" — penicillin allergy was hives, so cefazolin is fine." if pcn else ".")
 
     def _prophylaxis_drugs(self) -> list[str]:
-        return ["cefazolin", "metronidazole"] if self.case.scenario_id == "appendectomy" else ["cefazolin"]
+        return ["cefazolin", "metronidazole"] if self.case.scenario_id in ("appendectomy", "sigmoid_colectomy") else ["cefazolin"]
 
     def _give_prophylaxis(self) -> None:
         c = self.case
@@ -210,7 +210,8 @@ class Autopilot:
             self.act({"type": "airway", "maneuver": "mask_on"})
             self.goto("preox")
         elif p == "preox" and self.in_phase >= 170:
-            self.say("Preoxygenated. Full stomach, so rapid sequence: fentanyl, propofol, rocuronium 1.2 per kilo, no bag-mask ventilation.")
+            self.say("Preoxygenated. Full stomach, so rapid sequence: fentanyl, propofol, rocuronium 1.2 per kilo, no bag-mask ventilation."
+                     if c.scenario.get("full_stomach", True) else "Preoxygenated. Fasted, so a standard induction with the video laryngoscope ready: fentanyl, propofol, rocuronium.")
             self.act({"type": "drug", "drug": "fentanyl", "dose": 150})
             self.goto("fentanyl")
         elif p == "fentanyl" and self.in_phase >= 60:
@@ -274,7 +275,15 @@ class Autopilot:
         elif p == "emergence":
             if b.spont_ve > 0.3 * b.ve0 and m.bagging:
                 self.act({"type": "bag", "on": False})
-            if eff.bis > 80 and eff.tof_ratio > 0.9 and b.spont_ve > 0.5 * b.ve0:
+            if eff.bis > 80 and eff.tof_ratio > 0.9 and b.spont_ve > 0.5 * b.ve0 and c.face_edema >= 0.5:
+                if not c._flags.get("cuff_leak_done"):
+                    self.say(f"{c.patient.first_name}'s face is swollen after {c.metrics.sec_steep / 3600:.1f} hours head-down — cuff-leak test before the tube comes out.")
+                    self.act({"type": "assess", "what": "cuff_leak"})
+                    self.act({"type": "drug", "drug": "dexamethasone", "dose": 8})
+                    self.last["leak_t"] = c.t
+                elif c.face_edema >= 0.8 and c.t - self.last.get("leak_t", c.t) < 300:
+                    return
+            if eff.bis > 80 and eff.tof_ratio > 0.9 and b.spont_ve > 0.5 * b.ve0 and (c.face_edema < 0.5 or c._flags.get("cuff_leak_done")):
                 self.say(f"{c.patient.he.capitalize()}'s awake, following commands, good tidal volumes. Extubating.")
                 self.act({"type": "airway", "maneuver": "extubate"})
                 self.act({"type": "airway", "maneuver": "nasal_cannula", "flow": 4})
