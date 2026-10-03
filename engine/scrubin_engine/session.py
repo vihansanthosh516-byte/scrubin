@@ -211,6 +211,12 @@ class Session:
         }
 
     def debrief(self, end: bool = False) -> dict:
+        c = self.case
+        if end and c.status == "emergence" and c.outcome is None and c.airway.device in ("none", "nasal_cannula", "face_mask") \
+                and c.eff.bis > 75 and c.body.spont_ve > 0.4 * c.body.ve0 and c.body.sao2 > 0.92:
+            # Extubated, awake and breathing: ending now is the handover to recovery.
+            c.outcome = "pacu"
+            c.event("case_complete", outcome="pacu")
         if end and self.case.status != "ended":
             # "End & debrief": the trainee closed the case — it is no longer resumable.
             self.case.status = "ended"

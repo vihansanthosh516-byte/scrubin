@@ -204,7 +204,7 @@ async function startServer() {
           const completion = await groq.chat.completions.create({
             model: process.env.GROQ_EVAL_MODEL || "openai/gpt-oss-120b",
             max_tokens: 2000,
-            temperature: 0.5,
+            temperature: 0,
             messages: [
               {
                 role: "system",
