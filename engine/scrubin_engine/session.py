@@ -255,7 +255,10 @@ def replay_frames(record: dict, every_s: float = 5.0) -> dict:
         })
 
     c = rebuild_case(record, on_tick=capture)
-    return {"frames": frames, "every_s": every_s, "debrief": build_debrief(c)}
+    # The saved debrief is the one the trainee saw (and the score on their record) — "End & debrief"
+    # isn't in the action log, so a rebuilt case would grade differently.
+    saved = record.get("debrief") if record.get("status") == "ended" else None
+    return {"frames": frames, "every_s": every_s, "debrief": saved or build_debrief(c)}
 
 
 class SessionStore:

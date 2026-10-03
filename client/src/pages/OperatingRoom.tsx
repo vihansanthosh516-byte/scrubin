@@ -299,7 +299,7 @@ export default function OperatingRoom() {
       {state?.pending && (
         <div className="mb-3 rounded-sm border border-amber-warm/40 bg-amber-warm/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="text-sm">
-            <span className="font-semibold text-amber-warm mr-2">{state.pending.from === "circulator" ? "Circulator" : "Anesthesia"}:</span>
+            <span className="font-semibold text-amber-warm mr-2">{state.pending.name ?? (state.pending.from === "circulator" ? "Circulator" : "Anesthesia")}:</span>
             {state.pending.question}
           </div>
           <div className="flex gap-2">

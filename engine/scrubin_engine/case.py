@@ -170,8 +170,8 @@ class Case:
         return result or {"ok": True}
 
     def _ask_confirm(self, act, who: str, text: str) -> dict:
-        self.pending = {"action": act.model_dump(exclude_none=True), "from": who, "question": text}
         self.say(who, text, kind="question")
+        self.pending = {"action": act.model_dump(exclude_none=True), "from": who, "name": self.comms[-1]["name"], "question": text}
         return {"ok": False, "needs_confirmation": True, "question": text}
 
     def _do_confirm(self, act: A.Confirm) -> dict:

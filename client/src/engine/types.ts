@@ -174,7 +174,7 @@ export interface CaseState {
   airway: AirwayState;
   infusions: Record<string, { rate: number; unit: string }>;
   position: string;
-  pending: { action: Record<string, unknown>; from: string; question: string } | null;
+  pending: { action: Record<string, unknown>; from: string; name?: string; question: string } | null;
   comms: CommsMessage[];
   patient_signs: { consciousness: string; breathing: string; moving: boolean; fasciculating: boolean };
   fluids: { in_ml: number; blood_loss_ml: number; urine_ml: number };

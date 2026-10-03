@@ -50,7 +50,7 @@ export default function OrCases() {
               My OR cases
             </h1>
           </div>
-          <Link href="/simulation?proc=appendectomy" className="px-4 py-2 rounded-sm border border-border hover:bg-primary/10 text-sm">
+          <Link href="/procedures" className="px-4 py-2 rounded-sm border border-border hover:bg-primary/10 text-sm">
             New case
           </Link>
         </div>
