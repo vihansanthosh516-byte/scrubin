@@ -226,7 +226,7 @@ export default function MySimulations() {
 
         {/* Scrollable list area — the only part of the dashboard that scrolls */}
         <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-4">
-          {completedCases.length > 0 && (
+          {completedCases.length > 0 && filter !== "active" && (
             <div className="glass-card p-5">
               <div className="flex items-center gap-2 mb-4">
                 <ShieldCheck className="w-4 h-4 text-[#2E6B4B] dark:text-[#8FBF9A]" />

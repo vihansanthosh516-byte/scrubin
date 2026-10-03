@@ -122,7 +122,7 @@ function DrugCart({ state, drugs, patient, act }: Props) {
             <div className="space-y-1">
               <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Bolus ({selected.unit})</label>
               <div className="flex gap-2">
-                <input
+                <input autoComplete="off" data-1p-ignore data-lpignore="true"
                   value={dose}
                   onChange={(e) => setDose(e.target.value.replace(/[^\d.]/g, ""))}
                   onKeyDown={(e) => e.key === "Enter" && push()}
@@ -144,7 +144,7 @@ function DrugCart({ state, drugs, patient, act }: Props) {
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Infusion ({selected.infusion_unit})</label>
                 <div className="flex gap-2">
-                  <input
+                  <input autoComplete="off" data-1p-ignore data-lpignore="true"
                     value={rate}
                     onChange={(e) => setRate(e.target.value.replace(/[^\d.]/g, ""))}
                     onKeyDown={(e) => e.key === "Enter" && startInfusion()}

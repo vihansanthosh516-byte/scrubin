@@ -174,7 +174,7 @@ export function CommandBar({ onSubmit, lastParse, role }: Props) {
         >
           {listening ? <Mic className="w-5 h-5 text-destructive" /> : <MicOff className="w-5 h-5 text-primary" />}
         </button>
-        <input
+        <input autoComplete="off" data-1p-ignore data-lpignore="true"
           ref={inputRef}
           value={listening ? interim : text}
           onChange={(e) => setText(e.target.value)}
