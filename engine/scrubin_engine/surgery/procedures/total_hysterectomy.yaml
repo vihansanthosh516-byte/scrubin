@@ -1,0 +1,434 @@
+# Total laparoscopic hysterectomy as a task graph (same rules as appendectomy.yaml).
+#
+# Teaching core: manipulator and bladder emptied first, steep Trendelenburg (watch peak
+# pressures and EtCO2), IDENTIFY THE URETER before coagulating the uterine arteries, a
+# careful bladder flap, and a closed vaginal cuff. Skipping the ureter step leaves a hidden
+# ureteric injury; cystoscopy at the end can catch it.
+
+id: total_hysterectomy
+name: Total Laparoscopic Hysterectomy
+
+label: total laparoscopic hysterectomy
+expected: "Expected duration about two hours, modest blood loss expected."
+hemostasis_ok: "Pedicles dry, cuff intact, no bleeding from the uterine arteries or the cuff edge."
+thermal_organ: bladder
+bleeding_teaching: "Skeletonize the uterine artery after identifying the ureter, use a sealer at the level of the isthmus, and close the cuff with full-thickness bites."
+positions: [steep_trendelenburg]
+position:
+  before: [explore, round_ligaments]
+  words: "steep Trendelenburg, legs in low lithotomy"
+  set: steep_trendelenburg
+challenge_by:
+  manipulator_in: scrub
+  ureter_identified: attending
+  cuff_closed: attending
+auto_instruments:
+  place_manipulator: manipulator
+  round_ligaments: ligasure
+  adnexa: ligasure
+  open_broad_ligament: scissors
+  bladder_flap: scissors
+  uterine_arteries: ligasure
+  colpotomy: hook_cautery
+  close_cuff: needle_driver
+final_checks: [hysterectomy]
+
+instruments:
+  scalpel:            {name: "#11 scalpel"}
+  veress:             {name: Veress needle}
+  hasson:             {name: Hasson trocar (open entry)}
+  trocar_12:          {name: 12 mm trocar}
+  trocar_5:           {name: 5 mm trocar}
+  camera:             {name: 30° laparoscope}
+  grasper:            {name: Atraumatic grasper}
+  maryland:           {name: Maryland dissector}
+  hook_cautery:       {name: Hook electrocautery, hemostatic: true, thermal: true}
+  harmonic:           {name: Harmonic scalpel, hemostatic: true, thermal: true}
+  scissors:           {name: Laparoscopic scissors}
+  clip_applier:       {name: Clip applier, hemostatic: true}
+  ligasure:           {name: LigaSure vessel sealer, hemostatic: true, thermal: true}
+  suction_irrigator:  {name: Suction-irrigator}
+  needle_driver:      {name: Needle driver}
+  sponge:             {name: Raytec sponge, counted: true}
+  manipulator:        {name: Uterine manipulator (cup)}
+  cystoscope:         {name: Cystoscope}
+
+targets:
+  umbilicus: [umbilicus, umbilical, belly button, navel]
+  abdomen: [abdomen, peritoneum, abdominal cavity]
+  adhesions: [adhesions, adhesion, omentum]
+  bleeder: [bleeder, bleeding, bleeding vessel, bleeding point, ooze]
+  fascia: [fascia, fascial defect, port site]
+  skin: [skin, incisions, wounds]
+
+  round_ligaments: [round ligaments, round ligament]
+  adnexa: [utero-ovarian ligaments, utero ovarian ligaments, fallopian tubes, tubes, adnexa, ovaries]
+  broad_ligament: [broad ligament, posterior leaf, peritoneum]
+  ureter: [ureter, left ureter, right ureter]
+  bladder: [bladder, bladder flap, vesicouterine, vesicouterine fold]
+  uterine_artery: [uterine artery, uterine arteries, uterine vessels]
+  cuff: [cuff, vaginal cuff, vagina]
+
+tasks:
+  - id: prep
+    name: Prep and drape
+    verbs: [prep, drape, prep and drape, prepping]
+    requires: [anesthetized]
+    blocked: "The patient isn't asleep with a secured airway yet."
+    duration_s: 300
+    stimulus: 0.05
+    sets: [prepped]
+    start: "Prepping with chlorhexidine and draping."
+    auto_order: 1
+
+  - id: place_manipulator
+    name: Place the uterine manipulator and Foley
+    verbs: [uterine manipulator, place the manipulator, manipulator, place the foley, speculum, tenaculum, vaginal manipulator, foley]
+    instruments: [manipulator]
+    requires: [prepped]
+    blocked: "Prep and drape first."
+    duration_s: 240
+    stimulus: 0.3
+    sets: [manipulator_in, bladder_empty]
+    hooks: [manipulator_risk]
+    start: "Speculum in, tenaculum on the cervix, uterine manipulator with the colpotomy cup placed and the Foley in."
+    auto_order: 2
+
+  - id: incision
+    name: Umbilical skin incision
+    verbs: [incise, incision, cut, make an incision, skin incision]
+    targets: [umbilicus]
+    instruments: [scalpel]
+    requires: [prepped]
+    blocked: "We haven't prepped and draped."
+    soft_requires:
+      time_out_done: "We haven't done a time-out."
+      antibiotics_given: "Antibiotics aren't in yet — the guidelines say within 60 minutes before incision."
+      anesthesia_ready: "Anesthesia hasn't said we're okay to start."
+      manipulator_in: "The uterine manipulator isn't in yet."
+    duration_s: 40
+    stimulus: 0.85
+    sets: [incised]
+    start: "Knife to skin — umbilical incision."
+    hooks: [record_incision]
+    auto_order: 3
+
+  - id: open_access
+    name: Open (Hasson) entry
+    verbs: [hasson, open entry, open access, enter the abdomen, get into the abdomen, access]
+    instruments: [hasson]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [veress_access]
+    duration_s: 180
+    stimulus: 0.6
+    sets: [access, camera_port]
+    start: "Dissecting down to fascia, opening the peritoneum under vision. Hasson in."
+    auto_order: 4
+
+  - id: veress_access
+    name: Veress needle entry
+    verbs: [veress, insert the veress, needle entry]
+    instruments: [veress]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [open_access]
+    duration_s: 45
+    stimulus: 0.5
+    sets: [access, veress_in]
+    hooks: [veress_placement]
+    start: "Veress in — drop test."
+
+  - id: insufflate
+    name: Insufflate CO2
+    verbs: [insufflate, gas on, pneumoperitoneum, start the gas, co2 on, insufflation]
+    requires: [access]
+    blocked: "No access to the peritoneum yet."
+    duration_s: 90
+    stimulus: 0.5
+    vagal: 0.6
+    iap: 15
+    sets: [insufflated]
+    hooks: [insufflation_checks]
+    start: "Insufflating to 15."
+    auto_order: 5
+
+  - id: umbilical_trocar
+    name: 12 mm umbilical trocar (after Veress)
+    verbs: [umbilical port, camera port, 12 mm port, place the umbilical trocar]
+    targets: [umbilicus]
+    instruments: [trocar_12]
+    requires: [insufflated, veress_in]
+    blocked: "Insufflate through the Veress first (or use open entry)."
+    duration_s: 45
+    stimulus: 0.6
+    sets: [camera_port]
+    hooks: [blind_trocar_risk]
+    start: "12 mm trocar at the umbilicus."
+
+  - id: camera_in
+    name: Camera in
+    verbs: [camera in, scope in, look inside, insert the camera, laparoscope in]
+    instruments: [camera]
+    requires: [camera_port, insufflated]
+    blocked: "Need a camera port and pneumoperitoneum first."
+    duration_s: 20
+    stimulus: 0.1
+    sets: [camera_in]
+    start: "Camera in."
+    auto_order: 6
+
+  - id: working_ports
+    name: Working ports (12 mm umbilical, two 5 mm lower lateral, one 5 mm suprapubic)
+    verbs: [working ports, place ports, 5 mm ports, ports, place the trocars, trocars, lower quadrant ports]
+    targets: [abdomen]
+    instruments: [trocar_12, trocar_5]
+    requires: [camera_in]
+    blocked: "Place working ports under direct vision — camera first."
+    duration_s: 180
+    stimulus: 0.6
+    sets: [working_ports]
+    start: "Left and right lower quadrant 5 mm and suprapubic 5 mm ports under direct vision, lateral to the epigastric vessels."
+    auto_order: 7
+
+  - id: explore
+    name: Diagnostic laparoscopy
+    verbs: [explore, look around, survey, diagnostic laparoscopy, inspect the abdomen, look at the uterus, find the uterus, inspect the pelvis]
+    requires: [camera_in]
+    blocked: "Can't see anything without the camera."
+    duration_s: 90
+    stimulus: 0.2
+    sets: [explored]
+    hooks: [reveal_uterus_findings, exposure_check]
+    start: "Surveying the pelvis: uterus, tubes, ovaries, bladder, bowel and the upper abdomen."
+    auto_order: 8
+
+  - id: lyse_adhesions
+    name: Take down adhesions
+    verbs: [lyse adhesions, take down adhesions, adhesiolysis, free the omentum, sweep the omentum, adhesions]
+    targets: [adhesions]
+    instruments: [grasper, maryland, hook_cautery, scissors, harmonic]
+    requires: [explored, working_ports, adhesions]
+    blocked: "No adhesions to take down (or you haven't explored / placed ports)."
+    duration_s: 300
+    stimulus: 0.35
+    clears: [adhesions]
+    hooks: [thermal_bowel_risk]
+    start: "Taking down the omental and bowel adhesions to the old caesarean scar."
+    auto_order: 9
+    auto_if: [adhesions]
+
+  - id: round_ligaments
+    name: Coagulate and divide the round ligaments
+    verbs: [divide the round ligaments, round ligaments, round ligament, coagulate the round ligaments, take the round ligaments]
+    targets: [round_ligaments]
+    instruments: [ligasure, harmonic, hook_cautery, scissors]
+    requires: [explored, working_ports, no_adhesions, manipulator_in]
+    blocked: "Explore the pelvis, place the ports and take down any adhesions first."
+    duration_s: 150
+    stimulus: 0.3
+    sets: [round_divided]
+    hooks: [pedicle_bleed]
+    start: "Dividing both round ligaments about 3 cm from the uterus and opening the anterior leaf of the broad ligament."
+    auto_order: 10
+
+  - id: adnexa
+    name: Divide the utero-ovarian ligaments and tubes (ovaries conserved)
+    verbs: [divide the utero-ovarian ligaments, utero ovarian ligaments, divide the tubes, take the tubes, conserve the ovaries, adnexa, divide the adnexa]
+    targets: [adnexa]
+    instruments: [ligasure, harmonic, hook_cautery, scissors]
+    requires: [round_divided]
+    blocked: "Divide the round ligaments first."
+    duration_s: 270
+    stimulus: 0.3
+    sets: [adnexa_divided]
+    hooks: [pedicle_bleed]
+    start: "Sealing and dividing both utero-ovarian ligaments and fallopian tubes; both ovaries stay."
+    auto_order: 11
+
+  - id: bladder_flap
+    name: Develop the bladder flap
+    verbs: [bladder flap, develop the bladder flap, create the bladder flap, dissect the bladder, push the bladder down, take the bladder down, vesicouterine fold]
+    targets: [bladder]
+    instruments: [scissors, hook_cautery, harmonic, maryland]
+    requires: [adnexa_divided]
+    blocked: "Divide the adnexal attachments first so the uterus can be anteverted."
+    duration_s: 360
+    stimulus: 0.3
+    sets: [bladder_flap_done]
+    hooks: [bladder_flap_risk]
+    start: "Opening the vesicouterine fold and pushing the bladder down off the lower uterine segment and cervix, in the avascular plane."
+    auto_order: 12
+
+  - id: open_broad_ligament
+    name: Open the posterior leaf of the broad ligament
+    verbs: [open the broad ligament, open the posterior leaf, posterior leaf, broad ligament, open the posterior broad ligament]
+    targets: [broad_ligament]
+    instruments: [scissors, hook_cautery, harmonic, maryland]
+    requires: [bladder_flap_done]
+    blocked: "Develop the bladder flap first."
+    duration_s: 120
+    stimulus: 0.25
+    sets: [broad_open]
+    start: "Opening the posterior leaf of the broad ligament down toward the uterosacral ligament."
+    auto_order: 13
+
+  - id: identify_ureter
+    name: Identify the ureter
+    verbs: [identify the ureter, find the ureter, locate the ureter, see the ureter, trace the ureter, show the ureter, ureter]
+    targets: [ureter]
+    requires: [broad_open]
+    blocked: "Open the posterior broad ligament first."
+    duration_s: 90
+    stimulus: 0.15
+    sets: [ureter_identified]
+    hooks: [ureter_seen]
+    start: "Tracing the ureter on the medial leaf of the broad ligament, from the pelvic brim down toward the uterine artery."
+    auto_order: 14
+
+  - id: uterine_arteries
+    name: Coagulate and divide the uterine arteries
+    verbs: [uterine arteries, uterine artery, coagulate the uterine arteries, divide the uterine arteries, take the uterine arteries, skeletonize the uterine arteries, divide the uterine vessels]
+    targets: [uterine_artery]
+    instruments: [ligasure, harmonic, hook_cautery, clip_applier]
+    requires: [broad_open, bladder_flap_done]
+    blocked: "Develop the bladder flap and open the broad ligament first."
+    soft_requires:
+      ureter_identified: "We haven't identified the ureter yet."
+    duration_s: 300
+    stimulus: 0.3
+    sets: [arteries_divided]
+    hooks: [uterine_artery_risk]
+    start: "Skeletonizing both uterine arteries at the level of the isthmus and sealing them against the uterus, away from the ureters."
+    auto_order: 15
+
+  - id: colpotomy
+    name: Circumferential colpotomy
+    verbs: [colpotomy, circumferential colpotomy, cut the vagina, open the vagina, cut around the cup, amputate the cervix, divide the vagina from the cervix]
+    targets: [cuff]
+    instruments: [hook_cautery, harmonic, scissors]
+    requires: [arteries_divided]
+    blocked: "Divide the uterine arteries first."
+    duration_s: 300
+    stimulus: 0.4
+    sets: [colpotomy_done]
+    hooks: [colpotomy_risk]
+    start: "Cutting down onto the colpotomy cup all the way round, with a balloon in the vagina to keep the pneumoperitoneum."
+    auto_order: 16
+
+  - id: remove_specimen
+    name: Remove the uterus vaginally
+    verbs: [remove the uterus, remove the specimen, deliver the uterus, take the uterus out, extract the specimen, remove the cervix and uterus]
+    requires: [colpotomy_done]
+    blocked: "Complete the colpotomy first."
+    duration_s: 240
+    stimulus: 0.3
+    sets: [specimen_out]
+    start: "Delivering the uterus and cervix through the vagina."
+    auto_order: 17
+
+  - id: close_cuff
+    name: Close the vaginal cuff
+    verbs: [close the cuff, close the vaginal cuff, vaginal cuff, suture the cuff, cuff closure, close the vagina, repair the cuff]
+    targets: [cuff]
+    instruments: [needle_driver]
+    requires: [specimen_out, camera_in]
+    blocked: "Remove the uterus first (and keep the camera in)."
+    duration_s: 600
+    stimulus: 0.3
+    sets: [cuff_closed]
+    hooks: [cuff_closure]
+    start: "Closing the vaginal cuff laparoscopically with a running barbed suture, full-thickness bites incorporating the uterosacrals."
+    auto_order: 18
+
+  - id: inspect_hemostasis
+    name: Inspect hemostasis
+    verbs: [check hemostasis, inspect, look for bleeding, hemostasis]
+    requires: [camera_in]
+    blocked: "Need the camera in."
+    duration_s: 60
+    stimulus: 0.1
+    sets: [hemostasis_checked]
+    hooks: [reveal_occult]
+    start: "Checking for bleeding with the pressure dropped to 5."
+    auto_order: 19
+
+  - id: control_bleeding
+    name: Control bleeding
+    verbs: [control, cauterize, clip the bleeder, stop the bleeding, get control, hemostasis on the bleeder, apply pressure]
+    targets: [bleeder]
+    instruments: [clip_applier, hook_cautery, harmonic, ligasure, grasper, sponge]
+    requires: [bleeding]
+    blocked: "There's no active bleeding."
+    duration_s: 60
+    stimulus: 0.3
+    hooks: [control_bleeder]
+    start: "Getting control of the bleeder."
+    priority: true
+
+  - id: cystoscopy
+    name: Cystoscopy (check the ureteric jets)
+    verbs: [cystoscopy, cystoscope, check the ureters, check the jets, ureteric jets, look in the bladder]
+    instruments: [cystoscope]
+    requires: [specimen_out]
+    blocked: "Not until the uterus is out."
+    duration_s: 240
+    stimulus: 0.15
+    sets: [cystoscopy_done]
+    hooks: [cystoscopy_result]
+    start: "Cystoscope in: looking at the bladder lining and both ureteric orifices for efflux."
+
+  - id: desufflate
+    name: Desufflate
+    verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
+    requires: [insufflated]
+    blocked: "The abdomen isn't insufflated."
+    duration_s: 60
+    stimulus: 0.2
+    iap: 0
+    clears: [insufflated, camera_in]
+    start: "Ports out under vision, letting the gas out."
+    auto_order: 20
+
+  - id: count
+    name: Sponge / needle / instrument count
+    verbs: [count, sponge count, do the count, counts]
+    requires: []
+    duration_s: 60
+    stimulus: 0.0
+    sets: [counted]
+    hooks: [count_result]
+    start: "Counting."
+    auto_order: 21
+
+  - id: close_fascia
+    name: Close port-site fascia
+    verbs: [close the fascia, close fascia, fascial closure, close the port site, suture the fascia]
+    targets: [fascia]
+    instruments: [needle_driver]
+    requires: [specimen_out]
+    blocked: "Remove the uterus first."
+    soft_requires:
+      not_insufflated: "We're still insufflated."
+      counted: "Count isn't done yet."
+      cuff_closed: "The vaginal cuff isn't closed."
+    duration_s: 300
+    stimulus: 0.5
+    sets: [fascia_closed]
+    start: "Closing the 12 mm port-site fascia with 0 Vicryl."
+    hooks: [closing_cue]
+    auto_order: 22
+
+  - id: close_skin
+    name: Close skin
+    verbs: [close skin, close the skin, skin closure, subcuticular, close]
+    targets: [skin]
+    instruments: [needle_driver]
+    requires: [fascia_closed]
+    blocked: "Close the fascia first."
+    duration_s: 360
+    stimulus: 0.35
+    sets: [skin_closed]
+    hooks: [finish]
+    start: "Subcuticular 4-0 Monocryl, then dressings."
+    auto_order: 23

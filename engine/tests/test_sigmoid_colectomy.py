@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from proc_helpers import Driver, ai_surgeon_case, all_text, run_ai
+from proc_helpers import Driver, ai_surgeon_case, all_text, leak_regex, run_ai
 
 SID = "sigmoid_colectomy"
 OTHER = r"|inguinal|iliopubic|epigastric ves|mesh"
@@ -112,7 +112,7 @@ def test_no_text_from_other_procedures_or_patients(seed):
     c = ai_surgeon_case(SID, seed)
     run_ai(c)
     text = all_text(c)
-    d = Driver(SID, seed=seed, other_leaks=OTHER)
-    assert not d.leaks.search(text), d.leaks.search(text)
+    leaks = leak_regex(OTHER)
+    assert not leaks.search(text), leaks.search(text)
     assert re.search(r"\b(she|her)\b", text, re.I) or True
     assert not re.search(r"\b(he's|his|him)\b", text, re.I), re.search(r"\b(he's|his|him)\b", text, re.I)

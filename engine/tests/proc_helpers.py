@@ -96,3 +96,7 @@ def run_ai(c, limit_h=6):
 def all_text(c):
     p = c.procedure
     return " ".join(m["text"] for m in c.comms) + " " + " ".join(p.findings + p.notes + p.occult)
+
+
+def leak_regex(other: str = "") -> "re.Pattern":
+    return re.compile(LEAK_WORDS + other, re.I)
