@@ -3,6 +3,7 @@
  * Warm cream layout, sharp white cards, sage/amber/terracotta difficulty pills.
  */
 import { useState, useEffect } from "react";
+import bundledCatalog from "@/data/procedureCatalog.json";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -183,22 +184,24 @@ export default function ProcedureLibrary() {
       if (difficulty && difficulty !== "All") params.append("difficulty", difficulty);
       if (category && category !== "All") params.append("category", category);
 
-      // The free servers sleep when idle and answer 502 while waking (~1 min) — keep trying before giving up.
-      let res: Response | null = null;
-      for (let attempt = 0; attempt < 6; attempt++) {
-        try {
-          res = await fetch(`${API_BASE}/api/procedures/search?${params.toString()}`);
-          if (res.ok) break;
-        } catch {
-          res = null;
-        }
-        if (attempt === 0) setError("Waking the server — this can take up to a minute…");
-        await new Promise((r) => setTimeout(r, 10000));
+      // The free server sleeps when idle and can take minutes to wake. Don't make the trainee wait:
+      // fall back to the copy of the catalog bundled with the site.
+      let data: any;
+      try {
+        const res = await fetch(`${API_BASE}/api/procedures/search?${params.toString()}`, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) throw new Error(String(res.status));
+        data = await res.json();
+      } catch {
+        const q = query.toLowerCase();
+        data = (bundledCatalog as any).procedures.filter(
+          (p: any) =>
+            (!q || p.name.toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q)) &&
+            (!difficulty || difficulty === "All" || String(p.category).toLowerCase() === difficulty.toLowerCase()) &&
+            (!category || category === "All" || p.specialty === category),
+        );
       }
-      if (!res || !res.ok) throw new Error('Failed to fetch procedures');
       setError(null);
 
-      const data = await res.json();
       const list = (Array.isArray(data) ? data : data.procedures || data.scenarios || []).map((p: any) => {
         // The registry API reports difficulty as `category` (e.g. "beginner");
         // accept both sources so badges, colors, and XP locking work everywhere.

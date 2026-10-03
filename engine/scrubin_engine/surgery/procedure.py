@@ -191,6 +191,8 @@ class Procedure:
             if fn:
                 fn(self, task, r)
         self.case.event("surgery_task_done", task=task["id"])
+        if self.mode == "trainee" and task["id"] != "control_bleeding":
+            self.case.say("system", f"{task['name']} — done.", kind="narration")
 
     # ------------------------------------------------------------------
     # trainee actions
