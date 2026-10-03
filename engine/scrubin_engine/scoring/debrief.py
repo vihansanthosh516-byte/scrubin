@@ -63,7 +63,7 @@ def anesthesia_items(case) -> list[dict]:
         hrs = case.metrics.sec_steep / 3600
         edema = case.face_edema
         items.append(_item("Ventilation", "Steep Trendelenburg", GOOD if edema < 0.3 else FAIR if edema < 0.8 else POOR,
-                           f"{hrs:.1f} h head-down at 25 degrees or more; facial/airway swelling {round(edema * 100)}%; peak airway pressure {case.airway.peak_pressure:.0f} cmH2O at the end.",
+                           f"{hrs:.1f} h head-down at 25 degrees or more; facial/airway swelling {round(edema * 100)}%; peak airway pressure reached {case.metrics.max_peak_pressure:.0f} cmH2O.",
                            "Hours of steep head-down raise peak pressures (less compliant chest), swell the face and airway and raise intraocular pressure: "
                            "protect and tape the eyes, watch the peak pressures and EtCO2, keep the head neutral and do a cuff-leak test before extubating."))
     placed = _first(case, "tube_placed")
@@ -131,7 +131,7 @@ def _safety_items(case) -> list[dict]:
     if m.incision_t is not None:
         if m.antibiotic_t is None:
             items.append(_item("Safety", "Antibiotic prophylaxis", POOR, "No antibiotics before incision.",
-                               "Give prophylaxis within 60 min before incision (cefazolin + metronidazole; penicillin hives is not a contraindication to cefazolin)."))
+                               "Give prophylaxis within 60 min before incision (cefazolin + metronidazole; a non-severe penicillin reaction such as hives or a rash is not a contraindication to cefazolin)."))
         else:
             lead = (m.incision_t - m.antibiotic_t) / 60
             items.append(_item("Safety", "Antibiotic prophylaxis", GOOD if 0 <= lead <= 60 else FAIR,

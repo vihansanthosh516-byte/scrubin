@@ -144,7 +144,8 @@ class Procedure:
             return False, f"{task['name']} is already done."
         for ex in task.get("exclusive_with", []):
             if ex in self.done:
-                return False, f"We already have access ({self.spec['task_by_id'][ex]['name']})."
+                other = self.spec['task_by_id'][ex]['name']
+                return False, task["exclusive_msg"].format(other=other) if task.get("exclusive_msg") else f"We already have access ({other})."
         for req in task.get("requires", []):
             if not self.flag(req):
                 r = self.running
@@ -159,6 +160,7 @@ class Procedure:
             missed = [t["name"].lower() for t in self.spec["tasks"]
                       if t.get("auto_order") and t["auto_order"] < task.get("auto_order", 99)
                       and t["id"] not in self.done and t["id"] != task["id"]
+                      and not (t.get("auto_if") and not all(self.flag(f) for f in t["auto_if"]))
                       and set(t.get("requires") or []) & {"camera_in", "insufflated"}]
             if missed:
                 self.notes.append("Skipped before desufflating: " + ", ".join(missed) + ".")
@@ -424,7 +426,6 @@ class Procedure:
             self.surgeon_says(f"Can we get {words}, please?", key="ask_position")
             if not self._waited("position", 50):
                 return
-            c.say("circulator", f"I've got the table — {words}.")
             c._do_position(A.Position(position=pos.get("set", "left_side_down")), "circulator")
             self.notes.append("Table position request went unanswered; circulator positioned the patient.")
         if tid == "count" and c.position != "level":

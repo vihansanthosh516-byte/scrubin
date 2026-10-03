@@ -66,6 +66,7 @@ class Metrics:
     esophageal_unrecognized_s: float = 0.0
     patient_movements: int = 0
     sec_steep: float = 0.0  # time head-down 25 degrees or more
+    max_peak_pressure: float = 0.0
 
     def public(self) -> dict:
         return {k: (round(v, 3) if isinstance(v, float) else v) for k, v in self.__dict__.items()}
@@ -723,7 +724,7 @@ class Case:
     @property
     def face_edema(self) -> float:
         """0..1: facial and airway swelling from hours of steep head-down positioning."""
-        return min(1.0, self.metrics.sec_steep / (3 * 3600.0))
+        return min(1.0, self.metrics.sec_steep / (5 * 3600.0))
 
     def _narrate(self, dt: float, eff) -> None:
         b, aw = self.body, self.airway
@@ -806,6 +807,8 @@ class Case:
         m.seconds += dt
         if self.load.trendelenburg_deg >= 25.0:
             m.sec_steep += dt
+        if self.airway.device == "ett":
+            m.max_peak_pressure = max(m.max_peak_pressure, self.airway.peak_pressure)
         if b.map < 65:
             m.sec_map_low += dt
         if b.map < 55:

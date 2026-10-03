@@ -1,0 +1,509 @@
+# Laparoscopic sigmoid colectomy as a task graph (same rules as appendectomy.yaml).
+#
+# Teaching core: medial-to-lateral dissection; find the LEFT URETER (and gonadal vessels)
+# before dividing the inferior mesenteric artery; mobilize the splenic flexure when the
+# colon will not reach without tension; stapled colorectal anastomosis followed by an air
+# leak test. Skipping the ureter leaves a hidden ureteric injury; skipping the leak test
+# (or a tight, poorly perfused, badly prepped anastomosis) leaves a hidden leak.
+
+id: sigmoid_colectomy
+name: Laparoscopic Sigmoid Colectomy
+
+label: laparoscopic sigmoid colectomy
+expected: "Expected duration about three hours, modest blood loss expected."
+hemostasis_ok: "IMA pedicle secure, mesentery dry, anastomosis intact."
+thermal_organ: small bowel
+bleeding_teaching: "Divide the inferior mesenteric artery with a vessel sealer or stapler only after the left ureter and gonadal vessels are identified, and keep the dissection in the avascular retroperitoneal plane."
+bag_name: wound protector
+positions: [steep_trendelenburg_right_down]
+position:
+  before: [explore, sweep_bowel]
+  words: "steep Trendelenburg, right side down"
+  set: steep_trendelenburg_right_down
+challenge_by:
+  ureter_identified: attending
+  reach_ok: attending
+  perfusion_checked: attending
+  leak_tested: attending
+auto_instruments:
+  sweep_bowel: grasper
+  medial_dissect: hook_cautery
+  divide_ima: ligasure
+  lateral_mobilize: hook_cautery
+  mobilize_flexure: harmonic
+  divide_distal: linear_stapler
+  bag: wound_protector
+  anastomose: circular_stapler
+  leak_test: suction_irrigator
+final_checks: [sigmoid]
+
+instruments:
+  scalpel:            {name: "#11 scalpel"}
+  veress:             {name: Veress needle}
+  hasson:             {name: Hasson trocar (open entry)}
+  trocar_12:          {name: 12 mm trocar}
+  trocar_5:           {name: 5 mm trocar}
+  camera:             {name: 30° laparoscope}
+  grasper:            {name: Atraumatic grasper}
+  maryland:           {name: Maryland dissector}
+  hook_cautery:       {name: Hook electrocautery, hemostatic: true, thermal: true}
+  harmonic:           {name: Harmonic scalpel, hemostatic: true, thermal: true}
+  scissors:           {name: Laparoscopic scissors}
+  clip_applier:       {name: Clip applier, hemostatic: true}
+  ligasure:           {name: LigaSure vessel sealer, hemostatic: true, thermal: true}
+  suction_irrigator:  {name: Suction-irrigator}
+  needle_driver:      {name: Needle driver}
+  sponge:             {name: Raytec sponge, counted: true}
+  linear_stapler:     {name: Laparoscopic linear stapler, hemostatic: true}
+  circular_stapler:   {name: Circular stapler (29 mm)}
+  wound_protector:    {name: Wound protector}
+
+targets:
+  umbilicus: [umbilicus, umbilical, belly button, navel]
+  abdomen: [abdomen, peritoneum, abdominal cavity]
+  adhesions: [adhesions, adhesion, omentum]
+  bleeder: [bleeder, bleeding, bleeding vessel, bleeding point, ooze]
+  fascia: [fascia, fascial defect, port site]
+  skin: [skin, incisions, wounds]
+
+  ureter: [left ureter, ureter, gonadal vessels, gonadal vein, gonadals]
+  ima: [ima, inferior mesenteric artery, mesenteric pedicle, pedicle, inferior mesenteric vessels]
+  promontory: [promontory, sacral promontory, retroperitoneum, mesentery, root of the mesentery]
+  colon: [sigmoid, colon, descending colon, lateral attachments, white line, toldt, line of toldt]
+  flexure: [splenic flexure, flexure]
+  rectosigmoid: [rectosigmoid, distal margin, upper rectum, rectum]
+  pelvis: [pelvis, small bowel, bowel]
+
+tasks:
+  - id: prep
+    name: Prep and drape
+    verbs: [prep, drape, prep and drape, prepping]
+    requires: [anesthetized]
+    blocked: "The patient isn't asleep with a secured airway yet."
+    duration_s: 300
+    stimulus: 0.05
+    sets: [prepped]
+    start: "Prepping with chlorhexidine and draping."
+    auto_order: 1
+
+  - id: incision
+    name: Umbilical skin incision
+    verbs: [incise, incision, cut, make an incision, skin incision]
+    targets: [umbilicus]
+    instruments: [scalpel]
+    requires: [prepped]
+    blocked: "We haven't prepped and draped."
+    soft_requires:
+      time_out_done: "We haven't done a time-out."
+      antibiotics_given: "Antibiotics aren't in yet — the guidelines say within 60 minutes before incision."
+      anesthesia_ready: "Anesthesia hasn't said we're okay to start."
+    duration_s: 40
+    stimulus: 0.85
+    sets: [incised]
+    start: "Knife to skin — umbilical incision."
+    hooks: [record_incision]
+    auto_order: 2
+
+  - id: open_access
+    name: Open (Hasson) entry
+    verbs: [hasson, open entry, open access, enter the abdomen, get into the abdomen, access]
+    instruments: [hasson]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [veress_access]
+    duration_s: 180
+    stimulus: 0.6
+    sets: [access, camera_port]
+    start: "Dissecting down to fascia, opening the peritoneum under vision. Hasson in."
+    auto_order: 3
+
+  - id: veress_access
+    name: Veress needle entry
+    verbs: [veress, insert the veress, needle entry]
+    instruments: [veress]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    exclusive_with: [open_access]
+    duration_s: 45
+    stimulus: 0.5
+    sets: [access, veress_in]
+    hooks: [veress_placement]
+    start: "Veress in — drop test."
+
+  - id: insufflate
+    name: Insufflate CO2
+    verbs: [insufflate, gas on, pneumoperitoneum, start the gas, co2 on, insufflation]
+    requires: [access]
+    blocked: "No access to the peritoneum yet."
+    duration_s: 90
+    stimulus: 0.5
+    vagal: 0.6
+    iap: 15
+    sets: [insufflated]
+    hooks: [insufflation_checks]
+    start: "Insufflating to 15."
+    auto_order: 4
+
+  - id: umbilical_trocar
+    name: 12 mm umbilical trocar (after Veress)
+    verbs: [umbilical port, camera port, 12 mm port, place the umbilical trocar]
+    targets: [umbilicus]
+    instruments: [trocar_12]
+    requires: [insufflated, veress_in]
+    blocked: "Insufflate through the Veress first (or use open entry)."
+    duration_s: 45
+    stimulus: 0.6
+    sets: [camera_port]
+    hooks: [blind_trocar_risk]
+    start: "12 mm trocar at the umbilicus."
+
+  - id: camera_in
+    name: Camera in
+    verbs: [camera in, scope in, look inside, insert the camera, laparoscope in]
+    instruments: [camera]
+    requires: [camera_port, insufflated]
+    blocked: "Need a camera port and pneumoperitoneum first."
+    duration_s: 20
+    stimulus: 0.1
+    sets: [camera_in]
+    start: "Camera in."
+    auto_order: 5
+
+  - id: working_ports
+    name: Working ports (12 mm right lower quadrant, 5 mm right upper quadrant and suprapubic)
+    verbs: [working ports, place ports, 5 mm ports, ports, place the trocars, trocars, right lower quadrant ports]
+    targets: [abdomen]
+    instruments: [trocar_12, trocar_5]
+    requires: [camera_in]
+    blocked: "Place working ports under direct vision — camera first."
+    duration_s: 180
+    stimulus: 0.6
+    sets: [working_ports]
+    start: "Right lower quadrant 12 mm, right upper quadrant 5 mm and suprapubic 5 mm ports under direct vision."
+    auto_order: 6
+
+  - id: explore
+    name: Diagnostic laparoscopy
+    verbs: [explore, look around, survey, diagnostic laparoscopy, inspect the abdomen, look at the sigmoid, find the sigmoid]
+    requires: [camera_in]
+    blocked: "Can't see anything without the camera."
+    duration_s: 90
+    stimulus: 0.2
+    sets: [explored]
+    hooks: [reveal_sigmoid_findings, exposure_check]
+    start: "Surveying the abdomen: sigmoid, descending colon, pelvis, small bowel."
+    auto_order: 7
+
+  - id: lyse_adhesions
+    name: Take down adhesions
+    verbs: [lyse adhesions, take down adhesions, adhesiolysis, free the omentum, sweep the omentum, adhesions]
+    targets: [adhesions]
+    instruments: [grasper, maryland, hook_cautery, scissors, harmonic]
+    requires: [explored, working_ports, adhesions]
+    blocked: "No adhesions to take down (or you haven't explored / placed ports)."
+    duration_s: 420
+    stimulus: 0.35
+    clears: [adhesions]
+    hooks: [thermal_bowel_risk]
+    start: "Taking down adhesions between the sigmoid, the pelvis and the old hysterectomy scar."
+    auto_order: 8
+    auto_if: [adhesions]
+
+  - id: sweep_bowel
+    name: Sweep the small bowel out of the pelvis
+    verbs: [sweep the small bowel, sweep bowel, move the small bowel, small bowel out of the pelvis, pack the small bowel, clear the small bowel]
+    targets: [pelvis]
+    instruments: [grasper]
+    requires: [explored, working_ports, no_adhesions]
+    blocked: "You can't clear the pelvis yet: explore, place ports and take down any adhesions first."
+    duration_s: 150
+    stimulus: 0.3
+    sets: [bowel_swept]
+    hooks: [exposure_check]
+    start: "Small bowel swept to the right upper quadrant, the sigmoid lifted up and the root of the mesentery exposed."
+    auto_order: 9
+
+  - id: medial_dissect
+    name: Medial-to-lateral dissection (enter the retroperitoneum)
+    verbs: [medial to lateral, medial approach, medial dissection, enter the retroperitoneum, open the mesentery, elevate the mesentery, incise at the promontory, dissect medially]
+    targets: [promontory]
+    instruments: [maryland, hook_cautery, harmonic, ligasure, grasper]
+    requires: [bowel_swept]
+    blocked: "Sweep the small bowel out of the pelvis first."
+    duration_s: 420
+    stimulus: 0.35
+    sets: [retroperitoneum_entered]
+    hooks: [medial_dissection]
+    start: "Incising below the sacral promontory and entering the avascular plane behind the mesentery, medial to lateral."
+    auto_order: 10
+
+  - id: identify_ureter
+    name: Identify the left ureter and gonadal vessels
+    verbs: [identify the ureter, identify the left ureter, find the ureter, find the left ureter, locate the ureter, show the ureter, see the ureter, ureter]
+    targets: [ureter]
+    requires: [retroperitoneum_entered]
+    blocked: "Enter the retroperitoneum first."
+    duration_s: 90
+    stimulus: 0.15
+    sets: [ureter_identified]
+    hooks: [ureter_found]
+    start: "Following the plane down behind the mesentery to find the left ureter, under the gonadal vessels."
+    auto_order: 11
+
+  - id: divide_ima
+    name: Divide the inferior mesenteric artery
+    verbs: [divide the ima, divide the inferior mesenteric artery, ligate the ima, take the ima, transect the ima, divide the pedicle, divide the mesenteric pedicle, take the pedicle]
+    targets: [ima]
+    instruments: [ligasure, harmonic, clip_applier, linear_stapler, scissors]
+    requires: [retroperitoneum_entered]
+    blocked: "Enter the retroperitoneum before you reach the pedicle."
+    soft_requires:
+      ureter_identified: "We haven't identified the left ureter yet."
+    duration_s: 180
+    stimulus: 0.3
+    sets: [ima_divided]
+    hooks: [ima_risk]
+    start: "Isolating the IMA pedicle below the left colic branch and dividing it."
+    auto_order: 12
+
+  - id: lateral_mobilize
+    name: Mobilize the descending colon (white line of Toldt)
+    verbs: [mobilize the colon, mobilize the descending colon, lateral mobilization, white line of toldt, incise the white line, take the lateral attachments, mobilize laterally, lateral attachments]
+    targets: [colon]
+    instruments: [hook_cautery, harmonic, scissors, ligasure]
+    requires: [ima_divided]
+    blocked: "Divide the IMA pedicle first so the mesentery lifts."
+    duration_s: 480
+    stimulus: 0.3
+    sets: [colon_mobilized]
+    hooks: [thermal_bowel_risk, lateral_risk]
+    start: "Incising the white line of Toldt and joining the plane from lateral."
+    auto_order: 13
+
+  - id: assess_reach
+    name: Check that the colon reaches the pelvis
+    verbs: [check the reach, test the reach, check for tension, assess the reach, see if it reaches, bring the colon down, tension]
+    requires: [colon_mobilized]
+    blocked: "Mobilize the colon first."
+    duration_s: 45
+    stimulus: 0.1
+    sets: [reach_assessed]
+    hooks: [reach_check]
+    start: "Bringing the proximal colon down to the pelvis to judge the reach."
+    auto_order: 14
+
+  - id: mobilize_flexure
+    name: Mobilize the splenic flexure
+    verbs: [mobilize the splenic flexure, take down the splenic flexure, splenic flexure, mobilize the flexure, take down the flexure]
+    targets: [flexure]
+    instruments: [harmonic, ligasure, hook_cautery, scissors]
+    requires: [reach_assessed]
+    blocked: "Check the reach first, so you know whether the flexure needs taking down."
+    duration_s: 900
+    stimulus: 0.35
+    sets: [flexure_mobilized, reach_ok]
+    clears: [tension]
+    hooks: [flexure_risk]
+    start: "Taking the splenocolic ligament and the lesser sac attachments to free the splenic flexure."
+    auto_order: 15
+    auto_if: [tension]
+
+  - id: divide_distal
+    name: Divide the rectosigmoid (distal margin)
+    verbs: [divide the rectosigmoid, transect the rectosigmoid, divide the distal margin, staple the rectosigmoid, divide the bowel distally, fire the linear stapler, transect distally]
+    targets: [rectosigmoid]
+    instruments: [linear_stapler]
+    requires: [reach_assessed]
+    blocked: "Mobilize the colon and check the reach first."
+    duration_s: 180
+    stimulus: 0.3
+    sets: [distal_divided]
+    hooks: [distal_stapler]
+    start: "Dividing the mesorectum on the upper rectum and firing the linear stapler across the rectosigmoid junction."
+    auto_order: 16
+
+  - id: bag
+    name: Wound protector (Pfannenstiel incision)
+    verbs: [wound protector, place the wound protector, protect the wound, protector, pfannenstiel incision, specimen bag, bag]
+    instruments: [wound_protector]
+    requires: [distal_divided]
+    blocked: "Divide the rectosigmoid before you plan the extraction."
+    duration_s: 240
+    stimulus: 0.6
+    sets: [bagged]
+    start: "Short Pfannenstiel incision, wound protector in."
+    auto_order: 17
+
+  - id: remove_specimen
+    name: Extract the specimen
+    verbs: [extract the specimen, remove the specimen, deliver the specimen, take the specimen out, extract, take the sigmoid out]
+    requires: [distal_divided]
+    blocked: "Divide the rectosigmoid first."
+    duration_s: 180
+    stimulus: 0.5
+    iap: 0
+    clears: [camera_in]
+    sets: [specimen_out]
+    hooks: [specimen_contamination]
+    start: "Delivering the sigmoid through the Pfannenstiel wound, pneumoperitoneum released."
+    auto_order: 18
+
+  - id: place_anvil
+    name: Divide the proximal colon and place the anvil
+    verbs: [place the anvil, anvil, divide the proximal colon, proximal transection, purse string, purse-string, transect the proximal colon]
+    instruments: [scissors, circular_stapler]
+    requires: [specimen_out]
+    blocked: "The specimen has to come out first."
+    duration_s: 420
+    stimulus: 0.3
+    sets: [anvil_placed]
+    start: "Dividing the colon above the diverticular segment, purse-string and the 29 mm anvil in."
+    auto_order: 19
+
+  - id: check_perfusion
+    name: Check the perfusion of the cut edge
+    verbs: [check perfusion, check the perfusion, check the blood supply, icg, check the cut edge, pulsatile bleeding, perfusion]
+    requires: [anvil_placed]
+    blocked: "There is no cut edge to look at yet."
+    duration_s: 60
+    stimulus: 0.1
+    sets: [perfusion_checked]
+    hooks: [perfusion_check]
+    start: "Looking at the cut edge of the proximal colon: pulsatile bleeding and colour."
+    auto_order: 20
+
+  - id: reinsufflate
+    name: Colon back in, reinsufflate
+    verbs: [reinsufflate, re-establish the pneumoperitoneum, gas back on, put the colon back, return the colon, close the wound and reinsufflate, camera back in]
+    instruments: [camera]
+    requires: [anvil_placed]
+    blocked: "Place the anvil first."
+    duration_s: 150
+    stimulus: 0.4
+    iap: 12
+    sets: [camera_in]
+    start: "Colon returned to the abdomen, wound closed around a port, pneumoperitoneum back to 12."
+    auto_order: 21
+
+  - id: anastomose
+    name: Stapled colorectal anastomosis
+    verbs: [anastomosis, make the anastomosis, fire the circular stapler, colorectal anastomosis, stapled anastomosis, join the bowel, connect the bowel, circular stapler, staple the anastomosis]
+    instruments: [circular_stapler]
+    requires: [anvil_placed, camera_in]
+    blocked: "Put the colon back in the abdomen and reinsufflate first."
+    soft_requires:
+      reach_ok: "The colon is under tension at the pelvis. Mobilize the splenic flexure first."
+      perfusion_checked: "We haven't checked that the proximal colon is well perfused."
+    duration_s: 360
+    stimulus: 0.3
+    sets: [anastomosed]
+    hooks: [anastomosis_risk]
+    start: "Circular stapler up the rectum, spike through beside the staple line, anvil joined and fired."
+    auto_order: 22
+
+  - id: leak_test
+    name: Air leak test of the anastomosis
+    verbs: [leak test, air leak test, bubble test, test the anastomosis, test the staple line, check the anastomosis, check the doughnuts, doughnuts]
+    instruments: [suction_irrigator]
+    requires: [anastomosed]
+    blocked: "There's no anastomosis to test yet."
+    duration_s: 150
+    stimulus: 0.15
+    sets: [leak_tested]
+    hooks: [leak_test_result]
+    start: "Pelvis filled with saline, bowel clamped above, air into the rectum: looking for bubbles."
+    auto_order: 23
+
+  - id: irrigate
+    name: Irrigate and suction
+    verbs: [irrigate, wash out, suction, lavage]
+    instruments: [suction_irrigator]
+    requires: [camera_in]
+    blocked: "Need the camera in."
+    duration_s: 240
+    stimulus: 0.2
+    sets: [irrigated]
+    hooks: [irrigation_effect]
+    start: "Irrigating and suctioning."
+    auto_order: 24
+    auto_if: [spillage]
+
+  - id: inspect_hemostasis
+    name: Inspect hemostasis
+    verbs: [check hemostasis, inspect, look for bleeding, hemostasis]
+    requires: [camera_in]
+    blocked: "Need the camera in."
+    duration_s: 60
+    stimulus: 0.1
+    sets: [hemostasis_checked]
+    hooks: [reveal_occult]
+    start: "Checking for bleeding with the pressure dropped to 5."
+    auto_order: 25
+
+  - id: control_bleeding
+    name: Control bleeding
+    verbs: [control, cauterize, clip the bleeder, stop the bleeding, get control, hemostasis on the bleeder, apply pressure]
+    targets: [bleeder]
+    instruments: [clip_applier, hook_cautery, harmonic, ligasure, grasper, sponge]
+    requires: [bleeding]
+    blocked: "There's no active bleeding."
+    duration_s: 60
+    stimulus: 0.3
+    hooks: [control_bleeder]
+    start: "Getting control of the bleeder."
+    priority: true
+
+  - id: desufflate
+    name: Desufflate
+    verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
+    requires: [insufflated]
+    blocked: "The abdomen isn't insufflated."
+    duration_s: 60
+    stimulus: 0.2
+    iap: 0
+    clears: [insufflated, camera_in]
+    start: "Ports out under vision, letting the gas out."
+    auto_order: 26
+
+  - id: count
+    name: Sponge / needle / instrument count
+    verbs: [count, sponge count, do the count, counts]
+    requires: []
+    duration_s: 60
+    stimulus: 0.0
+    sets: [counted]
+    hooks: [count_result]
+    start: "Counting."
+    auto_order: 27
+
+  - id: close_fascia
+    name: Close the Pfannenstiel and port-site fascia
+    verbs: [close the fascia, close fascia, fascial closure, close the port site, suture the fascia]
+    targets: [fascia]
+    instruments: [needle_driver]
+    requires: [anastomosed]
+    blocked: "Complete the anastomosis first."
+    soft_requires:
+      not_insufflated: "We're still insufflated."
+      counted: "Count isn't done yet."
+      leak_tested: "We haven't leak-tested the anastomosis."
+    duration_s: 300
+    stimulus: 0.5
+    sets: [fascia_closed]
+    start: "Closing the Pfannenstiel and the 12 mm port-site fascia with 0 PDS."
+    hooks: [closing_cue]
+    auto_order: 28
+
+  - id: close_skin
+    name: Close skin
+    verbs: [close skin, close the skin, skin closure, subcuticular, close]
+    targets: [skin]
+    instruments: [needle_driver]
+    requires: [fascia_closed]
+    blocked: "Close the fascia first."
+    duration_s: 360
+    stimulus: 0.35
+    sets: [skin_closed]
+    hooks: [finish]
+    start: "Subcuticular 4-0 Monocryl, then dressings."
+    auto_order: 29

@@ -15,9 +15,15 @@ if TYPE_CHECKING:  # pragma: no cover
 
 LAPAROSCOPIC = {"explore", "lyse_adhesions", "mobilize_cecum", "grasp_appendix", "window", "divide_meso", "secure_base", "divide_appendix", "bag", "irrigate",
                 "retract_fundus", "dissect_triangle", "clip_duct", "clip_artery", "divide_cystic", "dissect_liver_bed",
-                "identify_landmarks", "incise_peritoneum", "develop_flap", "reduce_sac", "parietalize", "place_mesh", "fix_mesh", "close_peritoneum"}
+                "identify_landmarks", "incise_peritoneum", "develop_flap", "reduce_sac", "parietalize", "place_mesh", "fix_mesh", "close_peritoneum",
+                "sweep_bowel", "medial_dissect", "identify_ureter", "divide_ima", "lateral_mobilize", "assess_reach", "mobilize_flexure", "divide_distal",
+                "place_anvil", "anastomose", "leak_test",
+                "round_ligaments", "adnexa", "bladder_flap", "open_broad_ligament", "uterine_arteries", "colpotomy", "close_cuff",
+                "reflect_colon", "kocher_duodenum", "mobilize_spleen", "expose_hilum", "survey_hilum", "isolate_artery", "isolate_vein", "spare_adrenal", "take_adrenal", "free_kidney"}
 NEEDS_EXPOSURE = {"explore", "grasp_appendix", "mobilize_cecum", "window", "divide_meso", "retract_fundus", "dissect_triangle", "dissect_liver_bed",
-                  "incise_peritoneum", "develop_flap", "reduce_sac"}
+                  "incise_peritoneum", "develop_flap", "reduce_sac", "sweep_bowel", "medial_dissect", "identify_ureter", "divide_ima", "lateral_mobilize",
+                  "mobilize_flexure", "divide_distal", "round_ligaments", "adnexa", "bladder_flap", "open_broad_ligament", "uterine_arteries",
+                  "reflect_colon", "kocher_duodenum", "mobilize_spleen", "expose_hilum", "isolate_artery", "isolate_vein", "free_kidney"}
 
 
 def _rng(proc: "Procedure"):
@@ -42,6 +48,14 @@ def duration_factor(proc: "Procedure", task: dict) -> float:
         f *= 1.2
     if tid in ("dissect_triangle", "dissect_liver_bed") and h.get("acute_inflammation"):
         f *= 1.5
+    if tid in ("medial_dissect", "lateral_mobilize", "mobilize_flexure", "divide_distal") and h.get("inflamed"):
+        f *= 1.4
+    if tid in ("bladder_flap", "uterine_arteries", "remove_specimen") and h.get("large_uterus"):
+        f *= 1.3
+    if tid == "bladder_flap" and h.get("bladder_adherent"):
+        f *= 1.3
+    if tid in ("expose_hilum", "free_kidney", "isolate_vein") and h.get("bulky_tumor"):
+        f *= 1.3
     return f
 
 
@@ -394,3 +408,360 @@ def end_mesh_fixation(proc, task, r):
 def final_hernia(proc):
     if "peritoneum_closed" not in proc.flags:
         proc.occult.append("Peritoneal flap left open: the mesh is exposed to bowel (adhesions, small-bowel obstruction, mesh erosion).")
+
+
+# --- laparoscopic sigmoid colectomy ----------------------------------------
+
+def end_reveal_sigmoid_findings(proc, task, r):
+    h = proc.case.patient.hidden
+    parts = ["Thickened, inflamed sigmoid with a phlegmon in the mesentery." if h.get("inflamed")
+             else "Fibrotic sigmoid with multiple diverticula, no active inflammation."]
+    if h.get("adhesions"):
+        parts.append("Dense adhesions between the sigmoid, the pelvic sidewall and the old hysterectomy scar.")
+    if not h.get("bowel_prepped"):
+        parts.append("There's solid stool in the colon: the bowel prep wasn't completed.")
+        proc.notes.append("The bowel preparation wasn't completed (more stool in the field, higher infection and leak risk).")
+    proc.findings = parts
+    proc.case.say(_speaker(proc), " ".join(parts), kind="speech" if proc.mode == "auto" else "finding")
+
+
+def start_medial_dissection(proc, task):
+    if proc.mode == "trainee":
+        proc.case.say("attending", "Medial to lateral. Find the left ureter and the gonadal vessels before anything in the mesentery gets divided.")
+
+
+def end_medial_dissection(proc, task, r):
+    h = proc.case.patient.hidden
+    if h.get("inflamed") and _rng(proc).random() < 0.15:
+        proc.flags.add("spillage")
+        proc.case.say(_speaker(proc), "Entering the phlegmon: a little pus escapes into the field, suctioning it." if proc.mode == "auto"
+                      else "A small pocket of pus escapes from the phlegmon in the mesentery.", kind="speech" if proc.mode == "auto" else "finding")
+        proc.notes.append("The mesenteric phlegmon was entered: pus in the field should be suctioned and the pelvis irrigated.")
+    if r.moved:
+        proc.notes.append("The patient moved during the retroperitoneal dissection.")
+
+
+def end_ureter_found(proc, task, r):
+    h = proc.case.patient.hidden
+    txt = "Left ureter identified under the gonadal vessels, peristalsing, lateral to the pedicle."
+    if h.get("ureter_distorted"):
+        txt = "Left ureter identified under the gonadal vessels, but it's pulled medially against the inflamed mesentery, much closer to the pedicle than usual."
+    if proc.mode == "trainee":
+        proc.case.say("attending", "Good. Ureter and gonadals are safely behind. Now you can divide the pedicle.")
+        proc.case.say("system", txt, kind="finding")
+    else:
+        proc.case.say("surgeon", txt)
+
+
+def end_ima_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    if "ureter_identified" not in proc.flags:
+        proc.notes.append("The IMA pedicle was divided before the left ureter was identified.")
+        if rng.random() < (0.45 if h.get("ureter_distorted") else 0.2):
+            proc.occult.append("Left ureter injury: clipped or divided with the IMA pedicle (flank pain, urinoma or hydronephrosis, "
+                               "a rising creatinine in the days after surgery).")
+    elif r.moved and rng.random() < 0.05:
+        proc.occult.append("Thermal injury to the left ureter from the sealer when the patient moved.")
+    ins = r.instrument
+    p = {"ligasure": 0.04, "clip_applier": 0.05, "linear_stapler": 0.03, "harmonic": 0.2}.get(ins, 1.0)
+    if rng.random() < p:
+        _bleed(proc, 120.0, "IMA stump", "IMA stump is bleeding! Suction!" if proc.mode == "auto"
+               else "Bright red blood fills the pedicle: the IMA stump is bleeding.")
+
+
+def end_lateral_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    if h.get("inflamed") and "spillage" not in proc.flags and _rng(proc).random() < 0.12:
+        proc.flags.add("spillage")
+        proc.notes.append("Pus released while mobilizing the inflamed descending colon.")
+    if r.moved:
+        proc.notes.append("The patient moved during mobilization of the colon.")
+
+
+def end_reach_check(proc, task, r):
+    if proc.case.patient.hidden.get("tension"):
+        proc.flags.add("tension")
+        proc.case.say(_speaker(proc), "The proximal colon won't reach the pelvis without tension: the splenic flexure has to come down." if proc.mode == "auto"
+                      else "The proximal colon only reaches the pelvis under tension. The splenic flexure needs mobilizing.", kind="speech" if proc.mode == "auto" else "finding")
+    else:
+        proc.flags.add("reach_ok")
+        proc.case.say(_speaker(proc), "The colon reaches the pelvis comfortably, no tension." if proc.mode == "auto" else "The colon reaches the pelvis with no tension.",
+                      kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_flexure_risk(proc, task, r):
+    if _rng(proc).random() < 0.08 + (0.1 if r.moved else 0.0):
+        _bleed(proc, 70.0, "splenic capsule", "Splenic capsular tear: oozing, need a haemostatic pad." if proc.mode == "auto"
+               else "The splenic capsule tore under traction and is oozing.")
+        proc.notes.append("Splenic capsular injury during mobilization of the flexure.")
+
+
+def end_distal_stapler(proc, task, r):
+    if _rng(proc).random() < 0.04:
+        _bleed(proc, 50.0, "rectal staple line", "Bleeding from the rectal staple line." if proc.mode == "auto" else "The rectal staple line is oozing.")
+
+
+def end_perfusion_check(proc, task, r):
+    h = proc.case.patient.hidden
+    if h.get("marginal_perfusion"):
+        proc.flags.add("perfusion_resected")
+        proc.case.say(_speaker(proc), "The cut edge isn't bleeding well: resecting back another 3 cm to pulsatile bleeding." if proc.mode == "auto"
+                      else "The cut edge is dusky and not bleeding. Resected back to bright, pulsatile bleeding.", kind="speech" if proc.mode == "auto" else "finding")
+        proc.notes.append("Marginal perfusion of the proximal colon recognised on the perfusion check and resected back.")
+    else:
+        proc.case.say(_speaker(proc), "Pulsatile bleeding from the cut edge: good perfusion." if proc.mode == "auto" else "Bright pulsatile bleeding from the cut edge: well perfused.",
+                      kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_anastomosis_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    p = 0.05
+    if "reach_ok" not in proc.flags:
+        p += 0.25
+        proc.notes.append("Anastomosis made under tension (the splenic flexure wasn't mobilized).")
+    if "perfusion_checked" not in proc.flags:
+        p += 0.3 if h.get("marginal_perfusion") else 0.03
+        proc.notes.append("Perfusion of the proximal colon wasn't checked.")
+    if not h.get("bowel_prepped"):
+        p += 0.08
+    if h.get("inflamed"):
+        p += 0.04
+    if _rng(proc).random() < p:
+        proc.flags.add("anastomotic_defect")
+
+
+def end_leak_test_result(proc, task, r):
+    if "anastomotic_defect" in proc.flags:
+        proc.flags.discard("anastomotic_defect")
+        proc.case.say(_speaker(proc), "Bubbles at the staple line: a leak. Oversewing it with interrupted sutures and retesting: now dry." if proc.mode == "auto"
+                      else "Air bubbles from the staple line: a defect. Oversewn with interrupted sutures; the retest is dry.", kind="speech" if proc.mode == "auto" else "finding")
+        proc.notes.append("The air leak test found a staple-line defect, which was repaired (the test paid off).")
+    else:
+        proc.case.say(_speaker(proc), "No bubbles, and both doughnuts are complete." if proc.mode == "auto" else "No bubbles. Both doughnuts are complete.",
+                      kind="speech" if proc.mode == "auto" else "finding")
+
+
+def final_sigmoid(proc):
+    if "leak_test" not in proc.done:
+        proc.notes.append("The anastomosis was never leak-tested.")
+    if "anastomotic_defect" in proc.flags:
+        proc.occult.append("Anastomotic leak, not detected because no air leak test was done (fever, ileus, peritonitis on day 3 to 5; likely a return to theatre).")
+
+
+# --- total laparoscopic hysterectomy ---------------------------------------
+
+def end_manipulator_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    if _rng(proc).random() < (0.04 if h.get("large_uterus") else 0.01):
+        proc.occult.append("Uterine perforation by the manipulator or sound (small fundal defect, usually settles, but bleeding or a broad-ligament haematoma can follow).")
+
+
+def end_reveal_uterus_findings(proc, task, r):
+    h = proc.case.patient.hidden
+    parts = ["Enlarged fibroid uterus, about 14 weeks in size, with three intramural fibroids." if h.get("large_uterus")
+             else "Fibroid uterus about 10 weeks in size with two intramural fibroids. Both ovaries and tubes look normal."]
+    if h.get("bladder_adherent"):
+        parts.append("The bladder is stuck to the lower segment from the caesarean scars.")
+    if h.get("adhesions"):
+        parts.append("Omentum is adherent to the anterior uterine wall.")
+    proc.findings = parts
+    proc.case.say(_speaker(proc), " ".join(parts), kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_pedicle_bleed(proc, task, r):
+    ins = _instrument(proc, r)
+    p = 0.04 if ins.get("hemostatic") else 0.8
+    if r.instrument == "hook_cautery":
+        p = 0.25
+    if _rng(proc).random() < p:
+        src = "round ligament artery (Sampson's)" if task["id"] == "round_ligaments" else "ovarian pedicle"
+        _bleed(proc, 70.0, src, f"Bleeder from the {src}! Suction!" if proc.mode == "auto" else f"Bright blood from the {src}.")
+
+
+def end_bladder_flap_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    ins = _instrument(proc, r)
+    rng = _rng(proc)
+    p = (0.3 if h.get("bladder_adherent") else 0.03) + (0.05 if ins.get("thermal") else 0.0) + (0.1 if r.moved else 0.0)
+    if rng.random() < p:
+        if rng.random() < 0.6:
+            proc.case.say(_speaker(proc), "Cystotomy: clear urine in the field. Closing it in two layers, catheter stays for a week." if proc.mode == "auto"
+                          else "Clear fluid wells up: a bladder injury. Repaired in two layers; catheter stays in for a week.", kind="speech" if proc.mode == "auto" else "finding")
+            proc.notes.append("Bladder injury during the bladder flap, recognised and repaired.")
+        else:
+            proc.occult.append("Bladder injury during the flap dissection, not recognised (vesicovaginal fistula, urinoma, haematuria).")
+
+
+def end_ureter_seen(proc, task, r):
+    h = proc.case.patient.hidden
+    txt = ("Ureter identified on the medial leaf of the broad ligament, peristalsing, well below where the uterine artery crosses." if not h.get("ureter_displaced")
+           else "Ureter identified, but the fibroid has pushed it laterally and it comes very close to the uterine artery.")
+    if proc.mode == "trainee":
+        proc.case.say("attending", "Good. Ureter is clear of the uterine artery: take it close to the uterus.")
+        proc.case.say("system", txt, kind="finding")
+    else:
+        proc.case.say("surgeon", txt)
+
+
+def end_uterine_artery_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    if "ureter_identified" not in proc.flags:
+        proc.notes.append("The uterine arteries were coagulated before the ureter was identified.")
+        if rng.random() < (0.35 if h.get("ureter_displaced") else 0.15):
+            proc.occult.append("Ureteric injury (thermal or clipped) at the uterine artery: flank pain, ureterovaginal fistula or hydronephrosis, recognised days later.")
+    ins = _instrument(proc, r)
+    p = (0.25 if h.get("large_uterus") else 0.06) * (1.0 if ins.get("hemostatic") else 4.0)
+    if r.instrument == "harmonic":
+        p = max(p, 0.15)
+    if rng.random() < min(0.9, p):
+        _bleed(proc, 130.0, "uterine artery", "Uterine artery bleeder! Suction!" if proc.mode == "auto" else "Brisk bleeding from the uterine artery stump.")
+
+
+def end_colpotomy_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    if "ureter_identified" not in proc.flags and rng.random() < 0.05:
+        proc.occult.append("Thermal injury to the ureter at the lateral colpotomy.")
+    if h.get("bladder_adherent") and "bladder_flap_done" in proc.flags and rng.random() < 0.05:
+        proc.occult.append("Bladder base thermal injury at the anterior colpotomy.")
+    if r.moved:
+        proc.notes.append("The patient moved during the colpotomy.")
+
+
+def end_cuff_closure(proc, task, r):
+    if r.moved:
+        proc.notes.append("The patient moved while the vaginal cuff was being sutured.")
+    proc.case.say(_speaker(proc), "Cuff closed, pedicles incorporated, no gap." if proc.mode == "auto" else "The cuff is closed with full-thickness bites; no gap.",
+                  kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_cystoscopy_result(proc, task, r):
+    found = [o for o in proc.occult if "Ureteric injury" in o or "ureter at the lateral" in o or "Bladder injury during the flap" in o or "Bladder base" in o]
+    rng = _rng(proc)
+    msg = "Both ureteric orifices are jetting clear urine. Bladder wall intact."
+    for o in found:
+        if rng.random() < 0.75:
+            proc.occult.remove(o)
+            msg = "No efflux from one ureteric orifice: a ureter injury. Stent passed and urology informed." if "reter" in o else "A bladder defect is visible: repaired over the catheter."
+            proc.notes.append("Cystoscopy caught an injury that would otherwise have been missed: " + o.split(":")[0].split(" during")[0] + ".")
+            break
+    proc.case.say(_speaker(proc), msg, kind="speech" if proc.mode == "auto" else "finding")
+
+
+def final_hysterectomy(proc):
+    if "cuff_closed" not in proc.flags:
+        proc.occult.append("Vaginal cuff left open: haematoma, cuff dehiscence or bowel evisceration through the vagina.")
+    if "ureter_identified" not in proc.flags and "cystoscopy_done" not in proc.flags:
+        proc.notes.append("No ureter identification and no cystoscopy: nothing would have caught a ureteric injury.")
+
+
+# --- laparoscopic radical nephrectomy --------------------------------------
+
+def end_reveal_kidney_findings(proc, task, r):
+    h = proc.case.patient.hidden
+    side = h.get("side", "right")
+    parts = [f"{side.capitalize()} kidney with a bulky exophytic tumour at the upper pole." if h.get("bulky_tumor")
+             else f"{side.capitalize()} kidney with a 7 cm upper-pole tumour inside Gerota's fascia."]
+    parts.append("No peritoneal disease, liver and spleen look normal.")
+    if h.get("adhesions"):
+        parts.append("The colon is stuck to the lateral sidewall by old adhesions.")
+    proc.findings = parts
+    proc.case.say(_speaker(proc), " ".join(parts), kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_reflect_risk(proc, task, r):
+    if r.moved:
+        proc.notes.append("The patient moved while the colon was being reflected.")
+
+
+def end_right_organ_risk(proc, task, r):
+    rng = _rng(proc)
+    thermal = _instrument(proc, r).get("thermal")
+    if thermal and rng.random() < 0.03 + (0.1 if r.moved else 0.0):
+        proc.occult.append("Thermal injury to the second part of the duodenum while kocherizing (presents as peritonitis or a duodenal leak on day 2 to 4).")
+    if rng.random() < 0.08 + (0.1 if r.moved else 0.0):
+        _bleed(proc, 60.0, "liver capsule", "Liver capsule tear from the retractor: oozing, need the sealer." if proc.mode == "auto"
+               else "The liver capsule tears under the retractor and is oozing.")
+
+
+def end_left_organ_risk(proc, task, r):
+    rng = _rng(proc)
+    if rng.random() < 0.12 + (0.1 if r.moved else 0.0):
+        _bleed(proc, 80.0, "splenic capsule", "Splenic capsular tear! Suction, I need a haemostatic pad." if proc.mode == "auto"
+               else "The splenic capsule tears under traction and bleeds steadily.")
+        proc.notes.append("Splenic capsular injury while dropping the spleen.")
+    if rng.random() < 0.02:
+        proc.occult.append("Injury to the tail of the pancreas (a pancreatic leak or fluid collection after surgery).")
+
+
+def end_hilum_view(proc, task, r):
+    h = proc.case.patient.hidden
+    txt = ("The renal artery is behind and above the vein. At the upper pole, the tumour is stuck to the adrenal gland with no fat plane between them." if h.get("adrenal_involved")
+           else "The renal artery is behind and above the vein. At the upper pole, there is a clear fat plane between the tumour and the adrenal gland.")
+    proc.findings = proc.findings + [txt]
+    proc.case.say(_speaker(proc), txt, kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_accessory_check(proc, task, r):
+    if proc.case.patient.hidden.get("accessory_renal_artery"):
+        proc.flags.add("accessory_found")
+        txt = "There's a second, smaller renal artery arising low from the aorta and running behind the vein to the lower pole."
+    else:
+        txt = "Single renal artery and a single renal vein; no accessory vessels."
+    proc.findings = proc.findings + [txt]
+    proc.case.say(_speaker(proc), txt, kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_artery_division(proc, task, r):
+    p = 0.01 if r.instrument == "vascular_stapler" else 0.04
+    if _rng(proc).random() < p:
+        _bleed(proc, 200.0, "renal artery stump", "A clip has slipped off the renal artery! Suction! Grasping the stump." if proc.mode == "auto"
+               else "Pulsatile bleeding: a clip slipped off the renal artery stump.")
+
+
+def end_vein_division(proc, task, r):
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    artery_first = "artery_divided" in proc.flags
+    accessory_left = h.get("accessory_renal_artery") and "accessory_divided" not in proc.flags
+    if not artery_first:
+        proc.notes.append("The renal vein was divided before the renal artery (the kidney engorges, and the vein can tear).")
+        _bleed(proc, 300.0, "engorged kidney and hilum", "The kidney is swelling and the hilum is bleeding! Suction!" if proc.mode == "auto"
+               else "The kidney swells dark and engorged and the hilum starts to bleed heavily.")
+    elif accessory_left:
+        proc.occult.append("A second renal artery was never found and stayed open: the kidney kept perfusing after the vein was divided (engorgement, hilar and parenchymal bleeding).")
+        proc.notes.append("The hilum was not surveyed for an accessory artery, and the kidney stayed perfused after the vein was divided.")
+        _bleed(proc, 200.0, "engorged kidney (accessory artery)", "The kidney is still pink and the hilum is oozing: there must be another artery!" if proc.mode == "auto"
+               else "The kidney is still pink and now swelling. There is bleeding around the hilum: another artery is feeding it.")
+    elif rng.random() < 0.03:
+        _bleed(proc, 150.0, "renal vein stump", "Bleeding from the renal vein staple line." if proc.mode == "auto" else "The renal vein staple line is oozing.")
+
+
+def start_adrenal_decision(proc, task):
+    if proc.mode == "trainee":
+        proc.case.say("attending", "What did the CT and the hilar view show? Spare the adrenal when there's a clear fat plane; take it if the tumour is stuck to it.")
+
+
+def end_adrenal_decision(proc, task, r):
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    inv = bool(h.get("adrenal_involved"))
+    if task["id"] == "spare_adrenal" and inv:
+        proc.occult.append("The adrenal was involved by tumour and was spared: residual tumour at the margin (positive margin, higher local recurrence risk).")
+        proc.notes.append("Adrenal spared although the tumour was stuck to the gland.")
+    elif task["id"] == "take_adrenal" and not inv:
+        proc.notes.append("The adrenal was taken unnecessarily: there was a clear fat plane, and adrenal-sparing is preferred for an upper-pole tumour with no adrenal involvement.")
+    if task["id"] == "take_adrenal" and h.get("side") == "right" and rng.random() < 0.06:
+        _bleed(proc, 60.0, "right adrenal vein", "Bleeding from the short right adrenal vein into the cava!" if proc.mode == "auto"
+               else "The short right adrenal vein tears off the vena cava and bleeds.")
+
+
+def end_free_risk(proc, task, r):
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    if h.get("bulky_tumor") and rng.random() < 0.1 + (0.1 if r.moved else 0.0):
+        proc.occult.append("Tumour capsule breached while freeing the bulky kidney (positive margin and a risk of seeding).")
+    if rng.random() < 0.08:
+        _bleed(proc, 60.0, "lumbar vessel", "Lumbar vessel bleeding." if proc.mode == "auto" else "A lumbar vein behind the kidney is bleeding.")

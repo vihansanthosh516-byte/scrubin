@@ -155,8 +155,9 @@ class Autopilot:
 
     def _abx_line(self) -> str:
         names = " and ".join(d.capitalize() if i == 0 else d for i, d in enumerate(self._prophylaxis_drugs()))
-        pcn = any("penicillin" in a for a in self.case.patient.allergies)
-        return f"{names} {'are' if ' and ' in names else 'is'} in" + (" — penicillin allergy was hives, so cefazolin is fine." if pcn else ".")
+        pcn = next((a for a in self.case.patient.allergies if "penicillin" in a), None)
+        reaction = (re.search(r"\((.*?)\)", pcn) or [None, "mild"])[1] if pcn else ""
+        return f"{names} {'are' if ' and ' in names else 'is'} in" + (f" — the penicillin allergy was {reaction}, so cefazolin is fine." if pcn else ".")
 
     def _prophylaxis_drugs(self) -> list[str]:
         return ["cefazolin", "metronidazole"] if self.case.scenario_id in ("appendectomy", "sigmoid_colectomy") else ["cefazolin"]
