@@ -101,6 +101,8 @@ class PatientSpec:
             "age": self.age,
             "sex": self.sex,
             "weight_kg": self.weight_kg,
+            "ibw_kg": round(self.ibw_kg, 1),
+            "lbm_kg": round(self.lbm_kg, 1),
             "height_cm": self.height_cm,
             "bmi": round(self.bmi, 1),
             "mallampati": self.mallampati,

@@ -143,6 +143,9 @@ class Procedure:
                 return False, f"We already have access ({self.spec['task_by_id'][ex]['name']})."
         for req in task.get("requires", []):
             if not self.flag(req):
+                r = self.running
+                if r is not None and req in r.task.get("sets", []):
+                    return False, f"Waiting on {r.task['name'].lower()} — about {max(1, round(r.remaining_s))} s left."
                 return False, task.get("blocked", f"Not yet — {req.replace('_', ' ')} first.")
         return True, ""
 

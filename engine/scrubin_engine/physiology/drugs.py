@@ -109,6 +109,10 @@ class DrugDef:
             "infusion_unit": self.infusion_unit,
             "aliases": list(self.aliases),
             "notes": self.notes,
+            # lets the cart pre-fill the low end of the usual bolus for this patient
+            "usual_per_kg": list(self.usual_per_kg),
+            "usual_fixed": list(self.usual_fixed),
+            "dose_weight": "tbw" if "tbw" in self.tags else ("lbm" if "lbm" in self.tags else "adjusted"),
         }
 
 

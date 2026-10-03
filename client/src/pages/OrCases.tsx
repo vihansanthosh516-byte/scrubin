@@ -12,7 +12,7 @@ function when(ts: number) {
 
 function outcomeLabel(c: SavedCase) {
   if (c.status !== "ended") return c.sim_t > 0 ? "In progress" : "Not started";
-  return c.outcome === "death" ? "Patient died" : c.outcome === "pacu" ? "Extubated → PACU" : "Ended";
+  return c.outcome === "death" ? "Patient died" : c.outcome === "pacu" ? "Extubated → PACU" : c.outcome === "surgery_complete" ? "Operation complete" : "Ended";
 }
 
 export default function OrCases() {

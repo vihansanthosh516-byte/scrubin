@@ -7,6 +7,8 @@ export interface PatientSummary {
   age: number;
   sex: string;
   weight_kg: number;
+  ibw_kg?: number;
+  lbm_kg?: number;
   height_cm: number;
   bmi: number;
   mallampati: number;
@@ -191,6 +193,9 @@ export interface DrugInfo {
   infusion_unit: string;
   aliases: string[];
   notes: string;
+  usual_per_kg?: [number, number];
+  usual_fixed?: [number, number];
+  dose_weight?: "tbw" | "lbm" | "adjusted";
 }
 
 export interface Catalog {

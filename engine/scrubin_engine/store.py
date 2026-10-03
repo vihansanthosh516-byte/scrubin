@@ -136,7 +136,7 @@ class SupabaseCaseStore:
         for row in rows:
             # Leave out unknown score/debrief so the upsert keeps what's already stored —
             # after a restart the cache is empty and None would wipe the saved values.
-            body = {k: v for k, v in row.items() if not (k in ("score", "debrief") and v is None)}
+            body = _finite({k: v for k, v in row.items() if not (k in ("score", "debrief") and v is None)})
             try:
                 r = self._http.post(self.base, json=body, params={"on_conflict": "id"},
                                     headers={"Prefer": "resolution=merge-duplicates,return=minimal"})
@@ -169,6 +169,17 @@ class SupabaseCaseStore:
             self._pending.pop(case_id, None)
             self._cache.pop(case_id, None)
         self._http.delete(self.base, params={"id": f"eq.{case_id}"}).raise_for_status()
+
+
+def _finite(v: Any) -> Any:
+    """JSON can't carry NaN/inf — one stray value used to make every save of a case fail."""
+    if isinstance(v, float):
+        return v if v == v and v not in (float("inf"), float("-inf")) else None
+    if isinstance(v, dict):
+        return {k: _finite(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple)):
+        return [_finite(x) for x in v]
+    return v
 
 
 def make_store():

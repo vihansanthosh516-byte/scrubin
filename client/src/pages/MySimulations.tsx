@@ -19,6 +19,7 @@ export default function MySimulations() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [completedCases, setCompletedCases] = useState<PersistedSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [casesLoading, setCasesLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
@@ -49,13 +50,24 @@ export default function MySimulations() {
   // completion); the in-memory /api/sim/list below only holds saves/resumes.
   // Load both so the page is the single place to review a trainee's record.
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setCasesLoading(false);
+      return;
+    }
     let cancelled = false;
-    syncLocalSessions(user.id).then(() => getUserSessions(user.id)).then((rows) => {
-      if (cancelled) return;
-      const merged = [...rows, ...getLocalSessions(user.id)].sort((a, b) => b.created_at.localeCompare(a.created_at));
-      setCompletedCases(merged);
-    });
+    const byNewest = (rows: PersistedSession[]) => rows.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    // Show what's on this device straight away, then the synced record — never an empty page while loading.
+    setCompletedCases(byNewest([...getLocalSessions(user.id)]));
+    syncLocalSessions(user.id)
+      .catch(() => {})
+      .then(() => getUserSessions(user.id))
+      .then((rows) => {
+        if (!cancelled) setCompletedCases(byNewest([...(rows ?? []), ...getLocalSessions(user.id)]));
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setCasesLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -275,7 +287,11 @@ export default function MySimulations() {
             </div>
           )}
 
-        {sessions.length === 0 && completedCases.length > 0 ? null : sessions.length === 0 ? (
+        {sessions.length === 0 && (completedCases.length > 0 || casesLoading) ? (
+          completedCases.length === 0 && (
+            <div className="p-12 glass-card text-center text-sm text-muted-foreground">Loading your record…</div>
+          )
+        ) : sessions.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

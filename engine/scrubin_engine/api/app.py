@@ -133,6 +133,8 @@ def user_cases(user_id: str) -> list[dict]:
         live = store.get(r["id"])
         if live is not None:  # fresher than the last autosave
             r.update(tick=live.case.tick, sim_t=live.case.t, status=live.case.status, outcome=live.case.outcome)
+            if r.get("score") is None and live.case.status == "ended":
+                r["score"] = build_debrief(live.case).get("score")
     return rows
 
 

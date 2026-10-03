@@ -49,6 +49,21 @@ export function AnesthesiaStation({ state, drugs, patient, act }: Props) {
   );
 }
 
+/** Low end of the usual bolus for this patient, rounded the way it'd be drawn up ("" if there's no usual dose). */
+function suggestedDose(d: DrugInfo, p: Props["patient"]): string {
+  let v = 0;
+  if (d.usual_per_kg && d.usual_per_kg[0] > 0) {
+    const ibw = p.ibw_kg ?? p.weight_kg;
+    const wt = d.dose_weight === "tbw" ? p.weight_kg : d.dose_weight === "lbm" ? p.lbm_kg ?? p.weight_kg : ibw + 0.4 * Math.max(0, p.weight_kg - ibw);
+    v = d.usual_per_kg[0] * wt;
+  } else if (d.usual_fixed && d.usual_fixed[0] > 0) {
+    v = d.usual_fixed[0];
+  }
+  if (!v) return "";
+  const step = v >= 100 ? 10 : v >= 20 ? 5 : v >= 2 ? 1 : 0.1;
+  return String(Math.round(Math.round(v / step) * step * 10) / 10);
+}
+
 function DrugCart({ state, drugs, patient, act }: Props) {
   const [selected, setSelected] = useState<DrugInfo | null>(null);
   const [dose, setDose] = useState("");
@@ -82,7 +97,10 @@ function DrugCart({ state, drugs, patient, act }: Props) {
             <Section key={label} title={label}>
               <div className="flex flex-wrap gap-1.5">
                 {groups[label].map((d) => (
-                  <OrButton key={d.id} active={selected?.id === d.id} onClick={() => setSelected(d)} title={d.notes}>
+                  <OrButton key={d.id} active={selected?.id === d.id} onClick={() => {
+                      setSelected(d);
+                      setDose(suggestedDose(d, patient));
+                    }} title={d.notes}>
                     <span className="font-semibold">{d.name}</span>
                     <span className="ml-1 text-[10px] text-muted-foreground">{/\/mL/.test(d.concentration) ? d.concentration : `${d.concentration} vial`}</span>
                   </OrButton>
