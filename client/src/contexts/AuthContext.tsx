@@ -19,7 +19,7 @@ interface AuthContextType {
   loading: boolean;
   loginWithGitHub: () => void;
   loginWithGoogle: () => void;
-  logout: () => void;
+  logout: () => void | Promise<void>;
   error: string | null;
   isAuthenticated: boolean;
   hasCompletedOnboarding: boolean;
@@ -264,10 +264,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.location.href = "/onboarding";
   };
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null);
     setHasCompletedOnboarding(false);
     localStorage.removeItem("scrubin_user");
+    // End the Supabase session too; otherwise the reload below restores the
+    // user from it and /signin bounces straight back to /profile.
+    try {
+      const { supabase } = await import("../lib/supabase");
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error("Supabase sign-out failed", e);
+    }
     window.location.href = "/signin";
   };
 
