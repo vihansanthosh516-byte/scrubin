@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { MonitorReadout } from "@/engine/types";
+import { TweenNumber } from "@/components/ui/tween-number";
 
 // Real monitor colour conventions, tuned to the ScrubIn palette.
 const COLORS = {
@@ -334,10 +335,10 @@ function Numeric({
         <span className="opacity-60 normal-case">{unit}</span>
       </div>
       <div
-        className={`${big ? "text-4xl" : small ? "text-lg" : "text-2xl"} font-semibold tabular-nums leading-tight ${alarm ? "text-destructive animate-pulse" : ""}`}
+        className={`${big ? "text-4xl" : small ? "text-lg" : "text-2xl"} font-semibold tabular-nums leading-tight transition-colors duration-500 ${alarm ? "text-destructive animate-pulse" : ""}`}
         style={{ color: alarm ? undefined : color }}
       >
-        {shown}
+        {typeof shown === "number" ? <TweenNumber value={shown} /> : shown}
       </div>
       {sub && <div className="text-[10px] uppercase tracking-wide opacity-70" style={{ color }}>{sub}</div>}
     </div>

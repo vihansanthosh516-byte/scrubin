@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import bundledCatalog from "@/data/procedureCatalog.json";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
+import { spring } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
 import { Lock, Clock, Search, ArrowRight, XCircle, Activity, Heart, Brain, Bone, Baby, Scissors, Stethoscope, Shield, Zap, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -81,6 +82,8 @@ function ProcedureCard({ proc, unlocked, requiredXP, index }: any) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.5, delay: (index % 3) * 0.08, ease: EASE }}
+      whileHover={isLocked ? undefined : { y: -3, transition: spring }}
+      whileTap={isLocked ? undefined : { scale: 0.985 }}
       className="relative"
     >
       {isLocked ? (

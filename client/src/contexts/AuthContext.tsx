@@ -48,6 +48,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const REDIRECT_URI = window.location.origin + "/signin";
 
   useEffect(() => {
+    // Dev-only: `?devUser=1` seeds a local onboarded user so automated browsers
+    // (Playwright) can reach signed-in pages. Vite replaces import.meta.env.DEV
+    // with false in production builds, so this is stripped from them.
+    if (import.meta.env.DEV && new URLSearchParams(window.location.search).get("devUser") === "1") {
+      const dev = { id: "dev-user", name: "Dev User", login: "dev", avatar_url: "", email: null, hasCompletedOnboarding: true };
+      localStorage.setItem("scrubin_user", JSON.stringify(dev));
+      localStorage.setItem(`scrubin_user_profile_${dev.id}`, JSON.stringify({ name: dev.name, hasCompletedOnboarding: true }));
+    }
+
     // Check localStorage for existing session
     const storedUser = localStorage.getItem("scrubin_user");
     if (storedUser) {
