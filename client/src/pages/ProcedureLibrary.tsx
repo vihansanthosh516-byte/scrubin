@@ -257,7 +257,7 @@ export default function ProcedureLibrary() {
     // supabase returns { data, error } — it never throws, so the old try/catch
     // silently swallowed a missing sessions table (the schema in
     // supabase_schema.sql must be applied to the connected project).
-    const { data, error } = await supabase.from('sessions').select('procedure_id, score, outcome');
+    const { data, error } = await supabase.from('sessions').select('procedure_id, score, outcome').eq('user_id', user.id);
     if (error) {
       setUserXP(0);
       return;
