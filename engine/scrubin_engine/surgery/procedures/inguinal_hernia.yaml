@@ -355,6 +355,8 @@ tasks:
     verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
     requires: [insufflated, mesh_placed]
     blocked: "The abdomen isn't insufflated."
+    soft_requires:
+      peritoneum_closed: "The peritoneal flap isn't closed, so the mesh is exposed to the bowel."
     duration_s: 60
     stimulus: 0.2
     iap: 0

@@ -11,7 +11,7 @@ name: Robotic Radical Prostatectomy
 
 label: robotic-assisted radical prostatectomy
 expected: "Expected duration about three and a half hours, modest blood loss expected."
-hemostasis_ok: "DVC stitch secure, pedicles dry, anastomosis watertight."
+hemostasis_ok: "Pelvis dry, pedicles secure, anastomosis in place."
 thermal_organ: rectum
 bleeding_teaching: "Suture-ligate the dorsal venous complex before dividing it, use clips rather than energy near the neurovascular bundles, and keep the pneumoperitoneum up while you work."
 bag_name: entrapment bag
@@ -357,7 +357,7 @@ tasks:
     stimulus: 0.3
     sets: [prostate_free]
     hooks: [dvc_division]
-    start: "Dividing the dorsal venous complex over the stitch and then the urethra, with a sharp cut and the apex in view."
+    start: "Dividing the dorsal venous complex and then the urethra, with a sharp cut and the apex in view."
     auto_order: 18
 
   - id: bag
@@ -427,7 +427,7 @@ tasks:
   - id: inspect_hemostasis
     name: Inspect hemostasis
     verbs: [check hemostasis, inspect, look for bleeding, hemostasis]
-    requires: [camera_in, prostate_free]
+    requires: [camera_in, uv_anastomosis]
     blocked: "Not yet: the main operative steps come first."
     duration_s: 60
     stimulus: 0.1
@@ -452,8 +452,10 @@ tasks:
   - id: desufflate
     name: Desufflate
     verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
-    requires: [insufflated, prostate_free]
+    requires: [insufflated, uv_anastomosis]
     blocked: "The abdomen isn't insufflated."
+    soft_requires:
+      leak_tested: "We haven't leak-tested the urethrovesical anastomosis."
     duration_s: 60
     stimulus: 0.2
     iap: 0
@@ -464,7 +466,7 @@ tasks:
   - id: count
     name: Sponge / needle / instrument count
     verbs: [count, sponge count, do the count, counts]
-    requires: [prostate_free]
+    requires: [uv_anastomosis]
     blocked: "Not yet: the main operative steps come first."
     duration_s: 60
     stimulus: 0.0

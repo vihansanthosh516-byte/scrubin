@@ -10,7 +10,7 @@ name: Total Laparoscopic Hysterectomy
 
 label: total laparoscopic hysterectomy
 expected: "Expected duration about two hours, modest blood loss expected."
-hemostasis_ok: "Pedicles dry, cuff intact, no bleeding from the uterine arteries or the cuff edge."
+hemostasis_ok: "Pedicles dry, no bleeding from the uterine arteries."
 thermal_organ: bladder
 bleeding_teaching: "Skeletonize the uterine artery after identifying the ureter, use a sealer at the level of the isthmus, and close the cuff with full-thickness bites."
 positions: [steep_trendelenburg]
@@ -383,6 +383,8 @@ tasks:
     verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
     requires: [insufflated, colpotomy_done]
     blocked: "The abdomen isn't insufflated."
+    soft_requires:
+      cuff_closed: "The vaginal cuff isn't closed."
     duration_s: 60
     stimulus: 0.2
     iap: 0

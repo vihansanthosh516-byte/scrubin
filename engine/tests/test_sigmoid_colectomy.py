@@ -79,7 +79,9 @@ def test_skipping_the_leak_test_is_challenged_and_can_hide_a_leak():
     _to_pelvis(d)
     d.do("make the anastomosis")
     d.do("check hemostasis")
-    d.do("desufflate")
+    r = d.ask("desufflate")
+    assert r.get("needs_confirmation") and "leak" in r["question"]
+    d.accept()
     d.do("do the count")
     r = d.ask("close the fascia")
     assert r.get("needs_confirmation") and "leak" in r["question"]
@@ -90,7 +92,9 @@ def test_skipping_the_leak_test_is_challenged_and_can_hide_a_leak():
         d.do("identify the left ureter")
         _to_pelvis(d)
         d.do("make the anastomosis")
-        d.steps(["check hemostasis", "desufflate", "do the count"])
+        d.do("check hemostasis")
+        d.do("desufflate", confirm=True)
+        d.do("do the count")
         d.do("close the fascia", confirm=True)
         d.do("close the skin")
         assert any("never leak-tested" in n for n in d.proc.notes)

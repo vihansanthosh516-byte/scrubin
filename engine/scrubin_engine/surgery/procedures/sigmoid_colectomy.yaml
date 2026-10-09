@@ -11,7 +11,7 @@ name: Laparoscopic Sigmoid Colectomy
 
 label: laparoscopic sigmoid colectomy
 expected: "Expected duration about three hours, modest blood loss expected."
-hemostasis_ok: "IMA pedicle secure, mesentery dry, anastomosis intact."
+hemostasis_ok: "IMA pedicle secure, mesentery dry."
 thermal_organ: small bowel
 bleeding_teaching: "Divide the inferior mesenteric artery with a vessel sealer or stapler only after the left ureter and gonadal vessels are identified, and keep the dissection in the avascular retroperitoneal plane."
 bag_name: wound protector
@@ -458,6 +458,8 @@ tasks:
     verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
     requires: [insufflated, anastomosed]
     blocked: "The abdomen isn't insufflated."
+    soft_requires:
+      leak_tested: "We haven't leak-tested the anastomosis."
     duration_s: 60
     stimulus: 0.2
     iap: 0

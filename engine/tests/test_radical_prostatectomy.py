@@ -102,7 +102,11 @@ def test_skipping_the_leak_test_is_challenged_and_can_hide_a_leak():
     _to_pelvis(d)
     _dissect(d)
     _decide(d)
-    d.steps(["divide the urethra", "bag the prostate", "urethrovesical anastomosis", "extract the prostate", "undock the robot", "check hemostasis", "desufflate", "do the count"])
+    d.steps(["divide the urethra", "bag the prostate", "urethrovesical anastomosis", "extract the prostate", "undock the robot", "check hemostasis"])
+    r = d.ask("desufflate")
+    assert r.get("needs_confirmation") and "leak" in r["question"]
+    d.accept()
+    d.do("do the count")
     r = d.ask("close the fascia")
     assert r.get("needs_confirmation") and "leak" in r["question"]
     hidden = False
@@ -111,7 +115,9 @@ def test_skipping_the_leak_test_is_challenged_and_can_hide_a_leak():
         _to_pelvis(d)
         _dissect(d)
         _decide(d)
-        d.steps(["divide the urethra", "bag the prostate", "urethrovesical anastomosis", "extract the prostate", "undock the robot", "check hemostasis", "desufflate", "do the count"])
+        d.steps(["divide the urethra", "bag the prostate", "urethrovesical anastomosis", "extract the prostate", "undock the robot", "check hemostasis"])
+        d.do("desufflate", confirm=True)
+        d.do("do the count")
         d.do("close the fascia", confirm=True)
         d.do("close the skin")
         assert any("never leak-tested" in n for n in d.proc.notes)

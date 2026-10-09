@@ -76,7 +76,11 @@ def test_leaving_the_cuff_open_is_challenged_and_hidden():
     _start(d)
     d.do("identify the ureter")
     d.do("coagulate the uterine arteries")
-    d.steps(["colpotomy", "remove the uterus", "check hemostasis", "desufflate", "do the count"])
+    d.steps(["colpotomy", "remove the uterus", "check hemostasis"])
+    r = d.ask("desufflate")
+    assert r.get("needs_confirmation") and "cuff" in r["question"]
+    d.accept()
+    d.do("do the count")
     r = d.ask("close the fascia")
     assert r.get("needs_confirmation") and "cuff" in r["question"]
     d.accept()
