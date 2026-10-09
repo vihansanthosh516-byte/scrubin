@@ -1,0 +1,35 @@
+# ScrubIn real-time OR engine on an Oracle Cloud Always Free VM.
+# Caddy terminates HTTPS (automatic Let's Encrypt certificate) and proxies to the engine,
+# including WebSockets, so the Vercel site (https) can talk to it (wss).
+services:
+  engine:
+    build: ../../engine
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: "8000"
+      SCRUBIN_DB: /data/cases.db
+    volumes:
+      - engine-data:/data
+    expose:
+      - "8000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - engine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  engine-data:
+  caddy-data:
+  caddy-config:
