@@ -7,6 +7,8 @@ and so replay exactly.
 
 from __future__ import annotations
 
+import json
+
 import re
 
 import asyncio
@@ -27,7 +29,7 @@ from .scoring.debrief import build_debrief
 from .surgery.parse import parse_surgical
 
 SPEEDS = (0.0, 0.5, 1.0, 2.0, 5.0, 10.0)
-BROADCAST_HZ = 5.0
+BROADCAST_HZ = 2.0  # each state is ~10 KB: 5 Hz used up the free bandwidth quota in a few case-hours
 MAX_STEPS_PER_LOOP = 60
 
 
@@ -48,6 +50,8 @@ class Session:
     store: Optional[CaseStore] = None
     _saved_tick: int = -1
     _saved_status: str = ""
+    _sent_tick: dict = field(default_factory=dict)
+    _sent_static: dict = field(default_factory=dict)
 
     # ------------------------------------------------------------------
     async def run(self) -> None:
@@ -83,6 +87,21 @@ class Session:
         for ws, since in list(self.clients.items()):
             snap = self.case.snapshot(since_comms=since)
             snap.update(type="state", speed=self.speed, paused=self.paused)
+            prev_tick = self._sent_tick.get(ws)
+            if self.paused and prev_tick == snap["tick"] and not snap["comms"]:
+                continue  # nothing changed while paused: send nothing
+            self._sent_tick[ws] = snap["tick"]
+            surgery = snap.get("surgery")
+            if surgery:
+                # The step list and instrument names are most of the payload and rarely change: send them only when they do.
+                static = json.dumps([surgery.get("tasks"), surgery.get("instruments")], sort_keys=True)
+                if self._sent_static.get(ws) == static:
+                    surgery = dict(surgery)
+                    surgery.pop("tasks", None)
+                    surgery.pop("instruments", None)
+                    snap["surgery"] = surgery
+                else:
+                    self._sent_static[ws] = static
             try:
                 await ws.send_json(snap)
                 if snap["comms"]:
@@ -91,6 +110,8 @@ class Session:
                 dead.append(ws)
         for ws in dead:
             self.clients.pop(ws, None)
+            self._sent_tick.pop(ws, None)
+            self._sent_static.pop(ws, None)
 
     def persist(self, throttle_ticks: int = 0, with_debrief: bool = False) -> None:
         """Autosave seed + action log (enough to rebuild the case exactly)."""

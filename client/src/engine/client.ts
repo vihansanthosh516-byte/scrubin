@@ -119,7 +119,14 @@ export function useOrConnection(caseId: string | null): OrConnection {
             setComms([]);
           }
           lastTick.current = msg.tick;
-          setState(msg as CaseState);
+          // The engine leaves out the step list and instruments when they haven't changed.
+          setState((prev) => {
+            const next = msg as CaseState;
+            if (next.surgery && prev?.surgery && !next.surgery.tasks) {
+              return { ...next, surgery: { ...next.surgery, tasks: prev.surgery.tasks, instruments: prev.surgery.instruments } };
+            }
+            return next;
+          });
           const fresh = (msg.comms as CommsMessage[]).filter((c) => !seen.has(c.id));
           if (fresh.length) {
             fresh.forEach((c) => seen.add(c.id));

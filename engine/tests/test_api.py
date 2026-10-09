@@ -77,3 +77,20 @@ def test_rate_limit_on_case_creation(monkeypatch):
                  for _ in range(3)]
     api._hits.clear()
     assert codes == [200, 200, 429]
+
+
+def test_state_stream_drops_the_unchanged_step_list():
+    import json
+
+    from fastapi.testclient import TestClient
+
+    from scrubin_engine.api.app import app
+
+    with TestClient(app) as c:
+        cid = c.post("/engine/cases", json={"scenario": "sigmoid_colectomy", "role": "surgeon", "seed": 1}).json()["case_id"]
+        with c.websocket_connect(f"/engine/cases/{cid}/ws") as ws:
+            ws.send_json({"type": "control", "paused": False, "speed": 1})
+            first = ws.receive_json()
+            later = [ws.receive_json() for _ in range(3)]
+    assert "tasks" in first["surgery"] and len(json.dumps(first)) > 5000
+    assert all("tasks" not in m["surgery"] and len(json.dumps(m)) < 3000 for m in later)
