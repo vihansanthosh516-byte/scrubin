@@ -174,7 +174,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Timeline</div>
             <div className="max-h-[360px] overflow-y-auto space-y-0.5 text-xs font-mono-data">
               {debrief.timeline
-                .filter((e) => !["assess", "say"].includes(e.kind) || (e.kind === "say" && e.intent))
+                .filter((e) => !["assess", "say"].includes(e.kind) || (e.kind === "say" && e.intent) || (e.kind === "assess" && e.what === "cuff_leak"))
                 .map((e, i) => (
                   <div key={i}>
                     <span className="text-muted-foreground">{fmtTime(e.t)}</span> {describe(e)}
@@ -210,6 +210,8 @@ function describe(e: { kind: string; [k: string]: any }): string {
       return `⚠ ${e.name}${e.source ? ` (${e.source})` : ""}`;
     case "surgery_task_start":
       return `▸ ${String(e.task).replace(/_/g, " ")}${e.instrument ? ` — ${String(e.instrument).replace(/_(\d+)$/, " $1 mm").replace(/_/g, " ")}` : ""}`;
+    case "assess":
+      return "cuff-leak test";
     case "position":
       return `position — ${String(e.position ?? "").replace(/_/g, " ")}`;
     case "say":

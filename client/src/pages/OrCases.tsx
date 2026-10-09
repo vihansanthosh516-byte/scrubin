@@ -112,6 +112,7 @@ function CaseRow({ c, children, onDelete }: { c: SavedCase; children: React.Reac
         </div>
         <div className="flex items-center gap-3">
           {c.score != null && <div className="font-mono-data text-2xl text-primary">{c.score}</div>}
+          {c.score == null && c.status === "ended" && <div className="text-xs text-muted-foreground" title="Ended before there was anything to grade">Not scored</div>}
           {children}
           <button onClick={() => onDelete(c.id)} className="p-2 rounded-sm hover:bg-destructive/10 text-muted-foreground hover:text-destructive" aria-label="Delete case">
             <Trash2 className="w-4 h-4" />
