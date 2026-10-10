@@ -3,6 +3,12 @@
 #   curl -fsSL https://raw.githubusercontent.com/vihansanthosh516-byte/scrubin/main/deploy/oracle/setup.sh | bash
 set -euo pipefail
 
+# Small VMs (1 GB micro shape) need swap or the Docker build gets killed.
+if [ "$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)" -lt 3000 ] && [ ! -f /swapfile ]; then
+  sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+  echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
+fi
+
 sudo apt-get update -y
 sudo apt-get install -y git ca-certificates curl
 if ! command -v docker >/dev/null; then
