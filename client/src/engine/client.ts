@@ -3,7 +3,19 @@ import type { Action, CaseState, Catalog, CommsMessage, CreateCaseResponse, Debr
 
 // The Python engine is reached through the Vite proxy (/engine -> :8000) in
 // development. In production set VITE_ENGINE_URL to the engine's origin.
-const ENGINE_ORIGIN = (import.meta.env.VITE_ENGINE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+// A link can carry ?engine=https://something.trycloudflare.com to test against an engine running
+// on a developer machine behind a Cloudflare quick tunnel (remembered for the tab). Only that
+// host is accepted, so a crafted link can't send the site to an arbitrary server.
+function tunnelOverride(): string {
+  try {
+    const q = new URLSearchParams(window.location.search).get("engine");
+    if (q && /^https:\/\/[a-z0-9-]+\.trycloudflare\.com\/?$/i.test(q)) sessionStorage.setItem("scrubin-engine", q.replace(/\/$/, ""));
+    return sessionStorage.getItem("scrubin-engine") ?? "";
+  } catch {
+    return "";
+  }
+}
+const ENGINE_ORIGIN = tunnelOverride() || ((import.meta.env.VITE_ENGINE_URL as string | undefined)?.replace(/\/$/, "") ?? "");
 
 function httpUrl(path: string) {
   return `${ENGINE_ORIGIN}/engine${path}`;
