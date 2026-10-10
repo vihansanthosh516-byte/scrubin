@@ -415,8 +415,8 @@ tasks:
     name: Undock the robot
     verbs: [undock the robot, undock, robot out, take the robot away, remove the robot]
     instruments: [robot]
-    requires: [docked]
-    blocked: "The robot isn't docked."
+    requires: [docked, specimen_out]
+    blocked: "Not yet: the prostate has to be out of the patient before the robot comes away."
     duration_s: 180
     stimulus: 0.1
     clears: [docked]
