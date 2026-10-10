@@ -9,6 +9,7 @@
 id: sigmoid_colectomy
 name: Laparoscopic Sigmoid Colectomy
 
+op_time_factor: 2.0
 label: laparoscopic sigmoid colectomy
 expected: "Expected duration about three hours, modest blood loss expected."
 hemostasis_ok: "IMA pedicle secure, mesentery dry."

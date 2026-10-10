@@ -8,6 +8,7 @@
 id: total_hysterectomy
 name: Total Laparoscopic Hysterectomy
 
+op_time_factor: 2.0
 label: total laparoscopic hysterectomy
 expected: "Expected duration about two hours, modest blood loss expected."
 hemostasis_ok: "Pedicles dry, no bleeding from the uterine arteries."
@@ -381,8 +382,8 @@ tasks:
   - id: desufflate
     name: Desufflate
     verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
-    requires: [insufflated, colpotomy_done]
-    blocked: "The abdomen isn't insufflated."
+    requires: [insufflated, colpotomy_done, specimen_out]
+    blocked: "Not yet: the specimen has to be out first (and the abdomen insufflated)."
     soft_requires:
       cuff_closed: "The vaginal cuff isn't closed."
     duration_s: 60

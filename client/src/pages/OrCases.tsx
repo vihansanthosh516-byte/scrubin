@@ -73,7 +73,7 @@ export default function OrCases() {
             <h2 className="text-sm uppercase tracking-[0.14em] text-primary">Continue</h2>
             {inProgress.map((c) => (
               <CaseRow key={c.id} c={c} onDelete={remove}>
-                <button onClick={() => setLocation(`/simulation?proc=${c.scenario}&case=${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-sage/40 text-sage dark:text-[#5E8C74] text-xs hover:bg-sage/10">
+                <button onClick={() => window.location.assign(`/simulation?proc=${c.scenario}&case=${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-sage/40 text-sage dark:text-[#5E8C74] text-xs hover:bg-sage/10">
                   <Play className="w-3.5 h-3.5" /> Resume
                 </button>
               </CaseRow>
@@ -86,7 +86,7 @@ export default function OrCases() {
             <h2 className="text-sm uppercase tracking-[0.14em] text-primary">Completed</h2>
             {finished.map((c) => (
               <CaseRow key={c.id} c={c} onDelete={remove}>
-                <button onClick={() => setLocation(`/or/replay/${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border text-xs hover:bg-primary/10">
+                <button onClick={() => window.location.assign(`/or/replay/${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border text-xs hover:bg-primary/10">
                   <Film className="w-3.5 h-3.5" /> Replay & debrief
                 </button>
               </CaseRow>

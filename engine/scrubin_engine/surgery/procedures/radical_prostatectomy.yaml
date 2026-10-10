@@ -9,6 +9,7 @@
 id: radical_prostatectomy
 name: Robotic Radical Prostatectomy
 
+op_time_factor: 2.0
 label: robotic-assisted radical prostatectomy
 expected: "Expected duration about three and a half hours, modest blood loss expected."
 hemostasis_ok: "Pelvis dry, pedicles secure, anastomosis in place."
@@ -452,8 +453,8 @@ tasks:
   - id: desufflate
     name: Desufflate
     verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
-    requires: [insufflated, uv_anastomosis]
-    blocked: "The abdomen isn't insufflated."
+    requires: [insufflated, uv_anastomosis, specimen_out]
+    blocked: "Not yet: the specimen has to be out first (and the abdomen insufflated)."
     soft_requires:
       leak_tested: "We haven't leak-tested the urethrovesical anastomosis."
     duration_s: 60

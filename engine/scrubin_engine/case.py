@@ -740,6 +740,8 @@ class Case:
             self._flags["edema_noted"] = True
             self.event("complication", name="facial_edema")
             self.say("circulator", f"{self.patient.first_name}'s face is getting puffy and the conjunctivae look swollen after {self.metrics.sec_steep / 3600:.1f} hours head-down. Eyes are still taped and padded.")
+            if self.role == "surgeon":
+                self.say("anesthesia", "Noted. I'll do a cuff-leak test before I extubate, and I'm keeping an eye on the peak pressures.")
         # Patient speech when awake.
         if eff.consciousness == "awake" and not self._flags.get("said_hello"):
             self._flags["said_hello"] = True

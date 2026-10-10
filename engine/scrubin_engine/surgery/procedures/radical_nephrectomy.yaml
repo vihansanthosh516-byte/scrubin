@@ -9,6 +9,7 @@
 id: radical_nephrectomy
 name: Laparoscopic Radical Nephrectomy
 
+op_time_factor: 2.0
 label: "laparoscopic {side} radical nephrectomy"
 expected: "Expected duration about three hours, blood loss should be modest if the hilum is controlled in the right order."
 hemostasis_ok: "Hilum stumps secure, renal fossa dry, adrenal bed and colon mesentery intact."
@@ -454,8 +455,8 @@ tasks:
   - id: desufflate
     name: Desufflate
     verbs: [desufflate, let the gas out, release the pneumoperitoneum, gas off]
-    requires: [insufflated, kidney_free]
-    blocked: "The abdomen isn't insufflated."
+    requires: [insufflated, kidney_free, specimen_out]
+    blocked: "Not yet: the specimen has to be out first (and the abdomen insufflated)."
     duration_s: 60
     stimulus: 0.2
     iap: 0

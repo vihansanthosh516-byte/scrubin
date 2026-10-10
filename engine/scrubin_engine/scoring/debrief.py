@@ -119,7 +119,18 @@ def surgeon_items(case) -> list[dict]:
                                "These were not visible during the case — this is what the patient will present with later."))
         if p.finished:
             op_min = (case.events[[e["kind"] for e in case.events].index("surgery_complete")]["t"] - (m.incision_t or 0)) / 60
-            items.append(_item("Technique", "Operative time", GOOD if op_min < 60 else FAIR if op_min < 90 else POOR, f"Incision to close: {op_min:.0f} min."))
+            good_min, fair_min = 60, 90
+            if p.spec.get("op_time_factor"):  # longer operations: scale to the procedure's own plan
+                planned = sum(t.get("duration_s", 60) for t in p.spec["tasks"] if t.get("auto_order") and not t.get("auto_if")) / 60
+                good_min, fair_min = p.spec["op_time_factor"] * planned, 1.5 * p.spec["op_time_factor"] * planned
+            items.append(_item("Technique", "Operative time", GOOD if op_min < good_min else FAIR if op_min < fair_min else POOR,
+                               f"Incision to close: {op_min:.0f} min (expected about {good_min:.0f} min or less)."))
+        if case.metrics.sec_steep > 3600:
+            hrs, edema = case.metrics.sec_steep / 3600, case.face_edema
+            items.append(_item("Technique", "Time in steep Trendelenburg", GOOD if edema < 0.3 else FAIR if edema < 0.8 else POOR,
+                               f"{hrs:.1f} h head-down at 25 degrees or more (facial and airway swelling about {round(edema * 100)}%, peak airway pressure {case.metrics.max_peak_pressure:.0f} cmH2O).",
+                               "Every hour head-down raises airway pressure, swells the face and airway and raises eye pressure. Work efficiently, "
+                               "level the table when you can (for example when no exposure is needed), and tell anesthesia so they can plan a cuff-leak test."))
         items.append(_item("Technique", "Blood loss", GOOD if case.body.blood_loss_ml < 100 else FAIR if case.body.blood_loss_ml < 400 else POOR,
                            f"Estimated blood loss {case.body.blood_loss_ml:.0f} mL.",
                            p.spec.get("bleeding_teaching", "Divide the mesoappendix with an energy device, stapler or clips; the appendiceal artery runs in it.")))

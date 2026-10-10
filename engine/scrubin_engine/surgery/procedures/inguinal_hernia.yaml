@@ -10,6 +10,7 @@
 id: inguinal_hernia
 name: Laparoscopic Inguinal Hernia Repair (TAPP)
 
+op_time_factor: 2.0
 label: laparoscopic right inguinal hernia repair (TAPP)
 expected: "Expected duration about an hour, minimal blood loss expected."
 hemostasis_ok: "Flap dry, mesh flat, no bleeding from the epigastric vessels or Cooper's ligament."
