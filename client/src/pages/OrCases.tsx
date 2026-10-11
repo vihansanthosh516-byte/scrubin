@@ -38,6 +38,14 @@ export default function OrCases() {
     load();
   };
 
+  const removeAllUnfinished = async () => {
+    const list = (cases ?? []).filter((c) => c.status !== "ended");
+    if (!list.length) return;
+    if (!window.confirm(`Delete all ${list.length} unfinished case${list.length === 1 ? "" : "s"} and their replays? This can't be undone. Finished cases are kept.`)) return;
+    await Promise.all(list.map((c) => engineApi.deleteCase(c.id).catch(() => undefined)));
+    load();
+  };
+
   const inProgress = (cases ?? []).filter((c) => c.status !== "ended" && c.sim_t > 0);
   const finished = (cases ?? []).filter((c) => c.status === "ended");
 
@@ -70,7 +78,12 @@ export default function OrCases() {
 
         {inProgress.length > 0 && (
           <section className="space-y-3">
-            <h2 className="text-sm uppercase tracking-[0.14em] text-primary">Continue</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm uppercase tracking-[0.14em] text-primary">Continue</h2>
+              <button onClick={removeAllUnfinished} className="text-xs text-muted-foreground hover:text-destructive underline-offset-2 hover:underline">
+                Delete all unfinished
+              </button>
+            </div>
             {inProgress.map((c) => (
               <CaseRow key={c.id} c={c} onDelete={remove}>
                 <button onClick={() => window.location.assign(`/simulation?proc=${c.scenario}&case=${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-sage/40 text-sage dark:text-[#5E8C74] text-xs hover:bg-sage/10">
