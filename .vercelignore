@@ -3,6 +3,10 @@
 .env.*.local
 /node_modules
 /dist
-/engine
+# The in-browser engine sources (engine/scrubin_engine) are packed at build time; skip the rest of engine/
+/engine/.venv
+/engine/data
+/engine/tests
+/engine/*.egg-info
 .git
 *.db
