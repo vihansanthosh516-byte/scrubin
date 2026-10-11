@@ -70,8 +70,15 @@ async function boot() {
   }
   py.runPython(`import sys\nsys.path.insert(0, "/app")`);
   py.globals.set("js_emit", (s: string) => ctx.postMessage(JSON.parse(s)));
-  py.globals.set("js_put", (s: string) => void idbPut(JSON.parse(s)));
-  py.globals.set("js_del", (id: string) => void idbDel(id));
+  py.globals.set("js_put", (s: string) => {
+    const row = JSON.parse(s);
+    void idbPut(row);
+    ctx.postMessage({ type: "persist", row });
+  });
+  py.globals.set("js_del", (id: string) => {
+    void idbDel(id);
+    ctx.postMessage({ type: "deleted", id });
+  });
   py.runPython(glue);
   py.globals.get("rt_load")(JSON.stringify(await idbAll()));
   status("ready");
@@ -98,6 +105,7 @@ ctx.onmessage = async (ev: MessageEvent) => {
     if (op === "init") result = true;
     else if (op === "core") result = JSON.parse(g("core_call")(ev.data.method, ev.data.path, ev.data.body ?? null, ev.data.query ?? null));
     else if (op === "api") result = JSON.parse(await g("api_call")(ev.data.method, ev.data.path, ev.data.body ?? null, ev.data.query ?? null));
+    else if (op === "import_row") result = g("rt_import")(ev.data.row);
     else if (op === "ws_open") result = await g("ws_open")(ev.data.caseId);
     else if (op === "ws_msg") result = await g("ws_msg")(ev.data.caseId, ev.data.msg);
     else if (op === "ws_close") result = g("ws_close")(ev.data.caseId);

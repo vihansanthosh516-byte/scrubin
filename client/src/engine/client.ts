@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { py } from "@/py/runtime";
+import { ensureCaseLocal, listCloudCases } from "./cloudCases";
 import type { Action, CaseState, Catalog, CommsMessage, CreateCaseResponse, Debrief, ReplayData, Role, SavedCase } from "./types";
 
 // By default the Python engine runs inside the browser (Pyodide, see src/py). A remote engine is used only
@@ -31,6 +32,18 @@ function wsUrl(path: string) {
 async function localRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const url = new URL(path, "http://local");
   const method = (init?.method || "GET").toUpperCase();
+  // Cases of a signed-in user are mirrored to their account: merge the cloud list, and pull a case this device lacks.
+  if (method === "GET" && /^\/users\/[^/]+\/cases$/.test(url.pathname)) {
+    const [local, remote] = await Promise.all([py.api(method, url.pathname, undefined, {}), listCloudCases()]);
+    const byId = new Map<string, any>((local.json as any[]).map((r) => [r.id, r]));
+    for (const r of remote) {
+      const mine = byId.get(r.id);
+      if (!mine || Number(r.updated_at) > Number(mine.updated_at)) byId.set(r.id, { ...(mine ?? {}), ...r });
+    }
+    return [...byId.values()].sort((a, b) => Number(b.updated_at) - Number(a.updated_at)) as T;
+  }
+  const m = url.pathname.match(/^\/cases\/([^/]+)\/(resume|replay|debrief)$/);
+  if (m) await ensureCaseLocal(m[1]);
   const body = init?.body && typeof init.body === "string" ? JSON.parse(init.body) : undefined;
   const r = await py.api(method, url.pathname, body, Object.fromEntries(url.searchParams.entries()));
   if (r.status >= 400) throw new Error(`${r.status} ${JSON.stringify(r.json)}`);

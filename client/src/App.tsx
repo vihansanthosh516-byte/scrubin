@@ -1,6 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Route, Switch, useLocation } from "wouter";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -20,6 +20,7 @@ import MySimulations from "./pages/MySimulations";
 import ReplayViewer from "./pages/ReplayViewer";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { startCloudSync } from "./engine/cloudCases";
 import Navbar from "./components/Navbar";
 
 // Loading screen component
@@ -35,6 +36,10 @@ function LoadingScreen() {
 function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { user, loading, hasCompletedOnboarding } = useAuth();
   const [location, setLocation] = useLocation();
+  // Mirror real-time OR cases to the signed-in user's account (see engine/cloudCases.ts).
+  const userIdRef = useRef<string | undefined>(undefined);
+  userIdRef.current = user?.id;
+  useEffect(() => startCloudSync(() => userIdRef.current), []);
 
   useEffect(() => {
     if (loading) return;

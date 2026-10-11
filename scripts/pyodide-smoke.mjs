@@ -41,6 +41,12 @@ console.log("utterance parsed", JSON.stringify(msgs.filter((m) => m.data?.type =
 r = J(await g("api_call")("GET", `/users/u/cases`, null, null)); console.log("list", r.json.map((x) => [x.scenario_name, x.status, Math.round(x.sim_t)]));
 r = J(await g("api_call")("GET", `/cases/${cid}/debrief`, null, null)); console.log("debrief", r.status, r.json.score);
 r = J(await g("api_call")("GET", `/cases/${cid}/replay`, null, JSON.stringify({ every_s: 5 }))); console.log("replay", r.status, r.json.frames?.length);
+r = J(await g("api_call")("GET", `/cases/${cid}/exists`, null, null)); console.log("exists", JSON.stringify(r.json));
+// importing a newer cloud copy replaces the local row and drops the live session
+const copy = { ...rows[cid], tick: rows[cid].tick + 100, updated_at: rows[cid].updated_at + 50 };
+g("rt_import")(JSON.stringify(copy));
+r = J(await g("api_call")("GET", `/cases/${cid}/exists`, null, null)); console.log("after import", JSON.stringify(r.json));
+if (r.json.tick !== copy.tick) { console.error("IMPORT FAILED"); process.exit(1); }
 g("ws_close")(cid);
 console.log("persisted rows", Object.keys(rows).length);
 if (!rows[cid] || !states.length) { console.error("SMOKE FAILED"); process.exit(1); }

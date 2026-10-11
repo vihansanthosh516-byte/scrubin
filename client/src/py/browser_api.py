@@ -136,6 +136,17 @@ class _Client:
         js_emit(_json({"type": "ws", "case_id": self.case_id, "data": data}))  # noqa: F821
 
 
+def rt_import(row_json):
+    """Replace a case row with a copy from the cloud (newer than ours) and drop any live session for it."""
+    rt = _init_rt()
+    row = json.loads(row_json)
+    live = rt["store"].sessions.pop(row["id"], None)
+    if live is not None and live.task:
+        live.task.cancel()
+    rt["db"].rows[row["id"]] = row
+    js_put(_json(row))  # noqa: F821
+
+
 def _case_info(s):
     from scrubin_engine.scenarios import SCENARIOS
 
@@ -196,6 +207,9 @@ async def api_call(method, path, body_json, query_json):
         if len(parts) >= 2 and parts[0] == "cases":
             cid = parts[1]
             act = parts[2] if len(parts) > 2 else ""
+            if method == "GET" and act == "exists":
+                r = db.rows.get(cid)
+                return _json({"status": 200, "json": {"exists": r is not None, "updated_at": r["updated_at"] if r else None, "tick": r["tick"] if r else None}})
             if method == "POST" and act == "resume":
                 s = resume(cid)
                 s.control(paused=True)
