@@ -186,7 +186,11 @@ class Case:
         if not act.accept:
             self.say(pending["from"], "Okay, holding that.")
             return {"ok": True, "cancelled": True}
-        return self._apply(A.parse_action(pending["action"]), confirmed=True)
+        result = self._apply(A.parse_action(pending["action"]), confirmed=True)
+        # Other orders from the same sentence ("propofol and roc") wait for the answer: cancelled means all of it is off.
+        for follow in pending.get("followups") or []:
+            self.submit(follow)
+        return result
 
     # --- drugs ------------------------------------------------------
 

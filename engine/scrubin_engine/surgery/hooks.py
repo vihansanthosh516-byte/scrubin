@@ -394,6 +394,10 @@ def start_mesh_fixation(proc, task):
     where = {"triangle_doom": "Tacks going in below the iliopubic tract, next to the iliac vessels (triangle of doom).",
              "triangle_pain": "Tacks going in lateral to the vessels, below the iliopubic tract (triangle of pain)."}.get(r.target if r else None)
     proc.surgeon_says(where or "Fixing the mesh to Cooper's ligament and the anterior abdominal wall, above the iliopubic tract only.")
+    if r and r.target == "triangle_doom":
+        proc.notes.append("Mesh tacks placed in the triangle of doom (external iliac vessels).")
+    elif r and r.target == "triangle_pain":
+        proc.notes.append("Mesh tacks placed in the triangle of pain (lateral femoral cutaneous and genitofemoral nerves).")
     if proc.mode == "trainee":
         proc.case.say("attending", "Tacks above the iliopubic tract only: Cooper's ligament and the rectus. Not below, not lateral to the vessels.", )
 
@@ -401,14 +405,12 @@ def start_mesh_fixation(proc, task):
 def end_mesh_fixation(proc, task, r):
     rng = _rng(proc)
     if r.target == "triangle_doom":
-        proc.notes.append("Mesh tacks placed in the triangle of doom (external iliac vessels).")
         if rng.random() < 0.5:
             _bleed(proc, 140.0, "external iliac branch", "A tack went through a vessel by the iliacs — dark blood in the pelvis!" if proc.mode == "auto"
                    else "Dark blood wells up around the tack by the iliac vessels.")
         if rng.random() < 0.55:
             proc.occult.append("Tack through the external iliac vessels (triangle of doom): delayed bleeding or pseudoaneurysm.")
     elif r.target == "triangle_pain":
-        proc.notes.append("Mesh tacks placed in the triangle of pain (lateral femoral cutaneous and genitofemoral nerves).")
         if rng.random() < 0.75:
             proc.occult.append("Tack entrapped the lateral femoral cutaneous / genitofemoral nerve (triangle of pain): chronic groin pain and numbness of the thigh.")
 
@@ -461,11 +463,15 @@ def end_ureter_found(proc, task, r):
         proc.case.say("surgeon", txt)
 
 
+def start_ima_risk(proc, task):
+    if "ureter_identified" not in proc.flags:
+        proc.notes.append("The IMA pedicle was divided before the left ureter was identified.")
+
+
 def end_ima_risk(proc, task, r):
     h = proc.case.patient.hidden
     rng = _rng(proc)
     if "ureter_identified" not in proc.flags:
-        proc.notes.append("The IMA pedicle was divided before the left ureter was identified.")
         if rng.random() < (0.45 if h.get("ureter_distorted") else 0.2):
             proc.occult.append("Left ureter injury: clipped or divided with the IMA pedicle (flank pain, urinoma or hydronephrosis, "
                                "a rising creatinine in the days after surgery).")
@@ -612,11 +618,15 @@ def end_ureter_seen(proc, task, r):
         proc.case.say("surgeon", txt)
 
 
+def start_uterine_artery_risk(proc, task):
+    if "ureter_identified" not in proc.flags:
+        proc.notes.append("The uterine arteries were coagulated before the ureter was identified.")
+
+
 def end_uterine_artery_risk(proc, task, r):
     h = proc.case.patient.hidden
     rng = _rng(proc)
     if "ureter_identified" not in proc.flags:
-        proc.notes.append("The uterine arteries were coagulated before the ureter was identified.")
         if rng.random() < (0.35 if h.get("ureter_displaced") else 0.15):
             proc.occult.append("Ureteric injury (thermal or clipped) at the uterine artery: flank pain, ureterovaginal fistula or hydronephrosis, recognised days later.")
     ins = _instrument(proc, r)
@@ -729,13 +739,17 @@ def end_artery_division(proc, task, r):
                else "Pulsatile bleeding: a clip slipped off the renal artery stump.")
 
 
+def start_vein_division(proc, task):
+    if "artery_divided" not in proc.flags:
+        proc.notes.append("The renal vein was divided before the renal artery (the kidney engorges, and the vein can tear).")
+
+
 def end_vein_division(proc, task, r):
     h = proc.case.patient.hidden
     rng = _rng(proc)
     artery_first = "artery_divided" in proc.flags
     accessory_left = h.get("accessory_renal_artery") and "accessory_divided" not in proc.flags
     if not artery_first:
-        proc.notes.append("The renal vein was divided before the renal artery (the kidney engorges, and the vein can tear).")
         _bleed(proc, 300.0, "engorged kidney and hilum", "The kidney is swelling and the hilum is bleeding! Suction!" if proc.mode == "auto"
                else "The kidney swells dark and engorged and the hilum starts to bleed heavily.")
     elif accessory_left:
@@ -845,11 +859,15 @@ def end_nerve_decision(proc, task, r):
         proc.notes.append("The patient moved during the pedicle dissection.")
 
 
+def start_dvc_division(proc, task):
+    if "dvc_ligated" not in proc.flags:
+        proc.notes.append("The dorsal venous complex was divided without being suture-ligated first.")
+
+
 def end_dvc_division(proc, task, r):
     h = proc.case.patient.hidden
     rng = _rng(proc)
     if "dvc_ligated" not in proc.flags:
-        proc.notes.append("The dorsal venous complex was divided without being suture-ligated first.")
         _bleed(proc, 400.0, "dorsal venous complex", "The dorsal venous complex is pouring! Pressure up to 20, suction!" if proc.mode == "auto"
                else "Dark blood floods the pelvis: the unsecured dorsal venous complex is bleeding heavily.")
     elif rng.random() < (0.15 if h.get("dvc_fragile") else 0.05):

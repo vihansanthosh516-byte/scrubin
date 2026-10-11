@@ -175,3 +175,49 @@ def test_inducing_before_preoxygenation_is_challenged():
     c.run(200)
     r = c.submit({"type": "drug", "drug": "propofol", "dose": 150})
     assert not r.get("needs_confirmation")
+
+
+def test_cancelled_induction_cancels_the_rest_of_the_sentence():
+    import asyncio
+
+    from scrubin_engine.session import Session
+    from scrubin_engine.factory import build_case
+
+    case = build_case("inguinal_hernia", "anesthesia", 2)
+    s = Session("t", "inguinal_hernia", "anesthesia", 2, case)
+    case.submit({"type": "monitor", "attach": ["ecg", "spo2", "nibp", "etco2", "bis"]})
+    case.submit({"type": "gas", "o2_flow": 10})
+    case.submit({"type": "airway", "maneuver": "mask_on"})
+    case.run(10)
+    r = asyncio.run(s.utterance("propofol 150 and rocuronium 100"))
+    assert case.pending and case.pending.get("followups")
+    assert not any(e["kind"] == "drug" for e in case.events)  # nothing given while the question is open
+    case.submit({"type": "confirm", "accept": False})
+    assert not any(e["kind"] == "drug" for e in case.events)  # cancelled: neither drug
+    # and when accepted, both go in, in order
+    case2 = build_case("inguinal_hernia", "anesthesia", 2)
+    s2 = Session("t2", "inguinal_hernia", "anesthesia", 2, case2)
+    case2.submit({"type": "gas", "o2_flow": 10})
+    case2.submit({"type": "airway", "maneuver": "mask_on"})
+    case2.run(10)
+    asyncio.run(s2.utterance("propofol 150 and rocuronium 100"))
+    case2.submit({"type": "confirm", "accept": True})
+    assert [e["drug"] for e in case2.events if e["kind"] == "drug"] == ["propofol", "rocuronium"]
+
+
+def test_step_order_mistakes_are_noted_when_the_step_starts():
+    from proc_helpers import Driver
+
+    d = Driver("total_hysterectomy", seed=4)
+    d.c.submit({"type": "say", "intent": "time_out"})
+    d.do("prep and drape")
+    d.do("place the uterine manipulator")
+    d.steps(["umbilical skin incision", "hasson open entry", "insufflate", "camera in", "place the working ports", "explore"], confirm=True)
+    d.c.submit({"type": "position", "position": "steep_trendelenburg"})
+    if d.proc.flag("adhesions"):
+        d.do("take down adhesions")
+    d.steps(["divide the round ligaments", "divide the utero-ovarian ligaments", "develop the bladder flap", "open the broad ligament"])
+    d.ask("coagulate the uterine arteries")
+    d.c.submit({"type": "confirm", "accept": True})
+    assert d.proc.running is not None  # ended mid-step: the note must already be there
+    assert any("before the ureter was identified" in n for n in d.proc.notes)

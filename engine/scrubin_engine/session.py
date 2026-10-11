@@ -175,7 +175,12 @@ class Session:
         if not actions:
             result = await interpret(text, self._context())
             actions, clarification, reply, source = result.actions, result.clarification, result.reply, result.source
-        results = [self.submit_action(a) for a in actions]
+        results = []
+        for i, a in enumerate(actions):
+            results.append(self.submit_action(a))
+            if results[-1].get("needs_confirmation") and c.pending is not None:
+                c.pending["followups"] = list(actions[i + 1:])  # the rest of the sentence waits for the answer
+                break
         responder = "anesthesia" if self.role == "surgeon" else "circulator"
         if clarification:
             c.record_say(responder, clarification, kind="question")
