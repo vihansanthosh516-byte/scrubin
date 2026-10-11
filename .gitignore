@@ -117,3 +117,6 @@ __pycache__/
 engine/data/
 .vercel
 .env*
+
+# Generated Python bundles for the in-browser engines (scripts/pack-python.mjs)
+client/public/py/

@@ -8,10 +8,10 @@
 // /api to the Express server; Cloudflare Pages: set VITE_API_URL to the
 // Docker-hosted API, e.g. https://api.yourdomain.com). VITE_APP_URL is kept
 // as a legacy alias.
+// The API now lives on this site (Vercel functions + the in-browser simulators). A separate API host is
+// only used when VITE_REMOTE_API=1 is set explicitly.
 export const API_BASE = (
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_APP_URL ||
-  ""
+  import.meta.env.VITE_REMOTE_API === "1" ? import.meta.env.VITE_API_URL || import.meta.env.VITE_APP_URL || "" : ""
 ).replace(/\/+$/, "");
 
 export async function request<T>(

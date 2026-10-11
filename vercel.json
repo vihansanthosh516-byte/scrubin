@@ -1,5 +1,5 @@
 {
-  "buildCommand": "vite build",
+  "buildCommand": "node scripts/pack-python.mjs && vite build",
   "outputDirectory": "dist/public",
   "installCommand": "npm install --legacy-peer-deps",
   "framework": null,

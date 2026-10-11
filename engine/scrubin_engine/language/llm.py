@@ -49,9 +49,16 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_MODEL = os.environ.get("SCRUBIN_OPENROUTER_MODEL", "nvidia/nemotron-3-super-120b-a12b:free")
 
 
+# Browser build (Pyodide): the language model is reached through the site's own /api/llm function,
+# which holds the API keys, so no key ever reaches the page.
+PROXY = os.environ.get("SCRUBIN_LLM_PROXY")
+
+
 def _providers() -> list[tuple[str, str, str]]:
     """(url, key, model) in the order to try them."""
     out: list[tuple[str, str, str]] = []
+    if PROXY:
+        return [("proxy:groq", "", m) for m in [MODEL, *[m for m in FALLBACK_MODELS if m != MODEL]]] + [("proxy:openrouter", "", OPENROUTER_MODEL)]
     key = api_key()
     if key:
         out += [(API_URL, key, m) for m in [MODEL, *[m for m in FALLBACK_MODELS if m != MODEL]]]
@@ -126,6 +133,9 @@ async def llm_parse(text: str, context: dict[str, Any], timeout_s: float = 8.0) 
         {"role": "user", "content": _context_block(context) + f'\nUtterance: "{text}"'},
     ]
     data = None
+    if PROXY:
+        data = await _proxy_chat(messages, providers, timeout_s)
+        return coerce_llm_output(data, text) if data is not None else _unparsed(r, text)
     async with httpx.AsyncClient(timeout=timeout_s) as client:
         for url, key, model in providers:
             payload: dict[str, Any] = {"model": model, "temperature": 0, "response_format": {"type": "json_object"}, "messages": messages}
@@ -148,6 +158,35 @@ async def llm_parse(text: str, context: dict[str, Any], timeout_s: float = 8.0) 
         r.unparsed.append(text)
         return r
     return coerce_llm_output(data, text)
+
+
+def _unparsed(r: ParseResult, text: str) -> ParseResult:
+    r.unparsed.append(text)
+    return r
+
+
+async def _proxy_chat(messages: list, providers: list, timeout_s: float):
+    """Try each model through the site's /api/llm function (Pyodide only); returns the parsed JSON or None."""
+    from pyodide.http import pyfetch  # type: ignore
+
+    for url, _key, model in providers:
+        payload: dict[str, Any] = {"model": model, "temperature": 0, "response_format": {"type": "json_object"}, "messages": messages}
+        if "gpt-oss" in model:
+            payload["reasoning_effort"] = "low"
+        elif "qwen3" in model and "groq" in url:
+            payload["reasoning_format"] = "hidden"
+        try:
+            resp = await pyfetch(PROXY, method="POST", headers={"Content-Type": "application/json"},
+                                 body=json.dumps({"provider": url.split(":", 1)[1], "payload": payload}))
+            if resp.status in (429, 500, 502, 503) or resp.status == 400:
+                continue
+            if resp.status >= 400:
+                continue
+            content = (await resp.json())["choices"][0]["message"]["content"] or ""
+            return json.loads(content[content.find("{"): content.rfind("}") + 1])
+        except Exception:  # noqa: BLE001 - any failure just means: try the next model
+            continue
+    return None
 
 
 def coerce_llm_output(data: dict, text: str) -> ParseResult:

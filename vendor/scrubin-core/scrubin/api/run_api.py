@@ -1,0 +1,1 @@
+# Deprecated kernel API – removed in favor of the session API. This file intentionally left empty.

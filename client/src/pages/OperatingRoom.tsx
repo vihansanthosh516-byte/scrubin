@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { engineApi, useOrConnection, wakeEngine } from "@/engine/client";
 import { recordSession } from "@/lib/recordSession";
 import { ENGINE_SCENARIO, SCENARIO_NAME } from "@/engine/scenarios";
+import { py } from "@/py/runtime";
 import ClassicSimulation from "./Simulation";
 import type { Catalog, CreateCaseResponse, Debrief, Role } from "@/engine/types";
 
@@ -48,6 +49,9 @@ export default function OperatingRoom() {
   const [started, setStarted] = useState(false);
   const conn = useOrConnection(stage === "or" ? created?.case_id ?? null : null);
   const { state } = conn;
+  const [pyStage, setPyStage] = useState(py.status().stage);
+  const [pyError, setPyError] = useState(py.status().error);
+  useEffect(() => py.onStatus((st) => { setPyStage(st.stage); setPyError(st.error); }), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,13 +145,13 @@ export default function OperatingRoom() {
           </motion.div>
           {engineUp === null && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" /> Waking up the OR… this can take up to a minute the first time.
+              <Loader2 className="w-4 h-4 animate-spin" /> {pyStage || "Waking up the OR…"} the first visit downloads about 15 MB, then it is cached.
             </div>
           )}
           {engineUp === false && (
             <div className="rounded-sm border border-amber-warm/40 bg-amber-warm/10 p-4 text-sm">
-              {import.meta.env.VITE_ENGINE_URL ? (
-                <>The simulation engine isn't reachable right now. Please try again in a minute.</>
+              {import.meta.env.VITE_ENGINE_URL || !import.meta.env.DEV ? (
+                <>The simulator couldn't start in this browser{pyError ? ` (${pyError.slice(0, 120)})` : ""}. Reload the page; if it keeps failing, try a recent Chrome, Edge, Firefox or Safari.</>
               ) : (
                 <>
                   The simulation engine isn't running. Start it with <code className="font-mono-data">npm run dev</code> (it launches the Python engine on
@@ -170,7 +174,7 @@ export default function OperatingRoom() {
             <RoleCard
               icon={<Stethoscope className="w-6 h-6" />}
               title="Surgeon"
-              text="Run the operation step by step — access, exposure, dissection, hemostasis, closure — with an AI anesthesiologist keeping him alive."
+              text="Run the operation step by step — access, exposure, dissection, hemostasis, closure — with an AI anesthesiologist keeping the patient alive."
               disabled={creating || engineUp !== true}
               onClick={() => begin("surgeon")}
             />

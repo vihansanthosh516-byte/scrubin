@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import os
-import sqlite3
 import threading
 import time
 from pathlib import Path
@@ -40,6 +39,8 @@ CREATE INDEX IF NOT EXISTS idx_cases_user ON cases(user_id, updated_at DESC);
 
 class CaseStore:
     def __init__(self, path: Optional[str] = None) -> None:
+        import sqlite3  # imported here so the in-browser build (no sqlite) can import this module
+
         self.path = Path(path or os.environ.get("SCRUBIN_DB", DEFAULT_DB))
         if str(self.path) != ":memory:":
             self.path.parent.mkdir(parents=True, exist_ok=True)

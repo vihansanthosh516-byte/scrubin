@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { py } from "@/py/runtime";
 import type { Action, CaseState, Catalog, CommsMessage, CreateCaseResponse, Debrief, ReplayData, Role, SavedCase } from "./types";
 
-// The Python engine is reached through the Vite proxy (/engine -> :8000) in
-// development. In production set VITE_ENGINE_URL to the engine's origin.
-// A link can carry ?engine=https://something.trycloudflare.com to test against an engine running
-// on a developer machine behind a Cloudflare quick tunnel (remembered for the tab). Only that
-// host is accepted, so a crafted link can't send the site to an arbitrary server.
+// By default the Python engine runs inside the browser (Pyodide, see src/py). A remote engine is used only
+// when a link carries ?engine=https://<name>.trycloudflare.com (testing against a developer machine) or the
+// build sets VITE_ENGINE_MODE=remote together with VITE_ENGINE_URL.
 function tunnelOverride(): string {
   try {
     const q = new URLSearchParams(window.location.search).get("engine");
@@ -15,7 +14,9 @@ function tunnelOverride(): string {
     return "";
   }
 }
-const ENGINE_ORIGIN = tunnelOverride() || ((import.meta.env.VITE_ENGINE_URL as string | undefined)?.replace(/\/$/, "") ?? "");
+const ENGINE_ORIGIN =
+  tunnelOverride() || (import.meta.env.VITE_ENGINE_MODE === "remote" ? (import.meta.env.VITE_ENGINE_URL as string | undefined)?.replace(/\/$/, "") ?? "" : "");
+const LOCAL = !ENGINE_ORIGIN;
 
 function httpUrl(path: string) {
   return `${ENGINE_ORIGIN}/engine${path}`;
@@ -27,7 +28,17 @@ function wsUrl(path: string) {
   return `${proto}://${window.location.host}/engine${path}`;
 }
 
+async function localRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const url = new URL(path, "http://local");
+  const method = (init?.method || "GET").toUpperCase();
+  const body = init?.body && typeof init.body === "string" ? JSON.parse(init.body) : undefined;
+  const r = await py.api(method, url.pathname, body, Object.fromEntries(url.searchParams.entries()));
+  if (r.status >= 400) throw new Error(`${r.status} ${JSON.stringify(r.json)}`);
+  return r.json as T;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  if (LOCAL) return localRequest<T>(path, init);
   const res = await fetch(httpUrl(path), {
     ...init,
     headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
@@ -39,6 +50,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 /** The free production host sleeps when idle; keep pinging /health for up to
  *  `timeoutMs` while it wakes. Resolves true once it answers. */
 export async function wakeEngine(timeoutMs = 90_000): Promise<boolean> {
+  if (LOCAL) {
+    try {
+      await Promise.race([py.init(), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), Math.max(timeoutMs, 120_000)))]);
+      return true;
+    } catch {
+      return false;
+    }
+  }
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
@@ -67,6 +86,12 @@ export const engineApi = {
   replay: (caseId: string, everyS = 5) => request<ReplayData>(`/cases/${caseId}/replay?every_s=${everyS}`),
   debrief: (caseId: string, end = false) => request<Debrief>(`/cases/${caseId}/debrief${end ? "?end=true" : ""}`),
   transcribe: async (audio: Blob): Promise<string> => {
+    if (LOCAL) {
+      // The site's own /api/stt function takes the raw recording and holds the key.
+      const r = await fetch("/api/stt", { method: "POST", headers: { "Content-Type": audio.type || "audio/webm" }, body: audio });
+      if (!r.ok) throw new Error(await r.text());
+      return (await r.json()).text as string;
+    }
     const form = new FormData();
     form.append("audio", audio, "speech.webm");
     const res = await fetch(httpUrl("/stt"), { method: "POST", body: form });
@@ -95,6 +120,9 @@ export function useOrConnection(caseId: string | null): OrConnection {
   const pendingText = useRef<Map<number, string>>(new Map());
   const outbox = useRef<unknown[]>([]);
   const lastTick = useRef(0);
+  const localReady = useRef(false);
+  const caseIdRef = useRef<string | null>(null);
+  caseIdRef.current = caseId;
   const refCounter = useRef(1);
 
   useEffect(() => {
@@ -109,6 +137,52 @@ export function useOrConnection(caseId: string | null): OrConnection {
     let retry: number | undefined;
     const seen = new Set<number>();
 
+    const handle = (msg: any) => {
+      if (msg.type === "state") {
+        if (msg.tick < lastTick.current) {
+          // The engine restarted and rebuilt the case: start the transcript over from its copy.
+          seen.clear();
+          setComms([]);
+        }
+        lastTick.current = msg.tick;
+        // The engine leaves out the step list and instruments when they haven't changed.
+        setState((prev) => {
+          const next = msg as CaseState;
+          if (next.surgery && prev?.surgery && !next.surgery.tasks) {
+            return { ...next, surgery: { ...next.surgery, tasks: prev.surgery.tasks, instruments: prev.surgery.instruments } };
+          }
+          return next;
+        });
+        const fresh = (msg.comms as CommsMessage[]).filter((c) => !seen.has(c.id));
+        if (fresh.length) {
+          fresh.forEach((c) => seen.add(c.id));
+          setComms((prev) => [...prev, ...fresh].slice(-300));
+        }
+      } else if (msg.type === "parsed") {
+        const text = pendingText.current.get(msg.ref) ?? "";
+        pendingText.current.delete(msg.ref);
+        setLastParse({ text, ok: !!msg.result?.ok, source: msg.result?.source ?? "", clarification: msg.result?.clarification ?? null });
+      }
+    };
+
+    // In-browser engine: the Python worker pushes the same messages a WebSocket would.
+    if (LOCAL) {
+      localReady.current = false;
+      py.wsOpen(caseId, handle)
+        .then(() => {
+          if (closed) return;
+          localReady.current = true;
+          setConnected(true);
+          outbox.current.splice(0).forEach((p) => void py.wsSend(caseId, p));
+        })
+        .catch(() => setConnected(false));
+      return () => {
+        closed = true;
+        localReady.current = false;
+        void py.wsClose(caseId, handle);
+      };
+    }
+
     const connect = () => {
       const ws = new WebSocket(wsUrl(`/cases/${caseId}/ws`));
       wsRef.current = ws;
@@ -122,34 +196,7 @@ export function useOrConnection(caseId: string | null): OrConnection {
         setConnected(false);
         if (!closed) retry = window.setTimeout(connect, 1500);
       };
-      ws.onmessage = (ev) => {
-        const msg = JSON.parse(ev.data);
-        if (msg.type === "state") {
-          if (msg.tick < lastTick.current) {
-            // The engine restarted and rebuilt the case: start the transcript over from its copy.
-            seen.clear();
-            setComms([]);
-          }
-          lastTick.current = msg.tick;
-          // The engine leaves out the step list and instruments when they haven't changed.
-          setState((prev) => {
-            const next = msg as CaseState;
-            if (next.surgery && prev?.surgery && !next.surgery.tasks) {
-              return { ...next, surgery: { ...next.surgery, tasks: prev.surgery.tasks, instruments: prev.surgery.instruments } };
-            }
-            return next;
-          });
-          const fresh = (msg.comms as CommsMessage[]).filter((c) => !seen.has(c.id));
-          if (fresh.length) {
-            fresh.forEach((c) => seen.add(c.id));
-            setComms((prev) => [...prev, ...fresh].slice(-300));
-          }
-        } else if (msg.type === "parsed") {
-          const text = pendingText.current.get(msg.ref) ?? "";
-          pendingText.current.delete(msg.ref);
-          setLastParse({ text, ok: !!msg.result?.ok, source: msg.result?.source ?? "", clarification: msg.result?.clarification ?? null });
-        }
-      };
+      ws.onmessage = (ev) => handle(JSON.parse(ev.data));
     };
     connect();
     return () => {
@@ -160,6 +207,11 @@ export function useOrConnection(caseId: string | null): OrConnection {
   }, [caseId]);
 
   const send = useCallback((payload: unknown) => {
+    if (LOCAL) {
+      if (localReady.current && caseIdRef.current) void py.wsSend(caseIdRef.current, payload);
+      else if (outbox.current.length < 20) outbox.current.push(payload);
+      return;
+    }
     const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload));
     else if (outbox.current.length < 20) outbox.current.push(payload);
