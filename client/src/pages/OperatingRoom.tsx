@@ -145,7 +145,7 @@ export default function OperatingRoom() {
           </motion.div>
           {engineUp === null && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" /> {pyStage || "Waking up the OR…"} the first visit downloads about 15 MB, then it is cached.
+              <Loader2 className="w-4 h-4 animate-spin" /> {pyStage && pyStage !== "Ready" ? pyStage : "Starting the simulator…"} (the first visit downloads about 15 MB; after that it is cached and starts in seconds)
             </div>
           )}
           {engineUp === false && (

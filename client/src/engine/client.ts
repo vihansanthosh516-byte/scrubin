@@ -64,8 +64,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
  *  `timeoutMs` while it wakes. Resolves true once it answers. */
 export async function wakeEngine(timeoutMs = 90_000): Promise<boolean> {
   if (LOCAL) {
+    // No timeout: a slow connection just takes longer to download Python (about 15 MB the first time); only a real failure ends the wait.
     try {
-      await Promise.race([py.init(), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), Math.max(timeoutMs, 120_000)))]);
+      await py.init();
       return true;
     } catch {
       return false;
