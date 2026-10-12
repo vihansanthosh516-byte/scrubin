@@ -10,6 +10,8 @@ import ProcedureLibrary from "./pages/ProcedureLibrary";
 import Simulation from "./pages/Simulation";
 import OperatingRoom from "./pages/OperatingRoom";
 import OrCases from "./pages/OrCases";
+import { Terms, Privacy } from "./pages/Legal";
+import SiteFooter from "./components/SiteFooter";
 import OrReplay from "./pages/OrReplay";
 import Leaderboard from "./pages/Leaderboard";
 import Profile from "./pages/Profile";
@@ -45,7 +47,7 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
     if (loading) return;
 
     // Define public routes that don't require auth
-    const publicRoutes = ["/signin", "/onboarding"];
+    const publicRoutes = ["/signin", "/onboarding", "/terms", "/privacy"];
     const isPublicRoute = publicRoutes.includes(location);
 
     // Not authenticated and not on a public route -> redirect to signin
@@ -115,10 +117,13 @@ function Router() {
             <Route path="/leaderboard" component={Leaderboard} />
             <Route path="/learn" component={LearnHub} />
             <Route path="/profile" component={Profile} />
+            <Route path="/terms" component={Terms} />
+            <Route path="/privacy" component={Privacy} />
             <Route component={NotFound} />
           </Switch>
         </motion.div>
       </AnimatePresence>
+      {showNavbar && <SiteFooter />}
     </>
   );
 }

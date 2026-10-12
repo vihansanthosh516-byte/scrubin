@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/errorReport";
 // Page-side handle to the Pyodide worker (worker.ts). One worker serves the whole app.
 type Pending = { resolve: (v: any) => void; reject: (e: Error) => void };
 
@@ -12,6 +13,7 @@ export type PyStatus = { stage: string; ready: boolean; error: string | null };
 let current: PyStatus = { stage: "", ready: false, error: null };
 
 function setStatus(stage: string) {
+  if (stage.startsWith("error:")) reportError("simulator-start", stage.slice(6));
   current = stage === "ready" ? { stage: "Ready", ready: true, error: null } : stage.startsWith("error:") ? { stage: "", ready: false, error: stage.slice(6) } : { stage, ready: false, error: null };
   statusListeners.forEach((f) => f(current));
 }

@@ -534,8 +534,8 @@ export const SignInPage = ({
             {/* Footer Text */}
             <p className="text-[10px] text-white/30 pt-4 leading-relaxed max-w-[280px] mx-auto">
               By continuing, you agree to ScrubIn's{" "}
-              <span className="underline">Terms</span> and{" "}
-              <span className="underline">Privacy Policy</span>.
+              <a className="underline" href="/terms" target="_blank" rel="noreferrer">Terms</a> and{" "}
+              <a className="underline" href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>. ScrubIn is an educational simulation, not medical advice.
             </p>
           </motion.div>
         </AnimatePresence>

@@ -9,7 +9,7 @@ WebAssembly) in a Web Worker, so the site needs no simulation server:
 | Classic multiple choice (`/simulation/classic`) | `vendor/scrubin-core` (copy of the Scrubin-Core repo, see `CORE_COMMIT.txt`) | `localApi.ts` wraps `window.fetch` and answers `/api/sim/*` and `/api/scenarios*` |
 
 - `scripts/pack-python.mjs` bundles the sources into `client/public/py/*.json` (runs before `dev` and `build`).
-- `worker.ts` loads Pyodide from the jsDelivr CDN (about 10-15 MB the first time, then cached), mounts the bundles,
+- `worker.ts` loads Pyodide from the jsDelivr CDN (about 10 MB over the wire (brotli) the first time, then cached), mounts the bundles,
   and runs `browser_api.py`, which replaces the FastAPI servers. Case records are kept in IndexedDB.
 - Things that need a secret stay on the server, as Vercel functions in `/api`: `llm` and `stt` (free-text and voice orders),
   `evaluate` (AI attending notes), `auth/*` (sign-in and sign-up).
