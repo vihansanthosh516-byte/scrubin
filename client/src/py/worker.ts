@@ -4,7 +4,9 @@
 // pushes {type:"status"|"ws", ...} events.
 import glue from "./browser_api.py?raw";
 
-const PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/";
+// Pyodide is served from this site (client/public/pyodide/v<version>/, see scripts/fetch-pyodide.mjs); the jsDelivr CDN
+// is only a fallback if those files are missing. Keep the fallback version equal to the "pyodide" version in package.json.
+const CDN_URL = "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/";
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
 
 let py: any = null;
@@ -54,12 +56,34 @@ function status(stage: string) {
   ctx.postMessage({ type: "status", stage });
 }
 
+async function localBase(): Promise<string | null> {
+  try {
+    const r = await fetch("/pyodide/version.txt");
+    if (!r.ok) return null;
+    const v = (await r.text()).trim();
+    return /^[\w.]+$/.test(v) ? `/pyodide/v${v}/` : null;
+  } catch {
+    return null;
+  }
+}
+
+async function startPython(base: string) {
+  const { loadPyodide } = await import(/* @vite-ignore */ new URL(base + "pyodide.mjs", self.location.href).href);
+  const instance = await loadPyodide({ indexURL: new URL(base, self.location.href).href });
+  status("Loading medical models…");
+  await instance.loadPackage(["pydantic", "pyyaml", "fastapi", "httpx"]);
+  return instance;
+}
+
 async function boot() {
   status("Loading the simulator…");
-  const { loadPyodide } = await import(/* @vite-ignore */ PYODIDE_URL + "pyodide.mjs");
-  py = await loadPyodide({ indexURL: PYODIDE_URL });
-  status("Loading medical models…");
-  await py.loadPackage(["pydantic", "pyyaml", "fastapi", "httpx"]);
+  const local = await localBase();
+  try {
+    if (!local) throw new Error("no local copy");
+    py = await startPython(local);
+  } catch {
+    py = await startPython(CDN_URL);
+  }
   const [engine, core] = await Promise.all([fetch("/py/engine.json").then((r) => r.json()), fetch("/py/core.json").then((r) => r.json())]);
   for (const bundle of [engine, core] as Record<string, string>[]) {
     for (const [p, text] of Object.entries(bundle)) {

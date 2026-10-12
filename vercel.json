@@ -1,8 +1,11 @@
 {
-  "buildCommand": "node scripts/pack-python.mjs && vite build",
+  "buildCommand": "node scripts/pack-python.mjs && node scripts/fetch-pyodide.mjs && vite build",
   "outputDirectory": "dist/public",
   "installCommand": "npm install --legacy-peer-deps",
   "framework": null,
+  "headers": [
+    { "source": "/pyodide/v(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

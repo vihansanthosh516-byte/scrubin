@@ -120,3 +120,4 @@ engine/data/
 
 # Generated Python bundles for the in-browser engines (scripts/pack-python.mjs)
 client/public/py/
+client/public/pyodide/
