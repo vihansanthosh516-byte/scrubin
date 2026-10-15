@@ -14,6 +14,13 @@ let current: PyStatus = { stage: "", ready: false, error: null };
 
 function setStatus(stage: string) {
   if (stage.startsWith("error:")) reportError("simulator-start", stage.slice(6));
+  if (stage === "ready") {
+    try {
+      sessionStorage.removeItem("py_reloaded");
+    } catch {
+      /* ignore */
+    }
+  }
   current = stage === "ready" ? { stage: "Ready", ready: true, error: null } : stage.startsWith("error:") ? { stage: "", ready: false, error: stage.slice(6) } : { stage, ready: false, error: null };
   statusListeners.forEach((f) => f(current));
 }
@@ -33,7 +40,20 @@ function get(): Worker {
     if ("error" in m) p.reject(new Error(m.error));
     else p.resolve(m.result);
   };
-  worker.onerror = (e) => setStatus("error:" + e.message);
+  worker.onerror = (e) => {
+    // A tab left open across a deploy points at worker files that no longer exist (the error has no message):
+    // reload once to pick up the new version instead of showing a dead end.
+    try {
+      if (!e.message && !sessionStorage.getItem("py_reloaded")) {
+        sessionStorage.setItem("py_reloaded", "1");
+        window.location.reload();
+        return;
+      }
+    } catch {
+      /* storage blocked: fall through to the message */
+    }
+    setStatus("error:" + (e.message || "the simulator files could not be loaded"));
+  };
   return worker;
 }
 
