@@ -134,6 +134,9 @@ class Autopilot:
     def induce_now(self) -> bool:
         """The surgeon asks to get going: once a minute of preoxygenation is done,
         start the induction rather than waiting out the full three minutes."""
+        if self.phase == "preox" and self.in_phase >= 60 and self.case.scenario.get("obstetric"):
+            self._obstetric_induction()
+            return True
         if self.phase == "preox" and self.in_phase >= 60:
             self.say("Okay — inducing now. Rapid sequence: fentanyl, propofol, rocuronium.")
             self.act({"type": "drug", "drug": "fentanyl", "dose": 150})
@@ -143,6 +146,14 @@ class Autopilot:
             self.say("Still preoxygenating — I'll induce in about a minute.")
             return True
         return False
+
+    def _obstetric_induction(self) -> None:
+        c = self.case
+        self.say("Preoxygenated. In labour with a full stomach: rapid sequence with cricoid pressure. Propofol and suxamethonium, no opioid until the baby is out.")
+        self.act({"type": "airway", "maneuver": "cricoid_on"})
+        self.act({"type": "drug", "drug": "propofol", "dose": round(2.5 * c.patient.lbm_kg, -1)})
+        self.act({"type": "drug", "drug": "succinylcholine", "dose": round(1.5 * c.patient.weight_kg, -1)})
+        self.goto("induced")
 
     def hear_deeper(self) -> None:
         self.act({"type": "drug", "drug": "propofol", "dose": 40})
@@ -209,8 +220,13 @@ class Autopilot:
             self.act({"type": "monitor", "attach": ["ecg", "spo2", "nibp", "etco2", "temp", "bis"]})
             self.act({"type": "gas", "o2_flow": 10, "air_flow": 0})
             self.act({"type": "airway", "maneuver": "mask_on"})
+            if c.scenario.get("pregnant"):
+                self.act({"type": "position", "position": "left_tilt"})
+                self.say("Left uterine displacement is on: she's term, so lying flat would squash the vena cava and drop her pressure.")
             self.goto("preox")
-        elif p == "preox" and self.in_phase >= 170:
+        elif p == "preox" and c.scenario.get("obstetric") and self.in_phase >= 120:
+            self._obstetric_induction()
+        elif p == "preox" and not c.scenario.get("obstetric") and self.in_phase >= 170:
             self.say("Preoxygenated. Full stomach, so rapid sequence: fentanyl, propofol, rocuronium 1.2 per kilo, no bag-mask ventilation."
                      if c.scenario.get("full_stomach", True) else "Preoxygenated. Fasted, so a standard induction with the video laryngoscope ready: fentanyl, propofol, rocuronium.")
             self.act({"type": "drug", "drug": "fentanyl", "dose": 150})
@@ -220,7 +236,8 @@ class Autopilot:
             self.act({"type": "drug", "drug": "rocuronium", "dose": round(1.2 * (c.patient.ibw_kg + 0.4 * (c.patient.weight_kg - c.patient.ibw_kg)), -1)})
             self.goto("induced")
         elif p == "induced" and self.in_phase >= 60 and eff.tof_count == 0:
-            self.act({"type": "airway", "maneuver": "intubate", "laryngoscope": "video", "tube_size": 7.5, "depth_cm": 22})
+            ob = c.scenario.get("obstetric")
+            self.act({"type": "airway", "maneuver": "intubate", "laryngoscope": "video", "tube_size": 7.0 if ob else 7.5, "depth_cm": 21 if ob else 22})
             self.goto("intubating")
         elif p == "intubating" and aw.attempt is None:
             if aw.device == "ett":
@@ -244,8 +261,11 @@ class Autopilot:
                 self.act({"type": "bag", "on": True})
                 self.goto("rescue_mask")
                 return
-            self.say(f"Tube confirmed — sustained CO2, equal breath sounds. 7.5 at 22 at the teeth.")
-            self.act({"type": "volatile", "percent": 2.5})
+            ob = c.scenario.get("obstetric")
+            self.say("Tube confirmed — sustained CO2, equal breath sounds. 7.0 at 21 at the teeth." if ob else "Tube confirmed — sustained CO2, equal breath sounds. 7.5 at 22 at the teeth.")
+            if ob:
+                self.act({"type": "airway", "maneuver": "cricoid_off"})
+            self.act({"type": "volatile", "percent": 1.5 if ob else 2.5})
             self.act({"type": "gas", "o2_flow": 1, "air_flow": 1})
             if not self.last.get("antibiotics"):
                 self._give_prophylaxis()
@@ -290,11 +310,45 @@ class Autopilot:
                 self.act({"type": "airway", "maneuver": "nasal_cannula", "flow": 4})
                 self.goto("done")
 
+    def _obstetric(self) -> None:
+        """Delivery, then the uterus: oxytocin, a lighter volatile, and escalation if it stays boggy."""
+        c = self.case
+        proc = c.procedure
+        if proc is None or "baby_delivered" not in proc.flags:
+            return
+        if not self.last.get("post_delivery"):
+            self.last["post_delivery"] = c.t
+            self.say("Baby's out: oxytocin 3 units slowly, infusion running, sevo down to half a MAC, and fentanyl now.")
+            self.act({"type": "drug", "drug": "oxytocin", "dose": 3, "unit": "units"})
+            self.act({"type": "infusion", "drug": "oxytocin", "rate": 10, "unit": "units/h"})
+            self.act({"type": "volatile", "percent": 0.8})
+            self.act({"type": "drug", "drug": "fentanyl", "dose": 100})
+            if c.eff.tof_count >= 3:
+                self.act({"type": "drug", "drug": "rocuronium", "dose": 20})
+        for b in proc.bleeders:
+            if not b.cure_drugs or not self.every("atony", 45):
+                continue
+            if "oxytocin" in b.cure_drugs:
+                self.say("Oxytocin, another 3 units, and the infusion up.")
+                self.act({"type": "drug", "drug": "oxytocin", "dose": 3, "unit": "units"})
+                self.act({"type": "infusion", "drug": "oxytocin", "rate": 20, "unit": "units/h"})
+            elif self.every("second_line", 600):
+                if c.patient.hidden.get("reactive_airway"):
+                    self.say("She's asthmatic, so no carboprost: methylergonovine 0.2 mg IM, and tranexamic acid 1 gram.")
+                    self.act({"type": "drug", "drug": "methylergonovine", "dose": 0.2})
+                else:
+                    self.say("Carboprost 0.25 mg IM, and tranexamic acid 1 gram.")
+                    self.act({"type": "drug", "drug": "carboprost", "dose": 0.25})
+                self.act({"type": "drug", "drug": "tranexamic_acid", "dose": 1})
+                self.act({"type": "fluid", "fluid": "lactated_ringers", "volume_ml": 500})
+
     def _maintain(self, emergence: bool = False) -> None:
         c = self.case
         eff, b, m = c.eff, c.body, c.machine
         if not self.every("titrate", 20):
             return
+        if c.scenario.get("obstetric") and not emergence:
+            self._obstetric()
         if not emergence:
             light = eff.bis > 60 or (self.baseline_hr and b.hr > 1.25 * self.baseline_hr and c.load.stimulus > 0.3)
             if light and self.every("sevo", 90):
@@ -304,7 +358,7 @@ class Autopilot:
                     self.act({"type": "drug", "drug": "fentanyl", "dose": 50})
             elif eff.bis < 35 and m.sevo_dial > 1.8 and self.every("sevo", 120):
                 self.act({"type": "volatile", "percent": round(m.sevo_dial - 0.3, 1)})
-            if eff.tof_count >= 2 and c.load.iap_mmhg > 5 and self.every("roc", 240):
+            if eff.tof_count >= 2 and (c.load.iap_mmhg > 5 or (c.scenario.get("obstetric") and c.load.stimulus > 0.3)) and self.every("roc", 240):
                 self.act({"type": "drug", "drug": "rocuronium", "dose": 20})
         if b.map < 65 and self.every("pressor", 90):
             if b.hr < 60:

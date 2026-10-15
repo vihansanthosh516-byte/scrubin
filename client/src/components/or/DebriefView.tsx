@@ -43,6 +43,10 @@ const HIDDEN_LABELS: Record<string, (v: any) => string> = {
   vas_adherent: (v) => (v ? "Vas deferens adherent to the sac (easy to injure)" : "Vas separate from the sac"),
   corona_mortis: (v) => (v ? "Corona mortis (aberrant pubic vessel) present" : "No aberrant pubic vessel"),
   contralateral_defect: (v) => (v ? "Small left-sided defect as well" : "Left groin intact"),
+  prior_cs_adhesions: (v) => (v ? "Bladder stuck up on the previous caesarean scar (adhesions)" : "No adhesions from the previous caesarean"),
+  anterior_placenta: (v) => (v ? "Anterior placenta (going through it bleeds, and the baby loses blood)" : "Placenta clear of the incision"),
+  big_baby: (v) => (v ? "Large baby with a deeply engaged head (a slower, harder delivery)" : "Average-sized baby"),
+  atony_risk: (v) => (v ? "Atony-prone uterus (prolonged labour): oxytocin alone may not be enough" : "Uterus responded normally to oxytocin"),
   prior_pelvic_surgery: (v) => (v ? "Prior pelvic surgery: bladder dome tethered by adhesions" : "No pelvic adhesions"),
 };
 

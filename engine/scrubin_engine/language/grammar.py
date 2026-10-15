@@ -33,6 +33,7 @@ UNIT_ALIASES = {
     "mg": "mg", "milligram": "mg", "milligrams": "mg", "migs": "mg", "mgs": "mg",
     "mcg": "mcg", "microgram": "mcg", "micrograms": "mcg", "micro": "mcg", "micros": "mcg", "ug": "mcg", "mics": "mcg", "mikes": "mcg", "mic": "mcg",
     "g": "g", "gram": "g", "grams": "g", "gm": "g",
+    "units": "units", "unit": "units", "iu": "units", "international units": "units",
 }
 
 MONITOR_WORDS = {
@@ -221,6 +222,9 @@ def parse_clause(raw: str) -> ParseResult:
         return r
     if _has(t, "steep trendelenburg", "steep trend", "steep head down", "maximum trendelenburg", "full trendelenburg", "30 degrees head down", "25 degrees head down"):
         add(type="position", position="steep_trendelenburg")
+        return r
+    if _has(t, "uterine displacement", "left lateral tilt", "left lateral", "wedge", "tilt the table left", "tilt the table to the left", "tilt her left", "left tilt"):
+        add(type="position", position="left_tilt")
         return r
     if _has(t, "left side down", "left tilt", "tilt left", "roll left", "roll him to the left", "roll her to the left", "left side down"):
         add(type="position", position="left_side_down")
@@ -415,18 +419,20 @@ def parse_clause(raw: str) -> ParseResult:
     if drug:
         d = DRUGS[drug]
         span = _drug_span(t, drug)
-        is_infusion = re.search(r"infusion|drip|gtt|run(ning)? at|/min|/kg/h|/h\b|per minute|per hour|mcg/kg|micrograms per kilo", t) and not re.search(r"bolus|push", t)
+        is_infusion = re.search(r"infusion|drip|gtt|run(ning)? at|/min|/kg/h|/h\b|/hr\b|per minute|per hour|mcg/kg|micrograms per kilo", t) and not re.search(r"bolus|push", t)
         if is_infusion or re.search(r"(stop|off|turn off|discontinue).{0,20}(infusion|drip)", t):
             if re.search(r"\b(stop|off|discontinue|pause)\b", t):
                 add(type="infusion", drug=drug, stop=True)
                 return r
-            m = re.search(NUM + r"\s*(mcg/kg/min|mcg/kg/h|mg/kg/h|mcg/min|mg/h|mg/min|mcg/h|micrograms per kilo(?:gram)? per minute)?", t)
+            m = re.search(NUM + r"\s*(mcg/kg/min|mcg/kg/h|mg/kg/h|mcg/min|mg/h|mg/min|mcg/h|units/h|units/hr|units per hour|micrograms per kilo(?:gram)? per minute)?", t)
             if not m:
                 r.clarification = f"What rate for the {d.name.lower()} infusion?"
                 return r
             unit = m.group(2)
             if unit and unit.startswith("micrograms per kilo"):
                 unit = "mcg/kg/min"
+            if unit in ("units/hr", "units per hour"):
+                unit = "units/h"
             add(type="infusion", drug=drug, rate=float(m.group(1)), unit=unit or d.infusion_unit or None)
             return r
         dose = _num_near_drug(t, span)

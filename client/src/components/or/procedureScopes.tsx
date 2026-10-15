@@ -6,6 +6,7 @@ import SigmoidScope, { isSigmoid } from "./SigmoidScope";
 import HysterectomyScope, { isHysterectomy } from "./HysterectomyScope";
 import NephrectomyScope, { isNephrectomy } from "./NephrectomyScope";
 import ProstatectomyScope, { isProstatectomy } from "./ProstatectomyScope";
+import CesareanScope, { isCesarean } from "./CesareanScope";
 
 /** The per-procedure laparoscopic drawing, or null for the generic (appendectomy) view. */
 export function procedureScope(state: CaseState): ReactNode | null {
@@ -15,11 +16,13 @@ export function procedureScope(state: CaseState): ReactNode | null {
   if (isHysterectomy(state)) return <HysterectomyScope state={state} />;
   if (isNephrectomy(state)) return <NephrectomyScope state={state} />;
   if (isProstatectomy(state)) return <ProstatectomyScope state={state} />;
+  if (isCesarean(state)) return <CesareanScope state={state} />;
   return null;
 }
 
 /** The table position this procedure asks for, for the surgeon's quick button. */
 export function tablePosition(state: CaseState): { position: string; label: string } {
+  if (isCesarean(state)) return { position: "left_tilt", label: "Left lateral tilt (wedge)" };
   if (isChole(state)) return { position: "reverse_trendelenburg", label: "Reverse Trendelenburg" };
   if (isHernia(state)) return { position: "trendelenburg", label: "Trendelenburg" };
   if (isProstatectomy(state)) return { position: "steep_trendelenburg", label: "Steep Trendelenburg" };

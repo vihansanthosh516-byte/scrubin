@@ -259,6 +259,11 @@ class Pharmacology:
         contract *= 1 + 0.9 * epi_b
         svr *= (1 - 0.1 * epi_b) * (1 + 1.2 * epi_a)
 
+        oxy = hill(self.ce("oxytocin"), 0.3, 2.0)  # a fast bolus vasodilates: low SVR, tachycardia; 1–3 units given slowly barely register
+        svr *= 1 - 0.45 * oxy
+        hr *= 1 + 0.3 * oxy
+        venodil += 0.04 * oxy
+
         esm = hill(self.ce("esmolol"), 2.0)
         hr *= 1 - 0.35 * esm
         contract *= 1 - 0.2 * esm

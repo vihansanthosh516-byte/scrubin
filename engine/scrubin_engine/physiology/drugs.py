@@ -164,6 +164,16 @@ DRUGS: dict[str, DrugDef] = {
                 usual_per_kg=(0.25, 1.0), pk=_one(0.0, 0.4, 1.0, fixed_v=10.0), tags=("tbw",)),
         DrugDef("naloxone", "Naloxone", "mg", "reversal", ("narcan",), "0.4 mg/mL",
                 usual_fixed=(0.04, 0.4), pk=_one(0.0, 0.08, 0.8, fixed_v=15.0)),
+        # --- uterotonics and haemostatic (obstetrics) --------------------
+        DrugDef("oxytocin", "Oxytocin", "units", "uterotonic", ("pitocin", "syntocinon"), "10 units/mL",
+                usual_fixed=(1.0, 5.0), pk=_one(0.0, 0.25, 1.0, fixed_v=12.0), infusion_unit="units/h", transit_s=10,
+                notes="Slow 1–3 unit bolus (5 at most) after delivery, then an infusion. A fast 10 unit bolus drops SVR and BP and speeds the heart."),
+        DrugDef("methylergonovine", "Methylergonovine", "mg", "uterotonic", ("methergine", "ergometrine"), "0.2 mg/mL",
+                usual_fixed=(0.2, 0.2), transit_s=15, notes="Second-line uterotonic IM. Avoid in hypertension or pre-eclampsia."),
+        DrugDef("carboprost", "Carboprost", "mg", "uterotonic", ("hemabate", "prostin"), "0.25 mg/mL",
+                usual_fixed=(0.25, 0.25), transit_s=15, notes="Second-line uterotonic IM. Can cause bronchospasm — avoid in asthma."),
+        DrugDef("tranexamic_acid", "Tranexamic acid", "g", "hemostatic", ("txa", "tranexamic"), "1 g",
+                usual_fixed=(1.0, 1.0), transit_s=5, notes="1 g over 10 minutes for postpartum haemorrhage."),
         # --- antibiotics (timing, allergy) -------------------------------
         DrugDef("cefazolin", "Cefazolin", "g", "antibiotic", ("ancef", "kefzol"), "2 g", usual_fixed=(2.0, 3.0), transit_s=5),
         DrugDef("cefoxitin", "Cefoxitin", "g", "antibiotic", ("mefoxin",), "2 g", usual_fixed=(2.0, 2.0), transit_s=5),

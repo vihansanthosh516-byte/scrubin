@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Action, CaseState } from "@/engine/types";
 import { OrButton, Section } from "./controls";
 import { procedureScope, tablePosition } from "./procedureScopes";
+import { isCesarean } from "./CesareanScope";
 
 interface Props {
   state: CaseState;
@@ -14,7 +15,7 @@ function ScopeView({ state }: { state: CaseState }) {
   const s = state.surgery;
   if (!s) return null;
   const done = new Set(s.done);
-  const cameraIn = done.has("camera_in") && !done.has("desufflate");
+  const cameraIn = (done.has("camera_in") && !done.has("desufflate")) || isCesarean(state);
   const appendixGone = done.has("specimen_out") || done.has("remove_specimen");
   const insufflating = s.iap > 1;
   return (
@@ -71,9 +72,11 @@ function ScopeView({ state }: { state: CaseState }) {
           {done.has("desufflate") ? "Camera out — closing." : insufflating ? "Insufflating…" : "No camera in."}
         </div>
       )}
-      <div className="absolute top-2 left-2 font-mono-data text-[11px] text-primary bg-muted rounded px-2 py-0.5">
-        IAP {s.iap.toFixed(0)} mmHg
-      </div>
+      {!isCesarean(state) && (
+        <div className="absolute top-2 left-2 font-mono-data text-[11px] text-primary bg-muted rounded px-2 py-0.5">
+          IAP {s.iap.toFixed(0)} mmHg
+        </div>
+      )}
       {s.running && (
         <div className="absolute bottom-0 inset-x-0 bg-muted px-3 py-2">
           <div className="flex justify-between text-xs">

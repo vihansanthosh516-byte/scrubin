@@ -37,6 +37,8 @@ class PatientSpec:
     interview: dict = field(default_factory=dict)
     # Hidden truths (never sent to the client until debrief).
     hidden: dict = field(default_factory=dict)
+    # Term pregnancy: smaller FRC, higher O2 consumption, lower anesthetic requirement.
+    pregnant: bool = False
 
     # --- pronouns (for what the team says) ----------------------------------
 
@@ -92,18 +94,18 @@ class PatientSpec:
         """Supine awake FRC; reduced with obesity (~ -3%/BMI point over 25)."""
         base = 30.0 * self.ibw_kg  # ~2.2 L supine for a 73 kg IBW adult
         obesity = max(0.0, self.bmi - 25.0) * 0.03
-        return base * max(0.5, 1.0 - obesity)
+        return base * max(0.5, 1.0 - obesity) * (0.8 if self.pregnant else 1.0)
 
     @property
     def vo2_ml_min(self) -> float:
         """Resting O2 consumption, +10% per degree C of fever."""
         base = 3.5 * self.weight_kg ** 0.75 * 3.0  # Brody/Kleiber-ish, ~250 ml/min @70kg
-        return base * (1.0 + 0.10 * max(0.0, self.temp_c - 37.0))
+        return base * (1.0 + 0.10 * max(0.0, self.temp_c - 37.0)) * (1.25 if self.pregnant else 1.0)
 
     @property
     def sevo_mac(self) -> float:
         """Age-adjusted sevoflurane MAC (%), Mapleson 1996."""
-        return 2.1 * 10 ** (-0.00269 * (self.age - 40))
+        return 2.1 * 10 ** (-0.00269 * (self.age - 40)) * (0.75 if self.pregnant else 1.0)
 
     @property
     def map(self) -> float:
@@ -125,6 +127,7 @@ class PatientSpec:
             "comorbidities": list(self.comorbidities),
             "npo_hours": self.npo_hours,
             "blood_type": self.blood_type,
+            "pregnant": self.pregnant,
             "interview": dict(self.interview),
             "baseline": {
                 "hr": self.hr,

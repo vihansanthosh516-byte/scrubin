@@ -33,6 +33,7 @@ const SURGEON_EXAMPLES: Record<string, string[]> = {
   total_hysterectomy: ["prep and drape", "place the uterine manipulator", "hasson entry", "insufflate", "divide the round ligaments", "develop the bladder flap", "identify the ureter", "coagulate the uterine arteries"],
   radical_nephrectomy: ["prep and drape", "hasson entry", "insufflate", "reflect the colon", "expose the hilum", "survey the hilum", "clip the renal artery", "staple the renal vein"],
   radical_prostatectomy: ["prep and drape", "place the foley", "dock the robot", "ligate the dorsal venous complex", "spare the nerves", "divide the urethra", "urethrovesical anastomosis", "leak test"],
+  emergency_cesarean: ["prep and drape", "pfannenstiel incision", "open the fascia", "open the peritoneum", "place the bladder retractor", "incise the uterus", "deliver the baby", "clamp the cord", "deliver the placenta", "close the uterus"],
 };
 
 interface Props {

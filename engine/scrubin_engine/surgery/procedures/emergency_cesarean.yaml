@@ -1,0 +1,319 @@
+# Category 1 caesarean section under general anesthesia as a task graph (same rules as appendectomy.yaml).
+#
+# Teaching core: left uterine displacement from the start (aortocaval compression), prep and drape BEFORE
+# induction so the knife goes in the moment the airway is secure, a fast skin-to-delivery interval, then the
+# uterus: oxytocin given slowly (a fast bolus drops the blood pressure), a firm uterus, escalation to
+# second-line uterotonics (carboprost is dangerous in asthma), and a count before closing.
+
+id: emergency_cesarean
+name: Emergency Caesarean Section (Category 1)
+
+op_time_factor: 1.6
+ebl_good: 700
+ebl_fair: 1000
+urgent: true
+wait_factor: 0.35
+prep_awake: true
+label: category 1 caesarean section
+expected: "Expected duration about half an hour from the knife, with a blood loss of about 500 mL."
+hemostasis_ok: "Uterus firm, hysterotomy dry, angles secure, no bleeding from the bladder flap."
+thermal_organ: bladder
+bleeding_teaching: "Deliver the placenta by cord traction, check the uterus is firm and that oxytocin is in, then escalate: methylergonovine or carboprost (not in asthma), tranexamic acid, and call for help early."
+positions: [left_tilt]
+position:
+  before: [prep]
+  words: "left lateral tilt, a wedge under her right hip"
+  set: left_tilt
+challenge_by:
+  positioned: circulator
+  anesthetized: anesthesia
+  oxytocin_given: anesthesia
+  counted: circulator
+auto_instruments:
+  incision: scalpel
+  dissect_subcut: cautery
+  open_fascia: scalpel
+  separate_recti: fingers
+  open_peritoneum: scissors
+  expose_uterus: bladder_blade
+  hysterotomy: scalpel
+  close_uterus: needle_driver
+  close_fascia: needle_driver
+  close_skin: needle_driver
+final_checks: [cesarean]
+
+instruments:
+  scalpel:            {name: "#10 scalpel"}
+  cautery:            {name: Electrocautery, hemostatic: true, thermal: true}
+  scissors:           {name: Mayo scissors}
+  fingers:            {name: Blunt finger dissection}
+  kelly:              {name: Kelly clamps}
+  bladder_blade:      {name: Bladder retractor (Doyen)}
+  clip_applier:       {name: Haemostat clamps and ties, hemostatic: true}
+  needle_driver:      {name: Needle driver}
+  suction_irrigator:  {name: Suction}
+  sponge:             {name: Raytec sponge, counted: true}
+  ultrasound:         {name: Sterile ultrasound probe}
+
+targets:
+  site: [pfannenstiel, suprapubic, bikini line, bikini, lower abdomen, abdomen, skin incision]
+  subcut: [fat, subcutaneous, subcutaneous tissue, sheath, rectus sheath]
+  fascia: [fascia, rectus sheath, sheath]
+  recti: [recti, rectus, rectus muscles, muscles]
+  peritoneum: [peritoneum, abdomen, abdominal cavity]
+  uterus: [uterus, lower segment, lower uterine segment, hysterotomy, womb, uterine incision]
+  baby: [baby, fetus, head, infant, newborn, child]
+  cord: [cord, umbilical cord]
+  placenta: [placenta, afterbirth]
+  bleeder: [bleeder, bleeding, bleeding vessel, bleeding point, ooze, atony, boggy uterus]
+  skin: [skin, wound, incision]
+
+tasks:
+  - id: prep
+    name: Prep, drape and Foley (before induction)
+    verbs: [prep, drape, prep and drape, prepping, foley]
+    requires: []
+    soft_requires:
+      positioned: "She's lying flat. The uterus is compressing her vena cava: she needs left lateral tilt first."
+    duration_s: 120
+    stimulus: 0.0
+    sets: [prepped]
+    start: "Quick chlorhexidine prep, drapes up and a Foley in, ready to cut the moment the airway is secure."
+    auto_order: 1
+
+  - id: incision
+    name: Pfannenstiel skin incision
+    verbs: [incise, incision, pfannenstiel, cut, make an incision, skin incision, knife to skin]
+    targets: [site]
+    instruments: [scalpel]
+    requires: [prepped, anesthetized]
+    blocked: "Not yet: she needs to be prepped and draped, and asleep with a confirmed airway. The airway comes first."
+    soft_requires:
+      time_out_done: "We haven't done a time-out."
+      antibiotics_given: "Antibiotics aren't in yet. They go in before the skin incision."
+      anesthesia_ready: "Anesthesia hasn't said we're okay to start."
+      positioned: "She's no longer tilted to the left."
+    duration_s: 30
+    stimulus: 0.85
+    sets: [incised]
+    start: "Knife to skin. Low transverse Pfannenstiel incision, two fingers above the pubic symphysis."
+    hooks: [record_incision]
+    auto_order: 2
+
+  - id: dissect_subcut
+    name: Dissect through the subcutaneous fat to the rectus sheath
+    verbs: [dissect through the fat, dissect to the sheath, carry the incision down, subcutaneous, expose the sheath, deepen the incision, dissect down]
+    targets: [subcut]
+    instruments: [cautery, scalpel, scissors]
+    requires: [incised]
+    blocked: "Make the skin incision first."
+    duration_s: 60
+    stimulus: 0.5
+    sets: [sheath_exposed]
+    hooks: [subcut_bleed]
+    start: "Cutting down through the subcutaneous fat to the rectus sheath, clamping and cauterising the vessels."
+    auto_order: 3
+
+  - id: open_fascia
+    name: Open the rectus sheath
+    verbs: [open the fascia, incise the sheath, incise the fascia, open the sheath, rectus sheath, open the rectus sheath]
+    targets: [fascia]
+    instruments: [scalpel, scissors]
+    requires: [sheath_exposed]
+    blocked: "Expose the rectus sheath first."
+    duration_s: 45
+    stimulus: 0.5
+    sets: [fascia_open]
+    start: "Nicking the sheath in the midline and extending it transversely with scissors."
+    auto_order: 4
+
+  - id: separate_recti
+    name: Separate the rectus muscles
+    verbs: [separate the recti, separate the rectus, split the muscles, separate the muscles, separate the rectus muscles]
+    targets: [recti]
+    instruments: [fingers, scissors]
+    requires: [fascia_open]
+    blocked: "Open the rectus sheath first."
+    duration_s: 30
+    stimulus: 0.5
+    sets: [recti_separated]
+    start: "Separating the recti in the midline by blunt dissection."
+    auto_order: 5
+
+  - id: open_peritoneum
+    name: Open the peritoneum
+    verbs: [open the peritoneum, enter the peritoneum, enter the abdomen, open the abdomen, peritoneal entry]
+    targets: [peritoneum]
+    instruments: [scissors, scalpel]
+    requires: [recti_separated]
+    blocked: "Separate the rectus muscles first."
+    duration_s: 45
+    stimulus: 0.6
+    sets: [peritoneum_open]
+    hooks: [peritoneal_entry]
+    start: "Lifting the peritoneum between two clamps, checking nothing is stuck to it, and opening it high, away from the bladder."
+    auto_order: 6
+
+  - id: scan_placenta
+    name: Locate the placenta with ultrasound
+    verbs: [ultrasound, scan, locate the placenta, find the placenta, placental site, scan the uterus]
+    targets: [placenta]
+    instruments: [ultrasound]
+    requires: [peritoneum_open]
+    blocked: "Open the abdomen first."
+    duration_s: 40
+    stimulus: 0.1
+    sets: [placenta_located]
+    hooks: [placenta_scan]
+    start: "Sterile probe on the uterus, looking for the placental edge."
+
+  - id: expose_uterus
+    name: Place the bladder retractor and expose the lower segment
+    verbs: [bladder retractor, bladder blade, expose the uterus, expose the lower segment, retractor, place the retractor, identify the lower segment]
+    targets: [uterus]
+    instruments: [bladder_blade]
+    requires: [peritoneum_open]
+    blocked: "Open the peritoneum first."
+    duration_s: 40
+    stimulus: 0.3
+    sets: [uterus_exposed]
+    hooks: [uterus_view]
+    start: "Bladder blade in, uterus rotated back to the midline, lower segment well seen."
+    auto_order: 7
+
+  - id: hysterotomy
+    name: Low transverse hysterotomy
+    verbs: [incise the uterus, hysterotomy, uterine incision, open the uterus, cut the uterus, lower segment incision, low transverse incision]
+    targets: [uterus]
+    instruments: [scalpel, scissors]
+    requires: [uterus_exposed]
+    blocked: "Expose the lower segment with the bladder retractor first."
+    duration_s: 40
+    stimulus: 0.8
+    sets: [uterus_open]
+    hooks: [hysterotomy_risk]
+    start: "A shallow transverse cut in the lower segment until the membranes bulge, then extending it with the fingers."
+    auto_order: 8
+
+  - id: deliver_baby
+    name: Deliver the baby
+    verbs: [deliver the baby, deliver the head, get the baby out, deliver the fetus, deliver the infant, baby out, deliver]
+    targets: [baby]
+    requires: [uterus_open]
+    blocked: "Open the uterus first."
+    duration_s: 60
+    stimulus: 0.8
+    sets: [baby_delivered]
+    hooks: [delivery]
+    start: "Hand in behind the head, flexing and lifting it out through the incision with fundal pressure, then the shoulders and body."
+    auto_order: 9
+
+  - id: clamp_cord
+    name: Clamp and cut the cord
+    verbs: [clamp the cord, cut the cord, clamp and cut the cord, cord clamp, hand the baby, hand over the baby]
+    targets: [cord]
+    instruments: [kelly]
+    requires: [baby_delivered]
+    blocked: "Deliver the baby first."
+    duration_s: 30
+    stimulus: 0.2
+    sets: [cord_clamped]
+    hooks: [cord_handover]
+    start: "Clamping and cutting the cord, baby passed to the neonatal team."
+    auto_order: 10
+
+  - id: deliver_placenta
+    name: Deliver the placenta
+    verbs: [deliver the placenta, remove the placenta, placenta out, controlled cord traction, placental delivery, take the placenta]
+    targets: [placenta]
+    requires: [cord_clamped]
+    blocked: "Clamp and cut the cord first."
+    duration_s: 90
+    stimulus: 0.3
+    sets: [placenta_out]
+    hooks: [placenta_tone]
+    start: "Controlled cord traction with the uterus held up, then wiping out the cavity."
+    auto_order: 11
+
+  - id: close_uterus
+    name: Close the hysterotomy in two layers
+    verbs: [close the uterus, close the hysterotomy, repair the uterus, suture the uterus, close the uterine incision, repair the hysterotomy]
+    targets: [uterus]
+    instruments: [needle_driver]
+    requires: [placenta_out]
+    blocked: "Deliver the placenta first."
+    soft_requires:
+      oxytocin_given: "Has oxytocin gone in? The uterus will not contract and stay firm without it."
+    duration_s: 420
+    stimulus: 0.3
+    sets: [uterus_closed]
+    hooks: [uterine_closure]
+    start: "Closing the hysterotomy in two layers of continuous absorbable suture, taking care at the angles."
+    auto_order: 12
+
+  - id: inspect_hemostasis
+    name: Check hemostasis, adnexa and gutters
+    verbs: [check hemostasis, inspect, look for bleeding, hemostasis, inspect the adnexa, clear the gutters, wipe out the gutters]
+    requires: [uterus_closed]
+    blocked: "Not yet: close the uterus first."
+    duration_s: 90
+    stimulus: 0.1
+    sets: [hemostasis_checked]
+    hooks: [reveal_occult]
+    start: "Checking the incision, both angles, the bladder flap and the adnexa, then emptying the gutters of clot."
+    auto_order: 13
+
+  - id: control_bleeding
+    name: Control bleeding
+    verbs: [control, cauterize, clip the bleeder, clamp the bleeder, stop the bleeding, get control, apply pressure, massage, massage the uterus, uterine massage, fundal massage, rub up a contraction]
+    targets: [bleeder]
+    instruments: [clip_applier, cautery, sponge]
+    requires: [bleeding]
+    blocked: "There's no active bleeding."
+    duration_s: 60
+    stimulus: 0.3
+    hooks: [control_bleeder]
+    start: "Getting control of the bleeding."
+    priority: true
+
+  - id: count
+    name: Sponge / needle / instrument count
+    verbs: [count, sponge count, do the count, counts]
+    requires: [uterus_closed]
+    blocked: "Not yet: the uterus has to be closed first."
+    duration_s: 60
+    stimulus: 0.0
+    sets: [counted]
+    hooks: [count_result]
+    start: "Counting."
+    auto_order: 14
+
+  - id: close_fascia
+    name: Close the rectus sheath
+    verbs: [close the fascia, close fascia, fascial closure, close the sheath, suture the fascia, close the rectus sheath]
+    targets: [fascia]
+    instruments: [needle_driver]
+    requires: [uterus_closed]
+    blocked: "Close the uterus first."
+    soft_requires:
+      counted: "The count isn't done yet."
+    duration_s: 240
+    stimulus: 0.5
+    sets: [fascia_closed]
+    start: "Closing the rectus sheath with a continuous 1 Vicryl."
+    hooks: [closing_cue]
+    auto_order: 15
+
+  - id: close_skin
+    name: Close skin
+    verbs: [close skin, close the skin, skin closure, subcuticular, close]
+    targets: [skin]
+    instruments: [needle_driver]
+    requires: [fascia_closed]
+    blocked: "Close the sheath first."
+    duration_s: 300
+    stimulus: 0.35
+    sets: [skin_closed]
+    hooks: [finish]
+    start: "Subcutaneous layer and a subcuticular skin closure, then the dressing."
+    auto_order: 16

@@ -8,10 +8,11 @@ export const ENGINE_SCENARIO: Record<string, string> = {
   "total-hysterectomy": "total_hysterectomy",
   "radical-nephrectomy": "radical_nephrectomy",
   "radical-prostatectomy": "radical_prostatectomy",
+  "c-section": "emergency_cesarean",
 };
 
 // Saved cases resume with the engine's scenario id, so those resolve too.
-for (const id of ["inguinal_hernia", "sigmoid_colectomy", "total_hysterectomy", "radical_nephrectomy", "radical_prostatectomy"]) ENGINE_SCENARIO[id] = id;
+for (const id of ["inguinal_hernia", "sigmoid_colectomy", "total_hysterectomy", "radical_nephrectomy", "radical_prostatectomy", "emergency_cesarean"]) ENGINE_SCENARIO[id] = id;
 
 export const SCENARIO_NAME: Record<string, string> = {
   appendectomy: "Laparoscopic Appendectomy",
@@ -21,6 +22,7 @@ export const SCENARIO_NAME: Record<string, string> = {
   total_hysterectomy: "Total Laparoscopic Hysterectomy",
   radical_nephrectomy: "Laparoscopic Radical Nephrectomy",
   radical_prostatectomy: "Robotic Radical Prostatectomy",
+  emergency_cesarean: "Emergency Caesarean Section (Category 1)",
 };
 
 /** Procedure name for an engine scenario id (falls back to the id). */

@@ -131,7 +131,7 @@ def surgeon_items(case) -> list[dict]:
                                f"{hrs:.1f} h head-down at 25 degrees or more (facial and airway swelling about {round(edema * 100)}%, peak airway pressure {case.metrics.max_peak_pressure:.0f} cmH2O).",
                                "Every hour head-down raises airway pressure, swells the face and airway and raises eye pressure. Work efficiently, "
                                "level the table when you can (for example when no exposure is needed), and tell anesthesia so they can plan a cuff-leak test."))
-        items.append(_item("Technique", "Blood loss", GOOD if case.body.blood_loss_ml < 100 else FAIR if case.body.blood_loss_ml < 400 else POOR,
+        items.append(_item("Technique", "Blood loss", GOOD if case.body.blood_loss_ml < p.spec.get("ebl_good", 100) else FAIR if case.body.blood_loss_ml < p.spec.get("ebl_fair", 400) else POOR,
                            f"Estimated blood loss {case.body.blood_loss_ml:.0f} mL.",
                            p.spec.get("bleeding_teaching", "Divide the mesoappendix with an energy device, stapler or clips; the appendiceal artery runs in it.")))
     return items
@@ -168,10 +168,66 @@ _COMPLICATION_TEACHING = {
 }
 
 
+def obstetric_items(case) -> list[dict]:
+    """Caesarean-specific teaching points, shown to both roles: positioning, speed, the uterus and the baby."""
+    m, items = case.metrics, []
+    delivery = _first(case, "delivery")
+    items.append(_item("Obstetrics", "Left uterine displacement",
+                       GOOD if m.sec_untilted < 60 else FAIR if m.sec_untilted < 240 else POOR,
+                       f"{m.sec_untilted / 60:.1f} min lying flat with the term uterus on the vena cava before delivery.",
+                       "From about 20 weeks the uterus compresses the vena cava when she is supine: preload and blood pressure fall, and so does placental blood flow. Tilt left from the start."))
+    if delivery is None:
+        return items
+    d2d = delivery["t"] / 60
+    items.append(_item("Obstetrics", "Decision to delivery",
+                       GOOD if d2d <= 15 else FAIR if d2d <= 30 else POOR,
+                       f"{d2d:.0f} min from the decision to deliver the baby (category 1: as fast as is safe, 30 min at the outside).",
+                       "Everything that delays the knife delays the baby: prep and drape during induction, a short preoxygenation, and a ready airway."))
+    ind = case._flags.get("induction")
+    if isinstance(ind, dict):
+        i2d = (delivery["t"] - ind["t"]) / 60
+        items.append(_item("Obstetrics", "Induction to delivery",
+                           GOOD if i2d <= 8 else FAIR if i2d <= 12 else POOR,
+                           f"{i2d:.0f} min from propofol to the baby being out.",
+                           "Anesthetic drugs cross the placenta: the longer between induction and delivery, the sleepier the baby. Surgeon ready, then induce."))
+    oxy = [e for e in _events(case, "drug") if e["drug"] == "oxytocin" and e["t"] >= delivery["t"] - 5]
+    if not oxy:
+        items.append(_item("Obstetrics", "Oxytocin", POOR, "No oxytocin was given after delivery.",
+                           "Oxytocin is the first-line uterotonic: give 1–3 units slowly after delivery and start an infusion."))
+    else:
+        first = oxy[0]
+        wait = first["t"] - delivery["t"]
+        fast = max(e["amount"] for e in oxy)
+        grade = GOOD if wait <= 120 and fast <= 5 else FAIR if wait <= 300 else POOR
+        items.append(_item("Obstetrics", "Oxytocin", grade,
+                           f"First dose {first['amount']:g} units, {wait / 60:.1f} min after delivery." + (f" A bolus of {fast:g} units drops SVR and blood pressure." if fast > 5 else ""),
+                           "Give 1–3 units slowly (up to 5), then an infusion. A fast 10 unit bolus causes hypotension and tachycardia."))
+    asthma = bool(case.patient.hidden.get("reactive_airway"))
+    carbo = [e for e in _events(case, "drug") if e["drug"] == "carboprost"]
+    if carbo and asthma:
+        items.append(_item("Obstetrics", "Carboprost in an asthmatic", POOR, "Carboprost was given to a patient with asthma and she bronchospasmed.",
+                           "Prostaglandin F2-alpha causes bronchoconstriction. Use methylergonovine (unless hypertensive) instead, and check the history before the second-line drug."))
+    if any(e.get("source") == "uterine atony" for e in _events(case, "complication")):
+        drugs = {e["drug"] for e in _events(case, "drug")}
+        escalated = bool(drugs & {"methylergonovine", "carboprost"})
+        txa = "tranexamic_acid" in drugs
+        items.append(_item("Obstetrics", "Uterine atony", GOOD if txa else FAIR if escalated or "oxytocin" in drugs else POOR,
+                           "The uterus was boggy after the placenta. " + ("A second-line uterotonic was given. " if escalated else "No second-line uterotonic was needed or given. ")
+                           + ("Tranexamic acid was given." if txa else "Tranexamic acid was not given."),
+                           "Atony ladder: massage, oxytocin, methylergonovine or carboprost, tranexamic acid, then surgical measures and help."))
+    items.append(_item("Obstetrics", "Baby", GOOD if delivery["apgar1"] >= 7 else FAIR if delivery["apgar1"] >= 4 else POOR,
+                       f"Apgars {delivery['apgar1']} and {delivery['apgar5']}, cord arterial pH {delivery['ph']}."
+                       + (" Contributing: " + "; ".join(delivery["reasons"]) + "." if delivery["reasons"] else " Nothing slowed the baby down."),
+                       "Speed to delivery, a tilted mother, a short induction-to-delivery interval and no opioid or deep volatile before the cord is clamped give the best baby."))
+    return items
+
+
 def build_debrief(case) -> dict[str, Any]:
     started = ("induction" in case._flags) if case.role == "anesthesia" else (case.metrics.incision_t is not None)
     if started:
         items = anesthesia_items(case) if case.role == "anesthesia" else surgeon_items(case)
+        if case.scenario.get("obstetric"):
+            items.extend(obstetric_items(case))
         op_done = case.role == "surgeon" and case.procedure is not None and case.procedure.finished
         if case.outcome is None and not op_done:
             # Stopping partway can't earn a perfect score for a case not finished.

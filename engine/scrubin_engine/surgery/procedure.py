@@ -47,6 +47,10 @@ class Bleeder:
     source: str
     rate_ml_min: float
     since_t: float
+    cure_drugs: tuple = ()  # a uterotonic given after this started stops it (atony)
+    given0: dict = field(default_factory=dict)
+    nonblocking: bool = False  # bleeding that does not stop the operation (a massaged boggy uterus, the placental bed)
+    until_flag: str = ""  # stops by itself once this flag is set (e.g. the placenta is out)
 
 
 @dataclass
@@ -93,6 +97,8 @@ class Procedure:
             return c.metrics.time_out_t is not None
         if name == "anesthesia_ready":
             return "anesthesia_ready" in self.flags
+        if name == "oxytocin_given":
+            return c.pharm.ever_given.get("oxytocin", 0.0) > 0.0
         if name == "not_insufflated":
             return "insufflated" not in self.flags
         if name == "adhesions":
@@ -319,8 +325,22 @@ class Procedure:
         co2_target = 2.4 * self.iap * (3.0 if "subq_emphysema" in self.flags else 1.0)
         self.co2_abs += (co2_target - self.co2_abs) * dt / 300.0
 
+        # Uterine atony stops once a uterotonic is given after it started.
+        for b in list(self.bleeders):
+            if b.until_flag and b.until_flag in self.flags:
+                self.bleeders.remove(b)
+            elif b.cure_drugs and any(c.pharm.ever_given.get(d, 0.0) > b.given0.get(d, 0.0) for d in b.cure_drugs):
+                self.bleeders.remove(b)
+                self.surgeon_says("The uterus is firming up under my hand: the bleeding is slowing.", key="atony_cured")
+        fn = getattr(H, f"tick_{self.spec['id']}", None)
+        if fn:
+            fn(self, dt)
+
         # Bleeding
         bleed = sum(b.rate_ml_min for b in self.bleeders)
+        baseline = getattr(H, f"baseline_bleed_{self.spec['id']}", None)
+        if baseline:
+            bleed += baseline(self)
 
         load = c.load
         load.iap_mmhg = self.iap
@@ -353,12 +373,16 @@ class Procedure:
         if c.body.movement > 0.3:
             r.moved = True
             return
-        if self.bleeders and not r.task.get("priority"):
+        if self.field_bleeders() and not r.task.get("priority"):
             self.surgeon_says("Can't see anything — there's bleeding.", key="cant_see", every_s=45)
             return
         r.remaining_s -= dt
         if r.remaining_s <= 0:
             self._finish_running()
+
+    def field_bleeders(self) -> list:
+        """Bleeding that stops the operation: a boggy uterus that has been massaged waits for drugs instead."""
+        return [b for b in self.bleeders if not b.nonblocking]
 
     # ------------------------------------------------------------------
     # AI surgeon
@@ -377,6 +401,7 @@ class Procedure:
 
     def _auto(self, dt: float) -> None:
         c = self.case
+        wf = float(self.spec.get("wait_factor", 1.0))  # an emergency does not wait as long at each checkpoint
         if self._unsafe_to_operate():
             self.surgeon_says(f"I'm holding — the airway's not secure. Tell me when {c.patient.he}'s intubated and oxygenating again.", key="hold_airway", every_s=60)
             return
@@ -385,7 +410,7 @@ class Procedure:
         if c.t > 45 and "greeted" not in self.flags:
             self.flags.add("greeted")
             self.surgeon_says(f"Morning everyone. {self.label[0].upper() + self.label[1:]} — let me know when {c.patient.he}'s asleep and the airway's secure.")
-        if self.bleeders and (self.running is None or not self.running.task.get("priority")):
+        if self.field_bleeders() and (self.running is None or not self.running.task.get("priority")):
             if self._waited("react_bleed", 15):
                 self._wait.pop("react_bleed", None)
                 self.running = None
@@ -408,21 +433,21 @@ class Procedure:
         if tid == "incision":
             if not self.flag("time_out_done"):
                 self.surgeon_says("Can we do a time-out please?", key="ask_timeout")
-                if not self._waited("timeout", 75):
+                if not self._waited("timeout", 75 * wf):
                     return
                 c.metrics.time_out_t = c.t
                 self.notes.append("Circulator had to lead the time-out; anesthesia didn't respond.")
                 c.say("circulator", f"I'll run it: {c.patient.name}, {c.patient.age}, {self.label}. {self._allergy_line()} " + ("Antibiotics in." if self.flag("antibiotics_given") else "Antibiotics are NOT in."))
             if not self.flag("antibiotics_given"):
                 self.surgeon_says("Have antibiotics gone in? I'd like them in before I cut.", key="ask_abx")
-                if not self._waited("abx", 120):
+                if not self._waited("abx", 120 * wf):
                     return
                 if "abx_skipped" not in self.flags:
                     self.flags.add("abx_skipped")
                     self.notes.append("Incision made without prophylactic antibiotics.")
             if not self.flag("anesthesia_ready"):
                 self.surgeon_says("Okay to start?", key="ask_ready")
-                if not self._waited("ready", 60):
+                if not self._waited("ready", 60 * wf):
                     return
                 self.flags.add("anesthesia_ready")
                 self.notes.append("Surgeon started without a clear 'go ahead' from anesthesia.")
@@ -430,7 +455,7 @@ class Procedure:
         if tid in pos.get("before", ("explore", "grasp_appendix", "mobilize_cecum")) and not self.flag("positioned"):
             words = pos.get("words", "Trendelenburg, left side down")
             self.surgeon_says(f"Can we get {words}, please?", key="ask_position")
-            if not self._waited("position", 50):
+            if not self._waited("position", 50 * wf):
                 return
             c._do_position(A.Position(position=pos.get("set", "left_side_down")), "circulator")
             self.notes.append("Table position request went unanswered; circulator positioned the patient.")
@@ -479,7 +504,7 @@ class Procedure:
             ok, _ = self.can_start(t)
             if ok:
                 return t
-            if t["id"] == "prep" and not self.flag("anesthetized"):
+            if t["id"] == "prep" and not self.flag("anesthetized") and not self.spec.get("prep_awake"):
                 return None
             return t  # blocked on a checkpoint the auto logic handles
         return None

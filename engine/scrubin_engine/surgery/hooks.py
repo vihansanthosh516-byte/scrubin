@@ -60,6 +60,10 @@ def duration_factor(proc: "Procedure", task: dict) -> float:
         f *= 1.3
     if tid in ("drop_bladder", "bladder_neck", "seminal_vesicles", "divide_urethra") and h.get("large_gland"):
         f *= 1.25
+    if tid in ("open_peritoneum", "expose_uterus") and h.get("prior_cs_adhesions"):
+        f *= 1.3
+    if tid == "deliver_baby" and h.get("big_baby"):
+        f *= 1.6
     return f
 
 
@@ -206,6 +210,19 @@ def end_reveal_occult(proc, task, r):
 
 def end_control_bleeder(proc, task, r):
     ins = _instrument(proc, r)
+    atony = [b for b in proc.bleeders if b.cure_drugs]
+    if atony:
+        # A boggy uterus is not fixed with clamps: massage buys time, the drugs fix it.
+        for b in atony:
+            if not b.nonblocking:
+                b.rate_ml_min *= 0.5
+                b.nonblocking = True
+        proc.bleeders[:] = [b for b in proc.bleeders if b.cure_drugs or not ins.get("hemostatic")]
+        who = "surgeon" if proc.mode == "auto" else "system"
+        proc.case.say(who, "Fundal massage is slowing it, but the uterus is still boggy. It needs a uterotonic: oxytocin if none has gone in, then methylergonovine "
+                           "or carboprost (not in asthma), and tranexamic acid." if proc.mode == "auto"
+                      else "Massage slows the bleeding but the uterus is still boggy. It needs a uterotonic drug from anesthesia.")
+        return
     if ins.get("hemostatic"):
         proc.bleeders.clear()
         msg = "Bleeding controlled."
@@ -898,3 +915,197 @@ def final_prostatectomy(proc):
         proc.notes.append("The urethrovesical anastomosis was never leak-tested.")
     if "uv_defect" in proc.flags:
         proc.occult.append("Urethrovesical anastomotic leak, not detected because no leak test was done (urine leak, pelvic urinoma, prolonged catheter and an anastomotic stricture later).")
+
+
+# --- emergency caesarean section ----------------------------------------------
+
+def end_subcut_bleed(proc, task, r):
+    ins = _instrument(proc, r)
+    if _rng(proc).random() < (0.05 if ins.get("hemostatic") else 0.5):
+        _bleed(proc, 35.0, "superficial epigastric vessel", "Bleeder in the fat! Suction and cautery!" if proc.mode == "auto" else "A vessel in the subcutaneous fat is bleeding.")
+
+
+def end_peritoneal_entry(proc, task, r):
+    h = proc.case.patient.hidden
+    rng = _rng(proc)
+    p = (0.15 if h.get("prior_cs_adhesions") else 0.01) + (0.05 if r.moved else 0.0)
+    if rng.random() < p:
+        if rng.random() < 0.6:
+            proc.case.say(_speaker(proc), "Clear fluid: I've nicked the bladder where it was stuck to the old scar. I'll repair it in two layers after the baby is out." if proc.mode == "auto"
+                          else "Clear fluid wells up: the bladder was stuck up and has been nicked. It will be repaired in two layers after delivery.",
+                          kind="speech" if proc.mode == "auto" else "finding")
+            proc.notes.append("Bladder injury at peritoneal entry (adherent to the previous caesarean scar), recognised and repaired.")
+        else:
+            proc.occult.append("Bladder injury at peritoneal entry, not recognised (haematuria, vesico-uterine fistula, urinoma).")
+
+
+def end_placenta_scan(proc, task, r):
+    h = proc.case.patient.hidden
+    txt = ("The placenta is anterior and its lower edge reaches the front of the lower segment: the incision should go in above its edge." if h.get("anterior_placenta")
+           else "The placenta is posterior-fundal; the front of the lower segment is clear.")
+    proc.findings.append(txt)
+    proc.case.say(_speaker(proc), txt, kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_uterus_view(proc, task, r):
+    h = proc.case.patient.hidden
+    parts = ["The lower segment is thin, well formed and clear of the scar."]
+    if h.get("prior_cs_adhesions"):
+        parts.append("The bladder is stuck up on the old scar by adhesions.")
+    if h.get("anterior_placenta") and "placenta_located" not in proc.flags:
+        parts.append("There are large vessels in the lower segment: the placenta may be anterior.")
+    proc.findings.extend(parts)
+    proc.case.say(_speaker(proc), " ".join(parts), kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_hysterotomy_risk(proc, task, r):
+    c, h = proc.case, proc.case.patient.hidden
+    proc.hyst_t = c.t
+    through = h.get("anterior_placenta") and "placenta_located" not in proc.flags and proc.mode == "trainee"
+    if through:
+        from .procedure import Bleeder
+
+        proc.flags.add("cut_through_placenta")
+        proc.bleeders.append(Bleeder("anterior placenta", 100.0, c.t, nonblocking=True, until_flag="placenta_out"))
+        c.event("complication", name="bleeding", source="anterior placenta", rate_ml_min=100.0)
+        c.say("system", "The incision has gone straight through an anterior placenta: dark blood, and the baby is losing blood too.", kind="finding")
+    if _rng(proc).random() < 0.03:
+        proc.notes.append("A small laceration of the baby's scalp from the scalpel. It was recognised and glued by the paediatric team.")
+
+
+def _mmss(seconds: float) -> str:
+    return f"{int(seconds // 60)}:{int(seconds % 60):02d}"
+
+
+def end_delivery(proc, task, r):
+    c, h = proc.case, proc.case.patient.hidden
+    m = c.metrics
+    t = c.t
+    proc.delivery_t = t
+    reasons = []
+    pen = 0
+    if t / 60.0 > 30:
+        pen += 2
+        reasons.append("decision-to-delivery over 30 minutes")
+    elif t / 60.0 > 20:
+        pen += 1
+        reasons.append("decision-to-delivery over 20 minutes")
+    ind = c._flags.get("induction")
+    if isinstance(ind, dict):
+        i2d = (t - ind["t"]) / 60.0
+        if i2d > 12:
+            pen += 2
+            reasons.append(f"induction-to-delivery {i2d:.0f} min (anesthetic transfer to the baby)")
+        elif i2d > 8:
+            pen += 1
+            reasons.append(f"induction-to-delivery {i2d:.0f} min")
+    if t - getattr(proc, "hyst_t", t) > 180:
+        pen += 1
+        reasons.append("uterine incision-to-delivery over 3 minutes")
+    if m.sec_untilted > 120:
+        pen += 1
+        reasons.append(f"{m.sec_untilted / 60:.0f} min flat (aortocaval compression)")
+    if m.sec_spo2_low > 60 or m.sec_map_low > 180:
+        pen += 1
+        reasons.append("maternal hypoxia or hypotension")
+    if "cut_through_placenta" in proc.flags:
+        pen += 1
+        reasons.append("incision through the placenta")
+    if c.pharm.ever_given.get("fentanyl", 0) > 0 or c.pharm.ever_given.get("remifentanil", 0) > 0:
+        pen += 1
+        reasons.append("maternal opioid before delivery")
+    if c.eff.sevo_mac > 1.2:
+        pen += 1
+        reasons.append("high volatile concentration")
+    apgar1 = max(1, 8 - pen)
+    apgar5 = min(10, apgar1 + (2 if apgar1 >= 5 else 1))
+    ph = round(7.27 - 0.025 * pen, 2)
+    proc.neonate = {"apgar1": apgar1, "apgar5": apgar5, "ph": ph, "reasons": reasons, "decision_to_delivery_s": round(t)}
+    c.event("delivery", apgar1=apgar1, apgar5=apgar5, ph=ph, reasons=reasons, decision_to_delivery_s=round(t))
+    if proc.mode == "auto":
+        proc.surgeon_says(f"Baby's out at {_mmss(t)} from the decision. Oxytocin please, slow bolus then an infusion.")
+    else:
+        proc.case.say("system", f"Baby delivered at {_mmss(t)} from the decision.", kind="narration")
+
+
+def end_cord_handover(proc, task, r):
+    n = getattr(proc, "neonate", None)
+    if not n:
+        return
+    if n["apgar1"] >= 7:
+        txt = f"Baby is crying, pink and active. Apgars {n['apgar1']} and {n['apgar5']}, cord arterial pH {n['ph']}."
+    elif n["apgar1"] >= 4:
+        txt = f"Baby is floppy and needed stimulation and mask breaths, then picked up. Apgars {n['apgar1']} and {n['apgar5']}, cord arterial pH {n['ph']}."
+    else:
+        txt = f"Baby is floppy and not breathing: the neonatal team is resuscitating. Apgars {n['apgar1']} and {n['apgar5']}, cord arterial pH {n['ph']}."
+    proc.case.say("circulator", txt)
+
+
+def end_placenta_tone(proc, task, r):
+    from .procedure import Bleeder
+
+    c, h = proc.case, proc.case.patient.hidden
+    given = dict(c.pharm.ever_given)
+    oxy = given.get("oxytocin", 0.0) > 0
+    if not oxy:
+        p = 1.0
+    elif h.get("atony_risk"):
+        p = 0.75
+    else:
+        p = 0.15 if c.eff.sevo_mac > 1.0 else 0.0
+    if _rng(proc).random() < p:
+        rate = 130.0 if oxy else 220.0
+        cure = ("methylergonovine", "carboprost") if oxy else ("oxytocin",)
+        proc.bleeders.append(Bleeder("uterine atony", rate, c.t, cure_drugs=cure, given0=given))
+        c.event("complication", name="bleeding", source="uterine atony", rate_ml_min=rate)
+        if proc.mode == "auto":
+            proc.surgeon_says("The uterus is boggy and bleeding. Massaging. Oxytocin is " + ("in but it's not enough: " if oxy else "not in yet: ")
+                              + ("methylergonovine or carboprost (not if she is asthmatic) and tranexamic acid please." if oxy else "I need it now."))
+        else:
+            c.say("system", "The uterus is soft and boggy, and blood is welling up from the cavity.", kind="finding")
+    else:
+        c.say(_speaker(proc), "Placenta complete, the uterus is contracting down and feels firm." if proc.mode == "auto" else "The placenta is out whole and the uterus is firm.",
+              kind="speech" if proc.mode == "auto" else "finding")
+
+
+def end_uterine_closure(proc, task, r):
+    if r.moved:
+        proc.notes.append("The patient moved while the hysterotomy was being sutured.")
+    proc.case.say(_speaker(proc), "Hysterotomy closed in two layers, angles secure, and the uterus is firm." if proc.mode == "auto"
+                  else "The hysterotomy is closed in two layers with the angles secured.", kind="speech" if proc.mode == "auto" else "finding")
+
+
+def tick_emergency_cesarean(proc, dt):
+    c = proc.case
+    if "baby_delivered" not in proc.flags:
+        return
+    given = c.pharm.ever_given
+    t0 = getattr(proc, "delivery_t", c.t)
+    if proc.mode == "auto" and given.get("oxytocin", 0.0) == 0 and c.t - t0 > 60:
+        proc.surgeon_says("Can I have oxytocin please? Slow bolus, then an infusion.", key="ask_oxy", every_s=75)
+    for b in proc.bleeders:
+        if not b.cure_drugs:
+            continue
+        if given.get("tranexamic_acid", 0.0) > b.given0.get("tranexamic_acid", 0.0) and not getattr(b, "txa", False):
+            b.rate_ml_min *= 0.6
+            b.txa = True
+        if proc.mode == "auto" and b.nonblocking and c.t - b.since_t > 60 and "oxytocin" not in b.cure_drugs:
+            proc.surgeon_says("Still boggy and bleeding: methylergonovine, or carboprost if she isn't asthmatic, and tranexamic acid please.", key="ask_second_line", every_s=90)
+        elif proc.mode == "auto" and b.nonblocking and "oxytocin" in b.cure_drugs and c.t - b.since_t > 45:
+            proc.surgeon_says("Oxytocin, now. The uterus is not contracting.", key="ask_oxy_atony", every_s=45)
+
+
+def final_cesarean(proc):
+    c = proc.case
+    if c.pharm.ever_given.get("oxytocin", 0.0) == 0:
+        proc.occult.append("No uterotonic was given: delayed postpartum haemorrhage from uterine atony.")
+
+
+def baseline_bleed_emergency_cesarean(proc) -> float:
+    """Ordinary operative blood loss: the hysterotomy edges and placental bed until the uterus is closed, plus wound ooze."""
+    f = proc.flags
+    if "uterus_open" in f and "uterus_closed" not in f:
+        return 35.0
+    if "incised" in f and "skin_closed" not in f:
+        return 4.0
+    return 0.0

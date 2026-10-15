@@ -66,6 +66,7 @@ class Metrics:
     esophageal_unrecognized_s: float = 0.0
     patient_movements: int = 0
     sec_steep: float = 0.0  # time head-down 25 degrees or more
+    sec_untilted: float = 0.0  # term pregnancy lying flat (aortocaval compression)
     max_peak_pressure: float = 0.0
 
     def public(self) -> dict:
@@ -195,6 +196,8 @@ class Case:
     # --- drugs ------------------------------------------------------
 
     def _resolve_dose(self, d: DrugDef, dose: float, unit: Optional[str]) -> float:
+        if d.unit == "units":
+            return dose  # oxytocin etc. are ordered in international units; nothing to convert
         unit = (unit or d.unit).lower().replace(" ", "")
         w = self.patient.weight_kg
         factor = {"mg": 1.0, "mcg": 1e-3, "ug": 1e-3, "g": 1e3, "mg/kg": w, "mcg/kg": w * 1e-3, "g/kg": w * 1e3}.get(unit)
@@ -253,6 +256,10 @@ class Case:
             self.metrics.antibiotic_t = self.t
         if "penicillin" in d.tags and any("penicillin" in a for a in self.patient.allergies):
             self._flags["anaphylaxis_onset"] = self.t + 180.0
+        if d.id == "carboprost" and self.patient.hidden.get("reactive_airway"):
+            self.airway.bronchospasm = max(self.airway.bronchospasm, 0.8)
+            self.event("complication", name="bronchospasm", cause="carboprost")
+            self.say("circulator", "Her airway pressures are climbing and she's wheezing: bronchospasm after the carboprost.")
         if d.id == "succinylcholine" and self.patient.hidden.get("mh_susceptible"):
             self._flags["mh"] = self.t
         return {"ok": True, "amount": amount, "unit": d.unit}
@@ -278,10 +285,12 @@ class Case:
             "mg/min": act.rate,
             "mg/h": act.rate / 60.0,
             "mcg/h": act.rate * 1e-3 / 60.0,
+            "units/h": act.rate / 60.0,
+            "units/min": act.rate,
         }.get(unit)
         if per_min_mg is None:
             return {"ok": False, "error": f"unknown infusion unit {unit}"}
-        amount_per_min = per_min_mg / {"mg": 1.0, "mcg": 1e-3, "g": 1e3}[d.unit]
+        amount_per_min = per_min_mg / {"mg": 1.0, "mcg": 1e-3, "g": 1e3, "units": 1.0}[d.unit]
         self.pharm.set_infusion(d.id, amount_per_min)
         self.infusions[d.id] = {"rate": act.rate, "unit": unit}
         self.event("infusion", drug=d.id, rate=act.rate, unit=unit)
@@ -530,12 +539,15 @@ class Case:
                       "steep_trendelenburg_right_down": 28.0}
     POSITION_WORDS = {"trendelenburg": "Trendelenburg", "reverse_trendelenburg": "reverse Trendelenburg", "left_side_down": "Trendelenburg, left side down", "steep_trendelenburg": "steep Trendelenburg",
                       "steep_trendelenburg_right_down": "steep Trendelenburg, right side down",
-                      "lateral_decubitus": "lateral decubitus, flank broken, axillary roll in"}
+                      "lateral_decubitus": "lateral decubitus, flank broken, axillary roll in",
+                      "left_tilt": "left lateral tilt (uterine displacement)"}
 
     def _do_position(self, act: A.Position, performer: str) -> dict:
         if self.procedure is not None and "docked" in self.procedure.flags and act.position != self.position:
             self.say("circulator", "The robot is docked, so the table can't move. It has to be undocked first.")
             return {"ok": False, "error": "robot docked"}
+        if self.scenario.get("pregnant") and act.position == "left_side_down":
+            act = A.Position(position="left_tilt")  # for a term pregnancy "left side down" means uterine displacement, not head-down
         self.position = act.position
         self.load.trendelenburg_deg = self.POSITION_ANGLE.get(act.position, self.load.trendelenburg_deg if act.position in ("left_tilt", "right_tilt") else 0.0)
         self.load.lateral_flank = act.position == "lateral_decubitus"
@@ -598,6 +610,8 @@ class Case:
             stim = max(stim, 0.15)
         stim = max(stim, load.stimulus)
         self.stim_response = self.pharm.stimulus_response(stim, eff)
+        if self._aortocaval():
+            eff.venodilation += 0.16  # the gravid uterus on the vena cava: less preload, hypotension once anesthesia takes the compensation away
         if self.anaphylaxis > 0:
             eff.svr_factor *= 1.0 - 0.55 * self.anaphylaxis
             eff.venodilation += 0.25 * self.anaphylaxis
@@ -815,11 +829,17 @@ class Case:
             self.status = "ended"
             self.event("death")
 
+    def _aortocaval(self) -> bool:
+        """Term uterus not displaced to the left (and not yet delivered)."""
+        return bool(self.scenario.get("pregnant")) and self.position != "left_tilt" and not (self.procedure is not None and "baby_delivered" in self.procedure.flags)
+
     def _accumulate(self, dt: float, eff) -> None:
         m, b = self.metrics, self.body
         m.seconds += dt
         if self.load.trendelenburg_deg >= 25.0:
             m.sec_steep += dt
+        if self._aortocaval():
+            m.sec_untilted += dt
         if self.airway.device == "ett":
             m.max_peak_pressure = max(m.max_peak_pressure, self.airway.peak_pressure)
         if b.map < 65:

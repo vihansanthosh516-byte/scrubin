@@ -12,6 +12,8 @@ const CLASS_ORDER: [string, string][] = [
   ["anticholinergic", "Anticholinergics"],
   ["beta_blocker", "Beta-blockers"],
   ["antibiotic", "Antibiotics"],
+  ["uterotonic", "Uterotonics"],
+  ["hemostatic", "Uterotonics"],
   ["antiemetic", "Adjuncts"],
   ["steroid", "Adjuncts"],
   ["analgesic", "Adjuncts"],
@@ -386,6 +388,7 @@ function FluidsMonitorsPanel({ state, act }: { state: CaseState; act: (a: Action
             ["trendelenburg", "Trendelenburg"],
             ["reverse_trendelenburg", "Reverse Trend."],
             ["left_side_down", "Trend + left down"],
+            ["left_tilt", "Left tilt (wedge)"],
           ].map(([p, label]) => (
             <OrButton key={p} active={state.position === p} onClick={() => act({ type: "position", position: p })}>
               {label}
