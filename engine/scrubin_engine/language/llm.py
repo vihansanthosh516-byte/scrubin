@@ -165,10 +165,15 @@ def _unparsed(r: ParseResult, text: str) -> ParseResult:
     return r
 
 
+BUSY = {"limited": False}  # set when the free language-model quota / rate limit stopped the last request
+
+
 async def _proxy_chat(messages: list, providers: list, timeout_s: float):
     """Try each model through the site's /api/llm function (Pyodide only); returns the parsed JSON or None."""
     from pyodide.http import pyfetch  # type: ignore
 
+    BUSY["limited"] = False
+    limited = 0
     for url, _key, model in providers:
         payload: dict[str, Any] = {"model": model, "temperature": 0, "response_format": {"type": "json_object"}, "messages": messages}
         if "gpt-oss" in model:
@@ -178,14 +183,15 @@ async def _proxy_chat(messages: list, providers: list, timeout_s: float):
         try:
             resp = await pyfetch(PROXY, method="POST", headers={"Content-Type": "application/json"},
                                  body=json.dumps({"provider": url.split(":", 1)[1], "payload": payload}))
-            if resp.status in (429, 500, 502, 503) or resp.status == 400:
-                continue
+            if resp.status == 429:
+                limited += 1
             if resp.status >= 400:
                 continue
             content = (await resp.json())["choices"][0]["message"]["content"] or ""
             return json.loads(content[content.find("{"): content.rfind("}") + 1])
         except Exception:  # noqa: BLE001 - any failure just means: try the next model
             continue
+    BUSY["limited"] = limited > 0
     return None
 
 

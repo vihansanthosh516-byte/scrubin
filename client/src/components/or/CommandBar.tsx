@@ -105,7 +105,11 @@ export function CommandBar({ onSubmit, lastParse, role, scenario }: Props) {
         try {
           const said = await engineApi.transcribe(blob);
           submit(said);
-        } catch {
+        } catch (e) {
+          if (String((e as Error)?.message).includes("rate-limited")) {
+            setVoiceError("Too many voice requests. Wait a minute, or type the order.");
+            return;
+          }
           setVoiceError("Speech-to-text unavailable. Type instead, or use Chrome/Edge for built-in recognition.");
         }
       };

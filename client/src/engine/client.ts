@@ -103,6 +103,7 @@ export const engineApi = {
     if (LOCAL) {
       // The site's own /api/stt function takes the raw recording and holds the key.
       const r = await fetch("/api/stt", { method: "POST", headers: { "Content-Type": audio.type || "audio/webm" }, body: audio });
+      if (r.status === 429) throw new Error("rate-limited");
       if (!r.ok) throw new Error(await r.text());
       return (await r.json()).text as string;
     }

@@ -187,7 +187,11 @@ class Session:
         if reply:
             c.record_say(reply["from"], reply["text"])
         if not actions and not clarification and not reply:
-            c.record_say(responder, "Sorry — say that again?", kind="question")
+            from .language.llm import BUSY
+            busy = BUSY["limited"]
+            BUSY["limited"] = False
+            c.record_say(responder, "The free language service is busy right now. Try short commands like 'give propofol 150 mg', or wait a minute and say it again." if busy
+                         else "Sorry — say that again?", kind="question")
         return {"ok": bool(actions) or bool(clarification) or bool(reply), "actions": actions, "results": results,
                 "clarification": clarification, "source": source}
 
