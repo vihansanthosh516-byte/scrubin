@@ -37,16 +37,17 @@ server/
   index.ts                  # Express backend
 ```
 
-## Color Palette
-- **Primary/Baby Blue:** #7EC8E3
-- **Teal (Learn Hub):** #5DCAA5
-- **Background Dark:** #0A1628
-- **Card Background:** #0D1117
+## Design system
+The full system (tokens, type scale, components, icons, usage rules) is the ScrubIn Design System artifact:
+https://claude.ai/artifact/PwZQfxE5CdgyEXb24bQ8en. The source of truth in code is `client/src/index.css`.
 
-## Typography
-- **Headlines:** Syne font
-- **Body:** Inter
-- **Data/Mono:** IBM Plex Mono
+- **Look:** editorial and warm, with cream ground, white cards, 1px warm hairlines, sharp corners (`rounded-sm`) and almost no shadow. Light and dark (`.dark`) themes.
+- **Colour:** background `#FBF9F5` (dark `#161310`), cards `#FFFFFF` (dark `#1E1A16`), text `#191919` / `#666059`, border `#E2DDD1`.
+  The one accent is terracotta `#CC553D` (dark `#D95338`). Status colours: sage `#2E6B4B`, amber `#C27820`, carmine `#A32A2A`. Use the shadcn tokens
+  (`bg-background`, `text-primary`, `border-border`...) or the `.glass-card` and `.pill-*` classes rather than new hex values.
+  The patient monitor is the exception: it stays dark (`#050B14`) with bedside colours.
+- **Type:** headlines in Instrument Serif (`font-display`), body and UI in Inter, numbers and labels in JetBrains Mono (`font-mono-data`, `label-mono`).
+- **Icons:** `lucide-react` only, with no emoji in the UI.
 
 ---
 
@@ -131,16 +132,15 @@ server/
    npm install <package-name>
    ```
 
-4. Apply the ScrubIn color palette:
-   - Replace green/purple accents with baby blue `#7EC8E3`
-   - Replace light backgrounds with `#0A1628`
-   - Replace white cards with `#0D1117`
-   - Replace any accent colors with teal `#5DCAA5` for Learn Hub sections
+4. Apply the ScrubIn palette (see "Design system" above):
+   - Replace accent colours with the `primary` token (terracotta) and success accents with sage
+   - Use `bg-background` for page grounds and `bg-card` with `border-border` for cards
+   - Use `rounded-sm` corners, and drop glows and gradients
 
 5. Apply ScrubIn typography:
-   - Headlines: `style={{ fontFamily: "'Syne', sans-serif" }}`
+   - Headlines: `className="font-display"` (Instrument Serif)
    - Body: default (Inter)
-   - Data/numbers: `className="font-mono-data"` (IBM Plex Mono)
+   - Data/numbers: `className="font-mono-data"` (JetBrains Mono)
 
 6. Add the component to the correct page with appropriate import
 
@@ -423,3 +423,13 @@ Procedures the engine doesn't model yet automatically fall back to the classic s
   `openai/gpt-oss-20b` (`GROQ_MODEL` overrides). Add a procedure: see `engine/README.md`.
 - Deploy: engine on Render free tier (`render.yaml`, `engine/Dockerfile`), cases in Supabase `or_cases`
   (`supabase_or_cases.sql`), frontend needs `VITE_ENGINE_URL`. Steps in `engine/README.md`.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
