@@ -19,15 +19,13 @@ export default function Signin() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-black">
-      <SignInPage 
-        onGitHubSignIn={loginWithGitHub}
-        onGoogleSignIn={loginWithGoogle}
-        onSignIn={signIn}
-        onSignUp={signUp}
-        loading={loading}
-      />
-    </div>
+    <SignInPage
+      onGitHubSignIn={loginWithGitHub}
+      onGoogleSignIn={loginWithGoogle}
+      onSignIn={signIn}
+      onSignUp={signUp}
+      loading={loading}
+    />
   );
 }
 

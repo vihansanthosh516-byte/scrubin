@@ -2,6 +2,7 @@
 // UI screenshot matrix: every route × light/dark × desktop/tablet/phone, signed in as the dev user.
 //
 //   node scripts/ui-shots.mjs [outDir] [--base http://127.0.0.1:3000] [--routes /,/procedures] [--widths 1440,390]
+//                             [--themes light] [--signed-out /signin] [--session-js '...'] [--page-js '...'] [--axe]
 //
 // Needs a running dev client (`npx vite`) so `?devUser=1` can seed a signed-in user, and a Chromium
 // binary (CHROME_PATH, else the newest Playwright-cached chromium). Talks to Chromium over the
@@ -23,6 +24,10 @@ const routes = flag("routes", "/,/procedures,/learn,/leaderboard,/profile,/my-si
 const widths = flag("widths", "1440,1024,390").split(",").map(Number);
 const themes = flag("themes", "light,dark").split(",");
 const runAxe = args.includes("--axe");
+// --session-js runs once after the dev user is seeded (e.g. to un-onboard them);
+// --page-js runs on every page before the capture (e.g. to open a menu).
+const sessionJs = flag("session-js", "");
+const pageJs = flag("page-js", "");
 const signedOut = flag("signed-out", "/signin").split(",").filter(Boolean);
 
 function findChrome() {
@@ -122,6 +127,10 @@ async function main() {
     await b.page("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }, { name: "prefers-color-scheme", value: theme }] });
     await b.eval(`localStorage.setItem("theme", ${JSON.stringify(theme)})`);
     await b.goto(base + route);
+    if (pageJs) {
+      await b.eval(pageJs);
+      await sleep(600);
+    }
     // Scroll through once so scroll-triggered (whileInView) sections render, then back to the top.
     await b.eval(`(async () => { const h = document.documentElement.scrollHeight; for (let y = 0; y < h; y += 400) { scrollTo(0, y); await new Promise(r => setTimeout(r, 60)); } scrollTo(0, 0); await new Promise(r => setTimeout(r, 400)); })()`);
     // Capture beyond the viewport rather than resizing it, so 100vh sections keep their real height.
@@ -144,6 +153,7 @@ async function main() {
     for (const theme of themes)
       for (const w of widths) await shoot(route, theme, w).catch((e) => console.warn(`skipped ${route} ${theme} ${w}: ${e.message}`));
   await b.goto(base + "/?devUser=1");
+  if (sessionJs) await b.eval(sessionJs);
   for (const route of routes)
     for (const theme of themes)
       for (const w of widths) await shoot(route, theme, w).catch((e) => console.warn(`skipped ${route} ${theme} ${w}: ${e.message}`));

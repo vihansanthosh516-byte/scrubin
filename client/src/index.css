@@ -81,7 +81,7 @@
   --card-foreground: #191919;
   --popover: #FFFFFF;
   --popover-foreground: #191919;
-  --primary: #CC553D;
+  --primary: #B5472F; /* a deeper cut of brand terracotta #CC553D so white text and terracotta text both pass AA */
   --primary-foreground: #FFFFFF;
   --secondary: #F4F0E8;
   --secondary-foreground: #191919;
@@ -93,7 +93,7 @@
   --destructive-foreground: #FFFFFF;
   --border: #E2DDD1;
   --input: #E2DDD1;
-  --ring: #CC553D;
+  --ring: #B5472F;
   --chart-1: #CC553D;
   --chart-2: #D99B26;
   --chart-3: #2E6B4B;
@@ -101,20 +101,20 @@
   --chart-5: #8C827A;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #191919;
-  --sidebar-primary: #CC553D;
+  --sidebar-primary: #B5472F;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #F4F0E8;
   --sidebar-accent-foreground: #191919;
   --sidebar-border: #E2DDD1;
-  --sidebar-ring: #CC553D;
+  --sidebar-ring: #B5472F;
   /* Semantic additions (ScrubIn design system) */
-  --primary-hover: #B94A35;
+  --primary-hover: #A03E29;
   --success: #2E6B4B;
   --success-foreground: #FFFFFF;
   --warning: #C27820;
   --warning-foreground: #191919;
   --info: #3F6680;
-  --label: #8C827A;
+  --label: #736A63; /* warm grey for eyebrows and meta; #8C827A (brand warm-gray-soft) is too light for small text */
   --nav-link: #666059;
   --surface-hover-border: rgba(204, 85, 61, 0.4);
   --shadow-surface: 0 1px 2px rgba(25, 25, 25, 0.02);
@@ -123,7 +123,7 @@
   --shadow-lift: 0 12px 32px rgba(25, 25, 25, 0.06);
   --pill-sage-fg: #2E6B4B; --pill-sage-bg: rgba(46, 107, 75, 0.1); --pill-sage-border: rgba(46, 107, 75, 0.3);
   --pill-amber-fg: #C27820; --pill-amber-bg: rgba(194, 120, 32, 0.1); --pill-amber-border: rgba(194, 120, 32, 0.3);
-  --pill-terracotta-fg: #CC553D; --pill-terracotta-bg: rgba(204, 85, 61, 0.1); --pill-terracotta-border: rgba(204, 85, 61, 0.3);
+  --pill-terracotta-fg: #B5472F; --pill-terracotta-bg: rgba(204, 85, 61, 0.1); --pill-terracotta-border: rgba(204, 85, 61, 0.3);
   --pill-carmine-fg: #A32A2A; --pill-carmine-bg: rgba(163, 42, 42, 0.1); --pill-carmine-border: rgba(163, 42, 42, 0.3);
 }
 
@@ -134,8 +134,8 @@
   --card-foreground: #EDEAE4;
   --popover: #1E1A16;
   --popover-foreground: #EDEAE4;
-  --primary: #D95338;
-  --primary-foreground: #FFFFFF;
+  --primary: #E06D53; /* lighter in dark so it reads as text; buttons put dark ink on it */
+  --primary-foreground: #161310;
   --secondary: #26211B;
   --secondary-foreground: #EDEAE4;
   --muted: #26211B;
@@ -146,7 +146,7 @@
   --destructive-foreground: #FFFFFF;
   --border: #3A342C;
   --input: #3A342C;
-  --ring: #D95338;
+  --ring: #E06D53;
   --chart-1: #D95338;
   --chart-2: #D99B26;
   --chart-3: #5E8C74;
@@ -154,13 +154,13 @@
   --chart-5: #A89F95;
   --sidebar: #1E1A16;
   --sidebar-foreground: #EDEAE4;
-  --sidebar-primary: #D95338;
-  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-primary: #E06D53;
+  --sidebar-primary-foreground: #161310;
   --sidebar-accent: #26211B;
   --sidebar-accent-foreground: #EDEAE4;
   --sidebar-border: #3A342C;
-  --sidebar-ring: #D95338;
-  --primary-hover: #C2482F;
+  --sidebar-ring: #E06D53;
+  --primary-hover: #E5765C;
   --success: #5E8C74;
   --success-foreground: #161310;
   --warning: #D99B26;

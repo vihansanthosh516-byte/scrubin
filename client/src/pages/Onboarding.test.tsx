@@ -33,10 +33,13 @@ describe("Onboarding", () => {
     cleanup();
   });
 
-  it("renders the dialog with the user's name pre-filled and all role options", () => {
+  it("renders the form with the user's name pre-filled and all role options", () => {
     render(<Onboarding />);
 
-    expect(screen.getByRole("dialog", { name: "Complete your profile" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Complete your profile" })).toBeInTheDocument();
+    // Fields are labelled, not just placeholdered
+    expect(screen.getByLabelText("Display name")).toHaveValue("Jane Doe");
+    expect(screen.getByLabelText("Current role")).toBeInTheDocument();
     // The name input is pre-filled from the user's OAuth profile
     expect(screen.getByPlaceholderText("Dr. House")).toHaveValue("Jane Doe");
 
@@ -80,7 +83,8 @@ describe("Onboarding", () => {
       displayName: "Dr. House",
       profession: "Attending Surgeon",
     });
-    // Entering the submitting state swaps the label for a spinner
+    // Entering the submitting state swaps the label and disables the button
     expect(screen.queryByRole("button", { name: /start operating/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /setting up your profile/i })).toBeDisabled();
   });
 });

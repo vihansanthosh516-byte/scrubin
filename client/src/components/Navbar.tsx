@@ -1,25 +1,26 @@
-"use client";
 /**
- * ScrubIn Navbar — Anthropic Editorial
- * Edge-to-edge sticky header on warm cream; blurs and gains a crisp border on
- * scroll. Charcoal links with terracotta hover, solid terracotta "Enter OR"
- * action, and light/dark/system theme switcher.
+ * ScrubIn Navbar: 64px fixed header on the page ground. Wordmark, five section links (active in
+ * terracotta, marked aria-current), a theme menu, the account menu, and one primary action,
+ * "Enter the OR". Below md the links, theme and account move into a sheet.
  */
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { motion } from "framer-motion";
+import { ChevronDown, LogOut, Menu, Monitor, Moon, Sun, User } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Moon, Sun, Menu, X, User, LogOut, ChevronDown, Monitor } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { CtaLink, Wordmark } from "@/components/scrubin";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -30,15 +31,30 @@ const NAV_LINKS = [
   { href: "/profile", label: "Profile" },
 ];
 
+const THEMES = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: Monitor },
+] as const;
+
+function Avatar({ src, name, className }: { src?: string; name: string; className?: string }) {
+  return src ? (
+    <img src={src} alt="" className={cn("rounded-sm border border-border object-cover", className)} />
+  ) : (
+    <span className={cn("flex items-center justify-center rounded-sm border border-border bg-muted text-[10px] font-bold text-foreground", className)} aria-hidden="true">
+      {name[0]?.toUpperCase()}
+    </span>
+  );
+}
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [location] = useLocation();
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
-  const [systemPrefersDark, setSystemPrefersDark] = useState(false);
 
-  // Blur + border on scroll (editorial sticky header behavior)
+  // A hairline appears once the page scrolls under the header.
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
@@ -46,197 +62,164 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close mobile menu + scroll to top on route change
+  // Close the mobile menu and start each page at the top.
   useEffect(() => {
     setMobileOpen(false);
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [location]);
 
-  useEffect(() => {
-    const mql = window.matchMedia("(prefers-color-scheme: dark)");
-    const update = () => setSystemPrefersDark(mql.matches);
-    update();
-    mql.addEventListener("change", update);
-    return () => mql.removeEventListener("change", update);
-  }, []);
+  const isActive = (href: string) => location === href || location.startsWith(href + "/");
+  const ThemeIcon = THEMES.find((t) => t.value === theme)?.icon ?? Sun;
+  const displayName = user ? user.customUsername || user.name?.split(" ")[0] || user.login : "";
 
-  const displayTheme = theme === "system" ? (systemPrefersDark ? "dark" : "light") : theme;
-  const isActive = (href: string) => location === href;
+  const themeItems = (
+    <DropdownMenuRadioGroup value={theme} onValueChange={(v) => setTheme(v as typeof theme)}>
+      {THEMES.map(({ value, label, icon: Icon }) => (
+        <DropdownMenuRadioItem key={value} value={value} className="cursor-pointer gap-2">
+          <Icon className="h-4 w-4 text-primary" aria-hidden="true" /> {label}
+        </DropdownMenuRadioItem>
+      ))}
+    </DropdownMenuRadioGroup>
+  );
 
   return (
-    <header
-      className={cn(
-        "fixed inset-x-0 top-0 z-50 border-b transition-all duration-300",
-        scrolled
-          ? "border-[#E2DDD1] bg-[#FBF9F5]/85 backdrop-blur-md shadow-[0_1px_12px_rgba(25,25,25,0.04)] dark:border-[#3A342C] dark:bg-[#161310]/85 dark:shadow-[0_1px_12px_rgba(0,0,0,0.4)]"
-          : "border-transparent bg-[#FBF9F5] dark:bg-[#161310]"
-      )}
-    >
+    <header className={cn("fixed inset-x-0 top-0 z-50 border-b bg-background transition-colors", scrolled ? "border-border" : "border-transparent")}>
       <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Link href="/" className="group flex items-center gap-2.5">
-          <span className="relative flex h-3.5 w-3.5 items-center justify-center">
-            <span className="absolute h-3.5 w-3.5 rounded-full bg-[#CC553D]/20" />
-            <span className="h-2 w-2 rounded-full bg-[#CC553D] animate-pulse" />
-          </span>
-          <span className="text-xl font-bold tracking-tight text-[#191919] dark:text-[#EDEAE4]">
-            Scrub<span className="text-[#CC553D]">In</span>
-          </span>
-        </Link>
+        <Wordmark />
 
-        {/* Desktop links */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
           {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href}>
-              <span
-                className={cn(
-                  "px-3.5 py-2 text-sm font-medium transition-colors rounded-sm",
-                  isActive(link.href)
-                    ? "text-[#CC553D] dark:text-[#D95338]"
-                    : "text-[#666059] hover:text-[#CC553D] dark:text-[#C2BBB0] dark:hover:text-[#D95338]"
-                )}
-              >
-                {link.label}
-              </span>
+            <Link
+              key={link.href}
+              href={link.href}
+              aria-current={isActive(link.href) ? "page" : undefined}
+              className={cn(
+                "rounded-sm px-3.5 py-2 text-sm font-medium transition-colors",
+                isActive(link.href) ? "text-primary" : "text-nav-link hover:text-primary",
+              )}
+            >
+              {link.label}
             </Link>
           ))}
         </nav>
 
-        {/* Right actions */}
         <div className="flex items-center gap-2">
-          {/* Theme dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-9 w-9 rounded-sm border border-[#E2DDD1] text-[#666059] hover:border-[#CC553D]/40 hover:text-[#CC553D] dark:border-[#3A342C] dark:text-[#C2BBB0]"
-                aria-label="Select theme"
-              >
-                {displayTheme === "light" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-36 rounded-sm border-[#E2DDD1] bg-white dark:bg-[#1E1A16]">
-              <DropdownMenuItem onClick={() => setTheme("light")} className="gap-2 cursor-pointer">
-                <Sun className="h-4 w-4 text-[#CC553D]" /> Light
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2 cursor-pointer">
-                <Moon className="h-4 w-4 text-[#CC553D]" /> Dark
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("system")} className="gap-2 cursor-pointer">
-                <Monitor className="h-4 w-4 text-[#CC553D]" /> System
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {user ? (
+          <div className="hidden items-center gap-2 md:flex">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex h-9 items-center gap-2 rounded-sm border border-[#E2DDD1] px-3 hover:border-[#CC553D]/40 dark:border-[#3A342C]"
-                >
-                  <img src={user.avatar_url} alt={user.name} className="h-5 w-5 rounded-sm border border-[#E2DDD1] dark:border-[#3A342C]" />
-                  <span className="max-w-[110px] truncate text-xs font-semibold text-[#191919] dark:text-[#EDEAE4]">
-                    {user.customUsername || user.name?.split(" ")[0] || user.login}
-                  </span>
-                  {user.profession && (
-                    <span className="hidden sm:inline max-w-[84px] truncate rounded-sm bg-[#CC553D]/10 px-1.5 py-0.5 font-mono-data text-[10px] font-semibold uppercase tracking-widest text-[#CC553D] dark:bg-[#D95338]/15 dark:text-[#D95338]">
-                      {user.profession}
-                    </span>
-                  )}
-                  <ChevronDown className="h-3 w-3 text-[#666059] dark:text-[#C2BBB0]" />
+                <Button size="icon" variant="outline" className="text-nav-link hover:text-primary" aria-label={`Theme: ${theme}`}>
+                  <ThemeIcon className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 rounded-sm border-[#E2DDD1] bg-white dark:bg-[#1E1A16]">
-                <DropdownMenuLabel className="flex flex-col">
-                  <span className="flex items-center gap-2 text-sm">
-                    {user.name}
-                    {user.profession && (
-                      <span className="rounded-full bg-[#CC553D] px-2 py-0.5 font-mono-data text-[10px] font-semibold uppercase tracking-widest text-white dark:bg-[#D95338]">
-                        {user.profession}
-                      </span>
-                    )}
-                  </span>
-                  <span className="font-mono-data text-[10px] font-normal text-[#666059] dark:text-[#C2BBB0]">@{user.login}</span>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-[#E2DDD1]" />
-                <Link href="/profile">
-                  <DropdownMenuItem className="cursor-pointer gap-2">
-                    <User className="h-4 w-4 text-[#CC553D]" /> Profile
-                  </DropdownMenuItem>
-                </Link>
-                <DropdownMenuSeparator className="bg-[#E2DDD1]" />
-                <DropdownMenuItem onClick={logout} className="cursor-pointer gap-2 text-[#A32A2A] focus:text-[#A32A2A]">
-                  <LogOut className="h-4 w-4" /> Sign Out
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" className="min-w-36 rounded-sm">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Theme</DropdownMenuLabel>
+                {themeItems}
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <Link href="/signin">
-              <Button
-                size="sm"
-                className="rounded-sm bg-[#CC553D] px-4 font-medium text-white hover:bg-[#B94A35]"
-              >
-                Sign In
+
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-9 gap-2 px-3" aria-label={`Account menu for ${displayName}`}>
+                    <Avatar src={user.avatar_url} name={displayName} className="h-5 w-5" />
+                    <span className="max-w-[110px] truncate text-xs font-semibold">{displayName}</span>
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 rounded-sm">
+                  <DropdownMenuLabel className="flex flex-col gap-0.5">
+                    <span className="text-sm">{user.name}</span>
+                    {user.profession && <span className="text-xs font-normal text-muted-foreground">{user.profession}</span>}
+                    <span className="font-mono-data text-[11px] font-normal text-muted-foreground">@{user.login}</span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="cursor-pointer gap-2">
+                    <Link href="/profile">
+                      <User className="h-4 w-4 text-primary" aria-hidden="true" /> Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} className="cursor-pointer gap-2 text-destructive focus:text-destructive">
+                    <LogOut className="h-4 w-4" aria-hidden="true" /> Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <CtaLink href="/signin" variant="outline" size="sm">
+                Sign in
+              </CtaLink>
+            )}
+          </div>
+
+          <CtaLink href="/procedures" size="sm" className="hidden font-semibold sm:inline-flex">
+            Enter the OR
+          </CtaLink>
+
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="md:hidden" aria-label="Open menu">
+                <Menu className="h-4 w-4" />
               </Button>
-            </Link>
-          )}
-
-          {/* Enter OR CTA */}
-          <Link href="/procedures">
-            <motion.span
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.98 }}
-              className="hidden sm:inline-flex h-9 items-center rounded-sm bg-[#CC553D] px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#B94A35]"
-            >
-              Enter OR
-            </motion.span>
-          </Link>
-
-          {/* Mobile toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-sm border border-[#E2DDD1] text-[#191919] md:hidden dark:border-[#3A342C] dark:text-[#EDEAE4]"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] gap-0 bg-background p-0">
+              <SheetHeader className="border-b border-border px-5 py-4">
+                <SheetTitle className="text-left">
+                  <Wordmark href={null} />
+                </SheetTitle>
+              </SheetHeader>
+              <nav aria-label="Main" className="flex flex-col px-3 py-3">
+                {NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    aria-current={isActive(link.href) ? "page" : undefined}
+                    className={cn(
+                      "rounded-sm px-3 py-3 text-sm font-medium",
+                      isActive(link.href) ? "bg-primary/10 text-primary" : "text-nav-link hover:bg-muted",
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+              <div className="border-t border-border px-5 py-4">
+                <p className="label-mono mb-2">Theme</p>
+                <div role="radiogroup" aria-label="Theme" className="grid grid-cols-3 gap-2">
+                  {THEMES.map(({ value, label, icon: Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      role="radio"
+                      aria-checked={theme === value}
+                      onClick={() => setTheme(value)}
+                      className={cn(
+                        "flex flex-col items-center gap-1 rounded-sm border px-2 py-2 text-xs font-medium",
+                        theme === value ? "border-primary bg-primary/10 text-primary" : "border-border text-nav-link",
+                      )}
+                    >
+                      <Icon className="h-4 w-4" aria-hidden="true" /> {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-auto space-y-3 border-t border-border px-5 py-5">
+                <CtaLink href="/procedures" className="w-full font-semibold">
+                  Enter the OR
+                </CtaLink>
+                {user ? (
+                  <Button variant="outline" onClick={logout} className="w-full text-destructive">
+                    <LogOut className="h-4 w-4" aria-hidden="true" /> Sign out
+                  </Button>
+                ) : (
+                  <CtaLink href="/signin" variant="outline" className="w-full">
+                    Sign in
+                  </CtaLink>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="border-t border-[#E2DDD1] bg-[#FBF9F5] px-4 pb-6 pt-2 md:hidden dark:bg-[#161310]"
-        >
-          <nav className="flex flex-col">
-            {NAV_LINKS.map((link) => (
-              <Link key={link.href} href={link.href}>
-                <span
-                  className={cn(
-                    "block rounded-sm px-3 py-3 text-sm font-medium",
-                    isActive(link.href)
-                      ? "bg-[#CC553D]/8 text-[#CC553D]"
-                      : "text-[#666059] hover:bg-[#F4F0E8] dark:text-[#C2BBB0] dark:hover:bg-[#26211B]"
-                  )}
-                >
-                  {link.label}
-                </span>
-              </Link>
-            ))}
-            <Link href="/procedures">
-              <span className="mt-3 block rounded-sm bg-[#CC553D] px-4 py-3 text-center text-sm font-semibold text-white">
-                Enter OR
-              </span>
-            </Link>
-          </nav>
-        </motion.div>
-      )}
     </header>
   );
 }

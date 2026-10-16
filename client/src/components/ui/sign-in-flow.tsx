@@ -1,235 +1,17 @@
-"use client";
-import React, { useState, useMemo, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import * as THREE from "three";
-
-type Uniforms = {
-  [key: string]: { value: number[] | number[][] | number; type: string };
-};
-
-interface ShaderProps {
-  source: string;
-  uniforms: {
-    [key: string]: { value: number[] | number[][] | number; type: string };
-  };
-}
+import { AuthShell, ErrorBanner, SelectField, TextField } from "@/components/scrubin";
+import { Button } from "@/components/ui/button";
+import { PROFESSIONS } from "@/lib/professions";
 
 interface SignInPageProps {
-  className?: string;
   onGoogleSignIn: () => void;
   onGitHubSignIn: () => void;
+  onSignIn?: (email: string, password: string) => unknown;
+  onSignUp?: (email: string, password: string, name: string, profession: string) => unknown;
   loading?: boolean;
 }
 
-export const CanvasRevealEffect = ({
-  animationSpeed = 10,
-  opacities = [0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 1],
-  colors = [[0, 255, 255]],
-  containerClassName,
-  dotSize,
-  showGradient = true,
-  reverse = false,
-}: {
-  animationSpeed?: number;
-  opacities?: number[];
-  colors?: number[][];
-  containerClassName?: string;
-  dotSize?: number;
-  showGradient?: boolean;
-  reverse?: boolean;
-}) => {
-  return (
-    <div className={cn("h-full relative w-full", containerClassName)}>
-      <div className="h-full w-full">
-        <DotMatrix
-          colors={colors ?? [[0, 255, 255]]}
-          dotSize={dotSize ?? 3}
-          opacities={
-            opacities ?? [0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 1]
-          }
-          shader={` ${reverse ? "u_reverse_active" : "false"}_; animation_speed_factor_${animationSpeed.toFixed(1)}_; `}
-          center={["x", "y"]}
-        />
-      </div>
-      {showGradient && (
-        <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-      )}
-    </div>
-  );
-};
-
-interface DotMatrixProps {
-  colors?: number[][];
-  opacities?: number[];
-  totalSize?: number;
-  dotSize?: number;
-  shader?: string;
-  center?: ("x" | "y")[];
-}
-
-const DotMatrix: React.FC<DotMatrixProps> = ({
-  colors = [[0, 0, 0]],
-  opacities = [0.04, 0.04, 0.04, 0.04, 0.04, 0.08, 0.08, 0.08, 0.08, 0.14],
-  totalSize = 20,
-  dotSize = 2,
-  shader = "",
-  center = ["x", "y"],
-}) => {
-  const uniforms = React.useMemo(() => {
-    let colorsArray = [
-      colors[0],
-      colors[0],
-      colors[0],
-      colors[0],
-      colors[0],
-      colors[0],
-    ];
-    if (colors.length === 2) {
-      colorsArray = [
-        colors[0],
-        colors[0],
-        colors[0],
-        colors[1],
-        colors[1],
-        colors[1],
-      ];
-    } else if (colors.length === 3) {
-      colorsArray = [
-        colors[0],
-        colors[0],
-        colors[1],
-        colors[1],
-        colors[2],
-        colors[2],
-      ];
-    }
-    return {
-      u_colors: {
-        value: colorsArray.map((color) => [
-          color[0] / 255,
-          color[1] / 255,
-          color[2] / 255,
-        ]),
-        type: "uniform3fv",
-      },
-      u_opacities: { value: opacities, type: "uniform1fv" },
-      u_total_size: { value: totalSize, type: "uniform1f" },
-      u_dot_size: { value: dotSize, type: "uniform1f" },
-      u_reverse: {
-        value: shader.includes("u_reverse_active") ? 1 : 0,
-        type: "uniform1i",
-      },
-    };
-  }, [colors, opacities, totalSize, dotSize, shader]);
-
-  return (
-    <Shader
-      source={` precision mediump float; in vec2 fragCoord; uniform float u_time; uniform float u_opacities[10]; uniform vec3 u_colors[6]; uniform float u_total_size; uniform float u_dot_size; uniform vec2 u_resolution; uniform int u_reverse; out vec4 fragColor; float PHI = 1.61803398874989484820459; float random(vec2 xy) { return fract(tan(distance(xy * PHI, xy) * 0.5) * xy.x); } float map(float value, float min1, float max1, float min2, float max2) { return min2 + (value - min1) * (max2 - min2) / (max1 - min1); } void main() { vec2 st = fragCoord.xy; ${center.includes("x") ? "st.x -= abs(floor((mod(u_resolution.x, u_total_size) - u_dot_size) * 0.5));" : ""} ${center.includes("y") ? "st.y -= abs(floor((mod(u_resolution.y, u_total_size) - u_dot_size) * 0.5));" : ""} float opacity = step(0.0, st.x); opacity *= step(0.0, st.y); vec2 st2 = vec2(int(st.x / u_total_size), int(st.y / u_total_size)); float frequency = 5.0; float show_offset = random(st2); float rand = random(st2 * floor((u_time / frequency) + show_offset + frequency)); opacity *= u_opacities[int(rand * 10.0)]; opacity *= 1.0 - step(u_dot_size / u_total_size, fract(st.x / u_total_size)); opacity *= 1.0 - step(u_dot_size / u_total_size, fract(st.y / u_total_size)); vec3 color = u_colors[int(show_offset * 6.0)]; float animation_speed_factor = 0.5; vec2 center_grid = u_resolution / 2.0 / u_total_size; float dist_from_center = distance(center_grid, st2); float timing_offset_intro = dist_from_center * 0.01 + (random(st2) * 0.15); float max_grid_dist = distance(center_grid, vec2(0.0, 0.0)); float timing_offset_outro = (max_grid_dist - dist_from_center) * 0.02 + (random(st2 + 42.0) * 0.2); float current_timing_offset; if (u_reverse == 1) { current_timing_offset = timing_offset_outro; opacity *= 1.0 - step(current_timing_offset, u_time * animation_speed_factor); opacity *= clamp((step(current_timing_offset + 0.1, u_time * animation_speed_factor)) * 1.25, 1.0, 1.25); } else { current_timing_offset = timing_offset_intro; opacity *= step(current_timing_offset, u_time * animation_speed_factor); opacity *= clamp((1.0 - step(current_timing_offset + 0.1, u_time * animation_speed_factor)) * 1.25, 1.0, 1.25); } fragColor = vec4(color, opacity); fragColor.rgb *= fragColor.a; }`}
-      uniforms={uniforms}
-    />
-  );
-};
-
-const ShaderMaterial = ({
-  source,
-  uniforms,
-}: {
-  hovered?: boolean;
-  uniforms: Uniforms;
-  source: string;
-}) => {
-  const { size } = useThree();
-  const ref = useRef<THREE.Mesh>(null);
-  useFrame(({ clock }) => {
-    if (!ref.current) return;
-    const timestamp = clock.getElapsedTime();
-    const material: any = ref.current.material;
-    const timeLocation = material.uniforms.u_time;
-    timeLocation.value = timestamp;
-  });
-
-  const getUniforms = () => {
-    const preparedUniforms: any = {};
-    for (const uniformName in uniforms) {
-      const uniform: any = uniforms[uniformName];
-      switch (uniform.type) {
-        case "uniform1f":
-          preparedUniforms[uniformName] = { value: uniform.value, type: "1f" };
-          break;
-        case "uniform1i":
-          preparedUniforms[uniformName] = { value: uniform.value, type: "1i" };
-          break;
-        case "uniform3f":
-          preparedUniforms[uniformName] = {
-            value: new THREE.Vector3().fromArray(uniform.value),
-            type: "3f",
-          };
-          break;
-        case "uniform1fv":
-          preparedUniforms[uniformName] = {
-            value: uniform.value,
-            type: "1fv",
-          };
-          break;
-        case "uniform3fv":
-          preparedUniforms[uniformName] = {
-            value: uniform.value.map(
-              (v: number[]) => new THREE.Vector3().fromArray(v)
-            ),
-            type: "3fv",
-          };
-          break;
-        case "uniform2f":
-          preparedUniforms[uniformName] = {
-            value: new THREE.Vector2().fromArray(uniform.value),
-            type: "2f",
-          };
-          break;
-        default:
-          console.error(`Invalid uniform type for '${uniformName}'.`);
-          break;
-      }
-    }
-    preparedUniforms["u_time"] = { value: 0, type: "1f" };
-    preparedUniforms["u_resolution"] = {
-      value: new THREE.Vector2(size.width * 2, size.height * 2),
-    };
-    return preparedUniforms;
-  };
-
-  const material = useMemo(() => {
-    const materialObject = new THREE.ShaderMaterial({
-      vertexShader: ` precision mediump float; in vec2 coordinates; uniform vec2 u_resolution; out vec2 fragCoord; void main(){ float x = position.x; float y = position.y; gl_Position = vec4(x, y, 0.0, 1.0); fragCoord = (position.xy + vec2(1.0)) * 0.5 * u_resolution; fragCoord.y = u_resolution.y - fragCoord.y; } `,
-      fragmentShader: source,
-      uniforms: getUniforms(),
-      glslVersion: THREE.GLSL3,
-      blending: THREE.CustomBlending,
-      blendSrc: THREE.SrcAlphaFactor,
-      blendDst: THREE.OneFactor,
-    });
-    return materialObject;
-  }, [size.width, size.height, source]);
-
-  return (
-    <mesh ref={ref as any}>
-      <planeGeometry args={[2, 2]} />
-      <primitive object={material} attach="material" />
-    </mesh>
-  );
-};
-
-const Shader: React.FC<ShaderProps> = ({ source, uniforms }) => {
-  return (
-    <Canvas className="absolute inset-0 h-full w-full">
-      <ShaderMaterial source={source} uniforms={uniforms} />
-    </Canvas>
-  );
-};
-
-// Google SVG Icon
 function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -288,258 +70,102 @@ function friendlyAuthError(message: string | undefined, fallback: string): strin
   return fallback;
 }
 
-export const SignInPage = ({
-  className,
-  onGoogleSignIn,
-  onGitHubSignIn,
-  onSignIn,
-  onSignUp,
-  loading,
-}: SignInPageProps & { 
-  onSignIn?: (email: string, password: string) => void;
-  onSignUp?: (email: string, password: string, name: string, profession: string) => void;
-  loading?: boolean;
-}) => {
+/** Email/password and OAuth sign-in on the cream editorial shell. Sign-up creates a pre-confirmed account. */
+export function SignInPage({ onGoogleSignIn, onGitHubSignIn, onSignIn, onSignUp, loading }: SignInPageProps) {
   const { error: globalAuthError } = useAuth();
-  const initialCanvasVisible = true;
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [profession, setProfession] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
-  const [lastUser, setLastUser] = useState<{name: string, login: string} | null>(null);
+  const [lastUser, setLastUser] = useState<{ name: string; login: string } | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("scrubin_last_user");
-    if (stored) {
-      try {
-        setLastUser(JSON.parse(stored));
-      } catch (e) {
-        console.error("Failed to parse last user", e);
-      }
+    try {
+      const stored = localStorage.getItem("scrubin_last_user");
+      if (stored) setLastUser(JSON.parse(stored));
+    } catch {
+      /* ignore a malformed entry */
     }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
-
     if (mode === "signin") {
-      if (!email || !password) {
-        setFormError("Please fill in all fields");
-        return;
-      }
-      if (onSignIn) {
-        const result = await (onSignIn(email, password) as any);
-        if (result?.error) {
-          setFormError(friendlyAuthError(result.error.message, "Invalid credentials"));
-        }
-      }
+      if (!email || !password) return setFormError("Enter your email and password.");
+      const result = (await onSignIn?.(email, password)) as { error?: { message?: string } } | undefined;
+      if (result?.error) setFormError(friendlyAuthError(result.error.message, "Incorrect email or password."));
     } else {
-      if (!email || !password || !name || !profession) {
-        setFormError("Please fill in all fields");
-        return;
-      }
-      if (onSignUp) {
-        const result = await (onSignUp(email, password, name, profession) as any);
-        if (result?.error) {
-          setFormError(friendlyAuthError(result.error.message, "Could not create account"));
-        }
-      }
+      if (!email || !password || !name || !profession) return setFormError("Fill in every field to create your account.");
+      const result = (await onSignUp?.(email, password, name, profession)) as { error?: { message?: string } } | undefined;
+      if (result?.error) setFormError(friendlyAuthError(result.error.message, "Could not create your account."));
     }
   };
 
+  const switchMode = () => {
+    setMode(mode === "signin" ? "signup" : "signin");
+    setFormError(null);
+  };
+
+  const error = formError ?? globalAuthError;
+  const title = mode === "signup" ? "Create your account" : lastUser ? `Welcome back, ${lastUser.name.split(" ")[0]}` : "Welcome back";
+  const lead = mode === "signup" ? "Join the next generation of surgeons." : "Sign in to continue your surgical training.";
+
   return (
-    <div className={cn("flex w-[100%] flex-col min-h-screen bg-black relative", className)}>
-      {/* Background Animation Layer */}
-      <div className="absolute inset-0 z-0">
-        {initialCanvasVisible && (
-          <div className="absolute inset-0">
-            <CanvasRevealEffect
-              animationSpeed={3}
-              containerClassName="bg-black"
-              colors={[[204, 85, 61]]}
-              dotSize={6}
-              reverse={false}
-            />
-          </div>
+    <AuthShell
+      title={title}
+      lead={lead}
+      footer={
+        <>
+          {mode === "signin" ? "New to ScrubIn?" : "Already have an account?"}{" "}
+          <button type="button" onClick={switchMode} className="font-semibold text-primary underline-offset-4 hover:underline">
+            {mode === "signin" ? "Create an account" : "Sign in"}
+          </button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        {mode === "signup" && (
+          <>
+            <TextField label="Full name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required />
+            <SelectField label="Your role" options={PROFESSIONS} placeholder="Select your role" value={profession} onChange={(e) => setProfession(e.target.value)} required />
+          </>
         )}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,0,0,1)_0%,_transparent_100%)]" />
-        <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black to-transparent" />
+        <TextField label="Email" type="email" autoComplete="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} required aria-invalid={!!error || undefined} />
+        <TextField
+          label="Password"
+          type="password"
+          autoComplete={mode === "signin" ? "current-password" : "new-password"}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          aria-invalid={!!error || undefined}
+          hint={mode === "signup" ? "At least 6 characters." : undefined}
+        />
+        {error && <ErrorBanner>{error}</ErrorBanner>}
+        <Button type="submit" disabled={loading} className="h-11 w-full text-sm font-semibold">
+          {loading ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
+        </Button>
+      </form>
+
+      <div className="my-6 flex items-center gap-4" aria-hidden="true">
+        <div className="h-px flex-1 bg-border" />
+        <span className="font-mono-data text-xs uppercase tracking-widest text-muted-foreground">or</span>
+        <div className="h-px flex-1 bg-border" />
       </div>
 
-      {/* Content Layer */}
-      <div className="relative z-10 flex flex-col flex-1 items-center justify-center px-4 py-12">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={mode}
-            initial={{ opacity: 0, x: mode === "signin" ? -20 : 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: mode === "signin" ? 20 : -20 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="w-full max-w-sm space-y-6 text-center"
-          >
-            {/* Logo */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex flex-col items-center mb-4"
-            >
-              <div className="w-12 h-12 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center mb-3 shadow-lg shadow-primary/20">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-6 h-6 text-[#CC553D]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                </svg>
-              </div>
-              <h1
-                className="text-3xl font-bold tracking-tight text-white"
-                style={{ fontFamily: "'Inter', sans-serif" }}
-              >
-                Scrub<span className="text-[#CC553D]">In</span>
-              </h1>
-            </motion.div>
-
-            {/* Welcome Text */}
-            <div className="space-y-1">
-              <h2 className="text-xl font-bold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
-                {mode === "signin" ? (lastUser ? `Welcome back, ${lastUser.name}` : "Welcome Back") : "Create Account"}
-              </h2>
-              <p className="text-white/60 text-sm">
-                {mode === "signin" 
-                  ? (lastUser ? `Continue as @${lastUser.login}` : "Sign in to continue your surgical training")
-                  : "Join the next generation of surgeons"}
-              </p>
-            </div>
-
-            {/* Email Form */}
-            <form onSubmit={handleSubmit} className="space-y-3 pt-2">
-              {mode === "signup" && (
-                <>
-                  <div className="space-y-1 text-left">
-                    <input
-                      type="text"
-                      placeholder="Full Name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-sm py-3 px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1 text-left">
-                    <select
-                      value={profession}
-                      onChange={(e) => setProfession(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-sm py-3 px-4 text-white focus:outline-none focus:border-primary/50 transition-colors text-sm appearance-none"
-                      required
-                    >
-                      <option value="" disabled className="bg-black text-white/30">Select Profession</option>
-                      <option value="Medical Student" className="bg-black">Medical Student</option>
-                      <option value="Resident" className="bg-black">Resident</option>
-                      <option value="Attending Surgeon" className="bg-black">Attending Surgeon</option>
-                      <option value="Nurse" className="bg-black">Nurse</option>
-                      <option value="Other" className="bg-black">Other</option>
-                    </select>
-                  </div>
-                </>
-              )}
-              
-              <div className="space-y-1 text-left">
-                <input
-                  type="email"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-sm py-3 px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
-                  required
-                />
-              </div>
-              <div className="space-y-1 text-left">
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-sm py-3 px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
-                  required
-                />
-              </div>
-              
-              {formError && (
-                <p className="text-[#A32A2A] text-xs text-left px-1">{formError}</p>
-              )}
-              {globalAuthError && !formError && (
-                <p className="text-[#A32A2A] text-xs text-left px-1">{globalAuthError}</p>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#CC553D] hover:bg-[#D95338] text-white font-bold py-3 rounded-sm transition-all duration-200 mt-2 disabled:opacity-50 text-sm"
-              >
-                {loading ? "Processing..." : mode === "signin" ? "Sign In" : "Sign Up"}
-              </button>
-            </form>
-
-            {/* Divider */}
-            <div className="flex items-center gap-4 py-1">
-              <div className="h-px bg-white/10 flex-1" />
-              <span className="text-white/40 text-xs uppercase tracking-widest font-mono-data">or</span>
-              <div className="h-px bg-white/10 flex-1" />
-            </div>
-
-            {/* Social Buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={onGoogleSignIn}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-sm py-2.5 px-2 transition-all duration-200 text-xs"
-              >
-                <GoogleIcon className="w-4 h-4" />
-                <span>Google</span>
-              </button>
-              <button
-                onClick={onGitHubSignIn}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-sm py-2.5 px-2 transition-all duration-200 text-xs"
-              >
-                <GitHubIcon className="w-4 h-4" />
-                <span>GitHub</span>
-              </button>
-            </div>
-
-            {/* Toggle Mode */}
-            <p className="text-sm text-white/40 pt-2">
-              {mode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
-              <button 
-                onClick={() => {
-                  setMode(mode === "signin" ? "signup" : "signin");
-                  setFormError(null);
-                }}
-                className="text-[#CC553D] hover:underline focus:outline-none"
-              >
-                {mode === "signin" ? "Sign Up" : "Sign In"}
-              </button>
-            </p>
-
-            {/* Footer Text */}
-            <p className="text-[10px] text-white/30 pt-4 leading-relaxed max-w-[280px] mx-auto">
-              By continuing, you agree to ScrubIn's{" "}
-              <a className="underline" href="/terms" target="_blank" rel="noreferrer">Terms</a> and{" "}
-              <a className="underline" href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>. ScrubIn is an educational simulation, not medical advice.
-            </p>
-          </motion.div>
-        </AnimatePresence>
+      <div className="grid grid-cols-2 gap-3">
+        <Button type="button" variant="outline" onClick={onGoogleSignIn} disabled={loading} className="h-11">
+          <GoogleIcon className="h-4 w-4" />
+          Google
+        </Button>
+        <Button type="button" variant="outline" onClick={onGitHubSignIn} disabled={loading} className="h-11">
+          <GitHubIcon className="h-4 w-4" />
+          GitHub
+        </Button>
       </div>
-    </div>
+    </AuthShell>
   );
-};
+}

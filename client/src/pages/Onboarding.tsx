@@ -1,18 +1,9 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, User, Briefcase } from "lucide-react";
-
-const PROFESSIONS = [
-  "Medical Student",
-  "Resident",
-  "Fellow",
-  "Attending Surgeon",
-  "Nurse Practitioner",
-  "Physician Assistant",
-  "Other"
-];
+import { AuthShell, SelectField, TextField } from "@/components/scrubin";
+import { PROFESSIONS } from "@/lib/professions";
 
 export default function Onboarding() {
   const { user, completeOnboarding } = useAuth();
@@ -22,165 +13,56 @@ export default function Onboarding() {
 
   // Pre-fill with OAuth data
   useEffect(() => {
-    if (user) {
-      setDisplayName(user.name || "");
-    }
+    if (user) setDisplayName(user.name || "");
   }, [user]);
 
-  const handleSubmit = async () => {
-    if (!user || !displayName || !profession) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !displayName.trim() || !profession) return;
     setIsSubmitting(true);
-    completeOnboarding({ displayName, profession });
+    try {
+      // completeOnboarding navigates to the profile on success.
+      await completeOnboarding({ displayName: displayName.trim(), profession });
+    } catch {
+      setIsSubmitting(false);
+    }
   };
 
-  // Don't render if no user
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="Complete your profile" className="fixed inset-0 bg-[#161310] z-50 flex items-center justify-center p-4">
-      {/* Animated background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/10 animate-gradient-shift" />
-      
-      {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-primary/20 rounded-full"
-            initial={{ 
-              x: Math.random() * window.innerWidth, 
-              y: Math.random() * window.innerHeight,
-              scale: 0
-            }}
-            animate={{ 
-              y: [null, Math.random() * -100],
-              scale: [0, 1, 0],
-              opacity: [0, 1, 0]
-            }}
-            transition={{ 
-              duration: 3 + Math.random() * 2, 
-              repeat: Infinity, 
-              delay: Math.random() * 2 
-            }}
-          />
-        ))}
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, rotate: -2 }}
-        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-        transition={{ duration: 0.5, type: "spring" }}
-        className="relative w-full max-w-md"
-      >
-        <div className="rounded-sm p-8 bg-[#1E1A16] border border-[#3A342C] shadow-[0_0_60px_rgba(204,85,61,0.15)]">
-          <div className="text-center mb-8">
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", delay: 0.2, stiffness: 200 }}
-              className="w-20 h-20 rounded-sm border-2 border-primary/40 overflow-hidden mx-auto mb-4 bg-[#26211B] shadow-[0_0_20px_rgba(204,85,61,0.2)]"
-            >
-              <img
-                src={user?.avatar_url}
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-2xl font-bold text-[#EDEAE4] mb-2"
-              style={{ fontFamily: "'Inter', sans-serif" }}
-            >
-              Complete Your Profile
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-[#A89F95] text-sm"
-            >
-              Let's set up your surgeon identity
-            </motion.p>
-          </div>
-
-          <div className="space-y-5">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <label className="block text-sm font-medium text-[#EDEAE4] mb-2">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A89F95]" />
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Dr. House"
-                  className="w-full h-12 pl-11 pr-4 rounded-sm bg-[#26211B] border border-[#3A342C] text-[#EDEAE4] placeholder:text-[#8C827A] focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
-                  maxLength={30}
-                />
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-<label className="block text-sm font-medium text-[#EDEAE4] mb-2">
-                Current Role
-              </label>
-              <div className="relative">
-                <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A89F95] z-10 pointer-events-none" />
-                <select
-                  value={profession}
-                  onChange={(e) => setProfession(e.target.value)}
-                  className="w-full h-12 pl-11 pr-10 rounded-sm bg-[#26211B] border border-[#3A342C] text-[#EDEAE4] focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all appearance-none cursor-pointer"
-                >
-                  <option value="" disabled className="bg-[#26211B] text-[#8C827A]">Select your current role</option>
-                  {PROFESSIONS.map((p) => (
-                    <option key={p} value={p} className="bg-[#1E1A16] text-[#EDEAE4]">{p}</option>
-                  ))}
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#A89F95]">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="pt-4"
-            >
-              <Button
-                onClick={handleSubmit}
-                disabled={!displayName || !profession || isSubmitting}
-                className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? (
-                  <div className="animate-spin w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full" />
-                ) : (
-                  <>
-                    Start Operating
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </Button>
-            </motion.div>
-          </div>
-        </div>
-      </motion.div>
-    </div>
+    <AuthShell title="Complete your profile" lead="Tell us who's scrubbing in. You can change this later.">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {user.avatar_url && (
+          <img src={user.avatar_url} alt="" className="mx-auto h-16 w-16 rounded-sm border border-border object-cover" />
+        )}
+        <TextField
+          label="Display name"
+          placeholder="Dr. House"
+          autoComplete="name"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          maxLength={30}
+          required
+        />
+        <SelectField
+          label="Current role"
+          options={PROFESSIONS}
+          placeholder="Select your current role"
+          value={profession}
+          onChange={(e) => setProfession(e.target.value)}
+          required
+        />
+        <Button type="submit" disabled={!displayName.trim() || !profession || isSubmitting} className="h-11 w-full text-sm font-semibold">
+          {isSubmitting ? (
+            "Setting up your profile…"
+          ) : (
+            <>
+              Start operating <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </>
+          )}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }
