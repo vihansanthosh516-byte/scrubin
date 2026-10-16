@@ -3,7 +3,7 @@ import { scenarioName } from "@/engine/scenarios";
 import { Link, useLocation } from "wouter";
 import { Film, Loader2, Play, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { fmtTime } from "@/components/or/AnesthesiaStation";
+import { fmtTime } from "@/lib/format";
 import { engineApi } from "@/engine/client";
 import type { SavedCase } from "@/engine/types";
 

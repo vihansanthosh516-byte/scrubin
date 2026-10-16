@@ -1,14 +1,15 @@
 import { useEffect, useRef } from "react";
 import type { CommsMessage } from "@/engine/types";
-import { fmtTime } from "./AnesthesiaStation";
+import { fmtTime } from "@/lib/format";
 
+// Who's speaking, by colour and always by name too.
 const SPEAKER_STYLE: Record<string, string> = {
-  surgeon: "text-amber-warm",
+  surgeon: "text-warning",
   anesthesia: "text-primary",
   attending: "text-primary",
-  circulator: "text-sage dark:text-[#5E8C74]",
-  scrub: "text-sage dark:text-[#5E8C74]",
-  patient: "text-[#9B4D6A] dark:text-pink-200",
+  circulator: "text-success",
+  scrub: "text-success",
+  patient: "text-info",
   system: "text-muted-foreground",
   trainee: "text-foreground",
 };
@@ -35,7 +36,7 @@ export function speak(m: CommsMessage) {
   window.speechSynthesis.speak(u);
 }
 
-export function CommsLog({ comms, voices }: { comms: CommsMessage[]; voices: boolean }) {
+export function CommsLog({ comms, voices, className = "" }: { comms: CommsMessage[]; voices: boolean; className?: string }) {
   const endRef = useRef<HTMLDivElement>(null);
   const spoken = useRef<number>(0);
 
@@ -54,7 +55,8 @@ export function CommsLog({ comms, voices }: { comms: CommsMessage[]; voices: boo
   }, [comms, voices]);
 
   return (
-    <div className="rounded-sm border border-border bg-card p-3 h-full min-h-[220px] max-h-[420px] overflow-y-auto text-sm space-y-1.5" aria-live="polite">
+    <div className={`space-y-1.5 overflow-y-auto rounded-sm border border-border bg-card p-3 text-sm ${className || "h-full min-h-[220px] max-h-[420px]"}`} role="log" aria-live="polite" aria-label="Team communication">
+      {comms.length === 0 && <p className="text-muted-foreground">The team's calls, findings and alarms appear here.</p>}
       {comms.map((m) =>
         m.kind === "trainee" ? (
           <div key={m.id} className="flex justify-end">
@@ -69,7 +71,7 @@ export function CommsLog({ comms, voices }: { comms: CommsMessage[]; voices: boo
             {m.kind !== "narration" && m.kind !== "finding" && m.kind !== "sign" && (
               <span className={`font-semibold mr-1.5 ${SPEAKER_STYLE[m.from] ?? ""}`}>{m.name}:</span>
             )}
-            <span className={m.kind === "finding" || m.kind === "sign" || m.kind === "narration" ? "italic text-muted-foreground" : m.kind === "question" ? "text-amber-warm" : ""}>
+            <span className={m.kind === "finding" || m.kind === "sign" || m.kind === "narration" ? "italic text-muted-foreground" : m.kind === "question" ? "font-medium text-warning" : ""}>
               {m.text}
             </span>
           </div>

@@ -73,10 +73,11 @@ async function launch() {
   const send = (method, params = {}, sessionId) =>
     new Promise((resolve, reject) => {
       const mid = ++id;
+      // Page scripts (--page-js) may wait for the app, e.g. the in-browser simulator booting.
       const timer = setTimeout(() => {
         pending.delete(mid);
         reject(new Error(`${method} timed out`));
-      }, 20000);
+      }, method === "Runtime.evaluate" ? 180000 : 20000);
       pending.set(mid, {
         resolve: (v) => (clearTimeout(timer), resolve(v)),
         reject: (e) => (clearTimeout(timer), reject(e)),

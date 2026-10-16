@@ -1,0 +1,6 @@
+/** Case clock: seconds → "mm:ss". */
+export function fmtTime(t: number) {
+  const m = Math.floor(t / 60);
+  const s = Math.floor(t % 60);
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}

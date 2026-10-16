@@ -51,18 +51,19 @@ function ScopeView({ state }: { state: CaseState }) {
   );
 }
 
-function ScopeOverlay({ s }: { s: NonNullable<CaseState["surgery"]> }) {
+/** IAP and the step in progress, over the camera image (always dark, so white text). */
+function ScopeOverlay({ s, showIap = true }: { s: NonNullable<CaseState["surgery"]>; showIap?: boolean }) {
   return (
     <>
-      <div className="absolute top-2 left-2 font-mono-data text-[11px] text-primary bg-muted rounded px-2 py-0.5">IAP {s.iap.toFixed(0)} mmHg</div>
+      {showIap && <div className="absolute left-2 top-2 rounded-sm bg-black/70 px-2 py-0.5 font-mono-data text-xs text-white">IAP {s.iap.toFixed(0)} mmHg</div>}
       {s.running && (
-        <div className="absolute bottom-0 inset-x-0 bg-muted px-3 py-2">
+        <div className="absolute inset-x-0 bottom-0 bg-black/75 px-3 py-2 text-white">
           <div className="flex justify-between text-xs">
             <span>{s.running.name}</span>
             <span className="font-mono-data">{Math.round(s.running.progress * 100)}%</span>
           </div>
-          <div className="h-1 rounded bg-muted mt-1">
-            <div className="h-1 rounded bg-sage" style={{ width: `${s.running.progress * 100}%` }} />
+          <div className="mt-1 h-1 rounded-sm bg-white/20">
+            <div className="h-1 rounded-sm bg-[#8FBFA4]" style={{ width: `${s.running.progress * 100}%` }} />
           </div>
         </div>
       )}
@@ -128,26 +129,11 @@ function FlatScopeView({ state }: { state: CaseState }) {
           <rect width="320" height="180" fill="url(#vignette)" />
         </svg>
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+        <div className="absolute inset-0 flex items-center justify-center text-sm text-white/70">
           {done.has("desufflate") ? "Camera out — closing." : insufflating ? "Insufflating…" : "No camera in."}
         </div>
       )}
-      {!isCesarean(state) && (
-        <div className="absolute top-2 left-2 font-mono-data text-[11px] text-primary bg-muted rounded px-2 py-0.5">
-          IAP {s.iap.toFixed(0)} mmHg
-        </div>
-      )}
-      {s.running && (
-        <div className="absolute bottom-0 inset-x-0 bg-muted px-3 py-2">
-          <div className="flex justify-between text-xs">
-            <span>{s.running.name}</span>
-            <span className="font-mono-data">{Math.round(s.running.progress * 100)}%</span>
-          </div>
-          <div className="h-1 rounded bg-muted mt-1">
-            <div className="h-1 rounded bg-sage" style={{ width: `${s.running.progress * 100}%` }} />
-          </div>
-        </div>
-      )}
+      <ScopeOverlay s={s} showIap={!isCesarean(state)} />
     </div>
   );
 }
@@ -170,7 +156,7 @@ export function SurgeonStation({ state, act, say }: Props) {
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <div className="space-y-3">
         <ScopeView state={state} />
-        {s.findings.length > 0 && <div className="text-xs text-amber-warm">{s.findings.join(" ")}</div>}
+        {s.findings.length > 0 && <p className="rounded-sm border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">{s.findings.join(" ")}</p>}
         <Section title="Instrument (scrub hands you…)">
           <div className="flex flex-wrap gap-1">
             {instrumentList.map(([id, name]) => (
@@ -188,27 +174,40 @@ export function SurgeonStation({ state, act, say }: Props) {
       </div>
       <div className="space-y-3">
         <Section title="Operative steps" right={<span className="text-[11px] text-muted-foreground">{s.done.length} done</span>}>
-          <div className="space-y-1 max-h-[330px] overflow-y-auto pr-1">
-            {visible.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                title={t.blocked ?? ""}
-                onClick={() => perform(t.id)}
-                className={`w-full flex items-center justify-between rounded-sm border px-3 py-1.5 text-left text-xs transition-colors ${
-                  t.available ? "border-sage/40 hover:bg-sage/10" : "border-border text-muted-foreground"
-                } ${s.running?.task === t.id ? "bg-sage/10" : ""}`}
-              >
-                <span>{t.name}</span>
-                <span className="text-[10px]">
-                  {instrument && t.instruments.includes(instrument) ? "✓ fits · " : ""}
-                  {s.running?.task === t.id ? "in progress" : t.available ? "ready" : "blocked"}
-                </span>
-              </button>
-            ))}
-          </div>
-          <div className="text-[11px] text-muted-foreground">
-            Steps aren't graded right/wrong — order, technique and instrument all change what happens. Hover a blocked step to see why.
+          <ul className="max-h-[360px] space-y-1.5 overflow-y-auto pr-1">
+            {visible.map((t) => {
+              const running = s.running?.task === t.id;
+              const fits = instrument && t.instruments.includes(instrument);
+              return (
+                <li key={t.id}>
+                  <button
+                    type="button"
+                    onClick={() => perform(t.id)}
+                    aria-describedby={t.blocked ? `why-${t.id}` : undefined}
+                    className={`w-full rounded-sm border px-3 py-2 text-left text-sm transition-colors ${
+                      running ? "border-success bg-success/10" : t.available ? "border-success/40 hover:bg-success/10" : "border-dashed border-border text-muted-foreground"
+                    }`}
+                  >
+                    <span className="flex items-center justify-between gap-3">
+                      <span className="font-medium">{t.name}</span>
+                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide">
+                        {fits && <span className="mr-2 text-success">Instrument fits</span>}
+                        {running ? <span className="text-success">In progress</span> : t.available ? <span className="text-success">Ready</span> : <span>Blocked</span>}
+                      </span>
+                    </span>
+                    {/* Why a step is blocked, shown inline (a hover tooltip can't be read on touch or by keyboard). */}
+                    {t.blocked && !t.available && (
+                      <span id={`why-${t.id}`} className="mt-1 block text-xs text-muted-foreground">
+                        {t.blocked}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="text-xs text-muted-foreground">
+            Steps aren't graded right or wrong: order, technique and instrument all change what happens.
           </div>
         </Section>
         <Section title="Talk to the team">

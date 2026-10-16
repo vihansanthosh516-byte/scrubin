@@ -66,9 +66,11 @@ interface Props {
   alarms: string[];
   paused: boolean;
   muted: boolean;
+  /** Overlay alarm chips on the waveforms. The live OR shows alarms in its own alarm bar instead. */
+  showAlarmChips?: boolean;
 }
 
-export function PatientMonitor({ readout, alarms, paused, muted }: Props) {
+export function PatientMonitor({ readout, alarms, paused, muted, showAlarmChips = true }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const live = useRef({ readout, paused, muted });
   live.current = { readout, paused, muted };
@@ -246,15 +248,16 @@ export function PatientMonitor({ readout, alarms, paused, muted }: Props) {
     <div
       className={`relative rounded-sm border bg-[#050B14] overflow-hidden transition-colors ${
         alarms.some((x) => ["asystole", "vf", "pea", "spo2_low", "apnea"].includes(x) || x.startsWith("spo2_low"))
-          ? "border-destructive/40 shadow-[0_0_40px_rgba(248,113,113,0.25)]"
+          ? "border-destructive shadow-[0_0_40px_rgba(248,113,113,0.25)]"
           : alarms.length
             ? "border-amber-warm/40"
             : "border-border"
       }`}
     >
-      <div className="grid grid-cols-[1fr_190px] min-h-[340px]">
-        <canvas ref={canvasRef} className="w-full h-full min-h-[340px]" aria-label="Patient monitor waveforms" />
-        <div className="border-l border-white/10 flex flex-col divide-y divide-white/10 font-mono-data">
+      {/* Waveforms beside the numerics; on a phone the numerics drop below the waveforms in two columns. */}
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr_190px] sm:min-h-[340px]">
+        <canvas ref={canvasRef} className="w-full h-full min-h-[220px] sm:min-h-[340px]" aria-label="Patient monitor waveforms" />
+        <div className="grid grid-cols-2 border-t border-white/10 font-mono-data sm:flex sm:flex-col sm:divide-y sm:divide-white/10 sm:border-l sm:border-t-0">
           <Numeric label="HR" unit="bpm" color={COLORS.ecg} value={a.has("ecg") ? r?.hr : undefined} alarm={alarm("hr")} sub={r?.rhythm && a.has("ecg") ? r.rhythm.replace("_", " ") : undefined} big />
           <Numeric label="SpO₂" unit="%" color={COLORS.spo2} value={a.has("spo2") ? (r?.spo2 ?? "?") : undefined} alarm={alarm("spo2")} big />
           <div className="px-3 py-2">
@@ -274,16 +277,16 @@ export function PatientMonitor({ readout, alarms, paused, muted }: Props) {
             </div>
           </div>
           <Numeric label="EtCO₂" unit="mmHg" color={COLORS.co2} value={a.has("etco2") ? (r?.etco2 ?? "—") : undefined} alarm={alarm("etco2") || alarm("apnea")} sub={a.has("etco2") && r?.rr != null ? `RR ${r.rr}` : undefined} />
-          <div className="grid grid-cols-2 divide-x divide-white/10">
+          <div className="col-span-2 grid grid-cols-2 divide-x divide-white/10 border-t border-white/10 sm:border-t-0">
             <Numeric small label="Temp" unit="°C" color="#E2E8F0" value={a.has("temp") ? r?.temp : undefined} alarm={alarm("temp")} />
             <Numeric small label="BIS" unit="" color={COLORS.bis} value={a.has("bis") ? r?.bis : undefined} sub={a.has("bis") ? undefined : "sensor off"} />
           </div>
-          <div className="grid grid-cols-2 divide-x divide-white/10">
+          <div className="col-span-2 grid grid-cols-2 divide-x divide-white/10 border-t border-white/10 sm:border-t-0">
             <Numeric small label="Ppeak" unit="cmH₂O" color="#E2E8F0" value={r?.peak_pressure ?? undefined} alarm={alarm("peak_pressure")} />
             <Numeric small label="FiO₂" unit="%" color="#E2E8F0" value={r?.fio2} />
           </div>
           {r?.fi_sevo != null && (r.fi_sevo > 0 || (r.et_sevo ?? 0) > 0) && (
-            <div className="grid grid-cols-2 divide-x divide-white/10">
+            <div className="col-span-2 grid grid-cols-2 divide-x divide-white/10 border-t border-white/10 sm:border-t-0">
               <Numeric small label="Sevo Fi/Et" unit="%" color="#A7F3D0" value={`${r.fi_sevo.toFixed(1)}/${r.et_sevo != null ? r.et_sevo.toFixed(1) : "—"}`} />
               <Numeric small label="MAC" unit="" color="#A7F3D0" value={r.mac != null ? r.mac.toFixed(2) : undefined} />
             </div>
@@ -295,7 +298,7 @@ export function PatientMonitor({ readout, alarms, paused, muted }: Props) {
           )}
         </div>
       </div>
-      {alarms.length > 0 && (
+      {showAlarmChips && alarms.length > 0 && (
         <div className="absolute top-2 left-2 flex flex-wrap gap-1.5">
           {alarms.map((al) => (
             <span key={al} className="px-2 py-0.5 rounded text-[10px] font-mono-data uppercase tracking-wide bg-destructive/10 text-destructive border border-destructive/40 animate-pulse">

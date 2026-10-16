@@ -1,4 +1,4 @@
-import { Mic, MicOff, Send } from "lucide-react";
+import { AlertCircle, Check, HelpCircle, Mic, Send } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { engineApi } from "@/engine/client";
 
@@ -41,6 +41,8 @@ interface Props {
   lastParse: { text: string; ok: boolean; source: string; clarification: string | null } | null;
   role: "anesthesia" | "surgeon";
   scenario?: string;
+  /** Inside a container that already draws the frame (the OR's bottom bar). */
+  bare?: boolean;
 }
 
 /**
@@ -48,7 +50,7 @@ interface Props {
  * to talk — push-to-talk, like a real OR where you call out orders.
  * Uses the browser's speech recognition; falls back to server-side Whisper.
  */
-export function CommandBar({ onSubmit, lastParse, role, scenario }: Props) {
+export function CommandBar({ onSubmit, lastParse, role, scenario, bare }: Props) {
   const [text, setText] = useState("");
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
@@ -141,11 +143,18 @@ export function CommandBar({ onSubmit, lastParse, role, scenario }: Props) {
     }
   }, [interim, submit]);
 
-  // Spacebar push-to-talk when not typing in a field.
+  // Spacebar push-to-talk when not typing in a field. Space on a focused control (a button, a tab,
+  // a checkbox) belongs to that control, and nothing fires while a dialog is open.
   useEffect(() => {
     const isTyping = () => {
       const el = document.activeElement as HTMLElement | null;
-      return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable);
+      if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return true;
+      return (
+        !!el &&
+        (["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A", "SUMMARY"].includes(el.tagName) ||
+          el.isContentEditable ||
+          /^(button|tab|checkbox|radio|switch|menuitem|option|slider)$/.test(el.getAttribute("role") ?? ""))
+      );
     };
     const down = (e: KeyboardEvent) => {
       if (e.code === "Space" && !e.repeat && !isTyping()) {
@@ -173,25 +182,35 @@ export function CommandBar({ onSubmit, lastParse, role, scenario }: Props) {
       : SURGEON_EXAMPLES[scenario ?? ""] ?? SURGEON_EXAMPLES.appendectomy;
 
   return (
-    <div className="rounded-sm border border-border bg-card p-3 space-y-2">
+    <div className={bare ? "space-y-1.5" : "space-y-2 rounded-sm border border-border bg-card p-3"}>
       <div className="flex items-center gap-2">
         <button
           type="button"
           onPointerDown={(e) => {
             e.preventDefault();
+            // Keep the press even if the pointer slides off the button mid-sentence.
+            e.currentTarget.setPointerCapture(e.pointerId);
             start();
           }}
           onPointerUp={stop}
-          onPointerLeave={() => listening && stop()}
-          className={`shrink-0 w-11 h-11 rounded-full flex items-center justify-center border transition-all ${
-            listening ? "bg-destructive/10 border-destructive scale-110 shadow-[0_0_24px_rgba(248,113,113,0.5)]" : "border-border hover:bg-primary/10"
+          onPointerCancel={() => listening && stop()}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-colors ${
+            listening ? "border-destructive bg-destructive text-destructive-foreground" : "border-border text-primary hover:bg-primary/10"
           }`}
-          aria-label="Hold to talk"
+          aria-label={listening ? "Listening. Release to send" : "Hold to talk"}
+          aria-pressed={listening}
           title="Hold to talk (or hold Space)"
         >
-          {listening ? <Mic className="w-5 h-5 text-destructive" /> : <MicOff className="w-5 h-5 text-primary" />}
+          <Mic className={`h-5 w-5 ${listening ? "motion-safe:animate-pulse" : ""}`} aria-hidden="true" />
         </button>
-        <input autoComplete="off" data-1p-ignore data-lpignore="true"
+        <label htmlFor="or-command-input" className="sr-only">
+          Order to the team
+        </label>
+        <input
+          id="or-command-input"
+          autoComplete="off"
+          data-1p-ignore
+          data-lpignore="true"
           ref={inputRef}
           value={listening ? interim : text}
           onChange={(e) => setText(e.target.value)}
@@ -199,26 +218,48 @@ export function CommandBar({ onSubmit, lastParse, role, scenario }: Props) {
             if (e.key === "Enter") submit(text);
             if (e.key === "Escape") inputRef.current?.blur();
           }}
-          placeholder={listening ? "Listening…" : "Say or type an order — e.g. “push 150 of propofol”"}
-          className="flex-1 bg-muted border border-border rounded-sm px-3 py-2.5 text-sm outline-none focus:border-primary"
+          placeholder={listening ? "Listening…" : role === "anesthesia" ? "Say or type an order, e.g. “push 150 of propofol”" : "Say or type an order, e.g. “camera in”"}
+          className="flex-1 rounded-sm border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-ring focus:ring-[3px] focus:ring-ring/50"
         />
-        <button type="button" onClick={() => submit(text)} className="shrink-0 w-11 h-11 rounded-sm border border-border flex items-center justify-center hover:bg-primary/10" aria-label="Send">
-          <Send className="w-4 h-4 text-primary" />
+        <button type="button" onClick={() => submit(text)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm border border-border text-primary hover:bg-primary/10" aria-label="Send order">
+          <Send className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-        <span>Hold <kbd className="px-1 rounded bg-muted">Space</kbd> to talk.</span>
-        {lastParse && (
-          <span className={lastParse.ok ? "text-sage dark:text-[#5E8C74]" : "text-amber-warm"}>
-            {lastParse.ok ? `✓ “${lastParse.text}”` : `? “${lastParse.text}”`}
-            {lastParse.source === "llm" ? " (AI)" : ""}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground" aria-live="polite">
+        {listening ? (
+          <span className="flex items-center gap-1.5 font-semibold text-destructive">
+            <span className="h-2 w-2 rounded-full bg-destructive motion-safe:animate-pulse" aria-hidden="true" /> Listening… release to send
+          </span>
+        ) : (
+          <span className="hidden sm:inline">
+            Hold <kbd className="rounded-sm border border-border bg-muted px-1">Space</kbd> to talk, <kbd className="rounded-sm border border-border bg-muted px-1">/</kbd> to type
           </span>
         )}
-        {voiceError && <span className="text-destructive">{voiceError}</span>}
+        {lastParse && (
+          <span className={`flex items-center gap-1 ${lastParse.ok ? "text-success" : "text-warning"}`}>
+            {lastParse.ok ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <HelpCircle className="h-3.5 w-3.5" aria-hidden="true" />}
+            {lastParse.ok ? "Understood" : "Not understood"}: “{lastParse.text}”{lastParse.source === "llm" ? " (AI)" : ""}
+          </span>
+        )}
+        {voiceError && (
+          <span className="flex items-center gap-1 text-destructive">
+            <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" /> {voiceError}
+          </span>
+        )}
       </div>
-      <div className="flex flex-wrap gap-1">
+      {lastParse && !lastParse.ok && lastParse.clarification && (
+        <p className="rounded-sm border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">{lastParse.clarification}</p>
+      )}
+      {/* One scrollable row so the bar stays short. */}
+      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]" aria-label="Example orders">
         {examples.map((ex) => (
-          <button key={ex} type="button" onClick={() => onSubmit(ex)} title="Send this order" className="text-[10px] px-2 py-0.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-border">
+          <button
+            key={ex}
+            type="button"
+            onClick={() => onSubmit(ex)}
+            title="Send this order"
+            className="shrink-0 whitespace-nowrap rounded-sm border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground hover:border-surface-hover-border hover:text-foreground"
+          >
             {ex}
           </button>
         ))}

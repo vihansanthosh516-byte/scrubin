@@ -119,6 +119,12 @@ export interface OrConnection {
   state: CaseState | null;
   comms: CommsMessage[];
   connected: boolean;
+  /** Set when the case can't be reached: the simulator failed, or the line has been down for a while. */
+  error: string | null;
+  /** Orders waiting to go out while the line is down. */
+  queued: number;
+  /** Reconnect from scratch. */
+  retry: () => void;
   lastParse: { text: string; ok: boolean; source: string; clarification: string | null } | null;
   act: (action: Action) => void;
   say: (text: string) => void;
@@ -131,6 +137,9 @@ export function useOrConnection(caseId: string | null): OrConnection {
   const [comms, setComms] = useState<CommsMessage[]>([]);
   const [connected, setConnected] = useState(false);
   const [lastParse, setLastParse] = useState<OrConnection["lastParse"]>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [queued, setQueued] = useState(0);
+  const [attempt, setAttempt] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
   const pendingText = useRef<Map<number, string>>(new Map());
   const outbox = useRef<unknown[]>([]);
@@ -139,18 +148,28 @@ export function useOrConnection(caseId: string | null): OrConnection {
   const caseIdRef = useRef<string | null>(null);
   caseIdRef.current = caseId;
   const refCounter = useRef(1);
+  const openedCase = useRef<string | null | undefined>(undefined);
+  const seenIds = useRef<Set<number>>(new Set());
 
   useEffect(() => {
-    // A new case starts with a clean log — the previous case's lines don't carry over.
-    setComms([]);
-    setState(null);
-    setLastParse(null);
-    lastTick.current = 0;
-    outbox.current = [];
+    // A new case starts with a clean log; the previous case's lines don't carry over. A reconnect
+    // to the same case (retry) keeps the transcript and the orders queued while it was down.
+    if (openedCase.current !== caseId) {
+      openedCase.current = caseId;
+      seenIds.current = new Set();
+      setComms([]);
+      setState(null);
+      setLastParse(null);
+      lastTick.current = 0;
+      outbox.current = [];
+      setQueued(0);
+    }
+    setError(null);
     if (!caseId) return;
     let closed = false;
     let retry: number | undefined;
-    const seen = new Set<number>();
+    let giveUp: number | undefined;
+    const seen = seenIds.current;
 
     const handle = (msg: any) => {
       if (msg.type === "state") {
@@ -189,8 +208,12 @@ export function useOrConnection(caseId: string | null): OrConnection {
           localReady.current = true;
           setConnected(true);
           outbox.current.splice(0).forEach((p) => void py.wsSend(caseId, p));
+          setQueued(0);
         })
-        .catch(() => setConnected(false));
+        .catch((e) => {
+          setConnected(false);
+          if (!closed) setError(`The simulator stopped responding${e?.message ? ` (${String(e.message).slice(0, 120)})` : ""}.`);
+        });
       return () => {
         closed = true;
         localReady.current = false;
@@ -203,13 +226,20 @@ export function useOrConnection(caseId: string | null): OrConnection {
       wsRef.current = ws;
       ws.onopen = () => {
         setConnected(true);
+        setError(null);
+        window.clearTimeout(giveUp);
+        giveUp = undefined;
         // Orders given while the line was down go out now instead of vanishing.
-        const queued = outbox.current.splice(0);
-        queued.forEach((p) => ws.send(JSON.stringify(p)));
+        const pending = outbox.current.splice(0);
+        pending.forEach((p) => ws.send(JSON.stringify(p)));
+        setQueued(0);
       };
       ws.onclose = () => {
         setConnected(false);
-        if (!closed) retry = window.setTimeout(connect, 1500);
+        if (closed) return;
+        // Keep retrying, but tell the trainee once the line has been down for 15 s.
+        if (giveUp === undefined) giveUp = window.setTimeout(() => setError("Lost the connection to the OR. Still trying to reconnect…"), 15_000);
+        retry = window.setTimeout(connect, 1500);
       };
       ws.onmessage = (ev) => handle(JSON.parse(ev.data));
     };
@@ -217,19 +247,27 @@ export function useOrConnection(caseId: string | null): OrConnection {
     return () => {
       closed = true;
       window.clearTimeout(retry);
+      window.clearTimeout(giveUp);
       wsRef.current?.close();
     };
-  }, [caseId]);
+  }, [caseId, attempt]);
+
+  const queue = (payload: unknown) => {
+    // Keep the newest orders if the line stays down: the oldest are the most likely to be stale.
+    outbox.current.push(payload);
+    if (outbox.current.length > 20) outbox.current.shift();
+    setQueued(outbox.current.length);
+  };
 
   const send = useCallback((payload: unknown) => {
     if (LOCAL) {
       if (localReady.current && caseIdRef.current) void py.wsSend(caseIdRef.current, payload);
-      else if (outbox.current.length < 20) outbox.current.push(payload);
+      else queue(payload);
       return;
     }
     const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload));
-    else if (outbox.current.length < 20) outbox.current.push(payload);
+    else queue(payload);
   }, []);
 
   const act = useCallback((action: Action) => send({ type: "action", action }), [send]);
@@ -243,5 +281,7 @@ export function useOrConnection(caseId: string | null): OrConnection {
   );
   const control = useCallback((c: { speed?: number; paused?: boolean }) => send({ type: "control", ...c }), [send]);
 
-  return { state, comms, connected, lastParse, act, say, control };
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
+
+  return { state, comms, connected, error, queued, retry, lastParse, act, say, control };
 }

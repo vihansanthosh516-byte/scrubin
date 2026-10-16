@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { scenarioName } from "@/engine/scenarios";
 import { Link, useParams } from "wouter";
 import { Loader2, Pause, Play } from "lucide-react";
-import { fmtTime } from "@/components/or/AnesthesiaStation";
+import { fmtTime } from "@/lib/format";
 import { CommsLog } from "@/components/or/CommsLog";
 import { DebriefView } from "@/components/or/DebriefView";
 import { PatientMonitor } from "@/components/or/PatientMonitor";

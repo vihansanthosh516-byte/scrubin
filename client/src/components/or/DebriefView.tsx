@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/api";
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Debrief } from "@/engine/types";
-import { fmtTime } from "./AnesthesiaStation";
+import { fmtTime } from "@/lib/format";
 
 const GRADE_STYLE = {
   good: "text-sage dark:text-[#5E8C74] border-sage/40 bg-sage/10",

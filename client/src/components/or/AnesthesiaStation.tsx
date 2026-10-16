@@ -1,7 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { HeartPulse } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Action, CaseState, DrugInfo, PatientSummary } from "@/engine/types";
+import { ConfirmDialog } from "@/components/scrubin";
+import { fmtTime } from "@/lib/format";
 import { OrButton, Section, Stepper } from "./controls";
+
+export { fmtTime };
+
+export const STATION_TABS = ["drugs", "airway", "vent", "other"] as const;
+export type StationTab = (typeof STATION_TABS)[number];
 
 const CLASS_ORDER: [string, string][] = [
   ["hypnotic", "Hypnotics"],
@@ -26,10 +34,40 @@ interface Props {
   act: (a: Action) => void;
 }
 
-export function AnesthesiaStation({ state, drugs, patient, act }: Props) {
+/** An OR button that asks first: for orders you can't take back (a shock, a unit of blood, extubation). */
+function ConfirmOrButton({ label, title, description, confirmLabel, tone = "red", disabled, onConfirm }: { label: ReactNode; title: string; description: string; confirmLabel: string; tone?: "red" | "amber" | "teal" | "blue"; disabled?: boolean; onConfirm: () => void }) {
+  const [open, setOpen] = useState(false);
   return (
-    <Tabs defaultValue="drugs" className="w-full">
-      <TabsList className="grid grid-cols-4 w-full">
+    <>
+      <OrButton tone={tone} disabled={disabled} onClick={() => setOpen(true)}>
+        {label}
+      </OrButton>
+      <ConfirmDialog open={open} onOpenChange={setOpen} title={title} description={description} confirmLabel={confirmLabel} destructive={tone === "red"} onConfirm={onConfirm} />
+    </>
+  );
+}
+
+/** Resuscitation is always one click away, whichever tab is open. */
+function CrisisRail({ act }: { act: (a: Action) => void }) {
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-1.5 rounded-sm border border-destructive/30 bg-destructive/5 px-3 py-2">
+      <span className="mr-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-destructive">
+        <HeartPulse className="h-4 w-4" aria-hidden="true" /> Crisis
+      </span>
+      <OrButton tone="red" onClick={() => act({ type: "cpr", on: true })}>Start CPR</OrButton>
+      <OrButton tone="red" onClick={() => act({ type: "cpr", on: false })}>Stop CPR</OrButton>
+      <ConfirmOrButton label="Shock 200 J" title="Charging 200 J. Everyone clear?" description="The shock is delivered as soon as you confirm." confirmLabel="Shock" onConfirm={() => act({ type: "defibrillate", joules: 200 })} />
+      <ConfirmOrButton label="Epi 1 mg" title="Give adrenaline 1 mg IV?" description="1 mg IV push, given as soon as you confirm." confirmLabel="Give 1 mg" onConfirm={() => act({ type: "drug", drug: "epinephrine", dose: 1000, unit: "mcg" })} />
+    </div>
+  );
+}
+
+export function AnesthesiaStation({ state, drugs, patient, act, tab, onTabChange }: Props & { tab?: StationTab; onTabChange?: (t: StationTab) => void }) {
+  return (
+    <>
+    <CrisisRail act={act} />
+    <Tabs value={tab} defaultValue={tab ? undefined : "drugs"} onValueChange={(v) => onTabChange?.(v as StationTab)} className="w-full">
+      <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-4">
         <TabsTrigger value="drugs">Drugs</TabsTrigger>
         <TabsTrigger value="airway">Airway</TabsTrigger>
         <TabsTrigger value="vent">Machine</TabsTrigger>
@@ -48,6 +86,7 @@ export function AnesthesiaStation({ state, drugs, patient, act }: Props) {
         <FluidsMonitorsPanel state={state} act={act} />
       </TabsContent>
     </Tabs>
+    </>
   );
 }
 
@@ -199,12 +238,6 @@ function DrugHistory({ state }: { state: CaseState }) {
   );
 }
 
-export function fmtTime(t: number) {
-  const m = Math.floor(t / 60);
-  const s = Math.floor(t % 60);
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
-
 function AirwayPanel({ state, act }: { state: CaseState; act: (a: Action) => void }) {
   const aw = state.airway;
   const [scope, setScope] = useState("mac4");
@@ -253,9 +286,15 @@ function AirwayPanel({ state, act }: { state: CaseState; act: (a: Action) => voi
             Laryngoscopy & intubate
           </OrButton>
           <OrButton disabled={aw.device === "ett" || aw.device === "lma"} onClick={() => air("lma", { lma_size: 5 })}>LMA #5</OrButton>
-          <OrButton tone="amber" disabled={!(aw.device === "ett" || aw.device === "lma")} onClick={() => air(aw.device === "ett" ? "extubate" : "remove_lma")}>
-            {aw.device === "lma" ? "Remove LMA" : "Extubate"}
-          </OrButton>
+          <ConfirmOrButton
+            tone="amber"
+            disabled={!(aw.device === "ett" || aw.device === "lma")}
+            label={aw.device === "lma" ? "Remove LMA" : "Extubate"}
+            title={aw.device === "lma" ? "Remove the LMA?" : "Extubate now?"}
+            description="The airway device comes out as soon as you confirm."
+            confirmLabel={aw.device === "lma" ? "Remove LMA" : "Extubate"}
+            onConfirm={() => air(aw.device === "ett" ? "extubate" : "remove_lma")}
+          />
         </div>
         {aw.device === "ett" && (
           <div className="flex items-end gap-2">
@@ -378,7 +417,7 @@ function FluidsMonitorsPanel({ state, act }: { state: CaseState; act: (a: Action
           <OrButton onClick={() => act({ type: "fluid", fluid: "lactated_ringers", volume_ml: 1000 })}>LR 1 L</OrButton>
           <OrButton onClick={() => act({ type: "fluid", fluid: "normal_saline", volume_ml: 500 })}>NS 500 mL</OrButton>
           <OrButton onClick={() => act({ type: "fluid", fluid: "albumin_5", volume_ml: 250 })}>Albumin 5% 250</OrButton>
-          <OrButton tone="red" onClick={() => act({ type: "fluid", fluid: "prbc", volume_ml: 300 })}>PRBC 1 unit</OrButton>
+          <ConfirmOrButton label="PRBC 1 unit" title="Transfuse one unit of packed red cells?" description="One unit (300 mL) runs in as soon as you confirm." confirmLabel="Transfuse" onConfirm={() => act({ type: "fluid", fluid: "prbc", volume_ml: 300 })} />
         </div>
       </Section>
       <Section title="Table & patient">
@@ -395,14 +434,6 @@ function FluidsMonitorsPanel({ state, act }: { state: CaseState; act: (a: Action
             </OrButton>
           ))}
           <OrButton onClick={() => act({ type: "warming", on: true })}>Forced-air warmer</OrButton>
-        </div>
-      </Section>
-      <Section title="Crisis">
-        <div className="flex flex-wrap gap-1.5">
-          <OrButton tone="red" onClick={() => act({ type: "cpr", on: true })}>Start CPR</OrButton>
-          <OrButton tone="red" onClick={() => act({ type: "cpr", on: false })}>Stop CPR</OrButton>
-          <OrButton tone="red" onClick={() => act({ type: "defibrillate", joules: 200 })}>Shock 200 J</OrButton>
-          <OrButton tone="red" onClick={() => act({ type: "drug", drug: "epinephrine", dose: 1000, unit: "mcg" })}>Epi 1 mg</OrButton>
         </div>
       </Section>
     </div>
