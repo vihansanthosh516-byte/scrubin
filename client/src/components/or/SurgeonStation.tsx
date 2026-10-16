@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Component, lazy, Suspense, useState, type ReactNode } from "react";
 import type { Action, CaseState } from "@/engine/types";
 import { OrButton, Section } from "./controls";
 import { procedureScope, tablePosition } from "./procedureScopes";
@@ -10,13 +10,73 @@ interface Props {
   say: (text: string) => void;
 }
 
-/** Laparoscopic view: a state-driven picture of what the camera shows. */
+const ScopeView3D = lazy(() => import("./ScopeView3D"));
+
+const hasWebGL = (() => {
+  try {
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    return false;
+  }
+})();
+
+/** Falls back to the flat drawing if the 3D view fails to load or crashes. */
+class Scope3DBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+/** Laparoscopic view: 3D when the device supports it, otherwise a flat drawing. */
 function ScopeView({ state }: { state: CaseState }) {
+  const s = state.surgery;
+  if (!s) return null;
+  const cameraIn = s.done.includes("camera_in") && !s.done.includes("desufflate");
+  if (!cameraIn || !hasWebGL || procedureScope(state)) return <FlatScopeView state={state} />;
+  const flat = <FlatScopeView state={state} />;
+  return (
+    <div className="relative aspect-[16/9] rounded-sm overflow-hidden border border-border bg-black">
+      <Scope3DBoundary fallback={flat}>
+        <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center text-sm text-white/60">Loading camera…</div>}>
+          <ScopeView3D state={state} />
+        </Suspense>
+      </Scope3DBoundary>
+      <ScopeOverlay s={s} />
+    </div>
+  );
+}
+
+function ScopeOverlay({ s }: { s: NonNullable<CaseState["surgery"]> }) {
+  return (
+    <>
+      <div className="absolute top-2 left-2 font-mono-data text-[11px] text-primary bg-muted rounded px-2 py-0.5">IAP {s.iap.toFixed(0)} mmHg</div>
+      {s.running && (
+        <div className="absolute bottom-0 inset-x-0 bg-muted px-3 py-2">
+          <div className="flex justify-between text-xs">
+            <span>{s.running.name}</span>
+            <span className="font-mono-data">{Math.round(s.running.progress * 100)}%</span>
+          </div>
+          <div className="h-1 rounded bg-muted mt-1">
+            <div className="h-1 rounded bg-sage" style={{ width: `${s.running.progress * 100}%` }} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Flat drawing of what the camera shows (fallback). */
+function FlatScopeView({ state }: { state: CaseState }) {
   const s = state.surgery;
   if (!s) return null;
   const done = new Set(s.done);
   const cameraIn = (done.has("camera_in") && !done.has("desufflate")) || isCesarean(state);
-  const appendixGone = done.has("specimen_out") || done.has("remove_specimen");
+  const appendixGone = done.has("remove_specimen");
   const insufflating = s.iap > 1;
   return (
     <div className="relative aspect-[16/9] rounded-sm overflow-hidden border border-border bg-black">
