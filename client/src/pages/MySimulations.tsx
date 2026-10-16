@@ -1,13 +1,14 @@
+/**
+ * My Simulations: cases in progress (saved classic sessions you can resume) and every completed
+ * case on record, with the way back into each procedure. Real-time OR cases live at /or/cases.
+ */
 import { useState, useEffect, useMemo } from "react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { useSimulationStore } from "../state/simulationStore";
-import { 
-  ShieldCheck, Activity, Clock, Play, AlertTriangle, 
-  Search, Trash2, RotateCcw, CheckCircle, XCircle, Sparkles 
-} from "lucide-react";
+import { Activity, Clock, Play, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
+import { ConfirmDialog, CtaLink, EmptyState, ErrorBanner, FilterChips, LoadingState, PageHeader, Pill, SearchField, type PillTone } from "@/components/scrubin";
 import { getUserSessions, getLocalSessions, syncLocalSessions, PersistedSession } from "../lib/leaderboard";
 import { API_BASE } from "../lib/api";
 
@@ -105,9 +106,6 @@ export default function MySimulations() {
   };
 
   const handleDelete = async (sessionId: string) => {
-    // Confirm delete locally, but let backend be authoritative
-    if (!window.confirm("Are you sure you want to delete this simulation?")) return;
-    
     setActionLoadingId(`delete-${sessionId}`);
     try {
       const res = await fetch(`${API_BASE}/api/sim/${sessionId}`, {
@@ -158,264 +156,168 @@ export default function MySimulations() {
     return result;
   }, [sessions, search, filter, sort]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
-        <div className="w-16 h-16 rounded-full border-t-2 border-primary animate-spin" />
-        <p className="text-muted-foreground font-mono-data">Loading your simulations...</p>
-      </div>
-    );
-  }
+  const isDone = (sim: any) =>
+    ["completed", "finished", "success", "failed"].includes((sim.status || sim.patient_status || "active").toLowerCase()) || sim.is_completed;
+  const OUTCOME_TONE: Record<string, PillTone> = { Successful: "sage", Complicated: "amber", Critical: "carmine", Incomplete: "neutral" };
+  const when = (iso?: string) =>
+    iso ? new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Unknown date";
 
   return (
-    <div className="h-dvh bg-background text-foreground relative overflow-clip">
-      {/* Subtle warm editorial texture — no neon */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "radial-gradient(#8C827A 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
-
-      {/* Fixed-height dashboard: header + filters pinned, list scrolls internally */}
-      <div className="relative z-10 mx-auto flex h-full w-full max-w-5xl flex-col gap-3 px-4 pt-20 pb-3">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-4">
-            <motion.div
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full surface surface-hover"
-              whileHover={{ scale: 1.05 }}
-            >
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-mono-data text-primary">Your Case Log</span>
-            </motion.div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
-              My <span className="text-[#CC553D] dark:text-[#D95338]">Simulations</span>
-            </h1>
-          </div>
-          <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            New Simulation
-          </Button>
+    <div className="bg-background text-foreground">
+      <div className="border-b border-border pb-10 pt-28">
+        <div className="mx-auto max-w-5xl px-4">
+          <PageHeader
+            eyebrow="Your case log"
+            title="My"
+            accent="simulations"
+            lead="Pick up a case in progress or look back at the ones you've finished."
+            actions={
+              <>
+                <CtaLink href="/or/cases" variant="outline">
+                  Real-time OR cases and replays
+                </CtaLink>
+                <CtaLink href="/procedures">New case</CtaLink>
+              </>
+            }
+          />
         </div>
+      </div>
 
-        <div className="flex flex-col md:flex-row gap-3 shrink-0 surface surface-hover p-3">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input 
-              type="text" 
-              placeholder="Search ID or procedure..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-background border border-border rounded-sm pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground transition-all"
-            />
-          </div>
-          <div className="flex gap-2">
-            <select 
-              value={filter} 
-              onChange={(e) => setFilter(e.target.value as any)}
-              className="bg-background border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground"
-            >
-              <option value="all">All States</option>
-              <option value="active">Active</option>
-              <option value="completed">Completed</option>
-            </select>
-            <select 
-              value={sort} 
-              onChange={(e) => setSort(e.target.value as any)}
-              className="bg-background border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-foreground"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Scrollable list area — the only part of the dashboard that scrolls */}
-        <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-4">
-          {completedCases.length > 0 && filter !== "active" && (
-            <div className="surface surface-hover p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <ShieldCheck className="w-4 h-4 text-[#2E6B4B] dark:text-[#8FBF9A]" />
-                <h2 className="font-bold text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>Completed Cases</h2>
-                <span className="text-[10px] font-mono-data px-2 py-0.5 rounded-full bg-background/60 border border-border text-muted-foreground">
-                  {completedCases.length} on record
-                </span>
-                <Link href="/or/cases" className="ml-auto text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground">
-                  Real-time OR cases &amp; replays →
-                </Link>
-              </div>
-              <div className="grid gap-2.5">
-                {completedCases.map((c) => {
-                  const xp =
-                    c.outcome === "Critical" ? 50 : 100 + Math.floor(Math.max(0, c.score) / 10);
-                  const outcomeColor =
-                    c.outcome === "Successful"
-                      ? "text-[#2E6B4B] dark:text-[#8FBF9A] border-[#2E6B4B]/40 bg-[#2E6B4B]/10"
-                      : c.outcome === "Complicated"
-                      ? "text-[#D99B26] dark:text-[#E0B060] border-[#D99B26]/40 bg-[#D99B26]/10"
-                      : "text-[#A32A2A] dark:text-[#E08080] border-[#A32A2A]/40 bg-[#A32A2A]/10";
-                  return (
-                    <div
-                      key={c.id}
-                      className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-sm bg-background/50 border border-border"
-                    >
-                      <div className="flex flex-wrap items-center gap-3 min-w-0">
-                        <span className="font-semibold text-sm text-foreground">{c.procedure_name || c.procedure_id}</span>
-                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${outcomeColor}`}>
-                          {c.outcome}
-                        </span>
-                        <span className="text-xs text-muted-foreground font-mono-data">Score {c.score}%</span>
-                        <span className="text-xs text-muted-foreground font-mono-data">+{xp} XP</span>
-                        {c.complications_count > 0 && (
-                          <span className="text-[10px] font-mono-data px-2 py-0.5 rounded-full bg-[#A32A2A]/10 border border-[#A32A2A]/30 text-[#E08080]">
-                            {c.complications_count} complication{c.complications_count > 1 ? "s" : ""}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        <Clock className="w-3 h-3 inline mr-1 -mt-0.5" />
-                        {c.created_at ? new Date(c.created_at).toLocaleString() : "Unknown"}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="p-3 bg-[#A32A2A]/10 border border-[#A32A2A]/40 rounded-sm text-[#E08080] flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="w-5 h-5 text-[#A32A2A] shrink-0" />
-                {error}
-              </div>
-              <button onClick={() => setError(null)}><XCircle className="w-4 h-4 text-[#A32A2A] hover:text-[#E08080]" /></button>
-            </div>
-          )}
-
-        {sessions.length === 0 && (completedCases.length > 0 || casesLoading) ? (
-          completedCases.length === 0 && (
-            <div className="p-12 surface surface-hover text-center text-sm text-muted-foreground">Loading your record…</div>
-          )
-        ) : sessions.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-12 surface surface-hover text-center flex flex-col items-center"
-          >
-            <motion.div
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            >
-              <Activity className="w-12 h-12 text-muted-foreground/40 mb-4" />
-            </motion.div>
-            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>No Simulations Found</h2>
-            <p className="text-muted-foreground mb-6">You have no simulation history available.</p>
-            <Button onClick={() => setLocation("/procedures")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              Start New Simulation
-            </Button>
-          </motion.div>
-        ) : filteredAndSortedSessions.length === 0 ? (
-          <div className="p-12 surface surface-hover text-center flex flex-col items-center">
-            <Search className="w-12 h-12 text-muted-foreground/40 mb-4" />
-            <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>No Matches</h2>
-            <p className="text-muted-foreground">No simulations match your current filters.</p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {filteredAndSortedSessions.map((sim: any, i: number) => {
-              const status = (sim.status || sim.patient_status || "active").toLowerCase();
-              const isCompleted = ["completed", "finished", "success", "failed"].includes(status) || sim.is_completed;
-              
-              return (
-                <motion.div
-                  // The backend can save the same session_id multiple times, so
-                  // session_id is NOT a unique key — colliding keys break React
-                  // reconciliation when the list switches between branches.
-                  key={sim.id || `${sim.session_id}-${i}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-6 surface surface-hover flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
-                >
-                  <div className="flex flex-col gap-3 flex-1">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="font-bold text-lg text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>{sim.procedure || "Unknown Procedure"}</h3>
-                      <span className="text-[10px] font-mono-data bg-background/60 px-2 py-1 rounded border border-border text-muted-foreground">
-                        ID: {sim.session_id}
-                      </span>
-                      {isCompleted ? (
-                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-[#2E6B4B]/40 bg-[#2E6B4B]/10 text-[#2E6B4B] flex items-center gap-1">
-                          <CheckCircle className="w-3 h-3" /> Completed
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-[#CC553D]/40 bg-[#CC553D]/10 text-[#CC553D] flex items-center gap-1">
-                          <Activity className="w-3 h-3" /> Active
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> 
-                        Saved: {sim.last_saved ? new Date(sim.last_saved).toLocaleString() : "Unknown"}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Activity className="w-3 h-3" /> 
-                        Tick: {sim.tick || 0}
-                      </span>
-                      <span>Status: {sim.patient_status || "Stable"}</span>
-                      {sim.progress !== undefined && (
-                        <span>Progress: {sim.progress}%</span>
-                      )}
-                    </div>
-
-                    {isCompleted && sim.outcome && (
-                      <div className="text-xs text-muted-foreground border-t border-border pt-2 mt-1">
-                        <span className="uppercase font-bold text-foreground/70 mr-2">Outcome:</span>
-                        {sim.outcome}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                    {!isCompleted && (
-                      <Button 
-                        onClick={() => handleResume(sim.session_id)} 
-                        disabled={!!actionLoadingId}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground flex-1 md:flex-none"
-                      >
-                        {actionLoadingId === `resume-${sim.session_id}` ? (
-                          <><div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin mr-2" /> Resuming...</>
-                        ) : (
-                          <><Play className="w-4 h-4 mr-2" /> Resume</>
-                        )}
-                      </Button>
-                    )}
-                    
-                    {isCompleted && (
-                      <Button 
-                        variant="outline"
-                        onClick={() => handleReplay(sim.session_id)} 
-                        disabled={!!actionLoadingId}
-                        className="text-[#CC553D] hover:text-[#CC553D] flex-1 md:flex-none"
-                      >
-                        <RotateCcw className="w-4 h-4 mr-2" /> Replay
-                      </Button>
-                    )}
-
-                    <Button 
-                      variant="outline"
-                      onClick={() => handleDelete(sim.session_id)} 
-                      disabled={!!actionLoadingId}
-                      className="border-[#A32A2A]/40 hover:bg-[#A32A2A]/10 text-[#A32A2A] hover:text-[#E08080] flex-1 md:flex-none"
-                    >
-                      {actionLoadingId === `delete-${sim.session_id}` ? (
-                        <div className="w-4 h-4 border-2 border-[#A32A2A]/50 border-t-[#A32A2A] rounded-full animate-spin" />
-                      ) : (
-                        <><Trash2 className="w-4 h-4" /> Delete</>
-                      )}
-                    </Button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+      <div className="mx-auto max-w-5xl space-y-14 px-4 py-12">
+        {error && (
+          <ErrorBanner action={<Button variant="ghost" size="sm" onClick={() => setError(null)}>Dismiss</Button>}>
+            {error}
+          </ErrorBanner>
         )}
-        </div>
+
+        {/* In progress (saved classic sessions) */}
+        <section aria-labelledby="saved-h">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+            <h2 id="saved-h" className="font-display text-3xl tracking-tight">Saved sessions</h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <FilterChips
+                label="Status"
+                options={[
+                  { value: "all", label: "All" },
+                  { value: "active", label: "In progress" },
+                  { value: "completed", label: "Finished" },
+                ]}
+                value={filter}
+                onChange={setFilter}
+              />
+              <label className="sr-only" htmlFor="sim-sort">Sort</label>
+              <select id="sim-sort" value={sort} onChange={(e) => setSort(e.target.value as "newest" | "oldest")} className="rounded-sm border border-input bg-card px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+              </select>
+            </div>
+          </div>
+          {sessions.length > 0 && <SearchField label="Search saved sessions" placeholder="Search by procedure" value={search} onChange={(e) => setSearch(e.target.value)} className="mb-5 max-w-md" />}
+
+          {loading ? (
+            <LoadingState label="Loading saved sessions" />
+          ) : sessions.length === 0 ? (
+            <div className="surface p-6 text-sm text-muted-foreground">No saved sessions. Cases you save part-way through appear here so you can resume them.</div>
+          ) : filteredAndSortedSessions.length === 0 ? (
+            <div className="surface p-6 text-sm text-muted-foreground">No saved sessions match these filters.</div>
+          ) : (
+            <ul className="surface divide-y divide-border">
+              {filteredAndSortedSessions.map((sim: any, i: number) => {
+                const done = isDone(sim);
+                return (
+                  // session_id is not unique (the backend can save one session several times).
+                  <li key={sim.id || `${sim.session_id}-${i}`} className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+                    <div className="min-w-0 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold">{sim.procedure || "Unknown procedure"}</h3>
+                        {done ? <Pill tone="sage">Finished</Pill> : <Pill tone="terracotta">In progress</Pill>}
+                      </div>
+                      <p className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5" aria-hidden="true" /> Saved {when(sim.last_saved)}
+                        </span>
+                        {sim.progress !== undefined && <span>{sim.progress}% through the case</span>}
+                        {done && sim.outcome && <span>Outcome: {sim.outcome}</span>}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {done ? (
+                        <Button variant="outline" onClick={() => handleReplay(sim.session_id)} disabled={!!actionLoadingId}>
+                          <RotateCcw className="h-4 w-4" aria-hidden="true" /> Replay
+                        </Button>
+                      ) : (
+                        <Button onClick={() => handleResume(sim.session_id)} disabled={!!actionLoadingId}>
+                          <Play className="h-4 w-4" aria-hidden="true" />
+                          {actionLoadingId === `resume-${sim.session_id}` ? "Resuming…" : "Resume"}
+                        </Button>
+                      )}
+                      <ConfirmDialog
+                        title="Delete this saved session?"
+                        description={`${sim.procedure || "This session"} will be removed. Completed cases on your record are not affected.`}
+                        confirmLabel="Delete session"
+                        destructive
+                        onConfirm={() => handleDelete(sim.session_id)}
+                        trigger={
+                          <Button variant="outline" disabled={!!actionLoadingId} className="text-destructive" aria-label={`Delete saved ${sim.procedure || "session"}`}>
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                            {actionLoadingId === `delete-${sim.session_id}` ? "Deleting…" : "Delete"}
+                          </Button>
+                        }
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        {/* Completed cases on record */}
+        <section aria-labelledby="done-h">
+          <div className="mb-5 flex items-baseline justify-between gap-4">
+            <h2 id="done-h" className="font-display text-3xl tracking-tight">Completed cases</h2>
+            {completedCases.length > 0 && <p className="font-mono-data text-sm text-muted-foreground">{completedCases.length} on record</p>}
+          </div>
+          {casesLoading && completedCases.length === 0 ? (
+            <LoadingState label="Loading your record" />
+          ) : completedCases.length === 0 ? (
+            <EmptyState
+              icon={<Activity />}
+              title="No completed cases yet"
+              description="Finish a case and it shows up here with its score, outcome and XP."
+              action={<CtaLink href="/procedures">Choose a procedure</CtaLink>}
+            />
+          ) : (
+            <ul className="surface divide-y divide-border">
+              {completedCases.map((c) => {
+                const xp = c.outcome === "Critical" ? 50 : 100 + Math.floor(Math.max(0, c.score) / 10);
+                return (
+                  <li key={c.id} className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
+                    <div className="min-w-0 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold">{c.procedure_name || c.procedure_id}</h3>
+                        <Pill tone={OUTCOME_TONE[c.outcome] ?? "neutral"}>{c.outcome}</Pill>
+                        {c.complications_count > 0 && (
+                          <Pill tone="carmine">
+                            {c.complications_count} complication{c.complications_count > 1 ? "s" : ""}
+                          </Pill>
+                        )}
+                      </div>
+                      <p className="flex flex-wrap gap-4 font-mono-data text-xs text-muted-foreground">
+                        <span>Score {c.score}%</span>
+                        <span>+{xp} XP</span>
+                        <span>{when(c.created_at)}</span>
+                      </p>
+                    </div>
+                    <CtaLink href={`/simulation?proc=${c.procedure_id}`} variant="outline" size="sm">
+                      <RotateCcw className="h-4 w-4" aria-hidden="true" /> Practise again
+                    </CtaLink>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
       </div>
     </div>
   );

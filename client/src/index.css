@@ -111,8 +111,8 @@
   --primary-hover: #A03E29;
   --success: #2E6B4B;
   --success-foreground: #FFFFFF;
-  --warning: #C27820;
-  --warning-foreground: #191919;
+  --warning: #99600F; /* deeper than brand amber #C27820 so warning text passes AA */
+  --warning-foreground: #FFFFFF;
   --info: #3F6680;
   --label: #736A63; /* warm grey for eyebrows and meta; #8C827A (brand warm-gray-soft) is too light for small text */
   --nav-link: #666059;
@@ -122,7 +122,7 @@
   --shadow-hover: 0 8px 24px rgba(25, 25, 25, 0.05);
   --shadow-lift: 0 12px 32px rgba(25, 25, 25, 0.06);
   --pill-sage-fg: #2E6B4B; --pill-sage-bg: rgba(46, 107, 75, 0.1); --pill-sage-border: rgba(46, 107, 75, 0.3);
-  --pill-amber-fg: #C27820; --pill-amber-bg: rgba(194, 120, 32, 0.1); --pill-amber-border: rgba(194, 120, 32, 0.3);
+  --pill-amber-fg: #99600F; --pill-amber-bg: rgba(194, 120, 32, 0.1); --pill-amber-border: rgba(194, 120, 32, 0.3);
   --pill-terracotta-fg: #B5472F; --pill-terracotta-bg: rgba(204, 85, 61, 0.1); --pill-terracotta-border: rgba(204, 85, 61, 0.3);
   --pill-carmine-fg: #A32A2A; --pill-carmine-bg: rgba(163, 42, 42, 0.1); --pill-carmine-border: rgba(163, 42, 42, 0.3);
 }

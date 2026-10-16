@@ -1,344 +1,189 @@
 /**
- * ScrubIn Home Page — Anthropic Editorial
- * Warm cream, serif hero, sharp bordered cards, staggered scroll reveals.
+ * ScrubIn Home: the signed-in landing page. A greeting with the one next action, the student's
+ * real numbers, how a case works, and the beginner cases to start with. No invented stats.
  */
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { motion, useInView } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { Activity, ArrowRight, BookOpen, Play, RotateCcw } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE } from "@/lib/api";
-import { Activity, Heart, Target, Users, Scissors, BookOpen, ArrowRight, Play, Zap, Award, Trophy } from "lucide-react";
 import { EASE } from "@/lib/motion";
+import { getLeaderboard, getUserSessions, type PersistedSession } from "@/lib/leaderboard";
+import { ENGINE_SCENARIO } from "@/engine/scenarios";
+import { CtaLink, DifficultyPill, Eyebrow, Pill, StatCard } from "@/components/scrubin";
 
-
-function StatNumber({ value, suffix }: { value: number; suffix?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.4 });
-  const [display, setDisplay] = useState(0);
-
-  useEffect(() => {
-    if (!inView) return;
-    let raf = 0;
-    const start = performance.now();
-    const duration = 1400;
-    const step = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(eased * value));
-      if (progress < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [inView, value]);
-
-  return (
-    <div ref={ref} className="flex items-baseline">
-      <span className="font-mono-data text-3xl md:text-4xl font-semibold tracking-tight text-[#191919] dark:text-[#EDEAE4]" style={{ fontVariantNumeric: "tabular-nums" }}>
-        {display.toLocaleString()}
-      </span>
-      {suffix && <span className="ml-1 text-xl font-bold text-[#CC553D]">{suffix}</span>}
-    </div>
-  );
-}
-
-function StatItem({ value, label, suffix = "", icon: Icon, delay = 0 }: any) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.3 });
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 24 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay, ease: EASE }}
-      className="group"
-    >
-      <div className="stats-card flex h-full flex-col justify-between gap-6 p-6 md:p-7">
-        <div className="flex h-9 w-9 items-center justify-center rounded-sm border border-[#E2DDD1] bg-[#FBF9F5] dark:border-[#3A342C] dark:bg-[#26211B]">
-          <Icon className="h-4 w-4 text-[#CC553D]" />
-        </div>
-        <div>
-          <StatNumber value={value} suffix={suffix} />
-          <div className="mt-2 text-xs uppercase tracking-[0.14em] text-[#8C827A]">{label}</div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function FeatureCard({ icon: Icon, title, description, index }: any) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.25 });
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 32 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.55, delay: index * 0.1, ease: EASE }}
-      className="group"
-    >
-      <div className="surface surface-hover flex h-full flex-col items-center gap-5 p-8 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-sm border border-[#E2DDD1] bg-[#FBF9F5] transition-colors group-hover:border-[#CC553D]/40 dark:border-[#3A342C] dark:bg-[#26211B]">
-          <Icon className="h-6 w-6 text-[#CC553D]" />
-        </div>
-        <h3 className="text-xl font-bold tracking-tight text-[#191919] dark:text-[#EDEAE4]">{title}</h3>
-        <p className="text-sm leading-relaxed text-[#666059] dark:text-[#A89F95]">{description}</p>
-      </div>
-    </motion.div>
-  );
-}
-
-function ProcedurePreview({ id, name, tag, difficulty, color, time, decisions, index }: any) {
-  return (
-    <Link href={`/simulation?proc=${id}`}>
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.3 }}
-        transition={{ duration: 0.5, delay: index * 0.08, ease: EASE }}
-        className="group cursor-pointer"
-      >
-        <div className="procedure-card flex h-full flex-col gap-4 p-6">
-          <div className="flex items-center justify-between gap-3">
-            <span className={`rounded-sm px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest ${color}`}>{difficulty}</span>
-            <span className="font-mono-data text-[10px] uppercase tracking-widest text-[#8C827A] dark:text-[#A89F95]">{tag}</span>
-          </div>
-          <h4 className="text-lg font-bold tracking-tight text-[#191919] transition-colors group-hover:text-[#CC553D] dark:text-[#EDEAE4]">{name}</h4>
-          <div className="mt-auto flex items-center justify-between gap-3 border-t border-[#E2DDD1] pt-4 font-mono-data text-[10px] uppercase tracking-widest text-[#8C827A] dark:border-[#3A342C] dark:text-[#A89F95]">
-            <span>{time} · {decisions} decisions</span>
-            <span className="flex items-center gap-1.5 text-[#CC553D] dark:text-[#D95338]">
-              Start Training
-              <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-            </span>
-          </div>
-        </div>
-      </motion.div>
-    </Link>
-  );
-}
-
-const SECTION_REVEAL = {
-  initial: { opacity: 0, y: 28 },
+const REVEAL = {
+  initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, amount: 0.3 },
-  transition: { duration: 0.6, ease: EASE },
+  transition: { duration: 0.5, ease: EASE },
 } as const;
 
+// The four Beginner cases (unlocked below 500 XP). Ids match the registry; times and decision
+// counts are the engine's own estimates.
+const STARTER_CASES = [
+  { id: "appendectomy", name: "Appendectomy", tag: "General Surgery", time: "34 min", decisions: 34 },
+  { id: "inguinal-hernia", name: "Inguinal Hernia Repair", tag: "General Surgery", time: "32 min", decisions: 32 },
+  { id: "thyroidectomy", name: "Thyroidectomy", tag: "ENT", time: "32 min", decisions: 32 },
+  { id: "carpal-tunnel-release", name: "Carpal Tunnel Release", tag: "Orthopedic", time: "30 min", decisions: 30 },
+];
+
+const STEPS = [
+  { title: "Read the briefing", body: "Meet the patient, the indication and the key risks before you scrub in." },
+  { title: "Operate in real time", body: "Give orders by voice or keyboard. Vitals, bleeding and the team respond as you go." },
+  { title: "Debrief and replay", body: "See what went well, what you missed, and replay any moment of the case." },
+];
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+}
+
 export default function Home() {
-  const [mounted, setMounted] = useState(false);
-  const [procedureCount, setProcedureCount] = useState(7);
-  useEffect(() => { setMounted(true); }, []);
-  // Keep the hero stat in sync with the live procedure registry (fallback to 7).
+  const { user } = useAuth();
+  const [procedureCount, setProcedureCount] = useState<number | null>(null);
+  const [mine, setMine] = useState<{ xp: number; cases: number; rank: number | null } | null>(null);
+  const [lastCase, setLastCase] = useState<PersistedSession | null>(null);
+
+  // Live size of the procedure library.
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/procedures/search`);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.procedures || data.scenarios || []);
-        if (!cancelled && list.length > 0) setProcedureCount(list.length);
-      } catch {
-        /* keep fallback */
-      }
-    })();
-    return () => { cancelled = true; };
+    fetch(`${API_BASE}/api/procedures/search`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data.procedures || data.scenarios || [];
+        if (!cancelled && list.length) setProcedureCount(list.length);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // The 4 procedures unlocked below 500 XP — ids must match the core registry
-  // so each card boots its own simulation (appendectomy/inguinal-hernia/thyroidectomy/carpal-tunnel-release).
-  // Decision counts mirror the engine's real totalTicks (each tick = one decision
-  // step); times are the engine's estimated durations, not a generic 6.
-  const procedures = [
-    { id: "appendectomy", name: "Appendectomy", tag: "General Surgery", difficulty: "Beginner", color: "pill-sage", time: "34 min", decisions: 34 },
-    { id: "inguinal-hernia", name: "Inguinal Hernia Repair", tag: "General Surgery", difficulty: "Beginner", color: "pill-sage", time: "32 min", decisions: 32 },
-    { id: "thyroidectomy", name: "Thyroidectomy", tag: "ENT", difficulty: "Beginner", color: "pill-sage", time: "32 min", decisions: 32 },
-    { id: "carpal-tunnel-release", name: "Carpal Tunnel Release", tag: "Orthopedic", difficulty: "Beginner", color: "pill-sage", time: "30 min", decisions: 30 },
-  ];
-  const features = [
-    { icon: Scissors, title: "Choose Your Procedure", description: "Browse real surgical cases from appendectomy to craniotomy." },
-    { icon: Target, title: "Make Every Decision", description: "From diagnosis to closing, every step is yours." },
-    { icon: BookOpen, title: "Learn From Everything", description: "Right or wrong, you'll know exactly why." },
-  ];
+  // The student's own XP, case count, rank and most recent case.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    getLeaderboard().then(({ entries }) => {
+      if (cancelled) return;
+      const i = entries.findIndex((e) => e.user_id === user.id);
+      setMine({ xp: i >= 0 ? entries[i].total_xp : 0, cases: i >= 0 ? entries[i].procedures_completed : 0, rank: i >= 0 ? i + 1 : null });
+    });
+    getUserSessions(user.id).then((s) => !cancelled && setLastCase(s[0] ?? null));
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const firstName = user?.name?.split(" ")[0] || user?.login || "Doctor";
+  const isNew = mine !== null && mine.cases === 0;
 
   return (
-    <div className="min-h-screen bg-[#FBF9F5] text-[#191919] dark:bg-[#161310] dark:text-[#EDEAE4]">
-      {/* ── Hero ── */}
-      <section className="relative flex min-h-[92vh] items-center justify-center overflow-clip border-b border-[#E2DDD1] px-4 dark:border-[#3A342C]">
-        {/* Subtle warm editorial texture — no neon */}
-        <div className="pointer-events-none absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "radial-gradient(#8C827A 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
-        <div className="relative z-10 mx-auto max-w-4xl text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={mounted ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, ease: EASE }}
-            className="mb-8 flex items-center justify-center gap-2.5"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-[#CC553D] dark:bg-[#D95338]" />
-            <span className="font-mono-data text-xs uppercase tracking-[0.16em] text-[#8C827A] dark:text-[#C2BBB0]">The Future of Surgical Education</span>
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 22 }}
-            animate={mounted ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
-            className="font-display text-6xl leading-[0.95] tracking-tight text-[#191919] sm:text-7xl md:text-8xl dark:text-[#EDEAE4]"
-          >
-            ScrubIn
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={mounted ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.25, ease: EASE }}
-            className="mx-auto mt-6 max-w-xl text-xl text-[#666059] dark:text-[#A89F95]"
-          >
-            Your first surgery starts here. Step into the OR, make real decisions, and see real consequences — with zero real risk.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={mounted ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.4, ease: EASE }}
-            className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
-          >
-            <Link href="/simulation">
-              <motion.span whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} className="inline-block">
-                <Button size="lg" className="rounded-sm bg-[#CC553D] px-10 py-3.5 text-base font-semibold text-white hover:bg-[#B94A35]">
-                  <Activity className="mr-2 h-5 w-5" /> Enter the OR
-                </Button>
-              </motion.span>
-            </Link>
-            <Link href="/procedures">
-              <motion.span whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} className="inline-block">
-                <Button size="lg" variant="outline" className="rounded-sm border-[#E2DDD1] bg-white px-10 py-3.5 text-base font-semibold text-[#191919] hover:border-[#CC553D]/40 hover:bg-[#FBF9F5] dark:border-[#3A342C] dark:bg-[#1E1A16] dark:text-[#EDEAE4]">
-                  <Play className="mr-2 h-5 w-5" /> View Procedures
-                </Button>
-              </motion.span>
-            </Link>
+    <div className="bg-background text-foreground">
+      {/* Greeting and the one next action */}
+      <section className="border-b border-border">
+        <div className="mx-auto max-w-6xl px-4 pb-16 pt-28 md:pb-20 md:pt-36">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}>
+            <Eyebrow variant="hero" className="mb-6">{greeting()}</Eyebrow>
+            <h1 className="font-display text-5xl leading-[0.98] tracking-tight sm:text-6xl md:text-7xl">
+              {isNew ? <>Your first surgery starts <span className="text-primary">here</span>, {firstName}.</> : <>Welcome back, <span className="text-primary">{firstName}</span>.</>}
+            </h1>
+            <p className="mt-6 max-w-xl text-lg text-muted-foreground">
+              {isNew
+                ? "Step into the OR, make the calls yourself, and see the consequences, with fictional patients and zero real risk."
+                : lastCase
+                  ? `Your last case was ${lastCase.procedure_name} (${lastCase.score}%). Pick up where you left off or try something new.`
+                  : "Pick a procedure, read the briefing, and scrub in."}
+            </p>
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+              {lastCase ? (
+                <CtaLink href={`/simulation?proc=${lastCase.procedure_id}`} size="lg" className="px-8 text-base font-semibold">
+                  <RotateCcw className="h-5 w-5" aria-hidden="true" /> Practise {lastCase.procedure_name} again
+                </CtaLink>
+              ) : (
+                <CtaLink href="/simulation?proc=appendectomy" size="lg" className="px-8 text-base font-semibold">
+                  <Activity className="h-5 w-5" aria-hidden="true" /> Start with an appendectomy
+                </CtaLink>
+              )}
+              <CtaLink href="/procedures" size="lg" variant="outline" className="px-8 text-base font-semibold">
+                <Play className="h-5 w-5" aria-hidden="true" /> Browse all procedures
+              </CtaLink>
+            </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ── Stats ── */}
-      <section className="border-b border-[#E2DDD1] bg-[#F4F0E8]/50 dark:border-[#3A342C] dark:bg-[#1E1A16]/40">
-        <div className="mx-auto max-w-6xl px-4 py-16 md:py-20">
-          <motion.p {...SECTION_REVEAL} className="mb-10 text-center font-mono-data text-xs uppercase tracking-[0.16em] text-[#8C827A]">
-            Trusted by medical students worldwide
-          </motion.p>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-5">
-            <StatItem value={procedureCount} label="Procedures" icon={Activity} delay={0} />
-            <StatItem value={200} label="Decision Points" suffix="+" icon={Target} delay={0.08} />
-            <StatItem value={14000} label="Students Trained" suffix="+" icon={Users} delay={0.16} />
-            <StatItem value={0} label="Patients Harmed" icon={Heart} delay={0.24} />
+      {/* Real numbers only */}
+      <section className="border-b border-border bg-muted/50" aria-labelledby="stats-heading">
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <h2 id="stats-heading" className="sr-only">Your progress</h2>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <StatCard value={mine ? mine.xp.toLocaleString() : "—"} label="Your XP" />
+            <StatCard value={mine ? mine.cases : "—"} label="Cases completed" />
+            <StatCard value={mine?.rank ? `#${mine.rank}` : "—"} label="Leaderboard rank" />
+            <StatCard value={procedureCount ?? "—"} label="Procedures available" />
           </div>
         </div>
       </section>
 
-      {/* ── How it works ── */}
-      <section className="border-b border-[#E2DDD1] dark:border-[#3A342C]">
-        <div className="mx-auto max-w-6xl px-4 py-24 md:py-32">
-          <motion.div {...SECTION_REVEAL} className="mb-16 text-center">
-            <span className="section-tag mb-4 block">How it works</span>
-            <h2 className="font-display text-5xl tracking-tight sm:text-6xl dark:text-[#EDEAE4]">
-              Three steps to the <span className="text-[#CC553D] dark:text-[#D95338]">OR</span>
+      {/* How a case works */}
+      <section className="border-b border-border">
+        <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+          <motion.div {...REVEAL} className="mb-12 max-w-2xl">
+            <Eyebrow className="mb-4 block">How a case works</Eyebrow>
+            <h2 className="font-display text-4xl tracking-tight sm:text-5xl">
+              Three steps to the <span className="text-primary">OR</span>
             </h2>
           </motion.div>
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            {features.map((f, i) => <FeatureCard key={f.title} icon={f.icon} title={f.title} description={f.description} index={i} />)}
-          </div>
+          <ol className="grid grid-cols-1 gap-5 md:grid-cols-3">
+            {STEPS.map((step, i) => (
+              <motion.li key={step.title} {...REVEAL} transition={{ duration: 0.5, delay: i * 0.08, ease: EASE }} className="surface p-7">
+                <span className="font-mono-data text-sm font-semibold text-primary">0{i + 1}</span>
+                <h3 className="mt-4 text-lg font-semibold tracking-tight">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+              </motion.li>
+            ))}
+          </ol>
         </div>
       </section>
 
-      {/* ── Procedures preview ── */}
-      <section className="border-b border-[#E2DDD1] bg-white/40 dark:border-[#3A342C] dark:bg-[#1E1A16]/30">
-        <div className="mx-auto max-w-6xl px-4 py-24 md:py-32">
-          <motion.div {...SECTION_REVEAL} className="mb-16 text-center">
-            <span className="section-tag mb-4 block">Available now</span>
-            <h2 className="font-display text-5xl tracking-tight sm:text-6xl dark:text-[#EDEAE4]">
-              Start your <span className="text-[#CC553D] dark:text-[#D95338]">training</span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-[#666059] dark:text-[#A89F95]">Choose from our growing library of surgical simulations</p>
+      {/* Starter cases */}
+      <section>
+        <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+          <motion.div {...REVEAL} className="mb-12 flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <Eyebrow className="mb-4 block">Start here</Eyebrow>
+              <h2 className="font-display text-4xl tracking-tight sm:text-5xl">
+                Beginner <span className="text-primary">cases</span>
+              </h2>
+            </div>
+            <CtaLink href="/learn" variant="outline">
+              <BookOpen className="h-4 w-4" aria-hidden="true" /> Read the briefings
+            </CtaLink>
           </motion.div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {procedures.map((proc, i) => <ProcedurePreview key={proc.name} {...proc} index={i} />)}
-          </div>
-          <motion.div {...SECTION_REVEAL} className="mt-14 text-center">
-            <Link href="/procedures">
-              <motion.span whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} className="inline-block">
-                <Button variant="outline" className="rounded-sm border-[#E2DDD1] bg-white px-8 py-3 font-semibold text-[#191919] hover:border-[#CC553D]/40 dark:border-[#3A342C] dark:bg-[#1E1A16] dark:text-[#EDEAE4]">
-                  View All Procedures <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </motion.span>
-            </Link>
-          </motion.div>
+          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {STARTER_CASES.map((c, i) => (
+              <motion.li key={c.id} {...REVEAL} transition={{ duration: 0.5, delay: i * 0.06, ease: EASE }}>
+                <Link href={`/simulation?proc=${c.id}`} className="procedure-card group flex h-full flex-col gap-4 p-6">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <DifficultyPill difficulty="Beginner" />
+                    {ENGINE_SCENARIO[c.id] && <Pill tone="terracotta">Real-time OR</Pill>}
+                  </div>
+                  <h3 className="text-lg font-semibold tracking-tight group-hover:text-primary">{c.name}</h3>
+                  <p className="label-mono">{c.tag}</p>
+                  <div className="mt-auto flex items-center justify-between border-t border-border pt-4 font-mono-data text-xs text-label">
+                    <span>
+                      {c.time} · {c.decisions} decisions
+                    </span>
+                    <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                  </div>
+                </Link>
+              </motion.li>
+            ))}
+          </ul>
         </div>
       </section>
-
-      {/* ── Value props ── */}
-      <section className="border-b border-[#E2DDD1] dark:border-[#3A342C]">
-        <div className="mx-auto max-w-6xl px-4 py-24 md:py-32">
-          <div className="grid grid-cols-1 gap-16 text-center md:grid-cols-3">
-            <motion.div {...SECTION_REVEAL}>
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-sm border border-[#E2DDD1] bg-white dark:bg-[#1E1A16]">
-                <Zap className="h-7 w-7 text-[#CC553D]" />
-              </div>
-              <h3 className="mb-3 text-xl font-bold tracking-tight">Real-Time Vitals</h3>
-              <p className="mx-auto max-w-xs text-sm text-[#666059] dark:text-[#A89F95]">Watch patient vitals respond to your decisions in real time.</p>
-            </motion.div>
-            <motion.div {...SECTION_REVEAL} transition={{ duration: 0.6, delay: 0.1, ease: EASE }}>
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-sm border border-[#E2DDD1] bg-white dark:bg-[#1E1A16]">
-                <Award className="h-7 w-7 text-[#CC553D]" />
-              </div>
-              <h3 className="mb-3 text-xl font-bold tracking-tight">XP & Rankings</h3>
-              <p className="mx-auto max-w-xs text-sm text-[#666059] dark:text-[#A89F95]">Earn experience and climb the global leaderboard.</p>
-            </motion.div>
-            <motion.div {...SECTION_REVEAL} transition={{ duration: 0.6, delay: 0.2, ease: EASE }}>
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-sm border border-[#E2DDD1] bg-white dark:bg-[#1E1A16]">
-                <Trophy className="h-7 w-7 text-[#CC553D]" />
-              </div>
-              <h3 className="mb-3 text-xl font-bold tracking-tight">Zero Risk</h3>
-              <p className="mx-auto max-w-xs text-sm text-[#666059] dark:text-[#A89F95]">Make mistakes, learn, and try again without any real-world consequences.</p>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Final CTA ── */}
-      <section className="relative overflow-clip">
-        <div className="mx-auto max-w-4xl px-4 py-28 text-center md:py-36">
-          <motion.div {...SECTION_REVEAL}>
-            <span className="section-tag mb-6 block">Ready to begin?</span>
-            <h2 className="font-display text-5xl leading-tight tracking-tight sm:text-6xl md:text-7xl dark:text-[#EDEAE4]">
-              The patient is on the table
-            </h2>
-            <p className="mx-auto mt-5 mb-12 max-w-md text-lg text-[#666059] dark:text-[#A89F95]">No experience required. No real risk. Just real learning.</p>
-            <Link href="/procedures">
-              <motion.span whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} className="inline-block">
-                <Button size="lg" className="rounded-sm bg-[#CC553D] px-12 py-4 text-lg font-semibold text-white hover:bg-[#B94A35]">
-                  <Activity className="mr-2 h-5 w-5" /> Start Your First Surgery
-                </Button>
-              </motion.span>
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Footer ── */}
-      <footer className="border-t border-[#E2DDD1] bg-[#F4F0E8]/60 py-14 dark:bg-[#1E1A16]/40">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-8 px-4 md:flex-row">
-          <div className="flex items-center gap-2.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#CC553D]" />
-            <span className="text-xl font-bold tracking-tight text-[#191919] dark:text-[#EDEAE4]">
-              Scrub<span className="text-[#CC553D]">In</span>
-            </span>
-          </div>
-          <div className="flex flex-wrap justify-center gap-8 text-sm text-[#666059] dark:text-[#A89F95]">
-            <Link href="/procedures"><span className="transition-colors hover:text-[#CC553D]">Procedures</span></Link>
-            <Link href="/learn"><span className="transition-colors hover:text-[#CC553D]">Learn Hub</span></Link>
-            <Link href="/my-simulations"><span className="transition-colors hover:text-[#CC553D]">My Simulations</span></Link>
-            <Link href="/leaderboard"><span className="transition-colors hover:text-[#CC553D]">Leaderboard</span></Link>
-            <Link href="/profile"><span className="transition-colors hover:text-[#CC553D]">Profile</span></Link>
-          </div>
-          <div className="font-mono-data text-xs text-[#8C827A]">© 2026 ScrubIn · For educational use only</div>
-        </div>
-      </footer>
     </div>
   );
 }

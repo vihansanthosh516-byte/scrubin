@@ -22,6 +22,7 @@ const OrReplay = lazy(() => import("./pages/OrReplay"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Profile = lazy(() => import("./pages/Profile"));
 const LearnHub = lazy(() => import("./pages/LearnHub"));
+const Briefing = lazy(() => import("./pages/Briefing"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const MySimulations = lazy(() => import("./pages/MySimulations"));
 const ReplayViewer = lazy(() => import("./pages/ReplayViewer"));
@@ -118,6 +119,7 @@ function Router() {
               <Route path="/my-simulations" component={MySimulations} />
               <Route path="/replay/:sessionId" component={ReplayViewer} />
               <Route path="/leaderboard" component={Leaderboard} />
+              <Route path="/learn/:procId" component={Briefing} />
               <Route path="/learn" component={LearnHub} />
               <Route path="/profile" component={Profile} />
               <Route path="/terms" component={Terms} />

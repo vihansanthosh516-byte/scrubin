@@ -6,14 +6,14 @@ const UPDATED = "October 12, 2026";
 
 function Page({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="min-h-screen pt-24 pb-16 px-4">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background px-4 pb-16 pt-28">
+      <div className="mx-auto max-w-2xl space-y-8">
         <div>
-          <div className="text-xs uppercase tracking-[0.2em] text-primary">ScrubIn</div>
-          <h1 className="text-3xl font-bold">{title}</h1>
-          <p className="text-xs text-muted-foreground mt-1">Last updated {UPDATED}</p>
+          <p className="section-tag">ScrubIn</p>
+          <h1 className="mt-3 font-display text-5xl leading-[1.02] tracking-tight">{title}</h1>
+          <p className="mt-3 text-sm text-muted-foreground">Last updated {UPDATED}</p>
         </div>
-        <div className="space-y-5 text-sm leading-relaxed text-foreground/90">{children}</div>
+        <div className="space-y-5 text-[15px] leading-relaxed text-foreground">{children}</div>
         <p className="text-xs text-muted-foreground pt-4">
           <Link href="/terms" className="underline">Terms</Link> · <Link href="/privacy" className="underline">Privacy</Link> · <Link href="/" className="underline">Home</Link>
         </p>
@@ -22,7 +22,7 @@ function Page({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-const H = ({ children }: { children: ReactNode }) => <h2 className="text-base font-semibold pt-1">{children}</h2>;
+const H = ({ children }: { children: ReactNode }) => <h2 className="pt-3 text-lg font-semibold tracking-tight">{children}</h2>;
 
 export function Terms() {
   return (

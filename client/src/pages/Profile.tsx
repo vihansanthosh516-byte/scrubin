@@ -1,31 +1,34 @@
 /**
- * ScrubIn Profile - Real Streaks & Achievements
+ * ScrubIn Profile: who you are, your rank and XP, real stats from your cases, and achievements
+ * with progress towards each one.
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Activity, Star, Trophy, Shield, Zap, Target, Award, Flame, TrendingUp, Github, Heart, Clock, CheckCircle, AlertCircle, Medal, Sparkles, Brain, Scissors } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Activity, AlertCircle, Award, Brain, CheckCircle, Clock, Flame, Heart, Scissors, Star, Target, TrendingUp, Trophy, Zap } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { getLeaderboard } from "@/lib/leaderboard";
+import { CtaLink, Eyebrow, LoadingState, Pill, StatCard } from "@/components/scrubin";
 
-const ALL_BADGES = [
-  { id: "first_cut", name: "First Cut", desc: "Complete your first procedure", icon: Scissors, color: "text-[#2E6B4B] dark:text-[#8FBF9A]", requirement: (stats: any) => stats.totalSurgeries >= 1 },
-  { id: "perfectionist", name: "Perfectionist", desc: "Get 100% on any procedure", icon: Star, color: "text-[#D99B26] dark:text-[#E0B060]", requirement: (stats: any) => stats.bestScore === 100 },
-  { id: "survivor", name: "Survivor", desc: "Complete 10 procedures", icon: Heart, color: "text-[#A32A2A] dark:text-[#E08080]", requirement: (stats: any) => stats.totalSurgeries >= 10 },
-  { id: "scholar", name: "Scholar", desc: "Complete 25 procedures", icon: Brain, color: "text-[#C27820] dark:text-[#E0B060]", requirement: (stats: any) => stats.totalSurgeries >= 25 },
-  { id: "master", name: "Master Surgeon", desc: "Complete 50 procedures", icon: Trophy, color: "text-[#C27820] dark:text-[#E0B060]", requirement: (stats: any) => stats.totalSurgeries >= 50 },
-  { id: "legend", name: "Legend", desc: "Complete 100 procedures", icon: Award, color: "text-[#CC553D] dark:text-[#E06D53]", requirement: (stats: any) => stats.totalSurgeries >= 100 },
-  { id: "streak_3", name: "On Fire", desc: "Maintain a 3-day streak", icon: Flame, color: "text-[#C27820] dark:text-[#E0B060]", requirement: (stats: any) => stats.streak >= 3 },
-  { id: "streak_7", name: "Dedicated", desc: "Maintain a 7-day streak", icon: Flame, color: "text-[#A32A2A] dark:text-[#E08080]", requirement: (stats: any) => stats.streak >= 7 },
-  { id: "streak_30", name: "Obsessed", desc: "Maintain a 30-day streak", icon: Flame, color: "text-[#A32A2A] dark:text-[#E08080]", requirement: (stats: any) => stats.streak >= 30 },
-  { id: "perfection_run", name: "Flawless", desc: "Complete 5 perfect surgeries in a row", icon: CheckCircle, color: "text-[#2E6B4B] dark:text-[#8FBF9A]", requirement: (stats: any) => stats.perfectRun >= 5 },
-  { id: "comeback", name: "Comeback Kid", desc: "Return after a break", icon: TrendingUp, color: "text-[#CC553D] dark:text-[#E06D53]", requirement: (stats: any) => stats.hasReturned === true },
-  { id: "speedster", name: "Speedster", desc: "Complete a procedure in under 10 minutes", icon: Zap, color: "text-[#E0B060] dark:text-[#E8C080]", requirement: (stats: any) => stats.fastestTime <= 600 },
+type Stats = { totalSurgeries: number; bestScore: number; streak: number; perfectRun: number; hasReturned: boolean; fastestTime: number };
+
+// progress(stats) -> [current, target]; a badge unlocks when current >= target.
+const ALL_BADGES: { id: string; name: string; desc: string; icon: React.ComponentType<{ className?: string }>; progress: (s: Stats) => [number, number] }[] = [
+  { id: "first_cut", name: "First Cut", desc: "Complete your first procedure", icon: Scissors, progress: (s) => [s.totalSurgeries, 1] },
+  { id: "perfectionist", name: "Perfectionist", desc: "Score 100% on any procedure", icon: Star, progress: (s) => [s.bestScore, 100] },
+  { id: "survivor", name: "Survivor", desc: "Complete 10 procedures", icon: Heart, progress: (s) => [s.totalSurgeries, 10] },
+  { id: "scholar", name: "Scholar", desc: "Complete 25 procedures", icon: Brain, progress: (s) => [s.totalSurgeries, 25] },
+  { id: "master", name: "Master Surgeon", desc: "Complete 50 procedures", icon: Trophy, progress: (s) => [s.totalSurgeries, 50] },
+  { id: "legend", name: "Legend", desc: "Complete 100 procedures", icon: Award, progress: (s) => [s.totalSurgeries, 100] },
+  { id: "streak_3", name: "On Fire", desc: "Keep a 3-day streak", icon: Flame, progress: (s) => [s.streak, 3] },
+  { id: "streak_7", name: "Dedicated", desc: "Keep a 7-day streak", icon: Flame, progress: (s) => [s.streak, 7] },
+  { id: "streak_30", name: "Obsessed", desc: "Keep a 30-day streak", icon: Flame, progress: (s) => [s.streak, 30] },
+  { id: "perfection_run", name: "Flawless", desc: "Score 100% five cases in a row", icon: CheckCircle, progress: (s) => [s.perfectRun, 5] },
+  { id: "comeback", name: "Comeback Kid", desc: "Return after a week away", icon: TrendingUp, progress: (s) => [s.hasReturned ? 1 : 0, 1] },
+  { id: "speedster", name: "Speedster", desc: "Finish a case in under 10 minutes", icon: Zap, progress: (s) => [s.fastestTime <= 600 ? 1 : 0, 1] },
 ];
 
 export default function Profile() {
-  const { user, loginWithGitHub } = useAuth();
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     totalSurgeries: 0,
     bestScore: 0,
@@ -39,7 +42,7 @@ export default function Profile() {
     lastSurgeryDate: null as string | null,
     surgeriesByDate: {} as Record<string, number>
   });
-  const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [rankInfo, setRankInfo] = useState<{ rank: number | null; totalPlayers: number; totalXp: number; proceduresCompleted: number } | null>(null);
 
   useEffect(() => {
@@ -177,137 +180,117 @@ export default function Profile() {
         }, {} as Record<string, number>)
       });
 
-      // Check badge unlocks
-      const newStats = { totalSurgeries, bestScore, avgScore, streak: currentStreak, perfectRun, hasReturned, fastestTime };
-      const newlyUnlocked = ALL_BADGES.filter(badge => badge.requirement(newStats)).map(b => b.id);
-      setUnlockedBadges(newlyUnlocked);
-
     } catch (e) {
       console.error('Failed to load progress:', e);
+    } finally {
+      setLoaded(true);
     }
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md rounded-sm p-8 text-center bg-card/90 backdrop-blur-xl border border-border shadow-[0_0_30px_rgba(204,85,61,0.1)]">
-          <div className="w-12 h-12 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center mb-6 mx-auto">
-            <Activity className="w-6 h-6 text-primary" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Sign in to view Profile</h1>
-          <p className="text-[#8C827A] mb-8 text-sm">Track your rank, XP, and detailed surgery performance across every session.</p>
-          <Button onClick={loginWithGitHub} className="w-full h-12 bg-white hover:bg-[#F4F0E8] text-black font-semibold rounded-sm flex items-center justify-center gap-3 transition-all">
-            <Github className="w-5 h-5" /> Continue with GitHub
-          </Button>
-        </motion.div>
-      </div>
-    );
-  }
+  if (!user) return null; // the route guard redirects signed-out visitors
+
+  const name = user.name || user.login;
+  const badgeStats: Stats = stats;
+  const unlockedCount = ALL_BADGES.filter((b) => {
+    const [cur, target] = b.progress(badgeStats);
+    return cur >= target;
+  }).length;
+  const fmtTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden pt-28 pb-16">
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/15 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[40%] bg-[#2E6B4B]/10 blur-[100px] rounded-full pointer-events-none" />
-
-      <div className="pt-8 pb-16 max-w-5xl mx-auto px-4 relative z-10">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.6, ease: "easeOut" }} className="rounded-[2rem] p-8 mb-10 surface-raised surface-hover relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-[#2E6B4B]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-8 relative z-10">
-            <motion.div className="relative group" initial={{ scale: 0.9 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
-              <div className="w-24 h-24 rounded-sm border-2 border-primary/40 overflow-hidden bg-card shadow-[0_0_30px_rgba(204,85,61,0.2)] relative z-10 transition-transform group-hover:scale-110">
-                <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
-              </div>
-              <motion.div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-[#2E6B4B] border-[3px] border-background flex items-center justify-center z-20 shadow-[0_0_15px_rgba(46,107,75,0.5)]" animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-                <div className="w-2.5 h-2.5 rounded-full bg-white" />
-              </motion.div>
-            </motion.div>
-            <div className="flex-1">
-              <motion.div className="flex items-center gap-3 mb-2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-                <h1 className="text-3xl font-bold text-foreground tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>{user.name}</h1>
-                <motion.span initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4, type: "spring" }}>
-                  <span className="px-3 py-1 rounded-full bg-[#CC553D] text-white text-xs font-semibold font-mono-data uppercase tracking-widest shadow-sm dark:bg-[#D95338]">{user.profession || "Resident"}</span>
-                </motion.span>
-              </motion.div>
-              <motion.p className="text-[#666059] dark:text-[#D1C9BF] text-sm mb-4 font-mono-data tracking-wide">@{user.login} · {stats.totalSurgeries} Procedures · {stats.avgScore}% Avg</motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45 }}
-                className="flex flex-wrap items-center gap-2.5"
-              >
-                {rankInfo ? (
-                  <>
-                    <span className="px-3 py-1.5 rounded-sm bg-[#2E6B4B]/15 border border-[#2E6B4B]/40 text-[#2E6B4B] dark:text-[#8FBF9A] text-xs font-bold font-mono-data tracking-widest">
-                      {rankInfo.rank ? `#${rankInfo.rank} of ${rankInfo.totalPlayers}` : "UNRANKED"}
-                    </span>
-                    <span className="px-3 py-1.5 rounded-sm bg-primary/10 border border-primary/30 text-primary dark:text-[#E06D53] text-xs font-bold font-mono-data tracking-widest">
-                      {rankInfo.totalXp.toLocaleString()} XP
-                    </span>
-                    <span className="px-3 py-1.5 rounded-sm bg-card/60 border border-border text-[#8C827A] dark:text-[#C2BBB0] text-xs font-mono-data tracking-widest">
-                      {rankInfo.proceduresCompleted} procedures on record
-                    </span>
-                  </>
-                ) : (
-                  <span className="px-3 py-1.5 rounded-sm bg-card/60 border border-border text-[#8C827A] dark:text-[#C2BBB0] text-xs font-mono-data tracking-widest">
-                    Rank unavailable — apply the Supabase schema to enable the leaderboard
-                  </span>
-                )}
-              </motion.div>
+    <div className="bg-background text-foreground">
+      <div className="border-b border-border pb-10 pt-28">
+        <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 md:flex-row md:items-center">
+          {user.avatar_url ? (
+            <img src={user.avatar_url} alt="" className="h-20 w-20 rounded-sm border border-border object-cover" />
+          ) : (
+            <span className="flex h-20 w-20 items-center justify-center rounded-sm border border-border bg-muted font-display text-4xl" aria-hidden="true">
+              {name[0]?.toUpperCase()}
+            </span>
+          )}
+          <div className="min-w-0">
+            <Eyebrow variant="hero" className="mb-3 flex">{user.profession || "Surgeon in training"}</Eyebrow>
+            <h1 className="font-display text-4xl leading-[1.02] tracking-tight sm:text-5xl">{name}</h1>
+            <p className="mt-2 font-mono-data text-sm text-muted-foreground">@{user.customUsername || user.login}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {rankInfo === null ? (
+                <Pill>Loading rank…</Pill>
+              ) : (
+                <>
+                  <Pill tone={rankInfo.rank ? "sage" : "neutral"}>{rankInfo.rank ? `Rank #${rankInfo.rank} of ${rankInfo.totalPlayers}` : "Not ranked yet"}</Pill>
+                  <Pill tone="terracotta">{rankInfo.totalXp.toLocaleString()} XP</Pill>
+                </>
+              )}
             </div>
           </div>
-        </motion.div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-          {[
-            { label: "Total Surgeries", value: stats.totalSurgeries, icon: Activity, color: "text-primary dark:text-[#E06D53]" },
-            { label: "Best Score", value: `${stats.bestScore}%`, icon: Star, color: "text-[#D99B26] dark:text-[#E0B060]" },
-            { label: "Avg Score", value: `${stats.avgScore}%`, icon: Target, color: "text-[#2E6B4B] dark:text-[#8FBF9A]" },
-            { label: "Complications", value: stats.complications, icon: AlertCircle, color: "text-[#A32A2A] dark:text-[#E08080]" },
-            { label: "Current Streak", value: `${stats.streak} days`, icon: Flame, color: stats.streak > 0 ? "text-[#C27820] dark:text-[#E0B060] drop-shadow-[0_0_8px_rgba(224,176,96,0.5)]" : "text-muted-foreground dark:text-[#C2BBB0]" },
-            { label: "Longest Streak", value: `${stats.longestStreak} days`, icon: Trophy, color: "text-[#C27820] dark:text-[#E0B060]" },
-            { label: "Perfect Run", value: stats.perfectRun, icon: CheckCircle, color: "text-[#2E6B4B] dark:text-[#8FBF9A]" },
-            { label: "Fastest Time", value: stats.fastestTime < 9999 ? `${Math.floor(stats.fastestTime / 60)}:${String(stats.fastestTime % 60).padStart(2, '0')}` : "N/A", icon: Clock, color: "text-[#CC553D] dark:text-[#E06D53]" },
-          ].map((stat, i) => (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.08 }} className="rounded-sm p-6 surface surface-hover flex flex-col justify-between min-h-[120px] group">
-              <div className="flex justify-between items-start mb-4">
-                <div className={`w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform ${stat.color}`}>
-                  <stat.icon className="w-5 h-5" />
-                </div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-foreground mb-1 group-hover:text-primary transition-colors" style={{ fontFamily: "'Inter', sans-serif" }}>{stat.value}</div>
-                <div className="label-mono text-[10px] tracking-widest text-[#8C827A] dark:text-[#C2BBB0]">{stat.label}</div>
-              </div>
-            </motion.div>
-          ))}
         </div>
+      </div>
 
-        {/* Badges */}
-        <div>
-          <h2 className="text-2xl font-bold text-foreground mb-6 px-2 tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>Achievements</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-            {ALL_BADGES.map((badge, i) => {
-              const isUnlocked = unlockedBadges.includes(badge.id);
+      <div className="mx-auto max-w-5xl px-4 py-12">
+        {!loaded ? (
+          <LoadingState label="Loading your cases" />
+        ) : stats.totalSurgeries === 0 ? (
+          <div className="surface flex flex-col items-start gap-4 p-8">
+            <h2 className="font-display text-3xl tracking-tight">No cases yet</h2>
+            <p className="text-muted-foreground">Your stats, streaks and achievements fill in as you complete cases.</p>
+            <CtaLink href="/simulation?proc=appendectomy">
+              <Activity className="h-4 w-4" aria-hidden="true" /> Start with an appendectomy
+            </CtaLink>
+          </div>
+        ) : (
+          <section aria-labelledby="stats-h">
+            <h2 id="stats-h" className="section-tag mb-4">Your numbers</h2>
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <StatCard icon={<Activity />} value={stats.totalSurgeries} label="Cases completed" />
+              <StatCard icon={<Star />} value={`${stats.bestScore}%`} label="Best score" />
+              <StatCard icon={<Target />} value={`${stats.avgScore}%`} label="Average score" />
+              <StatCard icon={<AlertCircle />} value={stats.complications} label="Complicated cases" />
+              <StatCard icon={<Flame />} value={`${stats.streak} d`} label="Current streak" />
+              <StatCard icon={<Trophy />} value={`${stats.longestStreak} d`} label="Longest streak" />
+              <StatCard icon={<CheckCircle />} value={stats.perfectRun} label="Perfect run" />
+              <StatCard icon={<Clock />} value={stats.fastestTime < 9999 ? fmtTime(stats.fastestTime) : "—"} label="Fastest case" />
+            </div>
+          </section>
+        )}
+
+        <section aria-labelledby="badges-h" className="mt-14">
+          <div className="mb-6 flex items-baseline justify-between gap-4">
+            <h2 id="badges-h" className="font-display text-3xl tracking-tight">Achievements</h2>
+            <p className="font-mono-data text-sm text-muted-foreground">
+              {unlockedCount} of {ALL_BADGES.length} unlocked
+            </p>
+          </div>
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {ALL_BADGES.map((badge) => {
+              const [cur, target] = badge.progress(badgeStats);
+              const done = cur >= target;
+              const pct = Math.min(100, Math.round((cur / target) * 100));
               return (
-                <motion.div key={badge.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3, delay: i * 0.05 }} className={`p-5 rounded-sm achievement-card ${isUnlocked ? "unlocked" : "locked"}`}>
-                  <div className={`w-12 h-12 rounded-sm bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-4 drop-shadow-[0_0_8px_rgba(204,85,61,0.25)] ${badge.color}`}>
-                    <badge.icon className="w-6 h-6" />
+                <li key={badge.id} className={`surface flex gap-4 p-5 ${done ? "border-success/40" : ""}`}>
+                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-sm border ${done ? "border-success/40 bg-success/10 text-success" : "border-border bg-muted text-label"}`} aria-hidden="true">
+                    <badge.icon className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold">{badge.name}</p>
+                    <p className="text-sm text-muted-foreground">{badge.desc}</p>
+                    {done ? (
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-success">Unlocked</p>
+                    ) : (
+                      <div className="mt-3">
+                        <div className="h-1 w-full bg-accent" role="progressbar" aria-label={`${badge.name} progress`} aria-valuemin={0} aria-valuemax={target} aria-valuenow={Math.min(cur, target)}>
+                          <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="mt-1.5 font-mono-data text-xs text-label">
+                          {Math.min(cur, target)} / {target}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <div className="font-bold text-base text-foreground mb-1 tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>{badge.name}</div>
-                  <div className="text-xs text-muted-foreground leading-relaxed font-mono-data tracking-wide">{badge.desc}</div>
-                  {isUnlocked && (
-                    <div className="mt-4 flex items-center gap-1.5 bg-primary/10 w-fit px-2.5 py-1 rounded-full border border-primary/30">
-                      <Award className="w-3 h-3 text-primary dark:text-[#E06D53]" />
-                      <span className="text-[10px] uppercase font-bold text-primary dark:text-[#E06D53] font-mono-data tracking-widest">Unlocked</span>
-                    </div>
-                  )}
-                </motion.div>
+                </li>
               );
             })}
-          </div>
-        </div>
+          </ul>
+        </section>
       </div>
     </div>
   );

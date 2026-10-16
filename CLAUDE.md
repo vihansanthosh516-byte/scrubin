@@ -14,7 +14,6 @@ client/
   src/
     components/
       ui/
-        scrubin-card.tsx    # Card components
         button.tsx          # shadcn button
         ...
     pages/
@@ -115,7 +114,8 @@ https://claude.ai/artifact/PwZQfxE5CdgyEXb24bQ8en. The source of truth in code i
    }
    ```
 
-6. Update the `PROC_ID_MAP` in `LearnHub.tsx` if the procedure should appear as a related simulation link.
+6. The pre-op briefing at `/learn/<id>` is built automatically from the catalog entry and the step bank
+   (`client/src/lib/briefings.ts`), so a new procedure with a step bank gets a briefing with no extra work.
 
 ---
 
@@ -179,38 +179,29 @@ https://claude.ai/artifact/PwZQfxE5CdgyEXb24bQ8en. The source of truth in code i
 
 ---
 
-## SKILL 4 — Updating the card style across ScrubIn
+## SKILL 4 — Cards, surfaces and the component kit
 
 **Exact steps:**
 
-1. The card component is at `client/src/components/ui/scrubin-card.tsx`
+1. Surfaces are CSS classes in `client/src/index.css`, built on tokens:
+   - `surface`: a static white-on-cream card (1px border, 4px corners, almost no shadow)
+   - `surface-raised`: a featured panel with a little more shadow
+   - add `surface-hover` only when the whole card is a link or button (2px lift, terracotta border)
+   - `procedure-card` for library-style cards (3px lift on hover)
 
-2. It exports:
-   - `ScrubinCard` — for interactive cards with hover glow
-   - `ScrubinStaticPanel` — for non-interactive panels (no animations)
-   - `ProcedureCard` — for procedure library cards
-   - `LearnCard` — for Learn Hub cards
+2. Shared components live in `client/src/components/scrubin/` (import from `@/components/scrubin`):
+   - `PageHeader`, `Eyebrow`, `Wordmark`
+   - `Pill`, `DifficultyPill`
+   - `CtaLink` (a link styled as a button)
+   - `TextField`, `SelectField`, `SearchField`, `FilterChips`
+   - `StatCard`, `EmptyState`, `ErrorBanner`, `LoadingState`
+   - `ConfirmDialog`, `AuthShell`
 
-3. Color usage:
-   - **Blue glow (`glowColor="blue"`):** Simulation and Procedures
-   - **Teal glow (`glowColor="teal"`):** Learn Hub
+3. Colours: use the tokens (`bg-card`, `border-border`, `text-foreground`, `text-muted-foreground`, `text-label`,
+   `text-primary`, `bg-success` / `bg-warning` / `bg-destructive`) and never hex values. Run `node scripts/ui-shots.mjs --axe`
+   against the dev server to check screenshots and contrast.
 
-4. To apply to a page:
-   ```typescript
-   import { ScrubinCard, ScrubinStaticPanel } from "@/components/ui/scrubin-card";
-
-   // For interactive cards:
-   <ScrubinCard glowColor="blue" variant="interactive">
-     {content}
-   </ScrubinCard>
-
-   // For static panels (OR decision panel, etc.):
-   <ScrubinStaticPanel glowColor="blue" className="p-6">
-     {content}
-   </ScrubinStaticPanel>
-   ```
-
-5. **CRITICAL:** Never try to edit `Simulation.tsx` with the Update tool — it always fails due to formatting. Use a PowerShell script instead.
+4. **CRITICAL:** Never try to edit `Simulation.tsx` with the Update tool — it always fails due to formatting. Use a PowerShell script instead.
 
 ---
 
