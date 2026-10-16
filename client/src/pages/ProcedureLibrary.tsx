@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import bundledCatalog from "@/data/procedureCatalog.json";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { spring } from "@/lib/motion";
+import { spring, EASE } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
 import { Lock, Clock, Search, ArrowRight, XCircle, Activity, Heart, Brain, Bone, Baby, Scissors, Stethoscope, Shield, Zap, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +17,6 @@ import { STOCK_STEP_BANKS } from "@/data/stockSteps";
 
 const FILTERS = ["All", "Beginner", "Intermediate", "Advanced", "Emergency", "Cardiovascular", "Neurological", "Orthopedic", "General", "OB/GYN", "Thoracic", "Urologic", "Plastic", "ENT"];
 
-const EASE = [0.25, 1, 0.5, 1] as const;
 
 // Humanized names for the engine's complication ids (server/engine/state/models.ts).
 const RISK_LABELS: Record<string, string> = {
@@ -356,7 +355,7 @@ export default function ProcedureLibrary() {
       </header>
 
       {/* Body */}
-      <main className="mx-auto max-w-6xl px-4 py-12">
+      <div className="mx-auto max-w-6xl px-4 py-12">
         {/* XP Progress Banner */}
         {user && (
           <motion.div
@@ -449,7 +448,7 @@ export default function ProcedureLibrary() {
             </Button>
           </motion.div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

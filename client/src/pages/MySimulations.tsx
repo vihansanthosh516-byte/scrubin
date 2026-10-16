@@ -177,7 +177,7 @@ export default function MySimulations() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-4">
             <motion.div
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full surface surface-hover"
               whileHover={{ scale: 1.05 }}
             >
               <Sparkles className="w-4 h-4 text-primary" />
@@ -192,7 +192,7 @@ export default function MySimulations() {
           </Button>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-3 shrink-0 glass-card p-3">
+        <div className="flex flex-col md:flex-row gap-3 shrink-0 surface surface-hover p-3">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input 
@@ -227,7 +227,7 @@ export default function MySimulations() {
         {/* Scrollable list area — the only part of the dashboard that scrolls */}
         <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-4">
           {completedCases.length > 0 && filter !== "active" && (
-            <div className="glass-card p-5">
+            <div className="surface surface-hover p-5">
               <div className="flex items-center gap-2 mb-4">
                 <ShieldCheck className="w-4 h-4 text-[#2E6B4B] dark:text-[#8FBF9A]" />
                 <h2 className="font-bold text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>Completed Cases</h2>
@@ -289,13 +289,13 @@ export default function MySimulations() {
 
         {sessions.length === 0 && (completedCases.length > 0 || casesLoading) ? (
           completedCases.length === 0 && (
-            <div className="p-12 glass-card text-center text-sm text-muted-foreground">Loading your record…</div>
+            <div className="p-12 surface surface-hover text-center text-sm text-muted-foreground">Loading your record…</div>
           )
         ) : sessions.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-12 glass-card text-center flex flex-col items-center"
+            className="p-12 surface surface-hover text-center flex flex-col items-center"
           >
             <motion.div
               animate={{ rotate: [0, 360] }}
@@ -310,7 +310,7 @@ export default function MySimulations() {
             </Button>
           </motion.div>
         ) : filteredAndSortedSessions.length === 0 ? (
-          <div className="p-12 glass-card text-center flex flex-col items-center">
+          <div className="p-12 surface surface-hover text-center flex flex-col items-center">
             <Search className="w-12 h-12 text-muted-foreground/40 mb-4" />
             <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>No Matches</h2>
             <p className="text-muted-foreground">No simulations match your current filters.</p>
@@ -329,7 +329,7 @@ export default function MySimulations() {
                   key={sim.id || `${sim.session_id}-${i}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-6 glass-card flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+                  className="p-6 surface surface-hover flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
                 >
                   <div className="flex flex-col gap-3 flex-1">
                     <div className="flex flex-wrap items-center gap-3">

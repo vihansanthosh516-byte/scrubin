@@ -192,7 +192,7 @@ export default function Profile() {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md rounded-sm p-8 text-center bg-card/90 backdrop-blur-xl border border-border shadow-[0_0_30px_rgba(204,85,61,0.1)]">
           <div className="w-12 h-12 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center mb-6 mx-auto">
-            <Activity className="w-6 h-6 text-baby-blue" />
+            <Activity className="w-6 h-6 text-primary" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Sign in to view Profile</h1>
           <p className="text-[#8C827A] mb-8 text-sm">Track your rank, XP, and detailed surgery performance across every session.</p>
@@ -211,7 +211,7 @@ export default function Profile() {
 
       <div className="pt-8 pb-16 max-w-5xl mx-auto px-4 relative z-10">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.6, ease: "easeOut" }} className="rounded-[2rem] p-8 mb-10 glass-card-pro relative overflow-hidden group">
+        <motion.div initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.6, ease: "easeOut" }} className="rounded-[2rem] p-8 mb-10 surface-raised surface-hover relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-[#2E6B4B]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <div className="flex flex-col md:flex-row items-start md:items-center gap-8 relative z-10">
             <motion.div className="relative group" initial={{ scale: 0.9 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
@@ -270,7 +270,7 @@ export default function Profile() {
             { label: "Perfect Run", value: stats.perfectRun, icon: CheckCircle, color: "text-[#2E6B4B] dark:text-[#8FBF9A]" },
             { label: "Fastest Time", value: stats.fastestTime < 9999 ? `${Math.floor(stats.fastestTime / 60)}:${String(stats.fastestTime % 60).padStart(2, '0')}` : "N/A", icon: Clock, color: "text-[#CC553D] dark:text-[#E06D53]" },
           ].map((stat, i) => (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.08 }} className="rounded-sm p-6 glass-card flex flex-col justify-between min-h-[120px] group">
+            <motion.div key={stat.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.08 }} className="rounded-sm p-6 surface surface-hover flex flex-col justify-between min-h-[120px] group">
               <div className="flex justify-between items-start mb-4">
                 <div className={`w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform ${stat.color}`}>
                   <stat.icon className="w-5 h-5" />

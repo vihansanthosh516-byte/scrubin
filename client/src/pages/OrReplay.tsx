@@ -93,7 +93,7 @@ export default function OrReplay() {
           </Link>
         </div>
 
-        <div className="glass-card p-4 space-y-3">
+        <div className="surface surface-hover p-4 space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <button onClick={() => setPlaying((p) => !p)} className="w-9 h-9 rounded-sm border border-border flex items-center justify-center hover:bg-primary/10" aria-label={playing ? "Pause" : "Play"}>
               {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}

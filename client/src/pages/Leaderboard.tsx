@@ -8,10 +8,10 @@ import { Link } from "wouter";
 import { Trophy, Medal, Crown, ArrowLeft, Activity, User, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getLeaderboard, LeaderboardEntry } from "@/lib/leaderboard";
+import { EASE } from "@/lib/motion";
 
 type RankedLeaderboardEntry = LeaderboardEntry & { rank: number };
 
-const EASE = [0.25, 1, 0.5, 1] as const;
 
 // Warm podium accents — gold, silver, bronze
 const PODIUM: Record<number, { ring: string; badge: string; label: string }> = {
@@ -80,7 +80,7 @@ export default function Leaderboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mx-auto max-w-4xl px-4 py-10">
         {/* Time range toggle — underlined editorial tabs */}
         <div className="mb-10 flex justify-center">
           <div className="inline-flex gap-1 border-b border-[#E2DDD1]">
@@ -186,7 +186,7 @@ export default function Leaderboard() {
             </div>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

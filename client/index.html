@@ -3,12 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>ScrubIn — Surgery Simulator for Students</title>
     <meta name="description" content="A web-based interactive surgery simulator. Step into the OR, make real decisions, see real consequences. Built for the next generation of doctors." />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#FBF9F5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#161310" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ScrubIn" />
+    <meta property="og:title" content="ScrubIn — Surgery Simulator for Students" />
+    <meta property="og:description" content="Step into the OR, make real decisions, and see real consequences — with zero real risk." />
+    <meta property="og:url" content="https://scrubin.vercel.app/" />
+    <meta property="og:image" content="https://scrubin.vercel.app/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- Apply the saved theme before first paint so dark-mode users never see a light flash. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("theme") || "light";
+          var dark = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", dark);
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>

@@ -30,49 +30,31 @@ export function ThemeProvider({
     return defaultTheme;
   });
 
-  // Apply theme to document
+  // Apply theme to document. index.html applies the stored theme before first paint;
+  // this keeps it in sync afterwards and follows the OS while on "system".
   useEffect(() => {
     const root = document.documentElement;
-
     const applyTheme = (isDark: boolean) => {
-      if (isDark) {
-        root.classList.add("dark");
-      } else {
-        root.classList.remove("dark");
-      }
+      root.classList.toggle("dark", isDark);
+      root.style.colorScheme = isDark ? "dark" : "light";
     };
+
+    if (switchable) localStorage.setItem("theme", theme);
 
     if (theme === "system") {
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
       applyTheme(mediaQuery.matches);
-
       const handler = (e: MediaQueryListEvent) => applyTheme(e.matches);
       mediaQuery.addEventListener("change", handler);
       return () => mediaQuery.removeEventListener("change", handler);
-    } else {
-      applyTheme(theme === "dark");
     }
-
-    if (switchable) {
-      localStorage.setItem("theme", theme);
-    }
+    applyTheme(theme === "dark");
   }, [theme, switchable]);
 
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-    if (switchable) {
-      localStorage.setItem("theme", newTheme);
-    }
-  };
+  const setTheme = (newTheme: Theme) => setThemeState(newTheme);
 
   const toggleTheme = switchable
-    ? () => {
-        setThemeState((prev) => {
-          const newTheme = prev === "light" ? "dark" : "light";
-          localStorage.setItem("theme", newTheme);
-          return newTheme;
-        });
-      }
+    ? () => setThemeState((prev) => (prev === "light" ? "dark" : "light"))
     : undefined;
 
   return (

@@ -877,7 +877,7 @@ function SimulationPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-12 text-center max-w-lg w-full"
+          className="surface surface-hover p-12 text-center max-w-lg w-full"
         >
           <div className="w-20 h-20 bg-primary/10 rounded-sm flex items-center justify-center mx-auto mb-6 border border-primary/20">
             <Activity className="w-10 h-10 text-primary" />
@@ -929,7 +929,7 @@ function SimulationPage() {
       <div className="relative z-10 mx-auto flex h-full w-full max-w-[1600px] flex-col gap-3 px-4 pt-20 pb-3">
 
         {/* TOP BAR */}
-        <div className="shrink-0 flex items-center justify-between gap-4 glass-card px-4 py-2.5">
+        <div className="shrink-0 flex items-center justify-between gap-4 surface surface-hover px-4 py-2.5">
           <div className="flex items-center gap-4 min-w-0">
             <div className="flex items-center gap-2 shrink-0">
               <ShieldCheck className="w-4 h-4 text-[#2E6B4B]" />
@@ -1013,7 +1013,7 @@ function SimulationPage() {
           {/* LEFT COLUMN: PATIENT + VITALS (below lg it stacks after the console) */}
           <div className="order-2 col-span-12 lg:order-none lg:col-span-3 flex min-h-0 flex-col gap-3 lg:overflow-y-auto lg:pr-1.5">
             {/* Patient / Simulation summary */}
-            <div className="shrink-0 glass-card p-4">
+            <div className="shrink-0 surface surface-hover p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Patient</h3>
                 <span className={`px-2 py-0.5 rounded-full border text-[11px] font-black uppercase tracking-wider ${statusBadgeClass}`}>
@@ -1091,7 +1091,7 @@ function SimulationPage() {
             </div>
 
             {/* Vitals */}
-            <div className="glass-card p-4">
+            <div className="surface surface-hover p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[10px] font-bold text-[#8C827A] dark:text-[#C2BBB0] uppercase tracking-widest">Vitals Monitoring</h3>
                 <div className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-[#2E6B4B] animate-pulse" : "bg-[#A32A2A]"}`} />
@@ -1135,7 +1135,7 @@ function SimulationPage() {
               </div>
             )}
 
-            <div className="relative flex h-[calc(100dvh-160px)] min-h-[440px] lg:h-auto lg:min-h-0 lg:flex-1 flex-col overflow-hidden glass-card p-5 text-foreground">
+            <div className="relative flex h-[calc(100dvh-160px)] min-h-[440px] lg:h-auto lg:min-h-0 lg:flex-1 flex-col overflow-hidden surface surface-hover p-5 text-foreground">
               {mode === "replay" && (
                 <div className="absolute inset-0 bg-[#CC553D]/5 backdrop-blur-[1px] rounded-sm z-10 flex items-center justify-center border border-[#CC553D]/20">
                   <div className="bg-[#26211B] border border-[#CC553D] p-6 rounded-sm text-center shadow-2xl">
@@ -1394,15 +1394,15 @@ function SimulationPage() {
             {/* Engine status strip (hidden on narrow screens — tick is already shown in the console header) */}
             {/* The poll (1.5s, slower during a rescue) is the VITALS REFRESH rate — the causal clock only advances with each surgical step or decision, so don't brand the poll as a tick rate. */}
             <div className="hidden lg:grid shrink-0 grid-cols-3 gap-3">
-              <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
+              <div className="p-3 surface surface-hover flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground uppercase" title="Live vitals refresh cadence — physiology decays in real time between steps">Vitals Refresh</span>
                 <span className="text-base font-bold text-[#CC553D]">{tickMs === null ? "paused" : `${tickMs / 1000}s`}</span>
               </div>
-              <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
+              <div className="p-3 surface surface-hover flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground uppercase" title="Advances with each surgical step or decision, not per poll — vitals keep decaying between them">Causal Clock</span>
                 <span className="text-base font-bold text-[#2E6B4B]">{currentTick}t</span>
               </div>
-              <div className="p-3 glass-card flex flex-col items-center justify-center gap-0.5">
+              <div className="p-3 surface surface-hover flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground uppercase" title="Surgical steps answered correctly on the first attempt">Step Accuracy</span>
                 <span className="text-base font-bold text-[#C27820]">{stepAccuracy === null ? "—" : `${stepAccuracy}%`}</span>
               </div>
@@ -1413,7 +1413,7 @@ function SimulationPage() {
           <div className="order-3 col-span-12 lg:order-none lg:col-span-3 flex min-h-0 flex-col gap-3 lg:overflow-y-auto lg:pr-1.5">
             <OperatingRoomDashboard scenario={scenario} phase={stepPhase} steps={caseState && caseLength ? { current: stepNow, total: caseLength } : undefined} />
 
-            <div className="shrink-0 glass-card p-4">
+            <div className="shrink-0 surface surface-hover p-4">
               <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Procedure Timeline</h3>
               <div className="flex flex-wrap gap-1.5">
                 {(PHASES || []).map((phase: any) => (

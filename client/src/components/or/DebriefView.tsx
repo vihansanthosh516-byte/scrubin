@@ -98,7 +98,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
         </div>
       </div>
 
-      <div className="glass-card p-4">
+      <div className="surface surface-hover p-4">
         <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">What the patient did</div>
         <div className="h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -141,7 +141,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
           ))}
         </div>
         <div className="space-y-5">
-          <div className="glass-card p-4">
+          <div className="surface surface-hover p-4">
             <div className="text-xs uppercase tracking-wider text-sage dark:text-[#5E8C74] mb-2">Attending notes</div>
             {notes ? (
               <p className="text-sm whitespace-pre-line leading-relaxed">{plainNotes(notes)}</p>
@@ -151,7 +151,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
               <p className="text-xs text-muted-foreground">Writing notes…</p>
             )}
           </div>
-          <div className="glass-card p-4">
+          <div className="surface surface-hover p-4">
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">What you couldn't see</div>
             <ul className="text-sm space-y-1">
               {Object.entries(debrief.hidden).map(([k, v]) => (
@@ -165,7 +165,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
             </ul>
           </div>
           {debrief.surgery.notes.length > 0 && (
-            <div className="glass-card p-4">
+            <div className="surface surface-hover p-4">
               <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">What almost went wrong</div>
               <ul className="text-sm space-y-1">
                 {debrief.surgery.notes.map((n, i) => (
@@ -174,7 +174,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
               </ul>
             </div>
           )}
-          <div className="glass-card p-4">
+          <div className="surface surface-hover p-4">
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Timeline</div>
             <div className="max-h-[360px] overflow-y-auto space-y-0.5 text-xs font-mono-data">
               {debrief.timeline

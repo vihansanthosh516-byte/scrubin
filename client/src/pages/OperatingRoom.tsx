@@ -255,7 +255,7 @@ export default function OperatingRoom() {
 
       {/* pre-brief */}
       {!started && (
-        <div className="glass-card p-5 mb-4">
+        <div className="surface surface-hover p-5 mb-4">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
             <div className="space-y-2 text-sm">
               <div className="text-xs uppercase tracking-wider text-primary">Pre-op chart</div>
@@ -337,7 +337,7 @@ export default function OperatingRoom() {
             <CommandBar onSubmit={conn.say} lastParse={conn.lastParse} role={role} scenario={procId} />
           </div>
           <div className="space-y-4">
-            <div className="glass-card p-4">
+            <div className="surface surface-hover p-4">
               {role === "anesthesia" ? (
                 <AnesthesiaStation state={state} drugs={catalog?.drugs ?? []} patient={p} act={conn.act} />
               ) : (

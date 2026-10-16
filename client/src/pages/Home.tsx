@@ -8,8 +8,8 @@ import { motion, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { API_BASE } from "@/lib/api";
 import { Activity, Heart, Target, Users, Scissors, BookOpen, ArrowRight, Play, Zap, Award, Trophy } from "lucide-react";
+import { EASE } from "@/lib/motion";
 
-const EASE = [0.25, 1, 0.5, 1] as const;
 
 function StatNumber({ value, suffix }: { value: number; suffix?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -76,7 +76,7 @@ function FeatureCard({ icon: Icon, title, description, index }: any) {
       transition={{ duration: 0.55, delay: index * 0.1, ease: EASE }}
       className="group"
     >
-      <div className="glass-card flex h-full flex-col items-center gap-5 p-8 text-center">
+      <div className="surface surface-hover flex h-full flex-col items-center gap-5 p-8 text-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-sm border border-[#E2DDD1] bg-[#FBF9F5] transition-colors group-hover:border-[#CC553D]/40 dark:border-[#3A342C] dark:bg-[#26211B]">
           <Icon className="h-6 w-6 text-[#CC553D]" />
         </div>

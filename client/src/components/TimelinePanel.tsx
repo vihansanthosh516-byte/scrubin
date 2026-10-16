@@ -76,7 +76,7 @@ export default function TimelinePanel() {
   };
 
   return (
-    <div className="min-h-[140px] max-h-[320px] lg:max-h-none flex-1 p-4 glass-card flex flex-col rounded-sm">
+    <div className="min-h-[140px] max-h-[320px] lg:max-h-none flex-1 p-4 surface surface-hover flex flex-col rounded-sm">
       <h3 className="text-[10px] font-bold text-[#8C827A] dark:text-[#C2BBB0] uppercase tracking-widest mb-3">Event Timeline</h3>
       
       <div 

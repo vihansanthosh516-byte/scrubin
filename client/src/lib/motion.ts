@@ -4,6 +4,8 @@ import type { Transition, Variants } from "framer-motion";
 export const spring: Transition = { type: "spring", damping: 25, stiffness: 300 };
 export const springSoft: Transition = { type: "spring", damping: 30, stiffness: 180 };
 export const ease = [0.22, 1, 0.36, 1] as const;
+// The editorial ease used for page entrances and hovers (same curve as the CSS transitions in index.css).
+export const EASE = [0.25, 1, 0.5, 1] as const;
 
 export const fadeUp: Variants = {
   hidden: { opacity: 0, y: 16 },

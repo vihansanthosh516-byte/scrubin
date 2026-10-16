@@ -113,7 +113,7 @@ export default function OrCases() {
 
 function CaseRow({ c, children, onDelete }: { c: SavedCase; children: React.ReactNode; onDelete: (id: string) => void }) {
   return (
-    <div className="glass-card p-4">
+    <div className="surface surface-hover p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="font-semibold">

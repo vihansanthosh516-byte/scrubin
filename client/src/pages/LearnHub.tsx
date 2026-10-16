@@ -53,7 +53,7 @@ export default function LearnHub() {
               </Link>
             </div>
             <motion.div 
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-6"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface surface-hover mb-6"
               whileHover={{ scale: 1.05 }}
             >
               <Sparkles className="w-4 h-4 text-[#CC553D]" />
@@ -104,7 +104,7 @@ export default function LearnHub() {
                 transition={{ duration: 0.6, delay: i * 0.1, type: "spring", stiffness: 100 }}
                 className="group"
               >
-                <div className="p-8 rounded-sm glass-card relative overflow-hidden h-full border-border/60">
+                <div className="p-8 rounded-sm surface surface-hover relative overflow-hidden h-full border-border/60">
                   <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-4">
                       <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
