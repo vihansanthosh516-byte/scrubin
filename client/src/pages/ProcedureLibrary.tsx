@@ -10,12 +10,14 @@ import bundledCatalog from "@/data/procedureCatalog.json";
 import { STOCK_STEP_BANKS } from "@/data/stockSteps";
 import { ENGINE_SCENARIO } from "@/engine/scenarios";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
 import { API_BASE } from "@/lib/api";
 import { EASE } from "@/lib/motion";
 import { useProcedureStore } from "@/state/procedureStore";
 import { Button } from "@/components/ui/button";
 import { DifficultyPill, EmptyState, ErrorBanner, FilterChips, PageHeader, Pill, SearchField } from "@/components/scrubin";
+import { LearningPath } from "@/components/game/LearningPath";
+import { LevelBar, StreakChip } from "@/components/game";
+import { useProgress } from "@/hooks/useProgress";
 
 // Humanized names for the engine's complication ids (server/engine/state/models.ts).
 const RISK_LABELS: Record<string, string> = {
@@ -163,8 +165,11 @@ function ProcedureCard({ proc, locked, index }: { proc: Procedure; locked: boole
 
 export default function ProcedureLibrary() {
   const { user } = useAuth();
-  const [userXP, setUserXP] = useState(0);
+  const progress = useProgress();
+  const userXP = progress.xp;
   const [specialty, setSpecialty] = useState("all");
+  // The path is the default way in; the library tab keeps search and filters.
+  const [view, setView] = useState<"path" | "library">(() => (new URLSearchParams(window.location.search).get("view") === "library" ? "library" : "path"));
   const { procedures, loading, error, query, difficulty, setProcedures, setLoading, setError, setQuery, setDifficulty } = useProcedureStore();
 
   // Show the catalog bundled with the site at once, then swap in the live registry if the
@@ -188,19 +193,6 @@ export default function ProcedureLibrary() {
     fetchProcedures();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (!user) return;
-    // XP uses the same formula as the leaderboard view.
-    supabase
-      .from("sessions")
-      .select("score, outcome")
-      .eq("user_id", user.id)
-      .then(({ data, error }) => {
-        if (error || !data) return setUserXP(0);
-        setUserXP(data.reduce((acc: number, s: any) => acc + (s.outcome === "Critical" ? 50 : 100 + Math.floor(s.score / 10)), 0));
-      });
-  }, [user]);
 
   const families = useMemo(() => {
     const counts = new Map<string, number>();
@@ -229,25 +221,47 @@ export default function ProcedureLibrary() {
   };
 
   const nextTier = userXP < 500 ? { at: 500, label: "Intermediate", from: 0 } : userXP < 2000 ? { at: 2000, label: "Advanced", from: 500 } : null;
-  const progress = nextTier ? Math.min(((userXP - nextTier.from) / (nextTier.at - nextTier.from)) * 100, 100) : 100;
+  const tierProgress = nextTier ? Math.min(((userXP - nextTier.from) / (nextTier.at - nextTier.from)) * 100, 100) : 100;
 
   return (
     <div className="bg-background text-foreground">
       <div className="border-b border-border pb-10 pt-28">
         <div className="mx-auto max-w-6xl px-4">
           <PageHeader
-            eyebrow="Procedure library"
-            title="Choose your"
-            accent="procedure"
-            lead={loading ? "Loading the library…" : `${visible.length} of ${procedures.length} procedures`}
+            eyebrow={view === "path" ? "Your learning path" : "Procedure library"}
+            title={view === "path" ? "One case at a" : "Choose your"}
+            accent={view === "path" ? "time." : "procedure"}
+            lead={view === "path" ? "Beginner to advanced. Finish cases to earn XP and unlock the next unit." : loading ? "Loading the library…" : `${visible.length} of ${procedures.length} procedures`}
+            actions={user && <StreakChip streak={progress.streak} doneToday={progress.doneToday} className="text-base" />}
           />
-          <div className="mt-8 space-y-4">
+          <div role="tablist" aria-label="View" className="mt-8 inline-flex rounded-2xl border-2 border-border bg-card p-1">
+            {(["path", "library"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                role="tab"
+                aria-selected={view === v}
+                onClick={() => setView(v)}
+                className={`rounded-xl px-5 py-2 text-sm font-bold transition-colors ${view === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                {v === "path" ? "Learning path" : "All procedures"}
+              </button>
+            ))}
+          </div>
+          {view === "library" && <div className="mt-6 space-y-4">
             <SearchField label="Search procedures" placeholder="Search by name, specialty or description" value={query} onChange={(e) => setQuery(e.target.value)} className="max-w-md" />
             <FilterChips label="Difficulty" options={DIFFICULTIES} value={level as (typeof DIFFICULTIES)[number]["value"]} onChange={(v) => setDifficulty(v === "all" ? "" : v)} />
             <FilterChips label="Specialty" options={families} value={specialty} onChange={setSpecialty} />
-          </div>
+          </div>}
         </div>
       </div>
+
+      {view === "path" ? (
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          {user && <LevelBar xp={userXP} className="mx-auto mb-12 max-w-xl" />}
+          <LearningPath procedures={procedures as Procedure[]} sessions={progress.sessions} xp={userXP} devUnlocked={import.meta.env.DEV} />
+        </div>
+      ) : (
 
       <div className="mx-auto max-w-6xl px-4 py-12">
         {user && (
@@ -265,8 +279,8 @@ export default function ProcedureLibrary() {
                 {nextTier ? `${nextTier.label} unlocks at ${nextTier.at.toLocaleString()} XP` : "All procedures unlocked"}
               </p>
             </div>
-            <div className="h-1.5 w-full bg-accent" role="progressbar" aria-label={nextTier ? `Progress to ${nextTier.label}` : "All tiers unlocked"} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
-              <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 1, ease: EASE }} className={`h-full ${nextTier ? (userXP >= 500 ? "bg-warning" : "bg-primary") : "bg-success"}`} />
+            <div className="h-1.5 w-full bg-accent" role="progressbar" aria-label={nextTier ? `Progress to ${nextTier.label}` : "All tiers unlocked"} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(tierProgress)}>
+              <motion.div initial={{ width: 0 }} animate={{ width: `${tierProgress}%` }} transition={{ duration: 1, ease: EASE }} className={`h-full ${nextTier ? (userXP >= 500 ? "bg-warning" : "bg-primary") : "bg-success"}`} />
             </div>
           </section>
         )}
@@ -298,6 +312,7 @@ export default function ProcedureLibrary() {
           />
         )}
       </div>
+      )}
     </div>
   );
 }

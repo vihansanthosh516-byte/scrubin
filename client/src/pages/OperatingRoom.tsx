@@ -33,6 +33,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { engineApi, useOrConnection, wakeEngine } from "@/engine/client";
 import { recordSession } from "@/lib/recordSession";
+import { CaseCelebration } from "@/components/game";
+import { refreshProgress, useProgress } from "@/hooks/useProgress";
+import { sessionXp } from "@/lib/game";
 import { fmtTime } from "@/lib/format";
 import { ENGINE_SCENARIO, SCENARIO_NAME } from "@/engine/scenarios";
 import { py } from "@/py/runtime";
@@ -75,6 +78,8 @@ export default function OperatingRoom() {
   const [mobileTab, setMobileTab] = useState("act");
   const [helpOpen, setHelpOpen] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const progress = useProgress();
+  const [celebration, setCelebration] = useState<{ earned: number; xpBefore: number; streakBefore: number; streakAfter: number } | null>(null);
   const conn = useOrConnection(stage === "or" ? created?.case_id ?? null : null);
   const { state } = conn;
   const [pyStage, setPyStage] = useState(py.status().stage);
@@ -149,6 +154,15 @@ export default function OperatingRoom() {
       if (user && !recorded && d.score != null) {
         setRecorded(true);
         recordSession(user, created.scenario.id, created.scenario.name, d);
+        // The game beat: XP earned, level and streak, shown over the debrief.
+        const outcome = d.outcome === "death" ? "Critical" : "Successful";
+        setCelebration({
+          earned: sessionXp({ score: d.score, outcome }),
+          xpBefore: progress.xp,
+          streakBefore: progress.streak,
+          streakAfter: progress.doneToday ? progress.streak : progress.streak + 1,
+        });
+        window.setTimeout(refreshProgress, 1500);
       }
       setStage("debrief");
       window.speechSynthesis?.cancel();
@@ -157,7 +171,7 @@ export default function OperatingRoom() {
     } finally {
       setEnding(false);
     }
-  }, [created, conn, user, recorded, ending]);
+  }, [created, conn, user, recorded, ending, progress]);
 
   const togglePause = useCallback(() => {
     conn.control({ paused: !state?.paused });
@@ -196,6 +210,7 @@ export default function OperatingRoom() {
   if (stage === "debrief" && debrief) {
     return (
       <div className="min-h-screen pt-20">
+        {celebration && <CaseCelebration open onClose={() => setCelebration(null)} {...celebration} />}
         <DebriefView
           debrief={debrief}
           procedureName={created?.scenario.name ?? procName}

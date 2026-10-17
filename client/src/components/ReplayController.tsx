@@ -43,10 +43,10 @@ export default function ReplayController() {
   };
 
   return (
-    <div className="p-4 bg-[#1E1A16] border border-[#3A342C] rounded-sm">
+    <div className="p-4 bg-card border border-border rounded-sm">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-white font-bold text-sm">Deterministic Replay</h3>
-        <span className="text-xs font-mono text-[#666059] dark:text-[#A89F95]">
+        <span className="text-xs font-mono text-muted-foreground ">
           Tick: {Math.min(replayTick, maxTick)} / {maxTick}
         </span>
       </div>
@@ -61,7 +61,7 @@ export default function ReplayController() {
               setReplayTick(Math.max(0, replayTick - 1));
             }}
             disabled={dvkChain.length === 0 || replayTick <= 0}
-            className="bg-[#26211B] hover:bg-[#332C24] border-[#3A342C] text-white"
+            className="bg-muted hover:bg-[#332C24] border-border text-white"
           >
             <ChevronLeftIcon className="w-4 h-4" />
           </Button>
@@ -72,7 +72,7 @@ export default function ReplayController() {
             size="icon"
             onClick={() => setIsReplaying(!isReplaying)}
             disabled={dvkChain.length === 0 || (replayTick >= maxTick && !isReplaying)}
-            className="bg-[#26211B] hover:bg-[#332C24] border-[#3A342C] text-white"
+            className="bg-muted hover:bg-[#332C24] border-border text-white"
           >
             {isReplaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
           </Button>
@@ -86,7 +86,7 @@ export default function ReplayController() {
               setReplayTick(Math.min(maxTick, replayTick + 1));
             }}
             disabled={dvkChain.length === 0 || replayTick >= maxTick}
-            className="bg-[#26211B] hover:bg-[#332C24] border-[#3A342C] text-white"
+            className="bg-muted hover:bg-[#332C24] border-border text-white"
           >
             <ChevronRightIcon className="w-4 h-4" />
           </Button>
@@ -100,7 +100,7 @@ export default function ReplayController() {
               setReplayTick(0);
             }}
             disabled={dvkChain.length === 0}
-            className="bg-[#26211B] hover:bg-[#332C24] border-[#3A342C] text-white"
+            className="bg-muted hover:bg-[#332C24] border-border text-white"
           >
             <RotateCcw className="w-4 h-4" />
           </Button>
@@ -109,7 +109,7 @@ export default function ReplayController() {
           <select
             value={speed}
             onChange={(e) => setSpeed(parseFloat(e.target.value))}
-            className="bg-[#26211B] text-white border border-[#3A342C] rounded px-2 py-1"
+            className="bg-muted text-white border border-border rounded px-2 py-1"
             disabled={dvkChain.length === 0}
           >
             {speedOptions.map((opt) => (
@@ -126,13 +126,13 @@ export default function ReplayController() {
             max={maxTick}
             value={Math.min(replayTick, maxTick)}
             onChange={handleScrub}
-            className="flex-1 accent-[#CC553D]"
+            className="flex-1 accent-primary"
             disabled={dvkChain.length === 0}
           />
         </div>
       
       {dvkChain.length === 0 && (
-        <div className="text-xs text-[#D99B26] mt-2">
+        <div className="text-xs text-warning mt-2">
           Load a DVK Proof Chain to enable replay mode.
         </div>
       )}

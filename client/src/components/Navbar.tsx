@@ -14,6 +14,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuCheckboxItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -21,6 +22,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CtaLink, Wordmark } from "@/components/scrubin";
+import { StreakChip } from "@/components/game";
+import { useProgress } from "@/hooks/useProgress";
+import { setSoundsEnabled, soundsEnabled } from "@/lib/celebrate";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -53,6 +57,8 @@ export default function Navbar() {
   const [location] = useLocation();
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
+  const progress = useProgress();
+  const [sounds, setSounds] = useState(soundsEnabled);
 
   // A hairline appears once the page scrolls under the header.
   useEffect(() => {
@@ -104,6 +110,12 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {user && progress.loaded && (
+            <Link href="/profile" aria-label={`${progress.streak}-day streak, ${progress.xp} XP`} className="flex items-center gap-2">
+              <StreakChip streak={progress.streak} doneToday={progress.doneToday} />
+              <span className="hidden rounded-full bg-xp/15 px-2.5 py-1 text-sm font-bold tabular-nums text-foreground lg:inline">{progress.xp.toLocaleString()} XP</span>
+            </Link>
+          )}
           <div className="hidden items-center gap-2 md:flex">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -114,6 +126,16 @@ export default function Navbar() {
               <DropdownMenuContent align="end" className="min-w-36 rounded-sm">
                 <DropdownMenuLabel className="text-xs text-muted-foreground">Theme</DropdownMenuLabel>
                 {themeItems}
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={sounds}
+                  onCheckedChange={(c) => {
+                    setSounds(!!c);
+                    setSoundsEnabled(!!c);
+                  }}
+                >
+                  Celebration sounds
+                </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
             </DropdownMenu>
 

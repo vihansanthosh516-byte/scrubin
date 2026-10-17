@@ -209,8 +209,8 @@ export default function PerformanceAnalyticsDashboard() {
       <h2 className="text-lg font-bold mb-3">Performance Analytics</h2>
 
       {isDeceased && (
-        <div className="mb-4 p-3 bg-[#3A0F0F] border-2 border-[#A32A2A] rounded-sm">
-          <p className="text-sm font-black text-[#E08080] uppercase tracking-wider">
+        <div className="mb-4 p-3 bg-[#3A0F0F] border-2 border-destructive rounded-sm">
+          <p className="text-sm font-black text-destructive uppercase tracking-wider">
             Patient Deceased — performance metrics reflect the terminal outcome
           </p>
         </div>
@@ -225,9 +225,9 @@ export default function PerformanceAnalyticsDashboard() {
         <ResponsiveContainer>
           <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
             <PolarGrid />
-            <PolarAngleAxis dataKey="metric" stroke="#8C827A" />
-            <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} stroke="#8C827A" />
-            <Radar name="Score" dataKey="value" stroke="#CC553D" fill="#CC553D" fillOpacity={0.4} />
+            <PolarAngleAxis dataKey="metric" stroke="#64748B" />
+            <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} stroke="#64748B" />
+            <Radar name="Score" dataKey="value" stroke="#0E7490" fill="#0E7490" fillOpacity={0.4} />
           </RadarChart>
         </ResponsiveContainer>
       </div>
@@ -261,10 +261,10 @@ export default function PerformanceAnalyticsDashboard() {
       <div className="w-full h-36 mb-4">
         <ResponsiveContainer>
           <LineChart data={scoreHistory}>
-            <XAxis dataKey="tick" stroke="#8C827A" />
-            <YAxis domain={[0, 100]} stroke="#8C827A" />
+            <XAxis dataKey="tick" stroke="#64748B" />
+            <YAxis domain={[0, 100]} stroke="#64748B" />
             <Tooltip />
-            <Line type="monotone" dataKey="score" stroke="#CC553D" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="score" stroke="#0E7490" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>

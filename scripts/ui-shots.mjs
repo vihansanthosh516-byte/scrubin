@@ -24,6 +24,8 @@ const routes = flag("routes", "/,/procedures,/learn,/leaderboard,/profile,/my-si
 const widths = flag("widths", "1440,1024,390").split(",").map(Number);
 const themes = flag("themes", "light,dark").split(",");
 const runAxe = args.includes("--axe");
+// --viewport: capture only what is on screen (for scroll-driven scenes positioned by --page-js).
+const viewportOnly = args.includes("--viewport");
 // --session-js runs once after the dev user is seeded (e.g. to un-onboard them);
 // --page-js runs on every page before the capture (e.g. to open a menu).
 const sessionJs = flag("session-js", "");
@@ -125,12 +127,19 @@ async function main() {
   const axe = {};
   const shoot = async (route, theme, width) => {
     await b.page("Emulation.setDeviceMetricsOverride", { width, height: width < 600 ? 844 : 900, deviceScaleFactor: 1, mobile: width < 600 });
-    await b.page("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }, { name: "prefers-color-scheme", value: theme }] });
+    await b.page("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: args.includes("--motion") ? "no-preference" : "reduce" }, { name: "prefers-color-scheme", value: theme }] });
     await b.eval(`localStorage.setItem("theme", ${JSON.stringify(theme)})`);
     await b.goto(base + route);
     if (pageJs) {
       await b.eval(pageJs);
       await sleep(600);
+    }
+    if (viewportOnly) {
+      const { data } = await b.page("Page.captureScreenshot", { format: "png" });
+      const file = path.join(outDir, `${slug(route)}-${theme}-${width}${process.env.SHOT_SUFFIX ?? ""}.png`);
+      fs.writeFileSync(file, Buffer.from(data, "base64"));
+      console.log(path.relative(process.cwd(), file));
+      return;
     }
     // Scroll through once so scroll-triggered (whileInView) sections render, then back to the top.
     await b.eval(`(async () => { const h = document.documentElement.scrollHeight; for (let y = 0; y < h; y += 400) { scrollTo(0, y); await new Promise(r => setTimeout(r, 60)); } scrollTo(0, 0); await new Promise(r => setTimeout(r, 400)); })()`);

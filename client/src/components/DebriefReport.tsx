@@ -47,7 +47,7 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
       <div className="p-5 border-b border-border bg-muted/40">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <ShieldCheck className="w-6 h-6 text-[#2E6B4B]" />
+            <ShieldCheck className="w-6 h-6 text-success" />
             <h2 className="text-lg font-bold tracking-tight">Professional Debrief</h2>
           </div>
           <div className="flex items-center gap-2">
@@ -69,7 +69,7 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-muted-foreground uppercase">Completion Status</span>
-            <span className="text-sm font-bold text-[#2E6B4B] uppercase">{completionStatus}</span>
+            <span className="text-sm font-bold text-success uppercase">{completionStatus}</span>
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-muted-foreground uppercase">Patient Outcome</span>
@@ -117,14 +117,14 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
           {/* Critical Events */}
           {evalData.critical_events && Array.isArray(evalData.critical_events) && evalData.critical_events.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-[#C27820] uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-sm font-bold text-warning uppercase tracking-widest flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" /> Critical Events
               </h3>
               <div className="space-y-2">
                 {evalData.critical_events.map((ev: any, i: number) => (
-                  <div key={i} className="p-3 bg-[#C27820]/5 border border-[#C27820]/40 rounded-sm">
+                  <div key={i} className="p-3 bg-warning/5 border border-warning/40 rounded-sm">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] font-bold text-[#C27820] uppercase">{ev.severity || "CRITICAL"}</span>
+                      <span className="text-[10px] font-bold text-warning uppercase">{ev.severity || "CRITICAL"}</span>
                       {ev.tick !== undefined && <span className="text-[10px] font-mono text-muted-foreground">T:{ev.tick}</span>}
                     </div>
                     <p className="text-sm text-muted-foreground">{ev.description || ev}</p>
@@ -137,13 +137,13 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
           {/* Mistakes */}
           {evalData.mistakes && Array.isArray(evalData.mistakes) && evalData.mistakes.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-[#A32A2A] uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-sm font-bold text-destructive uppercase tracking-widest flex items-center gap-2">
                 <XCircle className="w-4 h-4" /> Mistakes Identified
               </h3>
               <ul className="space-y-2">
                 {evalData.mistakes.map((mistake: any, i: number) => (
-                  <li key={i} className="text-sm text-[#E08080]/80 bg-[#A32A2A]/5 p-3 rounded-sm border border-[#A32A2A]/20 flex items-start gap-3">
-                    <XCircle className="w-4 h-4 text-[#A32A2A] mt-0.5 shrink-0" />
+                  <li key={i} className="text-sm text-[#E08080]/80 bg-destructive/5 p-3 rounded-sm border border-destructive/20 flex items-start gap-3">
+                    <XCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
                     {mistake.description || mistake}
                   </li>
                 ))}
@@ -156,13 +156,13 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
           {/* Strengths */}
           {evalData.strengths && Array.isArray(evalData.strengths) && evalData.strengths.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-[#2E6B4B] uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-sm font-bold text-success uppercase tracking-widest flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" /> Strengths
               </h3>
               <ul className="space-y-2">
                 {evalData.strengths.map((str: any, i: number) => (
-                  <li key={i} className="text-sm text-[#8FBF9A]/80 bg-[#2E6B4B]/5 p-3 rounded-sm border border-[#2E6B4B]/20 flex items-start gap-3">
-                    <CheckCircle className="w-4 h-4 text-[#2E6B4B] mt-0.5 shrink-0" />
+                  <li key={i} className="text-sm text-[#8FBF9A]/80 bg-success/5 p-3 rounded-sm border border-success/20 flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
                     {str.description || str}
                   </li>
                 ))}
@@ -173,13 +173,13 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
           {/* Recommendations */}
           {evalData.recommendations && Array.isArray(evalData.recommendations) && evalData.recommendations.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-[#CC553D] uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2">
                 <Lightbulb className="w-4 h-4" /> Recommendations
               </h3>
               <ul className="space-y-2">
                 {evalData.recommendations.map((rec: any, i: number) => (
-                  <li key={i} className="text-sm text-[#CC553D]/80 bg-[#CC553D]/5 p-3 rounded-sm border border-[#CC553D]/20 flex items-start gap-3">
-                    <Lightbulb className="w-4 h-4 text-[#CC553D] mt-0.5 shrink-0" />
+                  <li key={i} className="text-sm text-primary/80 bg-primary/5 p-3 rounded-sm border border-primary/20 flex items-start gap-3">
+                    <Lightbulb className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                     {rec.description || rec}
                   </li>
                 ))}

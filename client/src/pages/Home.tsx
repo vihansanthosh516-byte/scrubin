@@ -1,39 +1,16 @@
 /**
- * ScrubIn Home: the signed-in landing page. A greeting with the one next action, the student's
- * real numbers, how a case works, and the beginner cases to start with. No invented stats.
+ * ScrubIn Home: an Apple-style scroll story (hero → the monitor crisis → roles → debrief) wrapped
+ * around a Duolingo-style dashboard (streak, daily goal, level, continue).
  */
-import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Activity, ArrowRight, BookOpen, Play, RotateCcw } from "lucide-react";
+import { Activity, ArrowRight, Flame, Play, RotateCcw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { API_BASE } from "@/lib/api";
-import { EASE } from "@/lib/motion";
-import { getLeaderboard, getUserSessions, type PersistedSession } from "@/lib/leaderboard";
-import { ENGINE_SCENARIO } from "@/engine/scenarios";
-import { CtaLink, DifficultyPill, Eyebrow, Pill, StatCard } from "@/components/scrubin";
-
-const REVEAL = {
-  initial: { opacity: 0, y: 20 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, amount: 0.3 },
-  transition: { duration: 0.5, ease: EASE },
-} as const;
-
-// The four Beginner cases (unlocked below 500 XP). Ids match the registry; times and decision
-// counts are the engine's own estimates.
-const STARTER_CASES = [
-  { id: "appendectomy", name: "Appendectomy", tag: "General Surgery", time: "34 min", decisions: 34 },
-  { id: "inguinal-hernia", name: "Inguinal Hernia Repair", tag: "General Surgery", time: "32 min", decisions: 32 },
-  { id: "thyroidectomy", name: "Thyroidectomy", tag: "ENT", time: "32 min", decisions: 32 },
-  { id: "carpal-tunnel-release", name: "Carpal Tunnel Release", tag: "Orthopedic", time: "30 min", decisions: 30 },
-];
-
-const STEPS = [
-  { title: "Read the briefing", body: "Meet the patient, the indication and the key risks before you scrub in." },
-  { title: "Operate in real time", body: "Give orders by voice or keyboard. Vitals, bleeding and the team respond as you go." },
-  { title: "Debrief and replay", body: "See what went well, what you missed, and replay any moment of the case." },
-];
+import { useProgress } from "@/hooks/useProgress";
+import { CtaLink, Eyebrow } from "@/components/scrubin";
+import { GoalRing, LevelBar, StreakChip } from "@/components/game";
+import { DebriefChapter, FinalChapter, HeroChapter, MonitorChapter, RolesChapter } from "@/components/home/ScrollStory";
+import { cn } from "@/lib/utils";
 
 function greeting() {
   const h = new Date().getHours();
@@ -42,148 +19,76 @@ function greeting() {
 
 export default function Home() {
   const { user } = useAuth();
-  const [procedureCount, setProcedureCount] = useState<number | null>(null);
-  const [mine, setMine] = useState<{ xp: number; cases: number; rank: number | null } | null>(null);
-  const [lastCase, setLastCase] = useState<PersistedSession | null>(null);
-
-  // Live size of the procedure library.
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`${API_BASE}/api/procedures/search`)
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => {
-        const list = Array.isArray(data) ? data : data.procedures || data.scenarios || [];
-        if (!cancelled && list.length) setProcedureCount(list.length);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // The student's own XP, case count, rank and most recent case.
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    getLeaderboard().then(({ entries }) => {
-      if (cancelled) return;
-      const i = entries.findIndex((e) => e.user_id === user.id);
-      setMine({ xp: i >= 0 ? entries[i].total_xp : 0, cases: i >= 0 ? entries[i].procedures_completed : 0, rank: i >= 0 ? i + 1 : null });
-    });
-    getUserSessions(user.id).then((s) => !cancelled && setLastCase(s[0] ?? null));
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
-
+  const progress = useProgress();
   const firstName = user?.name?.split(" ")[0] || user?.login || "Doctor";
-  const isNew = mine !== null && mine.cases === 0;
+  const last = progress.sessions[0];
+  const isNew = progress.loaded && progress.sessions.length === 0;
 
   return (
     <div className="bg-background text-foreground">
-      {/* Greeting and the one next action */}
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-6xl px-4 pb-16 pt-28 md:pb-20 md:pt-36">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}>
-            <Eyebrow variant="hero" className="mb-6">{greeting()}</Eyebrow>
-            <h1 className="font-display text-5xl leading-[0.98] tracking-tight sm:text-6xl md:text-7xl">
-              {isNew ? <>Your first surgery starts <span className="text-primary">here</span>, {firstName}.</> : <>Welcome back, <span className="text-primary">{firstName}</span>.</>}
-            </h1>
-            <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-              {isNew
-                ? "Step into the OR, make the calls yourself, and see the consequences, with fictional patients and zero real risk."
-                : lastCase
-                  ? `Your last case was ${lastCase.procedure_name} (${lastCase.score}%). Pick up where you left off or try something new.`
-                  : "Pick a procedure, read the briefing, and scrub in."}
-            </p>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-              {lastCase ? (
-                <CtaLink href={`/simulation?proc=${lastCase.procedure_id}`} size="lg" className="px-8 text-base font-semibold">
-                  <RotateCcw className="h-5 w-5" aria-hidden="true" /> Practise {lastCase.procedure_name} again
-                </CtaLink>
-              ) : (
-                <CtaLink href="/simulation?proc=appendectomy" size="lg" className="px-8 text-base font-semibold">
-                  <Activity className="h-5 w-5" aria-hidden="true" /> Start with an appendectomy
-                </CtaLink>
-              )}
-              <CtaLink href="/procedures" size="lg" variant="outline" className="px-8 text-base font-semibold">
-                <Play className="h-5 w-5" aria-hidden="true" /> Browse all procedures
+      <HeroChapter
+        greeting={<Eyebrow variant="hero" className="mb-6 flex">{greeting()}, {firstName}</Eyebrow>}
+        title={isNew ? <>Your first surgery<br />starts <span className="text-primary">here.</span></> : <>Ready to<br /><span className="text-primary">scrub in?</span></>}
+        lead={isNew ? "Step into a real-time operating room, make the calls yourself, and see the consequences, with zero real risk." : last ? `Last time: ${last.procedure_name}, ${last.score}%. Keep your streak alive with one case today.` : "One case a day keeps your streak alive."}
+        actions={
+          <>
+            {last ? (
+              <CtaLink href={`/simulation?proc=${last.procedure_id}`} size="lg" className="px-8">
+                <RotateCcw className="h-5 w-5" aria-hidden="true" /> Practise {last.procedure_name} again
               </CtaLink>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Real numbers only */}
-      <section className="border-b border-border bg-muted/50" aria-labelledby="stats-heading">
-        <div className="mx-auto max-w-6xl px-4 py-12">
-          <h2 id="stats-heading" className="sr-only">Your progress</h2>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <StatCard value={mine ? mine.xp.toLocaleString() : "—"} label="Your XP" />
-            <StatCard value={mine ? mine.cases : "—"} label="Cases completed" />
-            <StatCard value={mine?.rank ? `#${mine.rank}` : "—"} label="Leaderboard rank" />
-            <StatCard value={procedureCount ?? "—"} label="Procedures available" />
-          </div>
-        </div>
-      </section>
-
-      {/* How a case works */}
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
-          <motion.div {...REVEAL} className="mb-12 max-w-2xl">
-            <Eyebrow className="mb-4 block">How a case works</Eyebrow>
-            <h2 className="font-display text-4xl tracking-tight sm:text-5xl">
-              Three steps to the <span className="text-primary">OR</span>
-            </h2>
-          </motion.div>
-          <ol className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            {STEPS.map((step, i) => (
-              <motion.li key={step.title} {...REVEAL} transition={{ duration: 0.5, delay: i * 0.08, ease: EASE }} className="surface p-7">
-                <span className="font-mono-data text-sm font-semibold text-primary">0{i + 1}</span>
-                <h3 className="mt-4 text-lg font-semibold tracking-tight">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
-              </motion.li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* Starter cases */}
-      <section>
-        <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
-          <motion.div {...REVEAL} className="mb-12 flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <Eyebrow className="mb-4 block">Start here</Eyebrow>
-              <h2 className="font-display text-4xl tracking-tight sm:text-5xl">
-                Beginner <span className="text-primary">cases</span>
-              </h2>
-            </div>
-            <CtaLink href="/learn" variant="outline">
-              <BookOpen className="h-4 w-4" aria-hidden="true" /> Read the briefings
+            ) : (
+              <CtaLink href="/simulation?proc=appendectomy" size="lg" className="px-8">
+                <Activity className="h-5 w-5" aria-hidden="true" /> Start with an appendectomy
+              </CtaLink>
+            )}
+            <CtaLink href="/procedures" size="lg" variant="outline" className="px-8">
+              <Play className="h-5 w-5" aria-hidden="true" /> Your learning path
             </CtaLink>
-          </motion.div>
-          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {STARTER_CASES.map((c, i) => (
-              <motion.li key={c.id} {...REVEAL} transition={{ duration: 0.5, delay: i * 0.06, ease: EASE }}>
-                <Link href={`/simulation?proc=${c.id}`} className="procedure-card group flex h-full flex-col gap-4 p-6">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <DifficultyPill difficulty="Beginner" />
-                    {ENGINE_SCENARIO[c.id] && <Pill tone="terracotta">Real-time OR</Pill>}
-                  </div>
-                  <h3 className="text-lg font-semibold tracking-tight group-hover:text-primary">{c.name}</h3>
-                  <p className="label-mono">{c.tag}</p>
-                  <div className="mt-auto flex items-center justify-between border-t border-border pt-4 font-mono-data text-xs text-label">
-                    <span>
-                      {c.time} · {c.decisions} decisions
-                    </span>
-                    <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" aria-hidden="true" />
-                  </div>
-                </Link>
-              </motion.li>
-            ))}
-          </ul>
-        </div>
+          </>
+        }
+      />
+
+      {/* Duolingo-style dashboard: streak, daily goal, level. */}
+      <section className="mx-auto max-w-6xl px-4 pb-24" aria-labelledby="today-h">
+        <h2 id="today-h" className="sr-only">Today</h2>
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ type: "spring", damping: 22 }} className="grid gap-4 md:grid-cols-3">
+          <div className="surface flex items-center gap-5 p-6">
+            <span className={cn("flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl", progress.doneToday ? "bg-streak text-streak-foreground" : "bg-streak/10 text-streak")}>
+              <Flame className={cn("h-9 w-9", progress.doneToday && "fill-current")} aria-hidden="true" />
+            </span>
+            <div>
+              <p className="font-display text-4xl">{progress.streak}</p>
+              <p className="text-sm font-semibold text-muted-foreground">{progress.doneToday ? "day streak · today done" : progress.streak ? "day streak · do a case today" : "start a streak today"}</p>
+            </div>
+          </div>
+          <div className="surface flex items-center gap-5 p-6">
+            <GoalRing value={progress.todayXp} goal={progress.goal} />
+            <div>
+              <p className="font-display text-4xl">
+                {Math.min(progress.todayXp, progress.goal)}
+                <span className="text-xl text-muted-foreground">/{progress.goal}</span>
+              </p>
+              <p className="text-sm font-semibold text-muted-foreground">XP daily goal</p>
+            </div>
+          </div>
+          <div className="surface flex flex-col justify-center gap-3 p-6">
+            <LevelBar xp={progress.xp} />
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{progress.xp.toLocaleString()} XP total</span>
+              <StreakChip streak={progress.streak} doneToday={progress.doneToday} />
+            </div>
+          </div>
+        </motion.div>
+        <Link href="/procedures" className="group mt-4 flex items-center justify-between rounded-2xl border-2 border-border bg-card px-6 py-4 font-semibold transition-colors hover:border-primary">
+          <span>Continue your learning path</span>
+          <ArrowRight className="h-5 w-5 text-primary transition-transform group-hover:translate-x-1" aria-hidden="true" />
+        </Link>
       </section>
+
+      <MonitorChapter />
+      <RolesChapter />
+      <DebriefChapter />
+      <FinalChapter />
     </div>
   );
 }

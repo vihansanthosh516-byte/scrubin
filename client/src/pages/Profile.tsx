@@ -8,6 +8,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { CtaLink, Eyebrow, LoadingState, Pill, StatCard } from "@/components/scrubin";
+import { LevelBar, StreakChip } from "@/components/game";
+import { useProgress } from "@/hooks/useProgress";
+import { cn } from "@/lib/utils";
 
 type Stats = { totalSurgeries: number; bestScore: number; streak: number; perfectRun: number; hasReturned: boolean; fastestTime: number };
 
@@ -29,6 +32,7 @@ const ALL_BADGES: { id: string; name: string; desc: string; icon: React.Componen
 
 export default function Profile() {
   const { user } = useAuth();
+  const game = useProgress();
   const [stats, setStats] = useState({
     totalSurgeries: 0,
     bestScore: 0,
@@ -227,6 +231,27 @@ export default function Profile() {
       </div>
 
       <div className="mx-auto max-w-5xl px-4 py-12">
+        {/* Level and the week's streak calendar */}
+        <section aria-labelledby="level-h" className="surface mb-10 grid gap-6 p-6 md:grid-cols-[1.4fr_1fr] md:items-center">
+          <div>
+            <h2 id="level-h" className="sr-only">Level</h2>
+            <LevelBar xp={game.xp} />
+          </div>
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-bold">This week</span>
+              <StreakChip streak={game.streak} doneToday={game.doneToday} />
+            </div>
+            <ol className="grid grid-cols-7 gap-1.5" aria-label="Cases in the last 7 days">
+              {game.week.map((d) => (
+                <li key={d.date.toISOString()} className="flex flex-col items-center gap-1">
+                  <span className={cn("flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold", d.done ? "bg-streak text-streak-foreground" : "bg-muted text-label")}>{d.label}</span>
+                  <span className="sr-only">{d.date.toLocaleDateString()}: {d.done ? "case done" : "no case"}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
         {!loaded ? (
           <LoadingState label="Loading your cases" />
         ) : stats.totalSurgeries === 0 ? (
