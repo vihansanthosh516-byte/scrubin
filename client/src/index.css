@@ -4,10 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
-  ScrubIn design system: Clinical slate. Apple-style scroll storytelling around a clean clinical UI,
-  Duolingo-style game layer (XP, streaks, path) around the cases, never inside them.
+  ScrubIn design system: editorial, warm cream ground, white surfaces, one terracotta accent.
+  Rules, tokens and components: https://claude.ai/artifact/PwZQfxE5CdgyEXb24bQ8en
   Use the tokens (bg-background, bg-card, border-border, text-foreground, text-muted-foreground,
-  text-label, text-primary, bg-success / bg-warning / bg-destructive, bg-xp, bg-streak), never hex values.
+  text-label, text-primary, bg-success / bg-warning / bg-destructive) rather than hex values.
 */
 
 @theme inline {
@@ -58,136 +58,125 @@
   --color-label: var(--label);
   --color-nav-link: var(--nav-link);
   --color-surface-hover-border: var(--surface-hover-border);
-  --color-xp: var(--xp);
-  --color-xp-foreground: var(--xp-foreground);
-  --color-streak: var(--streak);
-  --color-streak-foreground: var(--streak-foreground);
-  /* Fixed brand marks (same in both themes): the wordmark dot, illustrations */
-  --color-brand: #0E7490;
-  --color-brand-bright: #22D3EE;
-  --color-ink: #0F172A;
-  /* Legacy names kept for old markup; they now point at the clinical slate palette. */
-  --color-terracotta: #0E7490;
-  --color-sage: #15803D;
-  --color-amber-warm: #B45309;
-  --color-carmine: #B91C1C;
+  /* Fixed brand palette (same in both themes): marks and illustrations, not UI chrome */
+  --color-cream: #FBF9F5;
+  --color-cream-deep: #F4F0E8;
+  --color-cream-accent: #EAE3D2;
+  --color-charcoal: #191919;
+  --color-warm-gray: #666059;
+  --color-warm-gray-soft: #8C827A;
+  --color-terracotta: #CC553D;
+  --color-terracotta-bright: #D95338;
+  --color-amber-warm: #D99B26;
+  --color-sage: #2E6B4B;
+  --color-carmine: #A32A2A;
+  --color-border-warm: #E2DDD1;
 }
 
 :root {
-  /* ScrubIn: Clinical slate. Cool white ground, near-black ink, one surgical-teal accent,
-     plus bright game colours (XP gold, streak orange) used only on gamified pieces. */
-  --radius: 0.75rem;
-  --background: #F7F8FA;
-  --foreground: #0F172A;
+  --radius: 0.25rem;
+  --background: #FBF9F5;
+  --foreground: #191919;
   --card: #FFFFFF;
-  --card-foreground: #0F172A;
+  --card-foreground: #191919;
   --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
-  --primary: #0E7490;
+  --popover-foreground: #191919;
+  --primary: #B5472F; /* a deeper cut of brand terracotta #CC553D so white text and terracotta text both pass AA */
   --primary-foreground: #FFFFFF;
-  --primary-hover: #0B6178;
-  --primary-shadow: #0A4D5F; /* the solid "ledge" under pressable buttons */
-  --secondary: #EEF2F6;
-  --secondary-foreground: #0F172A;
-  --muted: #EEF2F6;
-  --muted-foreground: #475569;
-  --accent: #E2E8F0;
-  --accent-foreground: #0F172A;
-  --destructive: #B91C1C;
+  --secondary: #F4F0E8;
+  --secondary-foreground: #191919;
+  --muted: #F4F0E8;
+  --muted-foreground: #666059;
+  --accent: #EAE3D2;
+  --accent-foreground: #191919;
+  --destructive: #A32A2A;
   --destructive-foreground: #FFFFFF;
-  --border: #E2E8F0;
-  --input: #CBD5E1;
-  --ring: #0E7490;
-  --chart-1: #0E7490;
-  --chart-2: #B45309;
-  --chart-3: #15803D;
-  --chart-4: #B91C1C;
-  --chart-5: #64748B;
+  --border: #E2DDD1;
+  --input: #E2DDD1;
+  --ring: #B5472F;
+  --chart-1: #CC553D;
+  --chart-2: #D99B26;
+  --chart-3: #2E6B4B;
+  --chart-4: #A32A2A;
+  --chart-5: #8C827A;
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #0F172A;
-  --sidebar-primary: #0E7490;
+  --sidebar-foreground: #191919;
+  --sidebar-primary: #B5472F;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #EEF2F6;
-  --sidebar-accent-foreground: #0F172A;
-  --sidebar-border: #E2E8F0;
-  --sidebar-ring: #0E7490;
-  --success: #15803D;
+  --sidebar-accent: #F4F0E8;
+  --sidebar-accent-foreground: #191919;
+  --sidebar-border: #E2DDD1;
+  --sidebar-ring: #B5472F;
+  /* Semantic additions (ScrubIn design system) */
+  --primary-hover: #A03E29;
+  --success: #2E6B4B;
   --success-foreground: #FFFFFF;
-  --warning: #B45309;
+  --warning: #99600F; /* deeper than brand amber #C27820 so warning text passes AA */
   --warning-foreground: #FFFFFF;
-  --info: #1D4ED8;
-  --label: #556274;
-  --nav-link: #475569;
-  --xp: #F5B400;
-  --xp-foreground: #0F172A;
-  --streak: #C2410C;
-  --streak-foreground: #FFFFFF;
-  --surface-hover-border: rgba(14, 116, 144, 0.45);
-  --shadow-surface: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-raised: 0 4px 16px rgba(15, 23, 42, 0.06);
-  --shadow-hover: 0 12px 28px rgba(15, 23, 42, 0.08);
-  --shadow-lift: 0 18px 40px rgba(15, 23, 42, 0.10);
-  --pill-sage-fg: #166534; --pill-sage-bg: rgba(21, 128, 61, 0.1); --pill-sage-border: rgba(21, 128, 61, 0.3);
-  --pill-amber-fg: #92400E; --pill-amber-bg: rgba(180, 83, 9, 0.1); --pill-amber-border: rgba(180, 83, 9, 0.3);
-  --pill-terracotta-fg: #0C6378; --pill-terracotta-bg: rgba(14, 116, 144, 0.1); --pill-terracotta-border: rgba(14, 116, 144, 0.3);
-  --pill-carmine-fg: #B91C1C; --pill-carmine-bg: rgba(185, 28, 28, 0.1); --pill-carmine-border: rgba(185, 28, 28, 0.3);
+  --info: #3F6680;
+  --label: #736A63; /* warm grey for eyebrows and meta; #8C827A (brand warm-gray-soft) is too light for small text */
+  --nav-link: #666059;
+  --surface-hover-border: rgba(204, 85, 61, 0.4);
+  --shadow-surface: 0 1px 2px rgba(25, 25, 25, 0.02);
+  --shadow-raised: 0 2px 12px rgba(25, 25, 25, 0.04);
+  --shadow-hover: 0 8px 24px rgba(25, 25, 25, 0.05);
+  --shadow-lift: 0 12px 32px rgba(25, 25, 25, 0.06);
+  --pill-sage-fg: #2E6B4B; --pill-sage-bg: rgba(46, 107, 75, 0.1); --pill-sage-border: rgba(46, 107, 75, 0.3);
+  --pill-amber-fg: #99600F; --pill-amber-bg: rgba(194, 120, 32, 0.1); --pill-amber-border: rgba(194, 120, 32, 0.3);
+  --pill-terracotta-fg: #B5472F; --pill-terracotta-bg: rgba(204, 85, 61, 0.1); --pill-terracotta-border: rgba(204, 85, 61, 0.3);
+  --pill-carmine-fg: #A32A2A; --pill-carmine-bg: rgba(163, 42, 42, 0.1); --pill-carmine-border: rgba(163, 42, 42, 0.3);
 }
 
 .dark {
-  --background: #0B1220;
-  --foreground: #E2E8F0;
-  --card: #111827;
-  --card-foreground: #E2E8F0;
-  --popover: #111827;
-  --popover-foreground: #E2E8F0;
-  --primary: #22D3EE;
-  --primary-foreground: #0B1220;
-  --primary-hover: #67E8F9;
-  --primary-shadow: #0E7490;
-  --secondary: #1E293B;
-  --secondary-foreground: #E2E8F0;
-  --muted: #1E293B;
-  --muted-foreground: #94A3B8;
-  --accent: #1E293B;
-  --accent-foreground: #E2E8F0;
-  --destructive: #F87171;
-  --destructive-foreground: #0B1220;
-  --border: #1E293B;
-  --input: #334155;
-  --ring: #22D3EE;
-  --chart-1: #22D3EE;
-  --chart-2: #FBBF24;
-  --chart-3: #4ADE80;
-  --chart-4: #F87171;
-  --chart-5: #94A3B8;
-  --sidebar: #111827;
-  --sidebar-foreground: #E2E8F0;
-  --sidebar-primary: #22D3EE;
-  --sidebar-primary-foreground: #0B1220;
-  --sidebar-accent: #1E293B;
-  --sidebar-accent-foreground: #E2E8F0;
-  --sidebar-border: #1E293B;
-  --sidebar-ring: #22D3EE;
-  --success: #4ADE80;
-  --success-foreground: #0B1220;
-  --warning: #FBBF24;
-  --warning-foreground: #0B1220;
-  --info: #60A5FA;
-  --label: #94A3B8;
-  --nav-link: #CBD5E1;
-  --xp: #FBBF24;
-  --xp-foreground: #0B1220;
-  --streak: #FB923C;
-  --streak-foreground: #0B1220;
-  --surface-hover-border: rgba(34, 211, 238, 0.45);
-  --shadow-surface: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.35);
-  --shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.45);
-  --shadow-lift: 0 18px 40px rgba(0, 0, 0, 0.5);
-  --pill-sage-fg: #4ADE80; --pill-sage-bg: rgba(74, 222, 128, 0.12); --pill-sage-border: rgba(74, 222, 128, 0.35);
-  --pill-amber-fg: #FBBF24; --pill-amber-bg: rgba(251, 191, 36, 0.12); --pill-amber-border: rgba(251, 191, 36, 0.35);
-  --pill-terracotta-fg: #22D3EE; --pill-terracotta-bg: rgba(34, 211, 238, 0.12); --pill-terracotta-border: rgba(34, 211, 238, 0.35);
-  --pill-carmine-fg: #F87171; --pill-carmine-bg: rgba(248, 113, 113, 0.12); --pill-carmine-border: rgba(248, 113, 113, 0.35);
+  --background: #161310;
+  --foreground: #EDEAE4;
+  --card: #1E1A16;
+  --card-foreground: #EDEAE4;
+  --popover: #1E1A16;
+  --popover-foreground: #EDEAE4;
+  --primary: #E06D53; /* lighter in dark so it reads as text; buttons put dark ink on it */
+  --primary-foreground: #161310;
+  --secondary: #26211B;
+  --secondary-foreground: #EDEAE4;
+  --muted: #26211B;
+  --muted-foreground: #A89F95;
+  --accent: #332C24;
+  --accent-foreground: #EDEAE4;
+  --destructive: #C84040;
+  --destructive-foreground: #FFFFFF;
+  --border: #3A342C;
+  --input: #3A342C;
+  --ring: #E06D53;
+  --chart-1: #D95338;
+  --chart-2: #D99B26;
+  --chart-3: #5E8C74;
+  --chart-4: #C84040;
+  --chart-5: #A89F95;
+  --sidebar: #1E1A16;
+  --sidebar-foreground: #EDEAE4;
+  --sidebar-primary: #E06D53;
+  --sidebar-primary-foreground: #161310;
+  --sidebar-accent: #26211B;
+  --sidebar-accent-foreground: #EDEAE4;
+  --sidebar-border: #3A342C;
+  --sidebar-ring: #E06D53;
+  --primary-hover: #E5765C;
+  --success: #5E8C74;
+  --success-foreground: #161310;
+  --warning: #D99B26;
+  --warning-foreground: #161310;
+  --info: #7FA6C2;
+  --label: #A89F95;
+  --nav-link: #C2BBB0;
+  --surface-hover-border: rgba(217, 83, 56, 0.4);
+  --shadow-surface: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-raised: 0 2px 12px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lift: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --pill-sage-fg: #8FBFA4; --pill-sage-bg: rgba(94, 140, 116, 0.14); --pill-sage-border: rgba(94, 140, 116, 0.4);
+  --pill-amber-fg: #E0B060; --pill-amber-bg: rgba(217, 155, 38, 0.14); --pill-amber-border: rgba(217, 155, 38, 0.4);
+  --pill-terracotta-fg: #E08866; --pill-terracotta-bg: rgba(217, 83, 56, 0.14); --pill-terracotta-border: rgba(217, 83, 56, 0.4);
+  --pill-carmine-fg: #E08080; --pill-carmine-bg: rgba(200, 64, 64, 0.14); --pill-carmine-border: rgba(200, 64, 64, 0.4);
 }
 
 @layer base {
@@ -210,7 +199,7 @@
     @apply cursor-pointer;
   }
   html { scroll-behavior: smooth; }
-  ::selection { background-color: rgba(14, 116, 144, 0.18); color: inherit; }
+  ::selection { background-color: rgba(204, 85, 61, 0.18); color: inherit; }
   /* A visible keyboard focus everywhere; components with their own ring override this. */
   :where(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 }
@@ -221,7 +210,7 @@
   @media (min-width: 1024px) { .container { padding-left: 2rem; padding-right: 2rem; max-width: 1280px; } }
 
   /* Editorial typography helpers */
-  .font-display { font-family: 'Inter', -apple-system, sans-serif; font-weight: 800; letter-spacing: -0.045em; }
+  .font-display { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; letter-spacing: -0.01em; }
   .font-mono-data { font-family: 'JetBrains Mono', 'Space Mono', monospace; }
   .section-tag { font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--label); }
   .label-mono { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--label); }
@@ -232,7 +221,7 @@
     background: var(--card);
     color: var(--card-foreground);
     border: 1px solid var(--border);
-    border-radius: 1rem;
+    border-radius: 0.25rem;
     box-shadow: var(--shadow-surface);
     transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.25s ease, box-shadow 0.25s ease;
   }
@@ -250,10 +239,6 @@
   .pill-carmine { background: var(--pill-carmine-bg); color: var(--pill-carmine-fg); border: 1px solid var(--pill-carmine-border); }
   .pill-neutral { background: var(--muted); color: var(--muted-foreground); border: 1px solid var(--border); }
 
-  /* Duolingo-style pressable: a solid ledge under the button that squashes on press. */
-  .pressable { box-shadow: 0 4px 0 var(--ledge, var(--primary-shadow)); transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.15s ease; }
-  .pressable:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 var(--ledge, var(--primary-shadow)); }
-
   /* Skip link: visible only on keyboard focus */
   .skip-link { position: absolute; left: 1rem; top: -3rem; z-index: 100; padding: 0.5rem 1rem; border-radius: 0.125rem; background: var(--primary); color: var(--primary-foreground); font-weight: 600; font-size: 0.875rem; transition: top 0.15s ease; }
   .skip-link:focus { top: 1rem; }
@@ -264,8 +249,8 @@
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.35); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.55); }
+::-webkit-scrollbar-thumb { background: rgba(140, 130, 122, 0.35); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(140, 130, 122, 0.55); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

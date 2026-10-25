@@ -264,7 +264,7 @@ export function PatientMonitor({ readout, alarms, paused, muted, showAlarmChips 
             <div className="flex items-center justify-between text-[10px] uppercase tracking-wider" style={{ color: COLORS.art }}>
               <span>{r?.art ? "ART" : "NIBP"}</span>
               {!r?.art && a.has("nibp") && (
-                <span className="normal-case text-[#94A3B8]">
+                <span className="text-muted-foreground normal-case">
                   {r?.nibp_cycling ? "cycling…" : r?.nibp_age_s != null ? `${Math.floor(r.nibp_age_s / 60)}m ago` : ""}
                 </span>
               )}
@@ -292,7 +292,7 @@ export function PatientMonitor({ readout, alarms, paused, muted, showAlarmChips 
             </div>
           )}
           {r?.tof && (
-            <div className="px-3 py-1.5 text-[11px] text-[#94A3B8]">
+            <div className="px-3 py-1.5 text-[11px] text-muted-foreground">
               TOF {r.tof.count}/4{r.tof.ratio != null ? ` · ratio ${r.tof.ratio.toFixed(2)}` : ""}
             </div>
           )}
@@ -335,7 +335,7 @@ function Numeric({
     <div className={`px-3 ${small ? "py-1.5" : "py-2"}`}>
       <div className="flex items-baseline justify-between text-[10px] uppercase tracking-wider" style={{ color }}>
         <span>{label}</span>
-        <span className="normal-case">{unit}</span>
+        <span className="opacity-60 normal-case">{unit}</span>
       </div>
       <div
         className={`${big ? "text-4xl" : small ? "text-lg" : "text-2xl"} font-semibold tabular-nums leading-tight transition-colors duration-500 ${alarm ? "text-destructive animate-pulse" : ""}`}
@@ -343,7 +343,7 @@ function Numeric({
       >
         {typeof shown === "number" ? <TweenNumber value={shown} /> : shown}
       </div>
-      {sub && <div className="text-[10px] uppercase tracking-wide" style={{ color }}>{sub}</div>}
+      {sub && <div className="text-[10px] uppercase tracking-wide opacity-70" style={{ color }}>{sub}</div>}
     </div>
   );
 }

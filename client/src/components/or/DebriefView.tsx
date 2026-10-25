@@ -1,50 +1,15 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/api";
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { AlertTriangle, CheckCircle2, MinusCircle, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { CtaLink, Eyebrow } from "@/components/scrubin";
 import type { Debrief } from "@/engine/types";
 import { fmtTime } from "@/lib/format";
 
-// Every grade carries a word and an icon, never colour alone.
 const GRADE_STYLE = {
-  good: { box: "border-success/40 bg-success/10", text: "text-success", label: "Good", Icon: CheckCircle2 },
-  fair: { box: "border-warning/40 bg-warning/10", text: "text-warning", label: "Fair", Icon: MinusCircle },
-  poor: { box: "border-destructive/40 bg-destructive/10", text: "text-destructive", label: "Needs work", Icon: XCircle },
-  "n/a": { box: "border-border", text: "text-muted-foreground", label: "Not applicable", Icon: MinusCircle },
+  good: "text-sage dark:text-[#5E8C74] border-sage/40 bg-sage/10",
+  fair: "text-amber-warm border-amber-warm/40 bg-amber-warm/10",
+  poor: "text-destructive border-destructive/40 bg-destructive/10",
+  "n/a": "text-muted-foreground border-border",
 } as const;
-
-const band = (score: number) => (score >= 85 ? "Excellent" : score >= 70 ? "Good" : score >= 50 ? "Fair" : "Needs work");
-
-type Trend = Debrief["trend"][number] & { min: number };
-const AXIS = { fill: "var(--muted-foreground)", fontSize: 11 };
-
-/** One small chart per physiological group (a shared 0–180 axis hid everything but HR). */
-function VitalChart({ title, data, lines, domain, refs }: { title: string; data: Trend[]; lines: { key: keyof Trend; name: string; color: string }[]; domain: [number, number]; refs?: { y: number; label: string; color: string }[] }) {
-  return (
-    <figure className="surface p-4">
-      <figcaption className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</figcaption>
-      <div className="h-[200px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-            <CartesianGrid stroke="var(--border)" />
-            <XAxis dataKey="min" type="number" domain={[0, "dataMax"]} tickFormatter={(m: number) => `${Math.round(m)}m`} tick={AXIS} stroke="var(--border)" />
-            <YAxis tick={AXIS} domain={domain} stroke="var(--border)" />
-            <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: 12, borderRadius: 2 }} labelFormatter={(m) => `${Math.round(Number(m))} min`} />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-            {refs?.map((r) => (
-              <ReferenceLine key={r.y} y={r.y} stroke={r.color} strokeDasharray="4 4" label={{ value: r.label, position: "insideTopRight", fill: r.color, fontSize: 10 }} />
-            ))}
-            {lines.map((l) => (
-              <Line key={String(l.key)} dataKey={l.key as string} name={l.name} stroke={l.color} dot={false} strokeWidth={2} isAnimationActive={false} />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </figure>
-  );
-}
 
 const HIDDEN_LABELS: Record<string, (v: any) => string> = {
   cormack_lehane: (v) => `Laryngoscopy view with a Macintosh blade: Cormack–Lehane grade ${v} (a video laryngoscope usually shows one grade better)`,
@@ -105,182 +70,123 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
   }, [debrief, procedureName]);
 
   const domains = Array.from(new Set(debrief.items.map((i) => i.domain)));
-  const trend: Trend[] = debrief.trend.map((p) => ({ ...p, min: p.t / 60 }));
-  const outcomeLabel = { pacu: "Extubated and handed to recovery", death: "Patient died", in_progress: "Case ended early", surgery_complete: "Operation complete, handed over to anaesthesia" }[debrief.outcome] ?? debrief.outcome;
-  const counts = debrief.items.reduce((m, i) => ({ ...m, [i.grade]: (m[i.grade] ?? 0) + 1 }), {} as Record<string, number>);
+  const trend = debrief.trend.map((p) => ({ ...p, min: p.t / 60 }));
+  const outcomeLabel = { pacu: "Extubated → PACU", death: "Patient died", in_progress: "Case ended early", surgery_complete: "Operation complete — handed over to anesthesia" }[debrief.outcome] ?? debrief.outcome;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 text-foreground">
-      <header className="flex flex-wrap items-end justify-between gap-6">
-        <div className="min-w-0">
-          <Eyebrow variant="hero" className="mb-3 flex">Debrief · {debrief.role === "anesthesia" ? "Anaesthesiologist" : "Surgeon"}</Eyebrow>
-          <h1 className="font-display text-4xl leading-[1.02] tracking-tight sm:text-5xl">{procedureName}</h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            {outcomeLabel} · {debrief.duration_min} min · blood loss {debrief.blood_loss_ml} mL · fluids {debrief.fluids_in_ml} mL
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <CtaLink href="/or/cases" variant="outline">All my cases</CtaLink>
-          <Button onClick={onRestart}>New case</Button>
-        </div>
-      </header>
-
-      {/* The verdict first: score on its scale, what it means, and where the marks went. */}
-      <section aria-labelledby="verdict-h" className="surface-raised grid gap-6 p-6 md:grid-cols-[auto_1fr] md:items-center">
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 id="verdict-h" className="section-tag">Process and outcome score</h2>
-          {debrief.score != null ? (
-            <p className="mt-2 font-mono-data tabular-nums">
-              <span className="text-6xl font-semibold text-primary">{debrief.score}</span>
-              <span className="ml-1 text-xl text-muted-foreground">/ 100</span>
-              <span className="ml-3 rounded-sm border border-border px-2 py-1 align-middle font-sans text-xs font-semibold uppercase tracking-wider">{band(debrief.score)}</span>
-            </p>
-          ) : (
-            <p className="mt-2 text-lg text-muted-foreground">No score: the case ended before the operation began.</p>
-          )}
-        </div>
-        <ul className="flex flex-wrap gap-2 text-sm" aria-label="Debrief items by grade">
-          {(["good", "fair", "poor"] as const).map((g) => {
-            const G = GRADE_STYLE[g];
-            return counts[g] ? (
-              <li key={g} className={`flex items-center gap-1.5 rounded-sm border px-3 py-1.5 ${G.box} ${G.text}`}>
-                <G.Icon className="h-4 w-4" aria-hidden="true" />
-                <span className="font-semibold">{counts[g]}</span> {G.label.toLowerCase()}
-              </li>
-            ) : null;
-          })}
-        </ul>
-      </section>
-
-      <section aria-labelledby="trend-h" className="space-y-3">
-        <h2 id="trend-h" className="font-display text-3xl tracking-tight">What the patient did</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <VitalChart
-            title="Circulation"
-            data={trend}
-            domain={[0, 180]}
-            lines={[
-              { key: "hr", name: "Heart rate (bpm)", color: "var(--chart-3)" },
-              { key: "map", name: "MAP (mmHg)", color: "var(--chart-1)" },
-            ]}
-            refs={[{ y: 65, label: "MAP 65", color: "var(--destructive)" }]}
-          />
-          <VitalChart
-            title="Oxygen and ventilation"
-            data={trend}
-            domain={[0, 110]}
-            lines={[
-              { key: "spo2", name: "SpO₂ (%)", color: "var(--info)" },
-              { key: "etco2", name: "EtCO₂ (mmHg)", color: "var(--chart-2)" },
-            ]}
-            refs={[{ y: 90, label: "SpO₂ 90", color: "var(--destructive)" }]}
-          />
-          {debrief.role === "anesthesia" && <VitalChart title="Depth of anaesthesia" data={trend} domain={[0, 100]} lines={[{ key: "bis", name: "BIS", color: "var(--chart-5)" }]} refs={[{ y: 60, label: "BIS 60", color: "var(--warning)" }]} />}
-        </div>
-        <details className="surface text-sm">
-          <summary className="cursor-pointer select-none px-4 py-3 font-medium">View the data as a table</summary>
-          <div className="max-h-72 overflow-auto border-t border-border">
-            <table className="w-full text-left font-mono-data text-xs tabular-nums">
-              <caption className="sr-only">Vital signs sampled through the case</caption>
-              <thead className="sticky top-0 bg-card text-label">
-                <tr>
-                  {["Time", "HR", "MAP", "SpO₂", "EtCO₂", "BIS"].map((h) => (
-                    <th key={h} scope="col" className="px-3 py-2 font-normal">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {trend.filter((_, i) => i % Math.max(1, Math.round(trend.length / 40)) === 0).map((p) => (
-                  <tr key={p.t}>
-                    <td className="px-3 py-1.5">{fmtTime(p.t)}</td>
-                    <td className="px-3 py-1.5">{p.hr}</td>
-                    <td className="px-3 py-1.5">{p.map}</td>
-                    <td className="px-3 py-1.5">{p.spo2}</td>
-                    <td className="px-3 py-1.5">{p.etco2}</td>
-                    <td className="px-3 py-1.5">{p.bis}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="text-xs uppercase tracking-[0.2em] text-primary">Debrief · {debrief.role === "anesthesia" ? "Anesthesiologist" : "Surgeon"}</div>
+          <h1 className="text-3xl font-bold">
+            {procedureName}
+          </h1>
+          <div className="text-sm text-muted-foreground">
+            {outcomeLabel} · {debrief.duration_min} min · EBL {debrief.blood_loss_ml} mL · fluids {debrief.fluids_in_ml} mL
           </div>
-        </details>
-      </section>
+        </div>
+        <div className="flex items-center gap-4">
+          {debrief.score != null && (
+            <div className="text-right">
+              <div className="text-5xl font-bold font-mono-data text-primary">{debrief.score}</div>
+              <div className="text-[11px] text-muted-foreground">process & outcome score</div>
+            </div>
+          )}
+          <button onClick={onRestart} className="px-4 py-2 rounded-sm border border-border hover:bg-primary/10 text-sm">
+            New case
+          </button>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
-        <section aria-labelledby="items-h" className="space-y-6">
-          <h2 id="items-h" className="font-display text-3xl tracking-tight">How you did</h2>
+      <div className="surface surface-hover p-4">
+        <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">What the patient did</div>
+        <div className="h-[280px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={trend}>
+              <CartesianGrid stroke="var(--border)" />
+              <XAxis dataKey="min" type="number" domain={[0, "dataMax"]} tickFormatter={(m: number) => `${Math.round(m)}m`} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+              <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} domain={[0, 180]} />
+              <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: 12 }} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <ReferenceLine y={65} stroke="#A32A2A" strokeDasharray="4 4" />
+              <ReferenceLine y={90} stroke="#2E6B4B" strokeDasharray="4 4" />
+              <Line dataKey="hr" name="HR" stroke="#2E6B4B" dot={false} strokeWidth={1.5} />
+              <Line dataKey="map" name="MAP" stroke="#CC553D" dot={false} strokeWidth={1.5} />
+              <Line dataKey="spo2" name="SpO₂" stroke="#2F7FA3" dot={false} strokeWidth={1.5} />
+              <Line dataKey="etco2" name="EtCO₂" stroke="#D99B26" dot={false} strokeWidth={1.5} />
+              <Line dataKey="bis" name="BIS" stroke="#8C827A" dot={false} strokeWidth={1} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+        <div className="space-y-5">
           {domains.map((domain) => (
             <div key={domain} className="space-y-2">
-              <h3 className="section-tag">{domain}</h3>
-              <ul className="space-y-2">
-                {debrief.items
-                  .filter((i) => i.domain === domain)
-                  .map((i, idx) => {
-                    const G = GRADE_STYLE[i.grade];
-                    return (
-                      <li key={idx} className={`rounded-sm border p-4 ${G.box}`}>
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="font-semibold">{i.title}</span>
-                          <span className={`flex shrink-0 items-center gap-1 text-xs font-semibold uppercase tracking-wider ${G.text}`}>
-                            <G.Icon className="h-4 w-4" aria-hidden="true" /> {G.label}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-sm">{i.detail}</p>
-                        {i.teaching && <p className="mt-2 text-sm text-muted-foreground">{i.teaching}</p>}
-                      </li>
-                    );
-                  })}
-              </ul>
+              <h3 className="text-sm uppercase tracking-[0.14em] text-primary">{domain}</h3>
+              {debrief.items
+                .filter((i) => i.domain === domain)
+                .map((i, idx) => (
+                  <div key={idx} className={`rounded-sm border p-3 ${GRADE_STYLE[i.grade]}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-foreground">{i.title}</span>
+                      <span className="text-[10px] uppercase tracking-wider">{i.grade}</span>
+                    </div>
+                    <div className="text-sm text-foreground mt-0.5">{i.detail}</div>
+                    {i.teaching && <div className="text-xs text-muted-foreground mt-1">{i.teaching}</div>}
+                  </div>
+                ))}
             </div>
           ))}
-        </section>
-        <aside className="space-y-5">
-          <section className="surface p-4" aria-labelledby="notes-h">
-            <h2 id="notes-h" className="section-tag mb-2 text-success">Attending notes</h2>
+        </div>
+        <div className="space-y-5">
+          <div className="surface surface-hover p-4">
+            <div className="text-xs uppercase tracking-wider text-sage dark:text-[#5E8C74] mb-2">Attending notes</div>
             {notes ? (
-              <p className="whitespace-pre-line text-sm leading-relaxed">{plainNotes(notes)}</p>
+              <p className="text-sm whitespace-pre-line leading-relaxed">{plainNotes(notes)}</p>
             ) : notesError ? (
-              <p className="text-sm text-muted-foreground">AI attending notes are unavailable right now. The structured debrief is complete without them.</p>
+              <p className="text-xs text-muted-foreground">AI attending notes are unavailable right now. The structured debrief is complete without them.</p>
             ) : (
-              <p role="status" className="text-sm text-muted-foreground">Writing notes…</p>
+              <p className="text-xs text-muted-foreground">Writing notes…</p>
             )}
-          </section>
-          <section className="surface p-4" aria-labelledby="hidden-h">
-            <h2 id="hidden-h" className="section-tag mb-2">What you couldn't see</h2>
-            <ul className="space-y-1.5 text-sm">
+          </div>
+          <div className="surface surface-hover p-4">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">What you couldn't see</div>
+            <ul className="text-sm space-y-1">
               {Object.entries(debrief.hidden).map(([k, v]) => (
                 <li key={k}>{HIDDEN_LABELS[k]?.(v) ?? `${k}: ${String(v)}`}</li>
               ))}
               {debrief.surgery.occult.map((o, i) => (
-                <li key={`o${i}`} className="flex gap-1.5 text-destructive">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> {o}
+                <li key={`o${i}`} className="text-destructive">
+                  {o}
                 </li>
               ))}
             </ul>
-          </section>
+          </div>
           {debrief.surgery.notes.length > 0 && (
-            <section className="surface p-4" aria-labelledby="near-h">
-              <h2 id="near-h" className="section-tag mb-2">What almost went wrong</h2>
-              <ul className="space-y-1.5 text-sm">
+            <div className="surface surface-hover p-4">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">What almost went wrong</div>
+              <ul className="text-sm space-y-1">
                 {debrief.surgery.notes.map((n, i) => (
                   <li key={`n${i}`}>{n}</li>
                 ))}
               </ul>
-            </section>
+            </div>
           )}
-          <section className="surface p-4" aria-labelledby="timeline-h">
-            <h2 id="timeline-h" className="section-tag mb-2">Timeline</h2>
-            <ol className="max-h-[360px] space-y-1 overflow-y-auto font-mono-data text-xs">
+          <div className="surface surface-hover p-4">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Timeline</div>
+            <div className="max-h-[360px] overflow-y-auto space-y-0.5 text-xs font-mono-data">
               {debrief.timeline
                 .filter((e) => !["assess", "say"].includes(e.kind) || (e.kind === "say" && e.intent) || (e.kind === "assess" && e.what === "cuff_leak"))
                 .map((e, i) => (
-                  <li key={i}>
-                    <span className="text-label">{fmtTime(e.t)}</span> {describe(e)}
-                  </li>
+                  <div key={i}>
+                    <span className="text-muted-foreground">{fmtTime(e.t)}</span> {describe(e)}
+                  </div>
                 ))}
-            </ol>
-          </section>
-        </aside>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -305,9 +211,9 @@ function describe(e: { kind: string; [k: string]: any }): string {
     case "volatile":
       return `sevo ${e.percent}%`;
     case "complication":
-      return `Complication: ${e.name}${e.source ? ` (${e.source})` : ""}`;
+      return `⚠ ${e.name}${e.source ? ` (${e.source})` : ""}`;
     case "surgery_task_start":
-      return `${String(e.task).replace(/_/g, " ")}${e.instrument ? ` — ${String(e.instrument).replace(/_(\d+)$/, " $1 mm").replace(/_/g, " ")}` : ""}`;
+      return `▸ ${String(e.task).replace(/_/g, " ")}${e.instrument ? ` — ${String(e.instrument).replace(/_(\d+)$/, " $1 mm").replace(/_/g, " ")}` : ""}`;
     case "assess":
       return "cuff-leak test";
     case "position":

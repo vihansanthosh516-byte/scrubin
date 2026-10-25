@@ -391,9 +391,9 @@ function SimulationPage() {
 
   if (loadingScenario) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
+      <div className="min-h-screen bg-[#FBF9F5] flex flex-col items-center justify-center space-y-4">
         <div className="w-16 h-16 rounded-full border-t-2 border-primary animate-spin" />
-        <p className="text-foreground font-mono">Loading simulation state...</p>
+        <p className="text-[#191919] dark:text-[#EDEAE4] font-mono">Loading simulation state...</p>
       </div>
     );
   }
@@ -864,16 +864,16 @@ function SimulationPage() {
     ? "Completed"
     : "In Surgery";
   const statusBadgeClass = isDeceased
-    ? "bg-destructive/10 border-destructive text-destructive animate-pulse"
+    ? "bg-[#A32A2A]/10 border-[#A32A2A] text-[#A32A2A] animate-pulse"
     : isBranched
-    ? "bg-destructive/10 border-destructive text-destructive animate-pulse"
+    ? "bg-[#A32A2A]/10 border-[#A32A2A] text-[#A32A2A] animate-pulse"
     : isCompleted
-    ? "bg-success/10 border-success/40 text-success"
+    ? "bg-[#2E6B4B]/10 border-[#2E6B4B]/40 text-[#2E6B4B]"
     : "bg-primary/10 border-primary/30 text-primary";
 
   if (!simId) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+      <div className="min-h-screen bg-[#FBF9F5] flex items-center justify-center p-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -882,30 +882,30 @@ function SimulationPage() {
           <div className="w-20 h-20 bg-primary/10 rounded-sm flex items-center justify-center mx-auto mb-6 border border-primary/20">
             <Activity className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2 uppercase tracking-tight">{PATIENT?.name ? `Start ${PATIENT.name}'s Surgery` : 'Start Surgery'}</h1>
-          <p className="text-muted-foreground mb-8">The ScrubIn Causal Engine will boot a simulation session for this procedure. Each run rolls a different patient: their ASA class and how sick they arrive are shown in the patient panel once the case starts.</p>
+          <h1 className="text-3xl font-bold text-[#191919] dark:text-[#EDEAE4] mb-2 uppercase tracking-tight">{PATIENT?.name ? `Start ${PATIENT.name}'s Surgery` : 'Start Surgery'}</h1>
+          <p className="text-[#666059] dark:text-[#C2BBB0] mb-8">The ScrubIn Causal Engine will boot a simulation session for this procedure. Each run rolls a different patient: their ASA class and how sick they arrive are shown in the patient panel once the case starts.</p>
           {engineReconnecting && !startError && (
-            <div className="p-3 mb-6 bg-[#3A2A0A]/10 border border-warning/60 rounded-sm text-left animate-pulse">
+            <div className="p-3 mb-6 bg-[#3A2A0A]/10 border border-[#D99B26]/60 rounded-sm text-left animate-pulse">
               <p className="text-xs font-bold text-[#8A5A00] dark:text-[#E0B060]">
                 ⚠️ Reconnecting to Surgical Engine…
               </p>
-              <p className="text-[11px] text-label mt-0.5">
+              <p className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] mt-0.5">
                 The engine is unreachable right now. Retrying automatically — press the button again once it is back.
               </p>
             </div>
           )}
           {sessionExpired && (
-            <div className="p-3 mb-6 bg-warning/8 border border-warning/40 rounded-sm text-left">
+            <div className="p-3 mb-6 bg-[#C27820]/8 border border-[#C27820]/40 rounded-sm text-left">
               <p className="text-xs font-bold text-[#8A5A00] dark:text-[#E0B060]">Your sign-in has expired</p>
-              <p className="text-[11px] text-label mt-0.5">
+              <p className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] mt-0.5">
                 Results from this case will stay on this device until you{" "}
                 <button className="underline font-semibold" onClick={() => { logout(); setLocation("/signin"); }}>sign in again</button>.
               </p>
             </div>
           )}
           {startError && (
-            <div className="p-4 mb-6 bg-destructive/8 border border-destructive/40 rounded-sm text-destructive text-left">
-              <h3 className="font-bold text-destructive mb-1">Initialization Failed</h3>
+            <div className="p-4 mb-6 bg-[#A32A2A]/8 border border-[#A32A2A]/40 rounded-sm text-[#A32A2A] text-left">
+              <h3 className="font-bold text-[#A32A2A] mb-1">Initialization Failed</h3>
               <p className="text-sm">{startError}</p>
             </div>
           )}
@@ -924,7 +924,7 @@ function SimulationPage() {
   return (
     <div className="min-h-screen lg:h-dvh bg-background text-foreground relative overflow-hidden">
       {/* Subtle warm editorial texture — no neon */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "radial-gradient(#64748B 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "radial-gradient(#8C827A 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
 
       <div className="relative z-10 mx-auto flex h-full w-full max-w-[1600px] flex-col gap-3 px-4 pt-20 pb-3">
 
@@ -932,17 +932,17 @@ function SimulationPage() {
         <div className="shrink-0 flex items-center justify-between gap-4 surface surface-hover px-4 py-2.5">
           <div className="flex items-center gap-4 min-w-0">
             <div className="flex items-center gap-2 shrink-0">
-              <ShieldCheck className="w-4 h-4 text-success" />
+              <ShieldCheck className="w-4 h-4 text-[#2E6B4B]" />
               <span className="font-bold text-sm tracking-tight whitespace-nowrap">SCRUBIN CAUSAL CORE</span>
             </div>
-            <div className="hidden lg:block h-6 w-px bg-border shrink-0" />
+            <div className="hidden lg:block h-6 w-px bg-[#E2DDD1] shrink-0" />
             <div className="hidden lg:flex items-center gap-5 min-w-0">
               <div className="flex flex-col min-w-0">
-                <span className="text-[11px] text-label uppercase">Patient</span>
+                <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase">Patient</span>
                 <span className="text-xs font-bold truncate">{PATIENT?.name || 'Unknown'} ({PATIENT?.age || '?'}y/o {PATIENT?.sex || ''})</span>
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-[11px] text-label uppercase">Procedure</span>
+                <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase">Procedure</span>
                 <span className="text-xs font-bold text-primary truncate">{procId.toUpperCase()}</span>
               </div>
             </div>
@@ -950,13 +950,13 @@ function SimulationPage() {
 
           <div className="flex items-center gap-3 shrink-0">
             {saveMessage && (
-              <div className={`absolute -bottom-10 right-0 px-3 py-1.5 rounded-sm text-xs font-bold animate-in fade-in slide-in-from-top-2 whitespace-nowrap z-50 ${saveMessage.type === 'success' ? 'bg-success/10 text-success border border-success/30' : 'bg-destructive/10 text-destructive border border-destructive/30'}`}>
+              <div className={`absolute -bottom-10 right-0 px-3 py-1.5 rounded-sm text-xs font-bold animate-in fade-in slide-in-from-top-2 whitespace-nowrap z-50 ${saveMessage.type === 'success' ? 'bg-[#2E6B4B]/10 text-[#2E6B4B] border border-[#2E6B4B]/30' : 'bg-[#A32A2A]/10 text-[#A32A2A] border border-[#A32A2A]/30'}`}>
                 {saveMessage.text}
               </div>
             )}
             <div className="hidden xl:flex flex-col items-end">
-              <span className="text-[11px] text-label uppercase">Session ID</span>
-              <span className="text-[10px] font-mono text-muted-foreground ">{simId}</span>
+              <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase">Session ID</span>
+              <span className="text-[10px] font-mono text-[#666059] dark:text-[#C2BBB0]">{simId}</span>
             </div>
 
             {/* A finished case is already recorded with its score; saving it again
@@ -979,7 +979,7 @@ function SimulationPage() {
             >
               {isSaving ? (
                 <>
-                  <div className="w-3 h-3 border-2 border-border border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3 h-3 border-2 border-[#3A342C] border-t-transparent rounded-full animate-spin" />
                   Saving...
                 </>
               ) : (
@@ -999,7 +999,7 @@ function SimulationPage() {
               </button>
               <button
                 onClick={() => setMode("replay")}
-                className={`px-3 py-1.5 rounded-sm text-xs font-bold transition-all ${mode === "replay" ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"}`}
+                className={`px-3 py-1.5 rounded-sm text-xs font-bold transition-all ${mode === "replay" ? "bg-[#CC553D] text-white" : "text-muted-foreground hover:text-foreground"}`}
               >
                 REPLAY
               </button>
@@ -1021,40 +1021,40 @@ function SimulationPage() {
                 </span>
               </div>
               {patientProfile && (
-                <div className="mb-3 rounded-sm border border-border bg-card dark:bg-[#221F1C] px-2.5 py-2">
-                  <span className="block text-[11px] text-label uppercase mb-0.5">Patient Profile</span>
-                  <span className="text-xs font-bold text-foreground ">
+                <div className="mb-3 rounded-sm border border-[#E2DDD1] dark:border-[#3A342C] bg-white dark:bg-[#221F1C] px-2.5 py-2">
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Patient Profile</span>
+                  <span className="text-xs font-bold text-[#191919] dark:text-[#EDEAE4]">
                     {patientProfile.asaLabel || `ASA ${patientProfile.asaClass}`}
                   </span>
-                  <span className="block text-[10px] text-primary font-medium">
+                  <span className="block text-[10px] text-[#CC553D] dark:text-[#E06D53] font-medium">
                     {patientProfile.presentationLabel || patientProfile.presentation}
                   </span>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                 <div className="min-w-0">
-                  <span className="block text-[11px] text-label uppercase mb-0.5">Name</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Name</span>
                   <span className="font-bold truncate block">{PATIENT?.name || 'Unknown'}</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-[11px] text-label uppercase mb-0.5">Age / Sex</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Age / Sex</span>
                   <span className="font-bold">{PATIENT?.age || '?'}y/o {PATIENT?.sex || ''}</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-[11px] text-label uppercase mb-0.5">Procedure</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Procedure</span>
                   <span className="font-bold text-primary truncate block">{procId.toUpperCase()}</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-[11px] text-label uppercase mb-0.5">Phase</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Phase</span>
                   <span className="truncate block">{stepPhase || pendingDecision?.phaseLabel || pendingDecision?.procedurePhase || currentState?.procedure_phase || '—'}</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-[11px] text-label uppercase mb-0.5">Step</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Step</span>
                   <span className="font-bold">{isStock ? `Step ${stepNow} / ${totalTicks}` : `Decision ${currentDecisionIdx + 1}`}</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-[11px] text-label uppercase mb-0.5">Tick</span>
-                  <span className="font-bold text-success">{currentTick}</span>
+                  <span className="block text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase mb-0.5">Tick</span>
+                  <span className="font-bold text-[#2E6B4B]">{currentTick}</span>
                 </div>
               </div>
 
@@ -1062,27 +1062,27 @@ function SimulationPage() {
               {currentState?.physiological_reserve !== undefined && (
                 <div className="mt-3 p-3 bg-background/50 border border-border rounded-sm space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <span className="text-[11px] font-bold text-label uppercase tracking-wider">Physiological Reserve</span>
+                    <span className="text-[11px] font-bold text-[#8C827A] dark:text-[#C2BBB0] uppercase tracking-wider">Physiological Reserve</span>
                     <span className={`text-[11px] font-bold font-mono ${
-                      currentState.physiological_reserve < 30 ? "text-destructive animate-pulse" :
-                      currentState.physiological_reserve < 70 ? "text-warning" :
-                      "text-success"
+                      currentState.physiological_reserve < 30 ? "text-[#A32A2A] animate-pulse" :
+                      currentState.physiological_reserve < 70 ? "text-[#C27820]" :
+                      "text-[#2E6B4B]"
                     }`}>
                       {currentState.physiological_reserve.toFixed(0)}%
                     </span>
                   </div>
-                  <div className="w-full bg-accent h-1.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-[#EAE3D2] h-1.5 rounded-full overflow-hidden">
                     <div
                       className={`h-full transition-all duration-500 ${
-                        currentState.physiological_reserve < 30 ? "bg-destructive animate-pulse" :
-                        currentState.physiological_reserve < 70 ? "bg-warning" :
-                        "bg-success"
+                        currentState.physiological_reserve < 30 ? "bg-[#A32A2A] animate-pulse" :
+                        currentState.physiological_reserve < 70 ? "bg-[#C27820]" :
+                        "bg-[#2E6B4B]"
                       }`}
                       style={{ width: `${currentState.physiological_reserve}%` }}
                     />
                   </div>
                   {currentState.physiological_reserve < 30 && (
-                    <p className="text-[10px] text-destructive/80 leading-tight animate-pulse font-mono font-bold">
+                    <p className="text-[10px] text-[#A32A2A]/80 leading-tight animate-pulse font-mono font-bold">
                       ⚠️ CRITICAL: Refractory Shock Active
                     </p>
                   )}
@@ -1093,24 +1093,24 @@ function SimulationPage() {
             {/* Vitals */}
             <div className="surface surface-hover p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[10px] font-bold text-label uppercase tracking-widest">Vitals Monitoring</h3>
-                <div className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-success animate-pulse" : "bg-destructive"}`} />
+                <h3 className="text-[10px] font-bold text-[#8C827A] dark:text-[#C2BBB0] uppercase tracking-widest">Vitals Monitoring</h3>
+                <div className={`w-1.5 h-1.5 rounded-full ${connectionStatus === "connected" ? "bg-[#2E6B4B] animate-pulse" : "bg-[#A32A2A]"}`} />
               </div>
               <div className="grid grid-cols-1 gap-2">
                 {vitals.heart_rate !== undefined && (
-                  <VitalItem icon={<Heart className="text-destructive" />} label="Heart Rate" value={vitals.heart_rate} unit="bpm" color={vitals.heart_rate > 110 || vitals.heart_rate < 50 ? "text-destructive animate-pulse" : "text-destructive"} trend={trendOf("heart_rate")} history={seriesOf("heart_rate")} />
+                  <VitalItem icon={<Heart className="text-[#A32A2A]" />} label="Heart Rate" value={vitals.heart_rate} unit="bpm" color={vitals.heart_rate > 110 || vitals.heart_rate < 50 ? "text-[#A32A2A] animate-pulse" : "text-[#A32A2A]"} trend={trendOf("heart_rate")} history={seriesOf("heart_rate")} />
                 )}
                 {vitals.bp_systolic !== undefined && (
-                  <VitalItem icon={<Activity className="text-primary" />} label="Blood Pressure" value={formatBP(vitals.bp_systolic, vitals.bp_diastolic)} unit="mmHg" color={vitals.bp_systolic < 90 || vitals.bp_systolic > 160 ? "text-destructive animate-pulse" : "text-primary"} trend={trendOf("bp_systolic")} history={seriesOf("bp_systolic")} />
+                  <VitalItem icon={<Activity className="text-[#CC553D]" />} label="Blood Pressure" value={formatBP(vitals.bp_systolic, vitals.bp_diastolic)} unit="mmHg" color={vitals.bp_systolic < 90 || vitals.bp_systolic > 160 ? "text-[#A32A2A] animate-pulse" : "text-[#CC553D]"} trend={trendOf("bp_systolic")} history={seriesOf("bp_systolic")} />
                 )}
                 {vitals.spo2 !== undefined && (
-                  <VitalItem icon={<Droplets className="text-success" />} label="Oxygen Saturation" value={vitals.spo2} unit="%" color={vitals.spo2 < 92 ? "text-destructive animate-pulse" : "text-success"} trend={trendOf("spo2")} history={seriesOf("spo2")} />
+                  <VitalItem icon={<Droplets className="text-[#2E6B4B]" />} label="Oxygen Saturation" value={vitals.spo2} unit="%" color={vitals.spo2 < 92 ? "text-[#A32A2A] animate-pulse" : "text-[#2E6B4B]"} trend={trendOf("spo2")} history={seriesOf("spo2")} />
                 )}
                 {vitals.respiratory_rate !== undefined && (
-                  <VitalItem icon={<Wind className="text-warning" />} label="Respiratory Rate" value={vitals.respiratory_rate} unit="/min" color={vitals.respiratory_rate > 24 || vitals.respiratory_rate < 8 ? "text-destructive animate-pulse" : "text-warning"} trend={trendOf("respiratory_rate")} history={seriesOf("respiratory_rate")} />
+                  <VitalItem icon={<Wind className="text-[#C27820]" />} label="Respiratory Rate" value={vitals.respiratory_rate} unit="/min" color={vitals.respiratory_rate > 24 || vitals.respiratory_rate < 8 ? "text-[#A32A2A] animate-pulse" : "text-[#C27820]"} trend={trendOf("respiratory_rate")} history={seriesOf("respiratory_rate")} />
                 )}
                 {vitals.temperature !== undefined && (
-                  <VitalItem icon={<Thermometer className="text-warning" />} label="Temperature" value={vitals.temperature} unit="°C" color={vitals.temperature > 38 || vitals.temperature < 35 ? "text-destructive animate-pulse" : "text-warning"} trend={trendOf("temperature")} history={seriesOf("temperature")} />
+                  <VitalItem icon={<Thermometer className="text-[#C27820]" />} label="Temperature" value={vitals.temperature} unit="°C" color={vitals.temperature > 38 || vitals.temperature < 35 ? "text-[#A32A2A] animate-pulse" : "text-[#C27820]"} trend={trendOf("temperature")} history={seriesOf("temperature")} />
                 )}
               </div>
             </div>
@@ -1119,28 +1119,28 @@ function SimulationPage() {
           {/* CENTER COLUMN: DECISION CONSOLE (always first on narrow screens so the buttons are above the fold) */}
           <div className="order-1 col-span-12 lg:order-none lg:col-span-6 flex min-h-0 flex-col gap-3">
             {engineReconnecting && (
-              <div className="shrink-0 p-3 bg-[#3A2A0A]/10 border border-warning/60 rounded-sm text-left animate-pulse">
+              <div className="shrink-0 p-3 bg-[#3A2A0A]/10 border border-[#D99B26]/60 rounded-sm text-left animate-pulse">
                 <p className="text-xs font-bold text-[#8A5A00] dark:text-[#E0B060]">
                   ⚠️ Reconnecting to Surgical Engine…
                 </p>
-                <p className="text-[11px] text-label mt-0.5">
+                <p className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] mt-0.5">
                   A network hiccup interrupted the last request. Retrying automatically — your session is safe.
                 </p>
               </div>
             )}
             {decisionError && (
-              <div className="shrink-0 p-3 bg-destructive/8 border border-destructive/40 rounded-sm text-destructive text-left">
-                <h3 className="font-bold text-destructive mb-1 text-xs">Backend Error</h3>
+              <div className="shrink-0 p-3 bg-[#A32A2A]/8 border border-[#A32A2A]/40 rounded-sm text-[#A32A2A] text-left">
+                <h3 className="font-bold text-[#A32A2A] mb-1 text-xs">Backend Error</h3>
                 <p className="text-xs">{decisionError}</p>
               </div>
             )}
 
             <div className="relative flex h-[calc(100dvh-160px)] min-h-[440px] lg:h-auto lg:min-h-0 lg:flex-1 flex-col overflow-hidden surface surface-hover p-5 text-foreground">
               {mode === "replay" && (
-                <div className="absolute inset-0 bg-primary/5 backdrop-blur-[1px] rounded-sm z-10 flex items-center justify-center border border-primary/20">
-                  <div className="bg-muted border border-primary p-6 rounded-sm text-center shadow-2xl">
+                <div className="absolute inset-0 bg-[#CC553D]/5 backdrop-blur-[1px] rounded-sm z-10 flex items-center justify-center border border-[#CC553D]/20">
+                  <div className="bg-[#26211B] border border-[#CC553D] p-6 rounded-sm text-center shadow-2xl">
                     <Power className="w-12 h-12 text-[#E8A99A] mx-auto mb-4 animate-pulse" />
-                    <h2 className="text-xl font-bold text-foreground">Replay Engine Active</h2>
+                    <h2 className="text-xl font-bold text-[#EDEAE4]">Replay Engine Active</h2>
                     <p className="text-[#E8A99A] text-sm mt-2">Scrubbing through DVK Proof Chain</p>
                   </div>
                 </div>
@@ -1148,9 +1148,9 @@ function SimulationPage() {
 
               <div className="flex items-center justify-between shrink-0 mb-4">
                 <span className={`px-3 py-1 border text-[10px] font-bold rounded-full uppercase tracking-tighter ${
-                  isDeceased ? 'bg-destructive/10 border-destructive text-destructive animate-pulse' :
-                  isCompleted ? 'bg-success/10 border-success/40 text-success' :
-                  isBranched ? 'bg-destructive/10 border-destructive text-destructive animate-pulse' :
+                  isDeceased ? 'bg-[#A32A2A]/10 border-[#A32A2A] text-[#A32A2A] animate-pulse' :
+                  isCompleted ? 'bg-[#2E6B4B]/10 border-[#2E6B4B]/40 text-[#2E6B4B]' :
+                  isBranched ? 'bg-[#A32A2A]/10 border-[#A32A2A] text-[#A32A2A] animate-pulse' :
                   'bg-primary/10 border-primary/30 text-primary'
                 }`}>
                   {isDeceased ? "PATIENT DECEASED" :
@@ -1158,7 +1158,7 @@ function SimulationPage() {
                    isBranched ? (complicationSource === "spontaneous" ? "PATIENT DETERIORATING" : "CRITICAL: Complication Active") :
                    `Step ${stepNow} of ${totalTicks}`}
                 </span>
-                <span className="text-xs text-label font-bold">Tick {currentTick}</span>
+                <span className="text-xs text-[#8C827A] dark:text-[#C2BBB0] font-bold">Tick {currentTick}</span>
               </div>
 
               {(isDeceased || isCompleted) ? (
@@ -1184,8 +1184,8 @@ function SimulationPage() {
                     {completionTab === "summary" && (
                       <>
                         {isDeceased && (
-                          <div className="mb-4 p-4 bg-[#3A0F0F] border-2 border-destructive rounded-sm">
-                            <h2 className="text-lg font-black text-destructive mb-1 animate-pulse">Patient Expired</h2>
+                          <div className="mb-4 p-4 bg-[#3A0F0F] border-2 border-[#A32A2A] rounded-sm">
+                            <h2 className="text-lg font-black text-[#E08080] mb-1 animate-pulse">Patient Expired</h2>
                             {(() => {
                               const last = lastRescueRef.current;
                               const comp = last?.complication.replace(/_/g, " ");
@@ -1193,26 +1193,26 @@ function SimulationPage() {
                               const treated = !!last && treatedRef.current === last.complication;
                               return (
                                 <>
-                                  <p className="text-foreground/80 text-xs mb-2">
+                                  <p className="text-[#EDEAE4]/80 text-xs mb-2">
                                     Cause: {currentState?.death_reason
                                       ?? (comp ? `${comp} was not brought under control in time` : "critical vitals crossed lethal thresholds")}.
                                   </p>
                                   {last && (
-                                    <p className="text-foreground/80 text-xs mb-2">
+                                    <p className="text-[#EDEAE4]/80 text-xs mb-2">
                                       Last complication: {comp}. What set it off: {trigger}
                                     </p>
                                   )}
                                   {last?.best && (
-                                    <p className="text-foreground/80 text-xs mb-3">
+                                    <p className="text-[#EDEAE4]/80 text-xs mb-3">
                                       {treated ? "You gave the right treatment" : "What would have treated it"}:{" "}
-                                      <span className="font-bold text-foreground">{last.best}</span>
+                                      <span className="font-bold text-[#EDEAE4]">{last.best}</span>
                                       {treated && ", but the patient's physiologic reserve was already too depleted to recover. Earlier control of the first complications is what would have saved them."}
                                     </p>
                                   )}
                                 </>
                               );
                             })()}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left text-xs text-foreground/60">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left text-xs text-[#EDEAE4]/60">
                               <div>BP: {fmtVital(vitals.bp_systolic)}/{fmtVital(vitals.bp_diastolic)} mmHg</div>
                               <div>HR: {fmtVital(vitals.heart_rate)} bpm</div>
                               <div>SpO₂: {fmtVital(vitals.spo2)}%</div>
@@ -1233,10 +1233,10 @@ function SimulationPage() {
                   </div>
 
                   <div className="shrink-0 grid grid-cols-1 sm:grid-cols-3 gap-2 mt-4">
-                    <Button variant="outline" className="h-10 border-border hover:bg-background text-primary hover:text-primary" onClick={() => setMode("replay")}>
+                    <Button variant="outline" className="h-10 border-[#E2DDD1] hover:bg-[#FBF9F5] text-[#CC553D] hover:text-[#CC553D]" onClick={() => setMode("replay")}>
                       <RotateCcw className="w-4 h-4 mr-2" /> View Replay
                     </Button>
-                    <Button variant="outline" className="h-10 border-border hover:bg-background text-foreground " onClick={() => setLocation("/procedures")}>
+                    <Button variant="outline" className="h-10 border-[#E2DDD1] hover:bg-[#FBF9F5] text-[#191919] dark:border-[#3A342C] dark:hover:bg-[#26211B] dark:text-[#EDEAE4]" onClick={() => setLocation("/procedures")}>
                       <Home className="w-4 h-4 mr-2" /> Dashboard
                     </Button>
                     <Button className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => {
@@ -1255,9 +1255,9 @@ function SimulationPage() {
                 {isBranched && (showEmergencyOptions || pendingDecision) ? (
                   /* BRANCHED MODE — complication recovery decisions from Python engine */
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col">
-                    <div className="p-4 bg-[#3A0F0F] border border-destructive rounded-sm mb-4">
+                    <div className="p-4 bg-[#3A0F0F] border border-[#A32A2A] rounded-sm mb-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-xl font-bold text-destructive">
+                        <h2 className="text-xl font-bold text-[#E08080]">
                           {(() => {
                             // A named injury (ureter, dura, bladder, bowel) heads the banner;
                             // the complication it is causing follows.
@@ -1268,11 +1268,11 @@ function SimulationPage() {
                             return injury ? `${injury} → ${comp}` : `Complication: ${comp}`;
                           })()}
                         </h2>
-                        <span className={`px-2 py-0.5 rounded-full border text-[11px] font-black uppercase tracking-wider ${complicationSource === "spontaneous" ? "bg-warning/15 border-warning/50 text-[#E0B060]" : "bg-destructive/20 border-destructive/60 text-[#E08080]"}`}>
+                        <span className={`px-2 py-0.5 rounded-full border text-[11px] font-black uppercase tracking-wider ${complicationSource === "spontaneous" ? "bg-[#D99B26]/15 border-[#D99B26]/50 text-[#E0B060]" : "bg-[#A32A2A]/20 border-[#A32A2A]/60 text-[#E08080]"}`}>
                           {complicationSource === "spontaneous" ? "Spontaneous Deterioration" : "Surgical Error"}
                         </span>
                       </div>
-                      <p className="text-foreground/80 text-sm italic mb-3">
+                      <p className="text-[#EDEAE4]/80 text-sm italic mb-3">
                         {complicationSource === "spontaneous"
                           ? "The patient is deteriorating — vitals are declining and complications are developing on their own. Select the correct intervention to stabilize them."
                           : lastMistake?.consequence || "A complication has occurred due to an incorrect decision. Select the correct intervention to recover the patient."}
@@ -1287,7 +1287,7 @@ function SimulationPage() {
                               </div>
                               <div className="h-1.5 bg-black/30 rounded-full overflow-hidden">
                                 <div
-                                  className={`h-full transition-all duration-500 ${shownTimeLeft / timeWindow < 0.3 ? "bg-[#E04040]" : "bg-warning"}`}
+                                  className={`h-full transition-all duration-500 ${shownTimeLeft / timeWindow < 0.3 ? "bg-[#E04040]" : "bg-[#D99B26]"}`}
                                   style={{ width: `${Math.max(0, Math.min(100, (shownTimeLeft / timeWindow) * 100))}%` }}
                                 />
                               </div>
@@ -1298,25 +1298,25 @@ function SimulationPage() {
                         </div>
                       )}
                       {tailored && (
-                        <div className="mb-3 p-3 bg-black/25 border border-destructive/40 rounded-sm">
+                        <div className="mb-3 p-3 bg-black/25 border border-[#A32A2A]/40 rounded-sm">
                           <span className="text-[11px] font-black uppercase tracking-wider text-[#E08080]/80 block mb-1">Right now</span>
-                          <p className="text-xs text-foreground/90 leading-relaxed">{tailored.situation}</p>
-                          <p className="mt-2 text-[11px] font-mono-data text-foreground/70">
+                          <p className="text-xs text-[#EDEAE4]/90 leading-relaxed">{tailored.situation}</p>
+                          <p className="mt-2 text-[11px] font-mono-data text-[#EDEAE4]/70">
                             HR {Math.round(vitalsNow.heart_rate ?? 0)} · BP {Math.round(vitalsNow.bp_systolic ?? 0)}/{Math.round(vitalsNow.bp_diastolic ?? 0)} · SpO₂ {Math.round(vitalsNow.spo2 ?? 0)}% · RR {Math.round(vitalsNow.respiratory_rate ?? 0)} · T {Number(vitalsNow.temperature ?? 0).toFixed(1)} °C
                           </p>
                         </div>
                       )}
                       {complicationCause && !tailored && (
-                        <div className="p-3 bg-black/25 border border-destructive/40 rounded-sm">
+                        <div className="p-3 bg-black/25 border border-[#A32A2A]/40 rounded-sm">
                           <span className="text-[11px] font-black uppercase tracking-wider text-[#E08080]/80 block mb-1">Physiologic Cause</span>
-                          <p className="text-xs text-foreground/85 leading-relaxed">{complicationCause}</p>
+                          <p className="text-xs text-[#EDEAE4]/85 leading-relaxed">{complicationCause}</p>
                         </div>
                       )}
                       {/* Tailored surgeries show the authored mechanism; the LLM note is for the rest. */}
                       {(tailored ? (complicationSource !== "spontaneous" ? lastMistake?.feedback : null) : llmNarrative) && (
-                        <div className="mt-2 p-3 bg-[#2A1A08]/40 border border-warning/40 rounded-sm">
+                        <div className="mt-2 p-3 bg-[#2A1A08]/40 border border-[#D99B26]/40 rounded-sm">
                           <span className="text-[11px] font-black uppercase tracking-wider text-[#E0B060]/90 block mb-1">🧠 Attending Note</span>
-                          <p className="text-xs text-foreground/90 leading-relaxed">{tailored ? lastMistake?.feedback : llmNarrative}</p>
+                          <p className="text-xs text-[#EDEAE4]/90 leading-relaxed">{tailored ? lastMistake?.feedback : llmNarrative}</p>
                         </div>
                       )}
                     </div>
@@ -1332,21 +1332,21 @@ function SimulationPage() {
                     className="flex flex-col"
                   >
                     {runnerCurrent?.repairTitle && (
-                      <div className="mb-3 self-start inline-flex items-center gap-2 px-2.5 py-1 rounded-sm border border-warning/60 bg-warning/10 text-[11px] font-black uppercase tracking-wider text-[#9A6A12] dark:text-[#E0B060]">
+                      <div className="mb-3 self-start inline-flex items-center gap-2 px-2.5 py-1 rounded-sm border border-[#D99B26]/60 bg-[#D99B26]/10 text-[11px] font-black uppercase tracking-wider text-[#9A6A12] dark:text-[#E0B060]">
                         {runnerCurrent.repairLabel}{runnerCurrent.depth > 1 ? ` (level ${runnerCurrent.depth})` : ""} · {runnerCurrent.repairTitle} · step {runnerCurrent.repairStep} of {runnerCurrent.repairLength}
                       </div>
                     )}
-                    <h2 className="text-2xl font-bold leading-tight mb-3 text-foreground ">{currentStockStep.title}</h2>
-                    <div className="p-4 bg-muted border border-border rounded-sm mb-4 ">
-                      <p className="text-muted-foreground text-sm leading-relaxed ">{currentStockStep.description}</p>
+                    <h2 className="text-2xl font-bold leading-tight mb-3 text-[#191919] dark:text-[#EDEAE4]">{currentStockStep.title}</h2>
+                    <div className="p-4 bg-[#F4F0E8] border border-[#E2DDD1] rounded-sm mb-4 dark:bg-[#26211B] dark:border-[#3A342C]">
+                      <p className="text-[#666059] dark:text-[#C2BBB0] text-sm leading-relaxed dark:text-[#A89F95]">{currentStockStep.description}</p>
                     </div>
                   </motion.div>
 
                 ) : (
                   <div className="flex flex-col items-center justify-center text-center p-8 h-full">
                     <div className="w-12 h-12 rounded-full border-t-2 border-primary animate-spin mb-4" />
-                    <h2 className="text-xl font-bold text-foreground ">Pending Causal State</h2>
-                    <p className="text-label text-sm mt-2">Waiting for ScrubIn Core to propagate the next deterministic decision...</p>
+                    <h2 className="text-xl font-bold text-[#191919] dark:text-[#EDEAE4]">Pending Causal State</h2>
+                    <p className="text-[#8C827A] dark:text-[#C2BBB0] text-sm mt-2">Waiting for ScrubIn Core to propagate the next deterministic decision...</p>
                   </div>
                 )}
               </div>
@@ -1359,12 +1359,12 @@ function SimulationPage() {
                       key={opt.id}
                       onClick={() => handleChoice(opt.id, opt)}
                       disabled={isSubmitting}
-                      className="group w-full text-left p-4 bg-destructive/5 border border-destructive/30 hover:bg-destructive/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-label/60 rounded-sm flex items-center justify-between disabled:opacity-50"
+                      className="group w-full text-left p-4 bg-[#A32A2A]/5 border border-[#A32A2A]/30 hover:bg-[#A32A2A]/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8C827A]/60 rounded-sm flex items-center justify-between disabled:opacity-50"
                     >
                       <div className="flex flex-col min-w-0">
                         <span className="text-sm font-bold text-[#8B2323]">{opt.label}</span>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-destructive group-hover:translate-x-0.5 transition-transform shrink-0" />
+                      <ChevronRight className="w-5 h-5 text-[#A32A2A] group-hover:translate-x-0.5 transition-transform shrink-0" />
                     </button>
                   ))}
                 </div>
@@ -1377,12 +1377,12 @@ function SimulationPage() {
                       key={choice.id}
                       onClick={() => handleStockChoice(choice)}
                       disabled={isSubmitting}
-                      className={`group w-full text-left p-4 bg-card border border-border rounded-sm flex items-center justify-between hover:bg-background transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-label/60 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`group w-full text-left p-4 bg-white border border-[#E2DDD1] rounded-sm flex items-center justify-between hover:bg-[#FBF9F5] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8C827A]/60 dark:bg-[#1E1A16] dark:border-[#3A342C] dark:hover:bg-[#26211B] ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      <span className="text-sm font-bold leading-snug pr-3 text-foreground ">
+                      <span className="text-sm font-bold leading-snug pr-3 text-[#191919] dark:text-[#EDEAE4]">
                         {choice.text}
                       </span>
-                      <ChevronRight className="w-5 h-5 text-label group-hover:text-primary transition-colors shrink-0" />
+                      <ChevronRight className="w-5 h-5 text-[#8C827A] dark:text-[#C2BBB0] group-hover:text-primary transition-colors shrink-0" />
                     </button>
                   ))}
                 </div>
@@ -1396,15 +1396,15 @@ function SimulationPage() {
             <div className="hidden lg:grid shrink-0 grid-cols-3 gap-3">
               <div className="p-3 surface surface-hover flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground uppercase" title="Live vitals refresh cadence — physiology decays in real time between steps">Vitals Refresh</span>
-                <span className="text-base font-bold text-primary">{tickMs === null ? "paused" : `${tickMs / 1000}s`}</span>
+                <span className="text-base font-bold text-[#CC553D]">{tickMs === null ? "paused" : `${tickMs / 1000}s`}</span>
               </div>
               <div className="p-3 surface surface-hover flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground uppercase" title="Advances with each surgical step or decision, not per poll — vitals keep decaying between them">Causal Clock</span>
-                <span className="text-base font-bold text-success">{currentTick}t</span>
+                <span className="text-base font-bold text-[#2E6B4B]">{currentTick}t</span>
               </div>
               <div className="p-3 surface surface-hover flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground uppercase" title="Surgical steps answered correctly on the first attempt">Step Accuracy</span>
-                <span className="text-base font-bold text-warning">{stepAccuracy === null ? "—" : `${stepAccuracy}%`}</span>
+                <span className="text-base font-bold text-[#C27820]">{stepAccuracy === null ? "—" : `${stepAccuracy}%`}</span>
               </div>
             </div>
           </div>
@@ -1417,7 +1417,7 @@ function SimulationPage() {
               <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Procedure Timeline</h3>
               <div className="flex flex-wrap gap-1.5">
                 {(PHASES || []).map((phase: any) => (
-                  <span key={phase.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-sm bg-muted border border-border text-[10px] font-bold text-muted-foreground ">
+                  <span key={phase.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-sm bg-[#F4F0E8] border border-[#E2DDD1] text-[10px] font-bold text-[#666059] dark:text-[#C2BBB0] dark:bg-[#26211B] dark:border-[#3A342C] dark:text-[#A89F95]">
                     <span>{phase.icon}</span>
                     <span className="uppercase">{phase.name}</span>
                   </span>
@@ -1454,11 +1454,11 @@ function fmtVital(value: number | undefined): string {
 
 function TrendArrow({ delta }: { delta: number | null }) {
   if (delta === null || Math.abs(delta) < 0.05) {
-    return <span className="text-[11px] text-label font-mono">–</span>;
+    return <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] font-mono">–</span>;
   }
   const up = delta > 0;
   return (
-    <span className={`text-[11px] font-mono font-black ${up ? "text-success" : "text-destructive"}`}>
+    <span className={`text-[11px] font-mono font-black ${up ? "text-[#2E6B4B]" : "text-[#A32A2A]"}`}>
       {up ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}
     </span>
   );
@@ -1492,18 +1492,18 @@ function VitalItem({ icon, label, value, unit, color, trend = null, history = []
         : value.toFixed(1)
       : String(value ?? "—");
   return (
-    <div className="p-2.5 bg-muted rounded-sm border border-border ">
+    <div className="p-2.5 bg-[#F4F0E8] rounded-sm border border-[#E2DDD1] dark:bg-[#26211B] dark:border-[#3A342C]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 bg-card rounded-sm border border-border flex items-center justify-center shrink-0 ">{icon}</div>
+          <div className="w-7 h-7 bg-white rounded-sm border border-[#E2DDD1] flex items-center justify-center shrink-0 dark:bg-[#1E1A16] dark:border-[#3A342C]">{icon}</div>
           <div className="flex flex-col min-w-0">
-            <span className="text-[11px] text-label uppercase">{label}</span>
+            <span className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase">{label}</span>
             <span className={`text-base font-black leading-none ${color}`}>{displayValue}<span className="text-[10px] font-normal opacity-50 ml-1">{unit}</span></span>
           </div>
         </div>
         <TrendArrow delta={trend} />
       </div>
-      <Sparkline data={history} colorClass={typeof trend === "number" && trend < 0 ? "text-destructive/70" : "text-success/70"} />
+      <Sparkline data={history} colorClass={typeof trend === "number" && trend < 0 ? "text-[#A32A2A]/70" : "text-[#2E6B4B]/70"} />
     </div>
   );
 }

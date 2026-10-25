@@ -45,16 +45,16 @@ export default function OperatingRoomDashboard({ scenario, steps, phase }: Dashb
   const stability = computeStability(vitals, baseline);
   const stabilityColor =
     stability === "stable"
-      ? "text-success"
+      ? "text-[#2E6B4B]"
       : stability === "mild"
-      ? "text-warning"
-      : "text-destructive";
+      ? "text-[#C27820]"
+      : "text-[#A32A2A]";
   const stabilityBorder =
     stability === "stable"
-      ? "border-success/40"
+      ? "border-[#2E6B4B]/40"
       : stability === "mild"
-      ? "border-warning/40"
-      : "border-destructive/50";
+      ? "border-[#C27820]/40"
+      : "border-[#A32A2A]/50";
 
   const totalTicks = scenario?.totalTicks;
   const remainingTicks = typeof totalTicks === "number" ? totalTicks - currentTick : null;
@@ -72,8 +72,8 @@ export default function OperatingRoomDashboard({ scenario, steps, phase }: Dashb
   const activeComplication = currentState?.active_complication ?? currentState?.activeComplication ?? null;
 
   const Card = ({ label, value, valueClass = "text-foreground", highlight = false }: { label: string; value: any; valueClass?: string; highlight?: boolean }) => (
-    <div className={`p-2.5 surface surface-hover rounded-sm ${highlight ? "border-destructive/40" : ""}`}>
-      <div className="text-[11px] text-label uppercase tracking-widest font-bold mb-0.5">{label}</div>
+    <div className={`p-2.5 surface surface-hover rounded-sm ${highlight ? "border-[#A32A2A]/40" : ""}`}>
+      <div className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase tracking-widest font-bold mb-0.5">{label}</div>
       <div className={`text-sm font-bold truncate ${valueClass}`}>{value ?? "-"}</div>
     </div>
   );
@@ -100,7 +100,7 @@ export default function OperatingRoomDashboard({ scenario, steps, phase }: Dashb
             <Card label="Remaining" value={remainingTicks !== null ? `${remainingTicks} ticks` : "Unknown"} />
           </>
         )}
-        <Card label="Active Complication" value={activeComplication ?? "None"} highlight={!!activeComplication} valueClass={activeComplication ? "text-destructive" : "text-success"} />
+        <Card label="Active Complication" value={activeComplication ?? "None"} highlight={!!activeComplication} valueClass={activeComplication ? "text-[#A32A2A]" : "text-[#2E6B4B]"} />
         <Card label="Patient Stability" value={stability.charAt(0).toUpperCase() + stability.slice(1)} valueClass={stabilityColor} />
         <Card label="Executive Goal" value={executiveGoal ?? "-"} />
         <Card label="Strategy" value={strategy ?? "-"} />

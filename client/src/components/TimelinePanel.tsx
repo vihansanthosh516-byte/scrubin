@@ -54,30 +54,30 @@ export default function TimelinePanel() {
   const getSeverityIcon = (severity: string) => {
     switch (severity?.toLowerCase()) {
       case "critical":
-        return <AlertCircle className="w-4 h-4 text-destructive" />;
+        return <AlertCircle className="w-4 h-4 text-[#A32A2A]" />;
       case "warning":
-        return <AlertTriangle className="w-4 h-4 text-warning" />;
+        return <AlertTriangle className="w-4 h-4 text-[#C27820]" />;
       case "info":
       default:
-        return <Info className="w-4 h-4 text-primary" />;
+        return <Info className="w-4 h-4 text-[#CC553D]" />;
     }
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity?.toLowerCase()) {
       case "critical":
-        return "bg-destructive/8 border-destructive/40 text-destructive";
+        return "bg-[#A32A2A]/8 border-[#A32A2A]/40 text-[#A32A2A]";
       case "warning":
-        return "bg-warning/8 border-warning/40 text-warning";
+        return "bg-[#C27820]/8 border-[#C27820]/40 text-[#C27820]";
       case "info":
       default:
-        return "bg-primary/8 border-primary/40 text-primary";
+        return "bg-[#CC553D]/8 border-[#CC553D]/40 text-[#CC553D]";
     }
   };
 
   return (
     <div className="min-h-[140px] max-h-[320px] lg:max-h-none flex-1 p-4 surface surface-hover flex flex-col rounded-sm">
-      <h3 className="text-[10px] font-bold text-label uppercase tracking-widest mb-3">Event Timeline</h3>
+      <h3 className="text-[10px] font-bold text-[#8C827A] dark:text-[#C2BBB0] uppercase tracking-widest mb-3">Event Timeline</h3>
       
       <div 
         ref={scrollRef}
@@ -85,7 +85,7 @@ export default function TimelinePanel() {
         style={{ scrollbarWidth: 'thin' }}
       >
         {timeline.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-label text-sm">
+          <div className="h-full flex items-center justify-center text-[#8C827A] dark:text-[#C2BBB0] text-sm">
             No timeline events yet.
           </div>
         ) : (
