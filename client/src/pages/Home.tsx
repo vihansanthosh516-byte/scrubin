@@ -82,14 +82,14 @@ export default function Home() {
   return (
     <div className="bg-background text-foreground">
       {/* Greeting and the one next action */}
-      <section>
-        <div className="mx-auto max-w-6xl px-4 pb-24 pt-32 md:pb-32 md:pt-44">
+      <section className="border-b border-border">
+        <div className="mx-auto max-w-6xl px-4 pb-16 pt-28 md:pb-20 md:pt-36">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={springSoft}>
             <Eyebrow variant="hero" className="mb-6">{greeting()}</Eyebrow>
-            <h1 className="font-display text-5xl leading-[1.02] sm:text-7xl md:text-8xl">
+            <h1 className="font-display text-5xl leading-[0.98] tracking-tight sm:text-6xl md:text-7xl">
               {isNew ? <>Your first surgery starts <span className="text-primary">here</span>, {firstName}.</> : <>Welcome back, <span className="text-primary">{firstName}</span>.</>}
             </h1>
-            <p className="mt-8 max-w-2xl text-xl leading-relaxed text-muted-foreground md:text-2xl">
+            <p className="mt-6 max-w-xl text-lg text-muted-foreground">
               {isNew
                 ? "Step into the OR, make the calls yourself, and see the consequences, with fictional patients and zero real risk."
                 : lastCase
@@ -115,7 +115,7 @@ export default function Home() {
       </section>
 
       {/* Real numbers only */}
-      <section aria-labelledby="stats-heading">
+      <section className="border-b border-border bg-muted/50" aria-labelledby="stats-heading">
         <div className="mx-auto max-w-6xl px-4 py-12">
           <h2 id="stats-heading" className="sr-only">Your progress</h2>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -128,7 +128,7 @@ export default function Home() {
       </section>
 
       {/* How a case works */}
-      <section>
+      <section className="border-b border-border">
         <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
           <motion.div {...REVEAL} className="mb-12 max-w-2xl">
             <Eyebrow className="mb-4 block">How a case works</Eyebrow>

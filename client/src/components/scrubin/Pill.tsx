@@ -12,7 +12,7 @@ const DIFFICULTY_TONE: Record<string, PillTone> = {
 /** Small uppercase status label. Always carries a word, so colour is never the only signal. */
 export function Pill({ tone = "neutral", icon, children, className }: { tone?: PillTone; icon?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold", `pill-${tone}`, className)}>
+    <span className={cn("inline-flex items-center gap-1 whitespace-nowrap rounded-sm px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider", `pill-${tone}`, className)}>
       {icon}
       {children}
     </span>

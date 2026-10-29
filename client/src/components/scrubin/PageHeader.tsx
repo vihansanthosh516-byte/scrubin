@@ -5,8 +5,9 @@ import { cn } from "@/lib/utils";
 export function Eyebrow({ children, variant = "section", className }: { children: ReactNode; variant?: "section" | "mono" | "hero"; className?: string }) {
   if (variant === "hero") {
     return (
-      <span className={cn("inline-flex items-center gap-2 text-base font-semibold text-primary", className)}>
-                {children}
+      <span className={cn("inline-flex items-center gap-2.5 font-mono-data text-xs uppercase tracking-[0.16em] text-label", className)}>
+        <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
+        {children}
       </span>
     );
   }
@@ -14,7 +15,7 @@ export function Eyebrow({ children, variant = "section", className }: { children
 }
 
 /**
- * Page title block: hero eyebrow, display h1 (with an optional terracotta accent word) and a lead.
+ * Page title block: hero eyebrow, Instrument Serif h1 (with an optional terracotta accent word) and a lead.
  * Every page uses this so titles are consistent and each page has exactly one h1.
  */
 export function PageHeader({
@@ -36,7 +37,7 @@ export function PageHeader({
     <header className={cn("flex flex-wrap items-end justify-between gap-6", className)}>
       <div className="max-w-3xl">
         {eyebrow && <Eyebrow variant="hero" className="mb-4">{eyebrow}</Eyebrow>}
-        <h1 className="font-display text-5xl leading-[1.02] text-foreground sm:text-6xl md:text-7xl">
+        <h1 className="font-display text-4xl leading-[1.02] tracking-tight text-foreground sm:text-5xl md:text-6xl">
           {title}
           {accent && <> <span className="text-primary">{accent}</span></>}
         </h1>

@@ -74,25 +74,25 @@
 }
 
 :root {
-  --radius: 0.875rem;
-  --background: #F5F5F7;
-  --foreground: #1D1D1F;
+  --radius: 0.25rem;
+  --background: #FBF9F5;
+  --foreground: #191919;
   --card: #FFFFFF;
-  --card-foreground: #1D1D1F;
+  --card-foreground: #191919;
   --popover: #FFFFFF;
-  --popover-foreground: #1D1D1F;
+  --popover-foreground: #191919;
   --primary: #B5472F; /* a deeper cut of brand terracotta #CC553D so white text and terracotta text both pass AA */
   --primary-foreground: #FFFFFF;
-  --secondary: #E8E8ED;
-  --secondary-foreground: #1D1D1F;
-  --muted: #EDEDF0;
-  --muted-foreground: #636366;
-  --accent: #E8E8ED;
-  --accent-foreground: #1D1D1F;
+  --secondary: #F4F0E8;
+  --secondary-foreground: #191919;
+  --muted: #F4F0E8;
+  --muted-foreground: #666059;
+  --accent: #EAE3D2;
+  --accent-foreground: #191919;
   --destructive: #A32A2A;
   --destructive-foreground: #FFFFFF;
-  --border: #E3E3E8;
-  --input: #D2D2D7;
+  --border: #E2DDD1;
+  --input: #E2DDD1;
   --ring: #B5472F;
   --chart-1: #CC553D;
   --chart-2: #D99B26;
@@ -114,13 +114,13 @@
   --warning: #99600F; /* deeper than brand amber #C27820 so warning text passes AA */
   --warning-foreground: #FFFFFF;
   --info: #3F6680;
-  --label: #6E6E73; /* warm grey for eyebrows and meta; #8C827A (brand warm-gray-soft) is too light for small text */
-  --nav-link: #424245;
+  --label: #736A63; /* warm grey for eyebrows and meta; #8C827A (brand warm-gray-soft) is too light for small text */
+  --nav-link: #666059;
   --surface-hover-border: rgba(204, 85, 61, 0.4);
-  --shadow-surface: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
-  --shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.04), 0 12px 40px rgba(0, 0, 0, 0.08);
-  --shadow-hover: 0 4px 10px rgba(0, 0, 0, 0.05), 0 18px 48px rgba(0, 0, 0, 0.1);
-  --shadow-lift: 0 6px 14px rgba(0, 0, 0, 0.06), 0 24px 60px rgba(0, 0, 0, 0.12);
+  --shadow-surface: 0 1px 2px rgba(25, 25, 25, 0.02);
+  --shadow-raised: 0 2px 12px rgba(25, 25, 25, 0.04);
+  --shadow-hover: 0 8px 24px rgba(25, 25, 25, 0.05);
+  --shadow-lift: 0 12px 32px rgba(25, 25, 25, 0.06);
   --pill-sage-fg: #2E6B4B; --pill-sage-bg: rgba(46, 107, 75, 0.1); --pill-sage-border: rgba(46, 107, 75, 0.3);
   --pill-amber-fg: #99600F; --pill-amber-bg: rgba(194, 120, 32, 0.1); --pill-amber-border: rgba(194, 120, 32, 0.3);
   --pill-terracotta-fg: #B5472F; --pill-terracotta-bg: rgba(204, 85, 61, 0.1); --pill-terracotta-border: rgba(204, 85, 61, 0.3);
@@ -129,29 +129,29 @@
   --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-press: cubic-bezier(0.2, 0, 0, 1);
   /* Translucent chrome: the page scrolls under the navbar */
-  --material-bar: rgba(245, 245, 247, 0.72);
+  --material-bar: rgba(251, 249, 245, 0.72);
   --material-edge: rgba(25, 25, 25, 0.06);
 }
 
 .dark {
-  --background: #000000;
-  --foreground: #F5F5F7;
-  --card: #1C1C1E;
-  --card-foreground: #F5F5F7;
-  --popover: #1C1C1E;
-  --popover-foreground: #F5F5F7;
+  --background: #161310;
+  --foreground: #EDEAE4;
+  --card: #1E1A16;
+  --card-foreground: #EDEAE4;
+  --popover: #1E1A16;
+  --popover-foreground: #EDEAE4;
   --primary: #E06D53; /* lighter in dark so it reads as text; buttons put dark ink on it */
-  --primary-foreground: #000000;
-  --secondary: #2C2C2E;
-  --secondary-foreground: #F5F5F7;
-  --muted: #1C1C1E;
-  --muted-foreground: #A1A1A6;
-  --accent: #2C2C2E;
-  --accent-foreground: #F5F5F7;
+  --primary-foreground: #161310;
+  --secondary: #26211B;
+  --secondary-foreground: #EDEAE4;
+  --muted: #26211B;
+  --muted-foreground: #A89F95;
+  --accent: #332C24;
+  --accent-foreground: #EDEAE4;
   --destructive: #C84040;
   --destructive-foreground: #FFFFFF;
-  --border: #2C2C2E;
-  --input: #3A3A3C;
+  --border: #3A342C;
+  --input: #3A342C;
   --ring: #E06D53;
   --chart-1: #D95338;
   --chart-2: #D99B26;
@@ -172,8 +172,8 @@
   --warning: #D99B26;
   --warning-foreground: #161310;
   --info: #7FA6C2;
-  --label: #A1A1A6;
-  --nav-link: #D2D2D7;
+  --label: #A89F95;
+  --nav-link: #C2BBB0;
   --surface-hover-border: rgba(217, 83, 56, 0.4);
   --shadow-surface: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-raised: 0 2px 12px rgba(0, 0, 0, 0.3);
@@ -183,7 +183,7 @@
   --pill-amber-fg: #E0B060; --pill-amber-bg: rgba(217, 155, 38, 0.14); --pill-amber-border: rgba(217, 155, 38, 0.4);
   --pill-terracotta-fg: #E08866; --pill-terracotta-bg: rgba(217, 83, 56, 0.14); --pill-terracotta-border: rgba(217, 83, 56, 0.4);
   --pill-carmine-fg: #E08080; --pill-carmine-bg: rgba(200, 64, 64, 0.14); --pill-carmine-border: rgba(200, 64, 64, 0.4);
-  --material-bar: rgba(0, 0, 0, 0.7);
+  --material-bar: rgba(22, 19, 16, 0.72);
   --material-edge: rgba(0, 0, 0, 0.4);
 }
 
@@ -191,7 +191,7 @@
   * { @apply border-border outline-ring/50; }
   body {
     @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
@@ -202,7 +202,7 @@
   }
   /* Size-specific tracking and leading: tighter as type grows, body left near zero */
   h1, h2, h3, h4, h5, h6 {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.15;
@@ -218,7 +218,7 @@
     @apply cursor-pointer;
   }
   html { scroll-behavior: smooth; }
-  ::selection { background-color: rgba(204, 85, 61, 0.22); color: inherit; }
+  ::selection { background-color: rgba(204, 85, 61, 0.18); color: inherit; }
   /* A visible keyboard focus everywhere; components with their own ring override this. */
   :where(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 }
@@ -229,10 +229,10 @@
   @media (min-width: 1024px) { .container { padding-left: 2rem; padding-right: 2rem; max-width: 1280px; } }
 
   /* Editorial typography helpers */
-  .font-display { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif; font-weight: 700; letter-spacing: -0.035em; line-height: 1.04; }
+  .font-display { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; letter-spacing: -0.015em; line-height: 1.04; }
   .font-mono-data { font-family: 'JetBrains Mono', 'Space Mono', monospace; }
-  .section-tag { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; font-size: 0.875rem; font-weight: 600; letter-spacing: 0; color: var(--primary); }
-  .label-mono { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; color: var(--label); }
+  .section-tag { font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--label); }
+  .label-mono { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--label); }
 
   /* Surfaces: white on cream, 1px warm hairline, 4px corners, almost no shadow.
      .surface is static; add .surface-hover only when the whole surface is a link or button. */
@@ -240,12 +240,11 @@
     background: var(--card);
     color: var(--card-foreground);
     border: 1px solid var(--border);
-    border-radius: 1.25rem;
+    border-radius: 0.25rem;
     box-shadow: var(--shadow-surface);
     transition: transform 0.4s var(--ease-fluid), border-color 0.25s ease, box-shadow 0.4s var(--ease-fluid);
   }
   .surface-raised { box-shadow: var(--shadow-raised); }
-  :root:not(.dark) .surface, :root:not(.dark) .surface-raised, :root:not(.dark) .procedure-card, :root:not(.dark) .stats-card, :root:not(.dark) .achievement-card { border-color: transparent; }
   .procedure-card, .stats-card { position: relative; overflow: hidden; }
   /* Lift only where hover exists (no sticky hover on touch); press responds on pointer-down everywhere */
   @media (hover: hover) and (pointer: fine) {
