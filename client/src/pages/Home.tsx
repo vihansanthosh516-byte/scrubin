@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { Activity, ArrowRight, BookOpen, Play, RotateCcw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE } from "@/lib/api";
-import { EASE } from "@/lib/motion";
+import { springSoft } from "@/lib/motion";
 import { getLeaderboard, getUserSessions, type PersistedSession } from "@/lib/leaderboard";
 import { ENGINE_SCENARIO } from "@/engine/scenarios";
 import { CtaLink, DifficultyPill, Eyebrow, Pill, StatCard } from "@/components/scrubin";
@@ -17,7 +17,7 @@ const REVEAL = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, amount: 0.3 },
-  transition: { duration: 0.5, ease: EASE },
+  transition: springSoft,
 } as const;
 
 // The four Beginner cases (unlocked below 500 XP). Ids match the registry; times and decision
@@ -84,7 +84,7 @@ export default function Home() {
       {/* Greeting and the one next action */}
       <section className="border-b border-border">
         <div className="mx-auto max-w-6xl px-4 pb-16 pt-28 md:pb-20 md:pt-36">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={springSoft}>
             <Eyebrow variant="hero" className="mb-6">{greeting()}</Eyebrow>
             <h1 className="font-display text-5xl leading-[0.98] tracking-tight sm:text-6xl md:text-7xl">
               {isNew ? <>Your first surgery starts <span className="text-primary">here</span>, {firstName}.</> : <>Welcome back, <span className="text-primary">{firstName}</span>.</>}
@@ -138,7 +138,7 @@ export default function Home() {
           </motion.div>
           <ol className="grid grid-cols-1 gap-5 md:grid-cols-3">
             {STEPS.map((step, i) => (
-              <motion.li key={step.title} {...REVEAL} transition={{ duration: 0.5, delay: i * 0.08, ease: EASE }} className="surface p-7">
+              <motion.li key={step.title} {...REVEAL} transition={{ ...springSoft, delay: i * 0.08 }} className="surface p-7">
                 <span className="font-mono-data text-sm font-semibold text-primary">0{i + 1}</span>
                 <h3 className="mt-4 text-lg font-semibold tracking-tight">{step.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
@@ -164,7 +164,7 @@ export default function Home() {
           </motion.div>
           <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {STARTER_CASES.map((c, i) => (
-              <motion.li key={c.id} {...REVEAL} transition={{ duration: 0.5, delay: i * 0.06, ease: EASE }}>
+              <motion.li key={c.id} {...REVEAL} transition={{ ...springSoft, delay: i * 0.06 }}>
                 <Link href={`/simulation?proc=${c.id}`} className="procedure-card group flex h-full flex-col gap-4 p-6">
                   <div className="flex flex-wrap items-center gap-2">
                     <DifficultyPill difficulty="Beginner" />

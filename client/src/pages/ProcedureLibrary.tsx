@@ -12,7 +12,7 @@ import { ENGINE_SCENARIO } from "@/engine/scenarios";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { API_BASE } from "@/lib/api";
-import { EASE } from "@/lib/motion";
+import { springSoft } from "@/lib/motion";
 import { useProcedureStore } from "@/state/procedureStore";
 import { Button } from "@/components/ui/button";
 import { DifficultyPill, EmptyState, ErrorBanner, FilterChips, PageHeader, Pill, SearchField } from "@/components/scrubin";
@@ -109,7 +109,7 @@ function ProcedureCard({ proc, locked, index }: { proc: Procedure; locked: boole
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.45, delay: (index % 3) * 0.06, ease: EASE }}
+      transition={{ ...springSoft, delay: (index % 3) * 0.06 }}
       className={locked ? "procedure-card relative flex flex-col p-6 opacity-70" : "procedure-card group relative flex flex-col p-6"}
       aria-disabled={locked || undefined}
     >
@@ -266,7 +266,7 @@ export default function ProcedureLibrary() {
               </p>
             </div>
             <div className="h-1.5 w-full bg-accent" role="progressbar" aria-label={nextTier ? `Progress to ${nextTier.label}` : "All tiers unlocked"} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
-              <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 1, ease: EASE }} className={`h-full ${nextTier ? (userXP >= 500 ? "bg-warning" : "bg-primary") : "bg-success"}`} />
+              <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ type: "spring", bounce: 0, duration: 1 }} className={`h-full ${nextTier ? (userXP >= 500 ? "bg-warning" : "bg-primary") : "bg-success"}`} />
             </div>
           </section>
         )}

@@ -1,15 +1,18 @@
 import type { Transition, Variants } from "framer-motion";
 
 // Shared motion tokens. Import these instead of hand-rolling springs per component.
-export const spring: Transition = { type: "spring", damping: 25, stiffness: 300 };
-export const springSoft: Transition = { type: "spring", damping: 30, stiffness: 180 };
+// Apple's fluid-interface defaults: critically damped (no overshoot) for UI, ~0.4s response;
+// bounce only after a gesture that carried momentum (a flick or drag release).
+export const spring: Transition = { type: "spring", bounce: 0, duration: 0.4 };
+export const springSoft: Transition = { type: "spring", bounce: 0, duration: 0.6 };
+export const springMomentum: Transition = { type: "spring", bounce: 0.2, duration: 0.4 };
 export const ease = [0.22, 1, 0.36, 1] as const;
-// The editorial ease used for page entrances and hovers (same curve as the CSS transitions in index.css).
-export const EASE = [0.25, 1, 0.5, 1] as const;
+// The editorial ease used for page entrances and hovers (same curve as --ease-fluid in index.css).
+export const EASE = ease;
 
 export const fadeUp: Variants = {
   hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } },
+  visible: { opacity: 1, y: 0, transition: springSoft },
 };
 
 export const scaleIn: Variants = {

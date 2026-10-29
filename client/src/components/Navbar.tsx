@@ -5,6 +5,7 @@
  */
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { motion } from "framer-motion";
 import { ChevronDown, LogOut, Menu, Monitor, Moon, Sun, User } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +23,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CtaLink, Wordmark } from "@/components/scrubin";
 import { cn } from "@/lib/utils";
+import { spring } from "@/lib/motion";
 
 const NAV_LINKS = [
   { href: "/procedures", label: "Procedures" },
@@ -54,7 +56,7 @@ export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
 
-  // A hairline appears once the page scrolls under the header.
+  // A soft edge appears once the page scrolls under the translucent header.
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
@@ -83,7 +85,7 @@ export default function Navbar() {
   );
 
   return (
-    <header className={cn("fixed inset-x-0 top-0 z-50 border-b bg-background transition-colors", scrolled ? "border-border" : "border-transparent")}>
+    <header data-scrolled={scrolled} className="material-bar fixed inset-x-0 top-0 z-50 transition-shadow duration-300">
       <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Wordmark />
 
@@ -94,10 +96,14 @@ export default function Navbar() {
               href={link.href}
               aria-current={isActive(link.href) ? "page" : undefined}
               className={cn(
-                "rounded-sm px-3.5 py-2 text-sm font-medium transition-colors",
+                "relative rounded-sm px-3.5 py-2 text-sm font-medium transition-colors",
                 isActive(link.href) ? "text-primary" : "text-nav-link hover:text-primary",
               )}
             >
+              {/* The marker slides between tabs (one shared element), so the move reads as continuous */}
+              {isActive(link.href) && (
+                <motion.span layoutId="nav-active" transition={spring} className="absolute inset-x-3.5 -bottom-[13px] h-0.5 bg-primary" aria-hidden="true" />
+              )}
               {link.label}
             </Link>
           ))}
