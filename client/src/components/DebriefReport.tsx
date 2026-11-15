@@ -174,13 +174,13 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
           {/* Recommendations */}
           {evalData.recommendations && Array.isArray(evalData.recommendations) && evalData.recommendations.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-terracotta flex items-center gap-2">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Lightbulb className="w-4 h-4" /> Recommendations
               </h3>
               <ul className="space-y-2">
                 {evalData.recommendations.map((rec: any, i: number) => (
-                  <li key={i} className="text-sm text-terracotta/80 bg-terracotta/5 p-3 rounded-sm border border-terracotta/20 flex items-start gap-3">
-                    <Lightbulb className="w-4 h-4 text-terracotta mt-0.5 shrink-0" />
+                  <li key={i} className="text-sm text-foreground/80 bg-terracotta/5 p-3 rounded-sm border border-terracotta/20 flex items-start gap-3">
+                    <Lightbulb className="w-4 h-4 text-foreground mt-0.5 shrink-0" />
                     <EventText text={rec.description || rec} />
                   </li>
                 ))}

@@ -5,8 +5,8 @@ import { fmtTime } from "@/lib/format";
 // Who's speaking, by colour and always by name too.
 const SPEAKER_STYLE: Record<string, string> = {
   surgeon: "text-warning",
-  anesthesia: "text-primary",
-  attending: "text-primary",
+  anesthesia: "text-foreground",
+  attending: "text-foreground",
   circulator: "text-success",
   scrub: "text-success",
   patient: "text-info",

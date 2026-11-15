@@ -22,7 +22,7 @@ export function CtaLink({
 }
 
 const fieldBase =
-  "w-full rounded-sm border border-input bg-card px-4 py-3 text-sm text-foreground placeholder:text-label transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-destructive";
+  "w-full rounded-sm border border-input bg-card px-4 py-3.5 text-sm text-foreground placeholder:text-label transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-destructive";
 
 /** Labelled text input. The label is always rendered (visually hidden with `hideLabel`) so screen readers get it. */
 export const TextField = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { label: string; hideLabel?: boolean; hint?: string }>(
@@ -122,7 +122,7 @@ export function FilterChips<T extends string>({
         <ToggleGroupItem
           key={o.value}
           value={o.value}
-          className="h-auto flex-none rounded-sm border border-border bg-card px-3.5 py-2 text-xs font-semibold text-muted-foreground shadow-none transition-colors first:rounded-sm last:rounded-sm hover:border-surface-hover-border hover:bg-card hover:text-foreground data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+          className="h-auto flex-none rounded-full border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground shadow-none transition-colors first:rounded-full last:rounded-full hover:border-surface-hover-border hover:bg-muted hover:text-foreground data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
         >
           {o.label}
         </ToggleGroupItem>

@@ -4,12 +4,12 @@ import { TweenNumber } from "@/components/ui/tween-number";
 
 // Real monitor colour conventions, tuned to the ScrubIn palette.
 const COLORS = {
-  ecg: "var(--ill-4ade80)",
-  spo2: "var(--ill-22d3ee)",
-  art: "var(--ill-f87171)",
-  co2: "var(--ill-f5c451)",
+  ecg: "#4ade80",
+  spo2: "#22d3ee",
+  art: "#f87171",
+  co2: "#f5c451",
   grid: "rgba(255,255,255,0.05)",
-  bis: "var(--ill-c4b5fd)",
+  bis: "#c4b5fd",
 };
 
 const SWEEP_PX_PER_S = 90;
@@ -96,7 +96,7 @@ export function PatientMonitor({ readout, alarms, paused, muted, showAlarmChips 
       canvas.width = Math.floor(rect.width * dpr);
       canvas.height = Math.floor(rect.height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.fillStyle = "var(--ill-050b14)";
+      ctx.fillStyle = "#050b14";
       ctx.fillRect(0, 0, rect.width, rect.height);
       x = 0;
     };
@@ -195,7 +195,7 @@ export function PatientMonitor({ readout, alarms, paused, muted, showAlarmChips 
         const dx = SWEEP_PX_PER_S * dt;
         const nx = x + dx;
         // Erase bar ahead of the sweep.
-        ctx.fillStyle = "var(--ill-050b14)";
+        ctx.fillStyle = "#050b14";
         ctx.fillRect(x, 0, dx + 14, H);
         channels.forEach((ch, i) => {
           const top = i * laneH;
@@ -278,17 +278,17 @@ export function PatientMonitor({ readout, alarms, paused, muted, showAlarmChips 
           </div>
           <Numeric label="EtCO₂" unit="mmHg" color={COLORS.co2} value={a.has("etco2") ? (r?.etco2 ?? "—") : undefined} alarm={alarm("etco2") || alarm("apnea")} sub={a.has("etco2") && r?.rr != null ? `RR ${r.rr}` : undefined} />
           <div className="col-span-2 grid grid-cols-2 divide-x divide-white/10 border-t border-white/10 sm:border-t-0">
-            <Numeric small label="Temp" unit="°C" color="var(--ill-e2e8f0)" value={a.has("temp") ? r?.temp : undefined} alarm={alarm("temp")} />
+            <Numeric small label="Temp" unit="°C" color="#e2e8f0" value={a.has("temp") ? r?.temp : undefined} alarm={alarm("temp")} />
             <Numeric small label="BIS" unit="" color={COLORS.bis} value={a.has("bis") ? r?.bis : undefined} sub={a.has("bis") ? undefined : "sensor off"} />
           </div>
           <div className="col-span-2 grid grid-cols-2 divide-x divide-white/10 border-t border-white/10 sm:border-t-0">
-            <Numeric small label="Ppeak" unit="cmH₂O" color="var(--ill-e2e8f0)" value={r?.peak_pressure ?? undefined} alarm={alarm("peak_pressure")} />
-            <Numeric small label="FiO₂" unit="%" color="var(--ill-e2e8f0)" value={r?.fio2} />
+            <Numeric small label="Ppeak" unit="cmH₂O" color="#e2e8f0" value={r?.peak_pressure ?? undefined} alarm={alarm("peak_pressure")} />
+            <Numeric small label="FiO₂" unit="%" color="#e2e8f0" value={r?.fio2} />
           </div>
           {r?.fi_sevo != null && (r.fi_sevo > 0 || (r.et_sevo ?? 0) > 0) && (
             <div className="col-span-2 grid grid-cols-2 divide-x divide-white/10 border-t border-white/10 sm:border-t-0">
-              <Numeric small label="Sevo Fi/Et" unit="%" color="var(--ill-a7f3d0)" value={`${r.fi_sevo.toFixed(1)}/${r.et_sevo != null ? r.et_sevo.toFixed(1) : "—"}`} />
-              <Numeric small label="MAC" unit="" color="var(--ill-a7f3d0)" value={r.mac != null ? r.mac.toFixed(2) : undefined} />
+              <Numeric small label="Sevo Fi/Et" unit="%" color="#a7f3d0" value={`${r.fi_sevo.toFixed(1)}/${r.et_sevo != null ? r.et_sevo.toFixed(1) : "—"}`} />
+              <Numeric small label="MAC" unit="" color="#a7f3d0" value={r.mac != null ? r.mac.toFixed(2) : undefined} />
             </div>
           )}
           {r?.tof && (

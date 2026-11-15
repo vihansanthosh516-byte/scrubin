@@ -132,7 +132,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
           <h2 id="verdict-h" className="font-sans section-tag">Process and outcome score</h2>
           {debrief.score != null ? (
             <p className="mt-2 font-mono-data tabular-nums">
-              <span className="text-6xl font-semibold text-primary">{debrief.score}</span>
+              <span className="text-6xl font-semibold text-foreground">{debrief.score}</span>
               <span className="ml-1 text-xl text-muted-foreground">/ 100</span>
               <span className="ml-3 rounded-sm border border-border px-2 py-1 align-middle font-sans text-xs font-semibold">{band(debrief.score)}</span>
             </p>

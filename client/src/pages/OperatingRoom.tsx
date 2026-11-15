@@ -322,7 +322,7 @@ export default function OperatingRoom() {
       <div className="sticky top-16 z-30 border-b border-border bg-background">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 py-2.5 lg:px-5">
           <div className="min-w-0">
-            <p className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-primary">
+            <p className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-foreground">
               {role === "anesthesia" ? "You are the anaesthesiologist" : "You are the surgeon"}
               {conn.connected ? (
                 <span className="flex items-center gap-1 text-success">
@@ -553,7 +553,7 @@ function Sign({ label, value, alert }: { label: string; value: string; alert?: b
 function RoleCard({ icon, title, text, onClick, href, disabled }: { icon: React.ReactNode; title: string; text: string; onClick?: () => void; href?: string; disabled?: boolean }) {
   const body = (
     <>
-      <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-sm border border-border bg-background text-primary">{icon}</span>
+      <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-sm border border-border bg-background text-foreground">{icon}</span>
       <span className="mb-1 block text-xl font-semibold">{title}</span>
       <span className="block text-sm text-muted-foreground">{text}</span>
     </>

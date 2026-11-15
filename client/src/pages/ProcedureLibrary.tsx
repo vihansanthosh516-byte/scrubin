@@ -93,7 +93,7 @@ function ProcedureRow({ proc, locked }: { proc: Procedure; locked: boolean }) {
             proc.name
           ) : (
             // The title link covers the whole row; the Briefing link sits above it.
-            <Link href={`/simulation?proc=${proc.id}`} className="after:absolute after:inset-0 after:content-[''] group-hover:text-primary">
+            <Link href={`/simulation?proc=${proc.id}`} className="after:absolute after:inset-0 after:content-[''] group-hover:text-foreground">
               {proc.name}
             </Link>
           )}
@@ -117,7 +117,7 @@ function ProcedureRow({ proc, locked }: { proc: Procedure; locked: boolean }) {
             <Lock className="h-4 w-4" aria-hidden="true" /> Earn {needXp} XP to open
           </span>
         ) : (
-          <Link href={`/learn/${proc.id}`} className="relative z-10 flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+          <Link href={`/learn/${proc.id}`} className="relative z-10 flex items-center gap-1.5 text-sm font-semibold text-foreground hover:underline">
             <BookOpen className="h-4 w-4" aria-hidden="true" /> Briefing
           </Link>
         )}
@@ -221,7 +221,7 @@ export default function ProcedureLibrary() {
             <div>
               <h2 id="xp-heading" className="font-sans text-sm text-muted-foreground">Your experience</h2>
               <p className="mt-1 font-mono-data text-4xl">
-                {userXP.toLocaleString()} <span className="text-xl text-primary">XP</span>
+                {userXP.toLocaleString()} <span className="text-xl text-foreground">XP</span>
               </p>
             </div>
             <div className="min-w-0">

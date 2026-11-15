@@ -41,9 +41,9 @@ const THEMES = [
 
 function Avatar({ src, name, className }: { src?: string; name: string; className?: string }) {
   return src ? (
-    <img src={src} alt="" className={cn("rounded-sm border border-border object-cover", className)} />
+    <img src={src} alt="" className={cn("rounded-full object-cover", className)} />
   ) : (
-    <span className={cn("flex items-center justify-center rounded-sm border border-border bg-muted text-[10px] font-bold text-foreground", className)} aria-hidden="true">
+    <span className={cn("flex items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-foreground", className)} aria-hidden="true">
       {name[0]?.toUpperCase()}
     </span>
   );
@@ -78,7 +78,7 @@ export default function Navbar() {
     <DropdownMenuRadioGroup value={theme} onValueChange={(v) => setTheme(v as typeof theme)}>
       {THEMES.map(({ value, label, icon: Icon }) => (
         <DropdownMenuRadioItem key={value} value={value} className="cursor-pointer gap-2">
-          <Icon className="h-4 w-4 text-primary" aria-hidden="true" /> {label}
+          <Icon className="h-4 w-4 text-foreground" aria-hidden="true" /> {label}
         </DropdownMenuRadioItem>
       ))}
     </DropdownMenuRadioGroup>
@@ -86,7 +86,7 @@ export default function Navbar() {
 
   return (
     <header data-scrolled={scrolled} className="material-bar fixed inset-x-0 top-0 z-50 transition-shadow duration-300">
-      <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-[72px] w-full max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Wordmark />
 
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
@@ -96,13 +96,13 @@ export default function Navbar() {
               href={link.href}
               aria-current={isActive(link.href) ? "page" : undefined}
               className={cn(
-                "relative whitespace-nowrap rounded-sm px-2.5 lg:px-3.5 py-2 text-sm font-medium transition-colors",
-                isActive(link.href) ? "text-primary" : "text-nav-link hover:text-primary",
+                "relative isolate whitespace-nowrap rounded-full px-3 lg:px-4 py-2 text-sm font-medium transition-colors",
+                isActive(link.href) ? "text-foreground" : "text-nav-link hover:text-foreground",
               )}
             >
               {/* The marker slides between tabs (one shared element), so the move reads as continuous */}
               {isActive(link.href) && (
-                <motion.span layoutId="nav-active" transition={spring} className="absolute inset-x-3.5 -bottom-[13px] h-0.5 bg-primary" aria-hidden="true" />
+                <motion.span layoutId="nav-active" transition={spring} className="absolute inset-0 -z-10 rounded-full bg-muted" aria-hidden="true" />
               )}
               {link.label}
             </Link>
@@ -113,7 +113,7 @@ export default function Navbar() {
           <div className="hidden items-center gap-2 md:flex">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="outline" className="text-nav-link hover:text-primary" aria-label={`Theme: ${theme}`}>
+                <Button size="icon" variant="outline" className="text-nav-link hover:text-foreground" aria-label={`Theme: ${theme}`}>
                   <ThemeIcon className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -126,7 +126,7 @@ export default function Navbar() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="h-9 gap-2 px-3" aria-label={`Account menu for ${displayName}`}>
+                  <Button variant="outline" className="h-10 gap-2 px-2 pr-3" aria-label={`Account menu for ${displayName}`}>
                     <Avatar src={user.avatar_url} name={displayName} className="h-5 w-5" />
                     <span className="max-w-[110px] truncate text-xs font-semibold">{displayName}</span>
                     <ChevronDown className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
@@ -141,7 +141,7 @@ export default function Navbar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild className="cursor-pointer gap-2">
                     <Link href="/profile">
-                      <User className="h-4 w-4 text-primary" aria-hidden="true" /> Profile
+                      <User className="h-4 w-4 text-foreground" aria-hidden="true" /> Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -181,7 +181,7 @@ export default function Navbar() {
                     aria-current={isActive(link.href) ? "page" : undefined}
                     className={cn(
                       "rounded-sm px-3 py-3 text-sm font-medium",
-                      isActive(link.href) ? "bg-primary/10 text-primary" : "text-nav-link hover:bg-muted",
+                      isActive(link.href) ? "bg-primary/10 text-foreground" : "text-nav-link hover:bg-muted",
                     )}
                   >
                     {link.label}
@@ -200,7 +200,7 @@ export default function Navbar() {
                       onClick={() => setTheme(value)}
                       className={cn(
                         "flex flex-col items-center gap-1 rounded-sm border px-2 py-2 text-xs font-medium",
-                        theme === value ? "border-primary bg-primary/10 text-primary" : "border-border text-nav-link",
+                        theme === value ? "border-primary bg-primary/10 text-foreground" : "border-border text-nav-link",
                       )}
                     >
                       <Icon className="h-4 w-4" aria-hidden="true" /> {label}

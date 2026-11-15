@@ -10,6 +10,9 @@ import { API_BASE } from "@/lib/api";
 import { getLeaderboard, getUserSessions, type PersistedSession } from "@/lib/leaderboard";
 import { ENGINE_SCENARIO } from "@/engine/scenarios";
 import { CtaLink, Pill } from "@/components/scrubin";
+import { PatientMonitor } from "@/components/or/PatientMonitor";
+import type { MonitorReadout } from "@/engine/types";
+import bundledCatalog from "@/data/procedureCatalog.json";
 
 // The four Beginner cases (unlocked below 500 XP). Ids match the registry; times and decision
 // counts are the engine's own estimates.
@@ -19,6 +22,13 @@ const STARTER_CASES = [
   { id: "thyroidectomy", name: "Thyroidectomy", tag: "ENT", time: "32 min", decisions: 32 },
   { id: "carpal-tunnel-release", name: "Carpal Tunnel Release", tag: "Orthopedic", time: "30 min", decisions: 30 },
 ];
+
+// A steady, healthy patient on the monitor: what the bedside screen looks like at the start of a case.
+const DEMO_READOUT: MonitorReadout = {
+  attached: ["ecg", "spo2", "nibp", "etco2"],
+  hr: 78, rhythm: "sinus", spo2: 98, pulse_rate: 78, perfusion_index: 3.1,
+  nibp: { sbp: 124, dbp: 78, map: 93 }, nibp_age_s: 40, etco2: 36, rr: 14, temp: 36.8, capno_shape: "normal",
+};
 
 const STEPS = [
   { title: "Read the briefing", body: "Meet the patient, the indication and the key risks before you scrub in." },
@@ -71,55 +81,65 @@ export default function Home() {
   const isNew = mine !== null && mine.cases === 0;
 
   const record = [
-    { label: "Your XP", value: mine ? mine.xp.toLocaleString() : "Not yet" },
-    { label: "Cases completed", value: mine ? String(mine.cases) : "Not yet" },
-    { label: "Leaderboard rank", value: mine?.rank ? `#${mine.rank}` : "Unranked" },
-    { label: "Procedures available", value: procedureCount != null ? String(procedureCount) : "Loading" },
+    { label: "Your XP", value: mine ? mine.xp.toLocaleString() : "0" },
+    { label: "Cases completed", value: mine ? String(mine.cases) : "0" },
+    { label: "Leaderboard rank", value: mine?.rank ? `#${mine.rank}` : "None" },
+    { label: "Procedures available", value: procedureCount != null ? String(procedureCount) : String((bundledCatalog as any).procedures.length) },
   ];
 
   return (
     <div className="bg-background text-foreground">
-      {/* First screen: the greeting, the one next action, and the student's own record beside it */}
-      <section className="border-b border-border">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-4 pb-16 pt-28 md:pt-36 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:items-end lg:gap-16">
+      {/* First screen: the headline and the one next action beside the live bedside monitor */}
+      <section>
+        <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 pb-20 pt-32 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14 lg:pt-36">
           <div className="min-w-0">
-            <h1 className="text-5xl leading-[0.98] sm:text-6xl md:text-7xl">
-              {isNew ? <>{greeting()}, {firstName}. Your first surgery starts here.</> : <>{greeting()}, {firstName}.</>}
+            <h1 className="text-5xl leading-[1.02] sm:text-6xl lg:text-[4.25rem]">
+              {isNew ? <>Your first surgery starts here.</> : <>{greeting()}, {firstName}.</>}
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-muted-foreground">
+            <p className="mt-6 max-w-md text-lg text-muted-foreground">
               {isNew
                 ? "Make the calls yourself on fictional patients, with zero real risk."
                 : lastCase
                   ? `Last case: ${lastCase.procedure_name}, ${lastCase.score}%. Pick it up or try another.`
                   : "Pick a procedure, read the briefing, and scrub in."}
             </p>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-10 flex flex-col flex-wrap gap-3 sm:flex-row">
               {lastCase ? (
-                <CtaLink href={`/simulation?proc=${lastCase.procedure_id}`} size="lg" className="px-8 text-base font-semibold">
+                <CtaLink href={`/simulation?proc=${lastCase.procedure_id}`} size="lg">
                   <RotateCcw className="h-5 w-5" aria-hidden="true" /> Practise {lastCase.procedure_name} again
                 </CtaLink>
               ) : (
-                <CtaLink href="/simulation?proc=appendectomy" size="lg" className="px-8 text-base font-semibold">
+                <CtaLink href="/simulation?proc=appendectomy" size="lg">
                   <Activity className="h-5 w-5" aria-hidden="true" /> Start with an appendectomy
                 </CtaLink>
               )}
-              <CtaLink href="/procedures" size="lg" variant="outline" className="px-8 text-base font-semibold">
+              <CtaLink href="/procedures" size="lg" variant="outline">
                 <Play className="h-5 w-5" aria-hidden="true" /> Browse all procedures
               </CtaLink>
             </div>
           </div>
 
-          <div aria-labelledby="stats-heading" role="region" className="min-w-0">
-            <h2 id="stats-heading" className="text-2xl">Your record</h2>
-            <dl className="mt-4 border-t border-foreground">
-              {record.map((r) => (
-                <div key={r.label} className="flex items-baseline justify-between gap-4 border-b border-border py-3">
-                  <dt className="text-sm text-muted-foreground">{r.label}</dt>
-                  <dd className="font-mono-data text-2xl text-foreground">{r.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
+          <figure className="min-w-0">
+            <div className="overflow-hidden rounded-[min(2vw,var(--radius-card))] shadow-[var(--shadow-lift)] outline outline-1 -outline-offset-1 outline-border">
+              <PatientMonitor readout={DEMO_READOUT} alarms={[]} paused={false} muted showAlarmChips={false} />
+            </div>
+            <figcaption className="mt-3 text-sm text-muted-foreground">The bedside monitor from inside a case. Every order you give moves these numbers.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      {/* The student's own record, as figures on one smoked band */}
+      <section aria-labelledby="stats-heading" className="border-y border-border bg-card">
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <h2 id="stats-heading" className="font-sans text-sm text-muted-foreground">Your record</h2>
+          <dl className="mt-6 grid grid-cols-2 gap-y-8 md:grid-cols-4">
+            {record.map((r) => (
+              <div key={r.label} className="min-w-0 border-l border-border pl-5 first:border-l-0 first:pl-0 md:[&:nth-child(3)]:border-l md:[&:nth-child(3)]:pl-5 [&:nth-child(3)]:border-l-0 [&:nth-child(3)]:pl-0">
+                <dt className="text-sm text-muted-foreground">{r.label}</dt>
+                <dd className="mt-2 font-display text-4xl leading-none sm:text-5xl">{r.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
@@ -143,14 +163,14 @@ export default function Home() {
                   className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-2 py-6 transition-colors hover:bg-muted/60 sm:grid-cols-[minmax(0,5fr)_minmax(0,3fr)_minmax(0,3fr)_auto] sm:px-3"
                 >
                   <span className="min-w-0">
-                    <h3 className="font-display text-3xl font-normal leading-tight group-hover:text-primary">{c.name}</h3>
+                    <h3 className="font-display text-3xl font-normal leading-tight group-hover:text-foreground">{c.name}</h3>
                     {ENGINE_SCENARIO[c.id] && <Pill tone="terracotta" className="mt-2">Real-time OR</Pill>}
                   </span>
                   <span className="hidden text-sm text-muted-foreground sm:block">{c.tag}</span>
                   <span className="hidden font-mono-data text-sm text-muted-foreground sm:block">
                     {c.time}, {c.decisions} decisions
                   </span>
-                  <ArrowRight className="h-5 w-5 text-primary transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                  <ArrowRight className="h-5 w-5 text-foreground transition-transform motion-safe:group-hover:translate-x-1" aria-hidden="true" />
                 </Link>
               </li>
             ))}
@@ -165,7 +185,7 @@ export default function Home() {
           <ol className="mt-12 grid grid-cols-1 md:grid-cols-3">
             {STEPS.map((step, i) => (
               <li key={step.title} className="border-t border-foreground py-6 md:border-l md:border-t-0 md:border-border md:px-8 md:first:border-l-0 md:first:pl-0">
-                <span className="font-mono-data text-sm text-primary">Step {i + 1}</span>
+                <span className="font-mono-data text-sm text-foreground">Step {i + 1}</span>
                 <h3 className="mt-3 font-display text-3xl font-normal">{step.title}</h3>
                 <p className="mt-3 leading-relaxed text-muted-foreground">{step.body}</p>
               </li>

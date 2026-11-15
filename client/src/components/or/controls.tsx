@@ -6,7 +6,7 @@ export function Section({ title, children, right }: { title: string; children: R
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h4 className="text-[11px] text-primary font-semibold">{title}</h4>
+        <h4 className="text-[11px] text-foreground font-semibold">{title}</h4>
         {right}
       </div>
       {children}
@@ -32,7 +32,7 @@ export function OrButton({
   className?: string;
 }) {
   const tones = {
-    blue: active ? "bg-primary/10 border-primary text-primary" : "border-border hover:border-primary/60 hover:bg-primary/10",
+    blue: active ? "bg-primary/10 border-primary text-foreground" : "border-border hover:border-primary/60 hover:bg-primary/10",
     teal: active ? "bg-success/10 border-success text-success" : "border-success/40 hover:bg-success/10",
     red: active ? "bg-destructive/10 border-destructive text-destructive" : "border-destructive/40 text-destructive hover:bg-destructive/10",
     amber: active ? "bg-warning/10 border-warning text-warning" : "border-warning/40 text-warning hover:bg-warning/10",

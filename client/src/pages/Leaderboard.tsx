@@ -10,8 +10,8 @@ import { CtaLink, EmptyState, LoadingState, PageHeader, Pill } from "@/component
 import { cn } from "@/lib/utils";
 
 function RankMark({ rank }: { rank: number }) {
-  if (rank === 1) return <Crown className="h-5 w-5 text-primary" aria-label="First place" />;
-  if (rank <= 3) return <Medal className="h-5 w-5 text-primary" aria-label={rank === 2 ? "Second place" : "Third place"} />;
+  if (rank === 1) return <Crown className="h-5 w-5 text-foreground" aria-label="First place" />;
+  if (rank <= 3) return <Medal className="h-5 w-5 text-foreground" aria-label={rank === 2 ? "Second place" : "Third place"} />;
   return <span className="font-mono-data text-base font-semibold text-label">{rank}</span>;
 }
 

@@ -870,7 +870,7 @@ function SimulationPage() {
     ? "bg-carmine/10 border-carmine text-carmine animate-pulse"
     : isCompleted
     ? "bg-sage/10 border-sage/40 text-sage"
-    : "bg-primary/10 border-primary/30 text-primary";
+    : "bg-primary/10 border-primary/30 text-foreground";
 
   if (!simId) {
     return (
@@ -881,7 +881,7 @@ function SimulationPage() {
           className="surface surface-hover p-12 text-center max-w-lg w-full"
         >
           <div className="w-20 h-20 bg-primary/10 rounded-sm flex items-center justify-center mx-auto mb-6 border border-primary/20">
-            <Activity className="w-10 h-10 text-primary" />
+            <Activity className="w-10 h-10 text-foreground" />
           </div>
           <h1 className="text-3xl text-charcoal dark:text-night-text mb-2 tracking-tight">{PATIENT?.name ? `Start ${PATIENT.name}'s Surgery` : 'Start Surgery'}</h1>
           <p className="text-warm-gray dark:text-night-soft mb-8">The ScrubIn Causal Engine will boot a simulation session for this procedure. Each run rolls a different patient: their ASA class and how sick they arrive are shown in the patient panel once the case starts.</p>
@@ -944,7 +944,7 @@ function SimulationPage() {
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-[11px] text-warm-gray-soft dark:text-night-soft">Procedure</span>
-                <span className="text-xs font-bold text-primary truncate">{procId.toUpperCase()}</span>
+                <span className="text-xs font-bold text-foreground truncate">{procId.toUpperCase()}</span>
               </div>
             </div>
           </div>
@@ -1027,7 +1027,7 @@ function SimulationPage() {
                   <span className="text-xs font-bold text-charcoal dark:text-night-text">
                     {patientProfile.asaLabel || `ASA ${patientProfile.asaClass}`}
                   </span>
-                  <span className="block text-[10px] text-terracotta dark:text-terracotta-night font-medium">
+                  <span className="block text-[10px] text-foreground dark:text-terracotta-night font-medium">
                     {patientProfile.presentationLabel || patientProfile.presentation}
                   </span>
                 </div>
@@ -1043,7 +1043,7 @@ function SimulationPage() {
                 </div>
                 <div className="min-w-0">
                   <span className="block text-[11px] text-warm-gray-soft dark:text-night-soft mb-0.5">Procedure</span>
-                  <span className="font-bold text-primary truncate block">{procId.toUpperCase()}</span>
+                  <span className="font-bold text-foreground truncate block">{procId.toUpperCase()}</span>
                 </div>
                 <div className="min-w-0">
                   <span className="block text-[11px] text-warm-gray-soft dark:text-night-soft mb-0.5">Phase</span>
@@ -1102,7 +1102,7 @@ function SimulationPage() {
                   <VitalItem icon={<Heart className="text-carmine" />} label="Heart Rate" value={vitals.heart_rate} unit="bpm" color={vitals.heart_rate > 110 || vitals.heart_rate < 50 ? "text-carmine animate-pulse" : "text-carmine"} trend={trendOf("heart_rate")} history={seriesOf("heart_rate")} />
                 )}
                 {vitals.bp_systolic !== undefined && (
-                  <VitalItem icon={<Activity className="text-terracotta" />} label="Blood Pressure" value={formatBP(vitals.bp_systolic, vitals.bp_diastolic)} unit="mmHg" color={vitals.bp_systolic < 90 || vitals.bp_systolic > 160 ? "text-carmine animate-pulse" : "text-terracotta"} trend={trendOf("bp_systolic")} history={seriesOf("bp_systolic")} />
+                  <VitalItem icon={<Activity className="text-foreground" />} label="Blood Pressure" value={formatBP(vitals.bp_systolic, vitals.bp_diastolic)} unit="mmHg" color={vitals.bp_systolic < 90 || vitals.bp_systolic > 160 ? "text-carmine animate-pulse" : "text-foreground"} trend={trendOf("bp_systolic")} history={seriesOf("bp_systolic")} />
                 )}
                 {vitals.spo2 !== undefined && (
                   <VitalItem icon={<Droplets className="text-sage" />} label="Oxygen Saturation" value={vitals.spo2} unit="%" color={vitals.spo2 < 92 ? "text-carmine animate-pulse" : "text-sage"} trend={trendOf("spo2")} history={seriesOf("spo2")} />
@@ -1152,7 +1152,7 @@ function SimulationPage() {
  isDeceased ? 'bg-carmine/10 border-carmine text-carmine animate-pulse' :
  isCompleted ? 'bg-sage/10 border-sage/40 text-sage' :
  isBranched ? 'bg-carmine/10 border-carmine text-carmine animate-pulse' :
- 'bg-primary/10 border-primary/30 text-primary'
+ 'bg-primary/10 border-primary/30 text-foreground'
  }`}>
                   {isDeceased ? "PATIENT DECEASED" :
                    isCompleted ? "SIMULATION COMPLETE" :
@@ -1234,7 +1234,7 @@ function SimulationPage() {
                   </div>
 
                   <div className="shrink-0 grid grid-cols-1 sm:grid-cols-3 gap-2 mt-4">
-                    <Button variant="outline" className="h-10 border-border-warm hover:bg-cream text-terracotta hover:text-terracotta" onClick={() => setMode("replay")}>
+                    <Button variant="outline" className="h-10 border-border-warm hover:bg-cream text-foreground hover:text-foreground" onClick={() => setMode("replay")}>
                       <RotateCcw className="w-4 h-4 mr-2" /> View Replay
                     </Button>
                     <Button variant="outline" className="h-10 border-border-warm hover:bg-cream text-charcoal dark:border-night-line dark:hover:bg-night-raised dark:text-night-text" onClick={() => setLocation("/procedures")}>
@@ -1383,7 +1383,7 @@ function SimulationPage() {
                       <span className="text-sm font-bold leading-snug pr-3 text-charcoal dark:text-night-text">
                         {choice.text}
                       </span>
-                      <ChevronRight className="w-5 h-5 text-warm-gray-soft dark:text-night-soft group-hover:text-primary transition-colors shrink-0" />
+                      <ChevronRight className="w-5 h-5 text-warm-gray-soft dark:text-night-soft group-hover:text-foreground transition-colors shrink-0" />
                     </button>
                   ))}
                 </div>
@@ -1397,7 +1397,7 @@ function SimulationPage() {
             <div className="hidden lg:grid shrink-0 grid-cols-3 gap-3">
               <div className="p-3 surface surface-hover flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground" title="Live vitals refresh cadence — physiology decays in real time between steps">Vitals Refresh</span>
-                <span className="text-base font-bold text-terracotta">{tickMs === null ? "paused" : `${tickMs / 1000}s`}</span>
+                <span className="text-base font-bold text-foreground">{tickMs === null ? "paused" : `${tickMs / 1000}s`}</span>
               </div>
               <div className="p-3 surface surface-hover flex flex-col items-center justify-center gap-0.5">
                 <span className="text-[11px] text-muted-foreground" title="Advances with each surgical step or decision, not per poll — vitals keep decaying between them">Causal Clock</span>

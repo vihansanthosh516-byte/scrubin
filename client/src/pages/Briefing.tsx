@@ -39,7 +39,7 @@ export default function Briefing() {
     <article className="bg-background text-foreground">
       <header className="border-b border-border pb-10 pt-28">
         <div className="mx-auto max-w-4xl px-4">
-          <Link href="/learn" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
+          <Link href="/learn" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All briefings
           </Link>
           <h1 className="font-display text-4xl leading-[1.02] tracking-tight sm:text-5xl md:text-6xl">{b.name}</h1>

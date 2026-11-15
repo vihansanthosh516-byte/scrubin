@@ -139,7 +139,7 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <ThemeProvider defaultTheme="light" switchable>
+        <ThemeProvider defaultTheme="dark" switchable>
           <MotionConfig reducedMotion="user">
             <TooltipProvider>
               <Toaster />

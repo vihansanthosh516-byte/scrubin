@@ -195,7 +195,7 @@ export function CommandBar({ onSubmit, lastParse, role, scenario, bare }: Props)
           onPointerUp={stop}
           onPointerCancel={() => listening && stop()}
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-colors ${
-            listening ? "border-destructive bg-destructive text-destructive-foreground" : "border-border text-primary hover:bg-primary/10"
+            listening ? "border-destructive bg-destructive text-destructive-foreground" : "border-border text-foreground hover:bg-primary/10"
           }`}
           aria-label={listening ? "Listening. Release to send" : "Hold to talk"}
           aria-pressed={listening}
@@ -221,7 +221,7 @@ export function CommandBar({ onSubmit, lastParse, role, scenario, bare }: Props)
           placeholder={listening ? "Listening…" : role === "anesthesia" ? "Say or type an order, e.g. “push 150 of propofol”" : "Say or type an order, e.g. “camera in”"}
           className="flex-1 rounded-sm border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-ring focus:ring-[3px] focus:ring-ring/50"
         />
-        <button type="button" onClick={() => submit(text)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm border border-border text-primary hover:bg-primary/10" aria-label="Send order">
+        <button type="button" onClick={() => submit(text)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm border border-border text-foreground hover:bg-primary/10" aria-label="Send order">
           <Send className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>

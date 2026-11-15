@@ -78,7 +78,7 @@ export default function OrCases() {
         {inProgress.length > 0 && (
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="font-sans text-sm text-primary">Continue</h2>
+              <h2 className="font-sans text-sm text-foreground">Continue</h2>
               <button onClick={removeAllUnfinished} className="text-xs text-muted-foreground hover:text-destructive underline-offset-2 hover:underline">
                 Delete all unfinished
               </button>
@@ -95,7 +95,7 @@ export default function OrCases() {
 
         {finished.length > 0 && (
           <section className="space-y-3">
-            <h2 className="font-sans text-sm text-primary">Completed</h2>
+            <h2 className="font-sans text-sm text-foreground">Completed</h2>
             {finished.map((c) => (
               <CaseRow key={c.id} c={c} onDelete={remove}>
                 <button onClick={() => window.location.assign(`/or/replay/${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border text-xs hover:bg-primary/10">
@@ -123,7 +123,7 @@ function CaseRow({ c, children, onDelete }: { c: SavedCase; children: React.Reac
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {c.score != null && <div className="font-mono-data text-2xl text-primary">{c.score}</div>}
+          {c.score != null && <div className="font-mono-data text-2xl text-foreground">{c.score}</div>}
           {c.score == null && c.status === "ended" && <div className="text-xs text-muted-foreground" title="Ended before there was anything to grade">Not scored</div>}
           {children}
           <button onClick={() => onDelete(c.id)} className="p-2 rounded-sm hover:bg-destructive/10 text-muted-foreground hover:text-destructive" aria-label="Delete case">

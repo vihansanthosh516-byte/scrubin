@@ -250,7 +250,7 @@ function AirwayPanel({ state, act }: { state: CaseState; act: (a: Action) => voi
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Section title="Basic airway" right={<span className="text-[11px] text-primary">{aw.intubating ? `Laryngoscopy… ${Math.ceil(aw.intubation_remaining_s)}s` : deviceLabel}</span>}>
+      <Section title="Basic airway" right={<span className="text-[11px] text-foreground">{aw.intubating ? `Laryngoscopy… ${Math.ceil(aw.intubation_remaining_s)}s` : deviceLabel}</span>}>
         <div className="flex flex-wrap gap-1.5">
           <OrButton active={aw.device === "face_mask"} onClick={() => air(aw.device === "face_mask" ? "mask_off" : "mask_on")}>Face mask</OrButton>
           <OrButton active={aw.jaw_thrust} onClick={() => air(aw.jaw_thrust ? "jaw_thrust_off" : "jaw_thrust_on")}>Jaw thrust</OrButton>

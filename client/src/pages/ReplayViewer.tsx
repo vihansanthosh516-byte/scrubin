@@ -175,7 +175,7 @@ export default function ReplayViewer() {
     switch (severity?.toLowerCase()) {
       case "critical": return <AlertCircle className="w-4 h-4 text-carmine shrink-0" />;
       case "warning": return <AlertTriangle className="w-4 h-4 text-amber shrink-0" />;
-      case "info": default: return <Info className="w-4 h-4 text-terracotta shrink-0" />;
+      case "info": default: return <Info className="w-4 h-4 text-foreground shrink-0" />;
     }
   };
 
@@ -183,7 +183,7 @@ export default function ReplayViewer() {
     switch (severity?.toLowerCase()) {
       case "critical": return "bg-carmine/10 border-carmine/30 text-carmine-soft";
       case "warning": return "bg-amber/10 border-amber/30 text-amber-soft";
-      case "info": default: return "bg-terracotta/10 border-terracotta/30 text-terracotta";
+      case "info": default: return "bg-terracotta/10 border-terracotta/30 text-foreground";
     }
   };
 
@@ -205,7 +205,7 @@ export default function ReplayViewer() {
             </div>
             <div className="flex flex-col ml-4">
               <span className="text-[10px] text-night-muted">Session ID</span>
-              <span className="text-sm font-bold text-primary">{sessionId}</span>
+              <span className="text-sm font-bold text-foreground">{sessionId}</span>
             </div>
           </div>
           
@@ -215,7 +215,7 @@ export default function ReplayViewer() {
             </Button>
             <div className="flex flex-col items-end mr-4">
               <span className="text-[10px] text-night-muted">Replay Status</span>
-              <span className="text-[10px] font-mono font-bold text-terracotta flex items-center gap-1">
+              <span className="text-[10px] font-mono font-bold text-foreground flex items-center gap-1">
                 {isPlaying ? <span className="w-1.5 h-1.5 rounded-full bg-terracotta animate-pulse" /> : <Pause className="w-2 h-2" />} 
                 {isPlaying ? "PLAYING" : "PAUSED"}
               </span>
@@ -238,7 +238,7 @@ export default function ReplayViewer() {
                 <VitalItem icon={<Heart className="text-carmine" />} label="Heart Rate" value={vitals.hr} unit="bpm" color="text-carmine" />
               )}
               {vitals.bpSys !== undefined && (
-                <VitalItem icon={<Activity className="text-terracotta" />} label="Blood Pressure" value={`${vitals.bpSys}/${vitals.bpDia !== undefined ? vitals.bpDia : '—'}`} unit="mmHg" color="text-terracotta" />
+                <VitalItem icon={<Activity className="text-foreground" />} label="Blood Pressure" value={`${vitals.bpSys}/${vitals.bpDia !== undefined ? vitals.bpDia : '—'}`} unit="mmHg" color="text-foreground" />
               )}
               {vitals.spo2 !== undefined && (
                 <VitalItem icon={<Droplets className="text-sage" />} label="Oxygen Saturation" value={vitals.spo2} unit="%" color="text-sage" />
@@ -258,7 +258,7 @@ export default function ReplayViewer() {
           {/* ANATOMY PANEL */}
           <div className="p-6 bg-night-card border border-night-line rounded-sm space-y-5">
             <h3 className="text-xs font-bold text-night-muted flex items-center gap-2">
-              <Map className="w-4 h-4 text-terracotta" /> Anatomy Field
+              <Map className="w-4 h-4 text-foreground" /> Anatomy Field
             </h3>
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 bg-black/40 rounded-sm border border-night-line/50 flex flex-col">
@@ -271,10 +271,10 @@ export default function ReplayViewer() {
               </div>
             </div>
             <div className="p-3 bg-terracotta/10 rounded-sm border border-terracotta/30 flex flex-col">
-              <span className="text-[11px] text-terracotta mb-1 flex items-center gap-1">
+              <span className="text-[11px] text-foreground mb-1 flex items-center gap-1">
                 <Target className="w-3 h-3" /> Target
               </span>
-              <span className="text-sm font-bold text-terracotta">{highlightedTarget}</span>
+              <span className="text-sm font-bold text-foreground">{highlightedTarget}</span>
             </div>
             {visibleStructures.length > 0 && (
               <div className="space-y-2">
@@ -343,7 +343,7 @@ export default function ReplayViewer() {
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-terracotta/15 via-night to-night opacity-60" />
             
             <div className="z-10 text-center flex flex-col items-center p-8">
-              <Power className="w-16 h-16 text-terracotta/50 mb-6 animate-pulse" />
+              <Power className="w-16 h-16 text-foreground/50 mb-6 animate-pulse" />
               <h2 className="text-3xl text-white/90">ScrubIn Core Replay</h2>
               <p className="text-warm-gray-soft dark:text-night-muted mt-4 max-w-sm text-sm">
                 Immutable playback visualization. Frontend interpolation and engine derivations are disabled.
@@ -351,7 +351,7 @@ export default function ReplayViewer() {
               <div className="mt-8 px-6 py-3 bg-black/50 border border-terracotta/30 rounded-sm flex items-center gap-8">
                 <div className="flex flex-col">
                   <span className="text-[10px] text-night-muted">Total Snapshots</span>
-                  <span className="text-xl font-bold text-terracotta font-mono">{totalFrames}</span>
+                  <span className="text-xl font-bold text-foreground font-mono">{totalFrames}</span>
                 </div>
                 <div className="h-8 w-px bg-night-raised" />
                 <div className="flex flex-col">

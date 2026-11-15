@@ -41,7 +41,7 @@ export function ErrorBanner({ children, action, className }: { children: ReactNo
 export function StatCard({ value, label, icon, className }: { value: ReactNode; label: string; icon?: ReactNode; className?: string }) {
   return (
     <div className={cn("surface flex flex-col justify-between gap-5 p-6", className)}>
-      {icon && <span className="flex h-9 w-9 items-center justify-center rounded-sm border border-border bg-background text-primary [&_svg]:h-4 [&_svg]:w-4">{icon}</span>}
+      {icon && <span className="flex h-9 w-9 items-center justify-center rounded-sm border border-border bg-background text-foreground [&_svg]:h-4 [&_svg]:w-4">{icon}</span>}
       <div>
         <p className="font-mono-data text-3xl font-semibold tracking-tight text-foreground tabular-nums">{value}</p>
         <p className="label-mono mt-1">{label}</p>

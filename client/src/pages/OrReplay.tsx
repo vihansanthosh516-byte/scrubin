@@ -148,7 +148,7 @@ export default function OrReplay() {
                   role="radio"
                   aria-checked={rate === r}
                   onClick={() => setRate(r)}
-                  className={cn("px-3 py-2 font-mono-data text-xs", rate === r ? "bg-primary/10 font-semibold text-primary" : "hover:bg-accent")}
+                  className={cn("px-3 py-2 font-mono-data text-xs", rate === r ? "bg-primary/10 font-semibold text-foreground" : "hover:bg-accent")}
                 >
                   {r}×
                 </button>

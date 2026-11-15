@@ -24,7 +24,7 @@ export default function WelcomeBack({ onConfirm, onNotYou }: WelcomeBackProps) {
       footer={
         <>
           Not you?{" "}
-          <button type="button" onClick={logout} className="font-semibold text-primary underline-offset-4 hover:underline">
+          <button type="button" onClick={logout} className="font-semibold text-foreground underline-offset-4 hover:underline">
             Sign out and use another account
           </button>
         </>

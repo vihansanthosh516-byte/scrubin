@@ -24,7 +24,7 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (switchable) {
-      const stored = localStorage.getItem("theme") as Theme | null;
+      const stored = localStorage.getItem("scrubin-theme") as Theme | null;
       return stored || defaultTheme;
     }
     return defaultTheme;
@@ -39,7 +39,7 @@ export function ThemeProvider({
       root.style.colorScheme = isDark ? "dark" : "light";
     };
 
-    if (switchable) localStorage.setItem("theme", theme);
+    if (switchable) localStorage.setItem("scrubin-theme", theme);
 
     if (theme === "system") {
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");

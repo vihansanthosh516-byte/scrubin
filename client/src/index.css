@@ -1,7 +1,9 @@
-/* Hallmark · redesign: full · theme: brand (ScrubIn cream, terracotta, Instrument Serif) · genre: editorial · built: the project */
-/* critique: one terracotta signal on cream; serif heads, Inter body, labels in plain sentence case; the dark monitor stays */
-/* Hallmark · answered 48 · ScopeView3D keeps literal hex · WebGL materials cannot read CSS variables */
-/* Hallmark · waive 7b · white cards on cream · the brand's card surface, named in the ScrubIn design system */
+/* Hallmark · shape: kept routes, index rows · genre: atmospheric · theme: Kiln (deal 1/3, seed surgical-training-simulator-medical-7cc2·db4d6143·2026-11-15·r0) · redesign: full
+ * hero: Settled · nav: edge-aligned pill · footer: plain disclaimer · imagery: the product (monitor, scope) · signature: the patient monitor lives in the hero · kiln: ember
+ * axes: dark/high-contrast-serif/warm · posture: full-palette · contrast: pass · fold: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S3 R4 V4 · weakest: S, the app screens keep their routes so each page leads with its own data */
+/* Hallmark · answered kiln · success green beside the ramp · clinical status needs a pass colour distinct from ember */
+/* Hallmark · answered 48 · ScopeView3D and PatientMonitor keep literal hex · WebGL and canvas cannot read CSS variables */
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -63,32 +65,67 @@
   --color-label: var(--label);
   --color-nav-link: var(--nav-link);
   --color-surface-hover-border: var(--surface-hover-border);
-  /* Fixed brand palette (same in both themes): marks and illustrations, not UI chrome */
-  --color-cream: #FBF9F5;
-  --color-cream-deep: #F4F0E8;
-  --color-cream-accent: #EAE3D2;
-  --color-charcoal: #191919;
-  --color-warm-gray: #666059;
-  --color-warm-gray-soft: #8C827A;
-  --color-terracotta: #CC553D;
-  --color-terracotta-bright: #D95338;
-  --color-amber-warm: #D99B26;
-  --color-sage: #2E6B4B;
-  --color-carmine: #A32A2A;
-  --color-border-warm: #E2DDD1;
-  --color-amber: #C27820;
-  /* Night palette: the dark OR consoles and the dark theme's fixed marks */
-  --color-night: #161310; --color-night-deep: #221F1C; --color-night-card: #1E1A16; --color-night-raised: #26211B;
-  --color-night-accent: #332C24; --color-night-line: #3A342C; --color-night-muted: #A89F95; --color-night-soft: #C2BBB0; --color-night-text: #EDEAE4;
-  --color-carmine-soft: #E08080; --color-carmine-deep: #8B2323; --color-carmine-night: #3A0F0F; --color-alarm: #E04040;
-  --color-amber-soft: #E0B060; --color-amber-deep: #8A5A00; --color-amber-ochre: #9A6A12; --color-amber-night: #3A2A0A; --color-amber-umber: #2A1A08;
-  --color-sage-soft: #8FBFA4; --color-sage-mint: #8FBF9A; --color-sage-night: #5E8C74;
-  --color-terracotta-night: #E06D53; --color-terracotta-soft: #E8A99A;
+  /* Legacy palette names, now theme-aware so every screen follows Kiln */
+  --color-cream: var(--background); --color-cream-deep: var(--muted); --color-cream-accent: var(--accent);
+  --color-charcoal: var(--foreground); --color-warm-gray: var(--muted-foreground); --color-warm-gray-soft: var(--label);
+  --color-terracotta: var(--primary); --color-terracotta-bright: var(--primary); --color-terracotta-night: var(--primary); --color-terracotta-soft: var(--primary);
+  --color-amber: var(--warning); --color-amber-warm: var(--warning); --color-amber-soft: var(--warning); --color-amber-deep: var(--warning); --color-amber-ochre: var(--warning);
+  --color-amber-night: color-mix(in oklab, var(--warning) 14%, var(--background)); --color-amber-umber: color-mix(in oklab, var(--warning) 10%, var(--background));
+  --color-sage: var(--success); --color-sage-soft: var(--success); --color-sage-mint: var(--success); --color-sage-night: var(--success);
+  --color-carmine: var(--destructive); --color-carmine-soft: var(--destructive); --color-carmine-deep: var(--destructive); --color-alarm: var(--destructive);
+  --color-carmine-night: color-mix(in oklab, var(--destructive) 14%, var(--background));
+  --color-border-warm: var(--border);
+  --color-night: var(--background); --color-night-deep: var(--background); --color-night-card: var(--card); --color-night-raised: var(--muted);
+  --color-night-accent: var(--accent); --color-night-line: var(--border); --color-night-muted: var(--muted-foreground); --color-night-soft: var(--label); --color-night-text: var(--foreground);
   --color-monitor: #050B14;
+  --color-heat-2: var(--heat-2); --color-heat-4: var(--heat-4);
 }
 
 :root {
-  /* Illustration palette: anatomy in the scope views and bedside colours on the monitor (fixed in both themes) */
+  /* Kiln, bisque colourway (light): bone ground, umber ink, one ember fill */
+  --font-display: "Boska", "Iowan Old Style", Georgia, serif;
+  --font-body: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-data: "Geist Mono", ui-monospace, monospace;
+  --radius: 1rem;
+  --radius-card: 28px;
+  --background: oklch(96.5% 0.014 80);
+  --foreground: oklch(20% 0.02 40);
+  --card: oklch(98.8% 0.008 80);
+  --card-foreground: oklch(20% 0.02 40);
+  --popover: oklch(98.8% 0.008 80);
+  --popover-foreground: oklch(20% 0.02 40);
+  --primary: oklch(52% 0.17 50);
+  --primary-foreground: oklch(97% 0.014 80);
+  --primary-hover: oklch(47% 0.16 48);
+  --secondary: oklch(92% 0.018 75);
+  --secondary-foreground: oklch(20% 0.02 40);
+  --muted: oklch(92% 0.018 75);
+  --muted-foreground: oklch(42% 0.025 50);
+  --accent: oklch(89% 0.022 72);
+  --accent-foreground: oklch(20% 0.02 40);
+  --destructive: oklch(48% 0.17 27);
+  --destructive-foreground: oklch(97% 0.014 80);
+  --border: oklch(20% 0.02 40 / 0.14);
+  --input: oklch(20% 0.02 40 / 0.45);
+  --ring: oklch(56% 0.18 52);
+  --success: oklch(45% 0.08 155);
+  --success-foreground: oklch(97% 0.014 80);
+  --warning: oklch(50% 0.13 62);
+  --warning-foreground: oklch(97% 0.014 80);
+  --info: oklch(45% 0.05 240);
+  --label: oklch(42% 0.025 50);
+  --nav-link: oklch(36% 0.025 45);
+  --surface-hover-border: oklch(52% 0.17 50 / 0.5);
+  --chart-1: oklch(52% 0.17 50); --chart-2: oklch(62% 0.15 62); --chart-3: oklch(45% 0.08 155); --chart-4: oklch(48% 0.17 27); --chart-5: oklch(55% 0.02 60);
+  --sidebar: var(--card); --sidebar-foreground: var(--foreground); --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--muted); --sidebar-accent-foreground: var(--foreground); --sidebar-border: var(--border); --sidebar-ring: var(--ring);
+  --shadow-surface: none; --shadow-raised: none; --shadow-hover: none;
+  --shadow-lift: 0 50px 90px -30px oklch(8% 0.01 40 / 0.35);
+  --heat-1: oklch(22% 0.07 22); --heat-2: oklch(40% 0.16 27); --heat-3: oklch(60% 0.21 36); --heat-4: oklch(76% 0.19 56); --heat-5: oklch(89% 0.14 78);
+  --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-press: cubic-bezier(0.2, 0, 0, 1);
+  --material-bar: var(--background);
+  --material-edge: transparent;
   --ill-000000: #000000;
   --ill-050b14: #050B14;
   --ill-1a0503: #1A0503;
@@ -229,120 +266,48 @@
   --ill-ffd9cc: #FFD9CC;
   --ill-ffe27a: #FFE27A;
   --ill-fff4e6: #FFF4E6;
-  --font-display: 'Instrument Serif', Georgia, serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-data: 'JetBrains Mono', 'Space Mono', monospace;
-  --radius: 0.25rem;
-  --background: #FBF9F5;
-  --foreground: #191919;
-  --card: #FFFFFF;
-  --card-foreground: #191919;
-  --popover: #FFFFFF;
-  --popover-foreground: #191919;
-  --primary: #B5472F; /* a deeper cut of brand terracotta #CC553D so white text and terracotta text both pass AA */
-  --primary-foreground: #FFFFFF;
-  --secondary: #F4F0E8;
-  --secondary-foreground: #191919;
-  --muted: #F4F0E8;
-  --muted-foreground: #666059;
-  --accent: #EAE3D2;
-  --accent-foreground: #191919;
-  --destructive: #A32A2A;
-  --destructive-foreground: #FFFFFF;
-  --border: #E2DDD1;
-  --input: #8C827A; /* field edges need 3:1 against the card */
-  --ring: #B5472F;
-  --chart-1: #CC553D;
-  --chart-2: #D99B26;
-  --chart-3: #2E6B4B;
-  --chart-4: #A32A2A;
-  --chart-5: #8C827A;
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #191919;
-  --sidebar-primary: #B5472F;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F4F0E8;
-  --sidebar-accent-foreground: #191919;
-  --sidebar-border: #E2DDD1;
-  --sidebar-ring: #B5472F;
-  /* Semantic additions (ScrubIn design system) */
-  --primary-hover: #A03E29;
-  --success: #2E6B4B;
-  --success-foreground: #FFFFFF;
-  --warning: #99600F; /* deeper than brand amber #C27820 so warning text passes AA */
-  --warning-foreground: #FFFFFF;
-  --info: #3F6680;
-  --label: #736A63; /* warm grey for eyebrows and meta; #8C827A (brand warm-gray-soft) is too light for small text */
-  --nav-link: #666059;
-  --surface-hover-border: rgba(204, 85, 61, 0.4);
-  --shadow-surface: 0 1px 2px rgba(25, 25, 25, 0.02);
-  --shadow-raised: 0 2px 12px rgba(25, 25, 25, 0.04);
-  --shadow-hover: 0 8px 24px rgba(25, 25, 25, 0.05);
-  --shadow-lift: 0 12px 32px rgba(25, 25, 25, 0.06);
-  --pill-sage-fg: #2E6B4B; --pill-sage-bg: rgba(46, 107, 75, 0.1); --pill-sage-border: rgba(46, 107, 75, 0.3);
-  --pill-amber-fg: #99600F; --pill-amber-bg: rgba(194, 120, 32, 0.1); --pill-amber-border: rgba(194, 120, 32, 0.3);
-  --pill-terracotta-fg: #B5472F; --pill-terracotta-bg: rgba(204, 85, 61, 0.1); --pill-terracotta-border: rgba(204, 85, 61, 0.3);
-  --pill-carmine-fg: #A32A2A; --pill-carmine-bg: rgba(163, 42, 42, 0.1); --pill-carmine-border: rgba(163, 42, 42, 0.3);
-  /* Motion (Apple fluid-interface rules): a critically damped ease-out for UI, a quick one for press feedback */
-  --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-press: cubic-bezier(0.2, 0, 0, 1);
-  /* Translucent chrome: the page scrolls under the navbar */
-  --material-bar: rgba(251, 249, 245, 0.72);
-  --material-edge: rgba(25, 25, 25, 0.06);
 }
 
 .dark {
-  --background: #161310;
-  --foreground: #EDEAE4;
-  --card: #1E1A16;
-  --card-foreground: #EDEAE4;
-  --popover: #1E1A16;
-  --popover-foreground: #EDEAE4;
-  --primary: #E06D53; /* lighter in dark so it reads as text; buttons put dark ink on it */
-  --primary-foreground: #161310;
-  --secondary: #26211B;
-  --secondary-foreground: #EDEAE4;
-  --muted: #26211B;
-  --muted-foreground: #A89F95;
-  --accent: #332C24;
-  --accent-foreground: #EDEAE4;
-  --destructive: #C84040;
-  --destructive-foreground: #FFFFFF;
-  --border: #3A342C;
-  --input: #7A7067;
-  --ring: #E06D53;
-  --chart-1: #D95338;
-  --chart-2: #D99B26;
-  --chart-3: #5E8C74;
-  --chart-4: #C84040;
-  --chart-5: #A89F95;
-  --sidebar: #1E1A16;
-  --sidebar-foreground: #EDEAE4;
-  --sidebar-primary: #E06D53;
-  --sidebar-primary-foreground: #161310;
-  --sidebar-accent: #26211B;
-  --sidebar-accent-foreground: #EDEAE4;
-  --sidebar-border: #3A342C;
-  --sidebar-ring: #E06D53;
-  --primary-hover: #E5765C;
-  --success: #5E8C74;
-  --success-foreground: #161310;
-  --warning: #D99B26;
-  --warning-foreground: #161310;
-  --info: #7FA6C2;
-  --label: #A89F95;
-  --nav-link: #C2BBB0;
-  --surface-hover-border: rgba(217, 83, 56, 0.4);
-  --shadow-surface: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-raised: 0 2px 12px rgba(0, 0, 0, 0.3);
-  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-lift: 0 12px 32px rgba(0, 0, 0, 0.4);
-  --pill-sage-fg: #8FBFA4; --pill-sage-bg: rgba(94, 140, 116, 0.14); --pill-sage-border: rgba(94, 140, 116, 0.4);
-  --pill-amber-fg: #E0B060; --pill-amber-bg: rgba(217, 155, 38, 0.14); --pill-amber-border: rgba(217, 155, 38, 0.4);
-  --pill-terracotta-fg: #E08866; --pill-terracotta-bg: rgba(217, 83, 56, 0.14); --pill-terracotta-border: rgba(217, 83, 56, 0.4);
-  --pill-carmine-fg: #E08080; --pill-carmine-bg: rgba(200, 64, 64, 0.14); --pill-carmine-border: rgba(200, 64, 64, 0.4);
-  --material-bar: rgba(22, 19, 16, 0.72);
-  --material-edge: rgba(0, 0, 0, 0.4);
+  /* Kiln, ember colourway (default): near-black ground, cream ink, one ember fill */
+  --background: oklch(13% 0.012 40);
+  --foreground: oklch(94% 0.02 80);
+  --card: oklch(17.5% 0.016 40);
+  --card-foreground: oklch(94% 0.02 80);
+  --popover: oklch(17.5% 0.016 40);
+  --popover-foreground: oklch(94% 0.02 80);
+  --primary: oklch(70% 0.2 45);
+  --primary-foreground: oklch(14% 0.02 40);
+  --primary-hover: oklch(75% 0.19 52);
+  --secondary: oklch(22% 0.018 40);
+  --secondary-foreground: oklch(94% 0.02 80);
+  --muted: oklch(22% 0.018 40);
+  --muted-foreground: oklch(72% 0.03 60);
+  --accent: oklch(25% 0.02 40);
+  --accent-foreground: oklch(94% 0.02 80);
+  --destructive: oklch(62% 0.2 30);
+  --destructive-foreground: oklch(14% 0.02 40);
+  --border: oklch(96% 0.01 80 / 0.12);
+  --input: oklch(96% 0.01 80 / 0.4);
+  --ring: oklch(76% 0.19 56);
+  --success: oklch(74% 0.08 155);
+  --success-foreground: oklch(14% 0.02 40);
+  --warning: oklch(80% 0.15 70);
+  --warning-foreground: oklch(14% 0.02 40);
+  --info: oklch(76% 0.06 240);
+  --label: oklch(72% 0.03 60);
+  --nav-link: oklch(84% 0.025 70);
+  --surface-hover-border: oklch(70% 0.2 45 / 0.55);
+  --chart-1: oklch(70% 0.2 45); --chart-2: oklch(80% 0.15 70); --chart-3: oklch(74% 0.08 155); --chart-4: oklch(62% 0.2 30); --chart-5: oklch(72% 0.03 60);
+  --shadow-lift: 0 50px 90px -30px oklch(8% 0.01 40 / 0.5);
+}
+
+/* Status pills, derived from the status tokens in both themes */
+:root, .dark {
+  --pill-sage-fg: var(--success); --pill-sage-bg: color-mix(in oklab, var(--success) 12%, transparent); --pill-sage-border: color-mix(in oklab, var(--success) 35%, transparent);
+  --pill-amber-fg: var(--warning); --pill-amber-bg: color-mix(in oklab, var(--warning) 12%, transparent); --pill-amber-border: color-mix(in oklab, var(--warning) 35%, transparent);
+  --pill-terracotta-fg: var(--foreground); --pill-terracotta-bg: color-mix(in oklab, var(--primary) 18%, transparent); --pill-terracotta-border: color-mix(in oklab, var(--primary) 45%, transparent);
+  --pill-carmine-fg: var(--destructive); --pill-carmine-bg: color-mix(in oklab, var(--destructive) 12%, transparent); --pill-carmine-border: color-mix(in oklab, var(--destructive) 35%, transparent);
 }
 
 @layer base {
@@ -350,7 +315,8 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-size: 16px;
+    line-height: 1.55;
     overflow-x: clip;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
@@ -359,10 +325,10 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
   /* Size-specific tracking and leading: tighter as type grows, body left near zero */
-  h1, h2 { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.015em; overflow-wrap: break-word; min-width: 0; }
+  h1, h2 { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.02em; overflow-wrap: break-word; min-width: 0; }
   h3, h4, h5, h6 {
     font-family: var(--font-body);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: -0.02em;
     line-height: 1.15;
     text-wrap: balance;
@@ -377,7 +343,7 @@
     @apply cursor-pointer;
   }
   html { scroll-behavior: smooth; overflow-x: clip; }
-  ::selection { background-color: var(--pill-terracotta-bg); color: inherit; }
+  ::selection { background-color: color-mix(in oklab, var(--primary) 35%, transparent); color: inherit; }
   /* A visible keyboard focus everywhere; components with their own ring override this. */
   :where(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 }
@@ -388,7 +354,7 @@
   @media (min-width: 1024px) { .container { padding-left: 2rem; padding-right: 2rem; max-width: 1280px; } }
 
   /* Editorial typography helpers */
-  .font-display { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.015em; line-height: 1.04; }
+  .font-display { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.02em; line-height: 1.04; font-variant-numeric: lining-nums; }
   .font-mono-data { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
   .section-tag { font-family: var(--font-body); font-size: 0.875rem; font-weight: 500; color: var(--label); }
   .label-mono { font-family: var(--font-body); font-size: 0.8125rem; font-weight: 500; color: var(--label); }
@@ -399,11 +365,11 @@
     background: var(--card);
     color: var(--card-foreground);
     border: 1px solid var(--border);
-    border-radius: 0.25rem;
-    box-shadow: var(--shadow-surface);
+    border-radius: var(--radius);
+    box-shadow: none;
     transition: transform 0.4s var(--ease-fluid), border-color 0.25s ease, box-shadow 0.4s var(--ease-fluid);
   }
-  .surface-raised { box-shadow: var(--shadow-raised); }
+  .surface-raised { box-shadow: var(--shadow-lift); }
   .procedure-card, .stats-card { position: relative; overflow: hidden; }
   /* Lift only where hover exists (no sticky hover on touch); press responds on pointer-down everywhere */
   @media (hover: hover) and (pointer: fine) {
@@ -428,7 +394,7 @@
   .pill-neutral { background: var(--muted); color: var(--muted-foreground); border: 1px solid var(--border); }
 
   /* Skip link: visible only on keyboard focus */
-  .skip-link { position: absolute; left: 1rem; top: 1rem; transform: translateY(-4rem); z-index: 100; padding: 0.5rem 1rem; border-radius: 0.125rem; background: var(--primary); color: var(--primary-foreground); font-weight: 600; font-size: 0.875rem; transition: transform 0.15s ease; }
+  .skip-link { position: absolute; left: 1rem; top: 1rem; transform: translateY(-4rem); z-index: 100; padding: 0.5rem 1rem; border-radius: 999px; background: var(--primary); color: var(--primary-foreground); font-weight: 600; font-size: 0.875rem; transition: transform 0.15s ease; }
   .skip-link:focus { transform: none; }
 }
 

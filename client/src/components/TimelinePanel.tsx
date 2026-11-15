@@ -60,7 +60,7 @@ export default function TimelinePanel() {
         return <AlertTriangle className="w-4 h-4 text-amber" />;
       case "info":
       default:
-        return <Info className="w-4 h-4 text-terracotta" />;
+        return <Info className="w-4 h-4 text-foreground" />;
     }
   };
 
@@ -72,7 +72,7 @@ export default function TimelinePanel() {
         return "bg-amber/8 border-amber/40 text-amber";
       case "info":
       default:
-        return "bg-terracotta/8 border-terracotta/40 text-terracotta";
+        return "bg-terracotta/8 border-terracotta/40 text-foreground";
     }
   };
 

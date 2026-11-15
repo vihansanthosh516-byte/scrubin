@@ -120,7 +120,7 @@ export function SignInPage({ onGoogleSignIn, onGitHubSignIn, onSignIn, onSignUp,
       footer={
         <>
           {mode === "signin" ? "New to ScrubIn?" : "Already have an account?"}{" "}
-          <button type="button" onClick={switchMode} className="font-semibold text-primary underline-offset-4 hover:underline">
+          <button type="button" onClick={switchMode} className="font-semibold text-foreground underline-offset-4 hover:underline">
             {mode === "signin" ? "Create an account" : "Sign in"}
           </button>
         </>
