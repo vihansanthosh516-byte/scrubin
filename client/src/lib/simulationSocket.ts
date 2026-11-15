@@ -14,7 +14,7 @@ class SimulationSocket {
 
     const store = useSimulationStore.getState();
 
-    // ✅ CRITICAL FIX: keep mode in sync everywhere
+    // CRITICAL FIX: keep mode in sync everywhere
     store.setMode(mode);
     store.setConnectionStatus("connecting");
 
@@ -35,7 +35,7 @@ class SimulationSocket {
             store.updateCognition(data.cognition);
           }
 
-        // ✅ ALWAYS extract usable state (no strict filtering)
+        // ALWAYS extract usable state (no strict filtering)
         const state =
           data.state ||
           data.summary ||
@@ -67,7 +67,7 @@ class SimulationSocket {
           return;
         }
 
-        // ✅ MAIN FIX: always update UI (NO mode gating)
+        // MAIN FIX: always update UI (NO mode gating)
         onTick(state, tick);
         // Record cognition snapshot for this tick (used by replay UI)
         store.recordCognition(tick, store.cognition);

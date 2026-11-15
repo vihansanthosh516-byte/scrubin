@@ -26,6 +26,7 @@ import { getCaseBankForProcedure } from "../data/stockProcedures";
 import { rescueTickMs, secondsLeft, windowSeconds, NORMAL_TICK_MS } from "../data/rescue/pacing";
 import { startCase, currentStep as runnerStep, chooseCorrect, chooseWrong, afterRescue, projectedLength, type CaseState, type CurrentStep } from "../data/caseRunner";
 import { RESCUE_BANKS, tailorRescue, CORE_GENERIC_FEEDBACK } from "../data/rescue";
+import { EventText, PhaseIcon, stripEmoji } from "../components/EventText";
 
 // NOTE: PROCEDURES_MAP has been removed – procedure data is loaded dynamically.
 
@@ -1336,7 +1337,7 @@ function SimulationPage() {
                         {runnerCurrent.repairLabel}{runnerCurrent.depth > 1 ? ` (level ${runnerCurrent.depth})` : ""}: {runnerCurrent.repairTitle}, step {runnerCurrent.repairStep} of {runnerCurrent.repairLength}
                       </div>
                     )}
-                    <h2 className="text-2xl leading-tight mb-3 text-charcoal dark:text-night-text">{currentStockStep.title}</h2>
+                    <h2 className="text-2xl leading-tight mb-3 text-charcoal dark:text-night-text">{stripEmoji(currentStockStep.title)}</h2>
                     <div className="p-4 bg-cream-deep border border-border-warm rounded-sm mb-4 dark:bg-night-raised dark:border-night-line">
                       <p className="text-warm-gray dark:text-night-soft text-sm leading-relaxed dark:text-night-muted">{currentStockStep.description}</p>
                     </div>
@@ -1362,7 +1363,7 @@ function SimulationPage() {
                       className="group w-full text-left p-4 bg-carmine/5 border border-carmine/30 hover:bg-carmine/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-gray-soft/60 rounded-sm flex items-center justify-between disabled:opacity-50"
                     >
                       <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-bold text-carmine-deep">{opt.label}</span>
+                        <span className="text-sm font-bold text-carmine-deep">{stripEmoji(opt.label)}</span>
                       </div>
                       <ChevronRight className="w-5 h-5 text-carmine group-hover:translate-x-0.5 transition-transform shrink-0" />
                     </button>
@@ -1418,7 +1419,7 @@ function SimulationPage() {
               <div className="flex flex-wrap gap-1.5">
                 {(PHASES || []).map((phase: any) => (
                   <span key={phase.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-sm bg-cream-deep border border-border-warm text-[10px] font-bold text-warm-gray dark:text-night-soft dark:bg-night-raised dark:border-night-line dark:text-night-muted">
-                    <span>{phase.icon}</span>
+                    <PhaseIcon name={String(phase.name)} />
                     <span className="">{phase.name}</span>
                   </span>
                 ))}

@@ -2,6 +2,7 @@ import { classify } from "./timelineEvents";
 import React from 'react';
 import { useSimulationStore } from '../state/simulationStore';
 import { ShieldCheck, Clock, AlertTriangle, XCircle, CheckCircle, Lightbulb, Save } from 'lucide-react';
+import { EventText } from "./EventText";
 
 export default function DebriefReport({ scenario }: { scenario: any }) {
   const { currentState, simId } = useSimulationStore();
@@ -106,7 +107,7 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
                 <div key={i} className="relative flex items-start gap-4">
                   <div className="absolute -left-[21px] mt-1 w-2 h-2 bg-border rounded-full" />
                   <span className="text-[10px] font-bold text-muted-foreground mt-0.5 w-24 shrink-0">{classify(String(event.description || event)).type}</span>
-                  <p className="text-sm text-muted-foreground">{event.description || event}</p>
+                  <p className="text-sm text-muted-foreground"><EventText text={event.description || event} /></p>
                 </div>
               ))}
             </div>
@@ -127,7 +128,7 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
                       <span className="text-[10px] font-bold text-amber">{ev.severity || "CRITICAL"}</span>
                       {ev.tick !== undefined && <span className="text-[10px] font-mono text-muted-foreground">T:{ev.tick}</span>}
                     </div>
-                    <p className="text-sm text-muted-foreground">{ev.description || ev}</p>
+                    <p className="text-sm text-muted-foreground"><EventText text={ev.description || ev} /></p>
                   </div>
                 ))}
               </div>
@@ -144,7 +145,7 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
                 {evalData.mistakes.map((mistake: any, i: number) => (
                   <li key={i} className="text-sm text-carmine-soft/80 bg-carmine/5 p-3 rounded-sm border border-carmine/20 flex items-start gap-3">
                     <XCircle className="w-4 h-4 text-carmine mt-0.5 shrink-0" />
-                    {mistake.description || mistake}
+                    <EventText text={mistake.description || mistake} />
                   </li>
                 ))}
               </ul>
@@ -163,7 +164,7 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
                 {evalData.strengths.map((str: any, i: number) => (
                   <li key={i} className="text-sm text-sage-mint/80 bg-sage/5 p-3 rounded-sm border border-sage/20 flex items-start gap-3">
                     <CheckCircle className="w-4 h-4 text-sage mt-0.5 shrink-0" />
-                    {str.description || str}
+                    <EventText text={str.description || str} />
                   </li>
                 ))}
               </ul>
@@ -180,7 +181,7 @@ export default function DebriefReport({ scenario }: { scenario: any }) {
                 {evalData.recommendations.map((rec: any, i: number) => (
                   <li key={i} className="text-sm text-terracotta/80 bg-terracotta/5 p-3 rounded-sm border border-terracotta/20 flex items-start gap-3">
                     <Lightbulb className="w-4 h-4 text-terracotta mt-0.5 shrink-0" />
-                    {rec.description || rec}
+                    <EventText text={rec.description || rec} />
                   </li>
                 ))}
               </ul>

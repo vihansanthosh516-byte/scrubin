@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useSimulationStore } from "../state/simulationStore";
 import { Info, AlertTriangle, AlertCircle } from "lucide-react";
 import { applyTimelineBatch, TimelineEvent } from "./timelineEvents";
+import { EventText } from "./EventText";
 
 export default function TimelinePanel() {
   const { currentState, currentTick } = useSimulationStore();
@@ -103,7 +104,7 @@ export default function TimelinePanel() {
                   {ev.timestamp && <span>{ev.timestamp}</span>}
                 </div>
               </div>
-              <p className="text-sm mt-1">{ev.description}</p>
+              <p className="text-sm mt-1"><EventText text={ev.description} /></p>
             </div>
           ))
         )}

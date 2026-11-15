@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CtaLink, Eyebrow } from "@/components/scrubin";
 import type { Debrief } from "@/engine/types";
 import { fmtTime } from "@/lib/format";
+import { EventText } from "@/components/EventText";
 
 // Every grade carries a word and an icon, never colour alone.
 const GRADE_STYLE = {
@@ -263,7 +264,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
               <h2 id="near-h" className="font-sans section-tag mb-2">What almost went wrong</h2>
               <ul className="space-y-1.5 text-sm">
                 {debrief.surgery.notes.map((n, i) => (
-                  <li key={`n${i}`}>{n}</li>
+                  <li key={`n${i}`}><EventText text={n} /></li>
                 ))}
               </ul>
             </section>

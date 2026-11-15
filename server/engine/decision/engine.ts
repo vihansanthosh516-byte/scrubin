@@ -679,11 +679,11 @@ export class DecisionEngine {
     comp: ComplicationType | null
   ): string {
     if (comp) {
-      return `⚠️ ${comp.replace(/_/g, " ").toUpperCase()} — ${prompt}`;
+      return `Complication, ${comp.replace(/_/g, " ")}: ${prompt}`;
     }
-    if (vitals.spo2 < 90) return `📉 SpO2: ${vitals.spo2}% — ${prompt}`;
-    if (vitals.heart_rate > 120) return `💓 HR: ${vitals.heart_rate} — ${prompt}`;
-    if (vitals.bp_systolic < 90) return `🩸 BP: ${vitals.bp_systolic}/${vitals.bp_diastolic} — ${prompt}`;
+    if (vitals.spo2 < 90) return `SpO2 ${vitals.spo2}%: ${prompt}`;
+    if (vitals.heart_rate > 120) return `HR ${vitals.heart_rate}: ${prompt}`;
+    if (vitals.bp_systolic < 90) return `BP ${vitals.bp_systolic}/${vitals.bp_diastolic}: ${prompt}`;
     return prompt;
   }
 

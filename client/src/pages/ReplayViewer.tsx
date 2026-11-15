@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { API_BASE } from "@/lib/api";
+import { EventText } from "@/components/EventText";
 
 export default function ReplayViewer() {
   const params = useParams();
@@ -324,7 +325,7 @@ export default function ReplayViewer() {
                         {getSeverityIcon(comp.severity || "info")}
                         <span className="text-xs font-bold truncate">{comp.title || comp.complication || "Unknown"}</span>
                       </div>
-                      <p className="text-[10px] opacity-80 leading-snug">{comp.description}</p>
+                      <p className="text-[10px] opacity-80 leading-snug"><EventText text={comp.description} /></p>
                     </div>
                   );
                 })}
@@ -439,7 +440,7 @@ export default function ReplayViewer() {
                         <span className="font-mono bg-black/30 px-1.5 py-0.5 rounded">T:{ev.tick}</span>
                       </div>
                     </div>
-                    <p className="text-sm mt-1">{ev.description}</p>
+                    <p className="text-sm mt-1"><EventText text={ev.description} /></p>
                   </div>
                 );
               })
