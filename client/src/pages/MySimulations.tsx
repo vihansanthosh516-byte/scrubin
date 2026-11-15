@@ -168,8 +168,7 @@ export default function MySimulations() {
         <div className="mx-auto max-w-5xl px-4">
           <PageHeader
             eyebrow="Your case log"
-            title="My"
-            accent="simulations"
+            title="My simulations"
             lead="Pick up a case in progress or look back at the ones you've finished."
             actions={
               <>
@@ -206,7 +205,7 @@ export default function MySimulations() {
                 onChange={setFilter}
               />
               <label className="sr-only" htmlFor="sim-sort">Sort</label>
-              <select id="sim-sort" value={sort} onChange={(e) => setSort(e.target.value as "newest" | "oldest")} className="rounded-sm border border-input bg-card px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <select id="sim-sort" value={sort} onChange={(e) => setSort(e.target.value as "newest" | "oldest")} className="rounded-sm border border-input bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
               </select>

@@ -1,18 +1,16 @@
 /**
  * ScrubIn Procedure Library: every procedure, filterable by difficulty and specialty (combinable),
- * with the student's XP gate. Each card opens the OR; "Briefing" opens the pre-op briefing first.
+ * with the student's XP gate. Each row opens the OR; "Briefing" opens the pre-op briefing first.
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
-import { Activity, ArrowRight, Baby, Bone, Brain, BookOpen, Clock, Heart, Lock, Scissors, Search, Shield, Star, Stethoscope, Zap } from "lucide-react";
+import { BookOpen, Lock, Search, Star } from "lucide-react";
 import bundledCatalog from "@/data/procedureCatalog.json";
 import { STOCK_STEP_BANKS } from "@/data/stockSteps";
 import { ENGINE_SCENARIO } from "@/engine/scenarios";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { API_BASE } from "@/lib/api";
-import { springSoft } from "@/lib/motion";
 import { useProcedureStore } from "@/state/procedureStore";
 import { Button } from "@/components/ui/button";
 import { DifficultyPill, EmptyState, ErrorBanner, FilterChips, PageHeader, Pill, SearchField } from "@/components/scrubin";
@@ -41,22 +39,6 @@ const REQUIRED_XP: Record<string, number> = { beginner: 0, intermediate: 500, ad
 /** "Thoracic / Surgical Oncology" → "Thoracic": the family a specialty filter groups by. */
 const familyOf = (specialty: string) => (specialty || "Other").split(" / ")[0].trim();
 
-const FAMILY_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
-  "General Surgery": Scissors,
-  "Trauma Surgery": Activity,
-  Cardiovascular: Heart,
-  Vascular: Heart,
-  Neurological: Brain,
-  Neurosurgery: Brain,
-  Orthopedic: Bone,
-  "OB/GYN": Baby,
-  Urology: Shield,
-  ENT: Stethoscope,
-  Laparoscopic: Zap,
-  Thoracic: Activity,
-  Hepatobiliary: Scissors,
-  "Surgical Oncology": Star,
-};
 
 interface Procedure {
   id: string;
@@ -91,75 +73,60 @@ function KeyRisks({ procId }: { procId: string }) {
   const risks = (STOCK_STEP_BANKS as any)[procId]?.spec?.risks as string[] | undefined;
   if (!risks?.length) return null;
   return (
-    <p className="mb-5 flex items-start gap-1.5 text-xs leading-relaxed text-label">
-      <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-      <span>
-        Key risks: <span className="text-muted-foreground">{risks.map((r) => RISK_LABELS[r] || r).join(" · ")}</span>
-      </span>
+    <p className="mt-2 text-sm leading-relaxed text-label">
+      Key risks: <span className="text-muted-foreground">{risks.map((r) => RISK_LABELS[r] || r).join(", ")}</span>
     </p>
   );
 }
 
-function ProcedureCard({ proc, locked, index }: { proc: Procedure; locked: boolean; index: number }) {
-  const Icon = FAMILY_ICON[proc.family] ?? Activity;
+function ProcedureRow({ proc, locked }: { proc: Procedure; locked: boolean }) {
   const realtime = Boolean(ENGINE_SCENARIO[proc.id]);
   const needXp = REQUIRED_XP[proc.difficulty];
   return (
-    <motion.li
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ ...springSoft, delay: (index % 3) * 0.06 }}
-      className={locked ? "procedure-card relative flex flex-col p-6 opacity-70" : "procedure-card group relative flex flex-col p-6"}
+    <li
+      className={`relative grid grid-cols-1 gap-x-8 gap-y-3 border-b border-border py-7 md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)_minmax(0,2fr)] ${locked ? "opacity-70" : "group transition-colors hover:bg-muted/60 md:px-3"}`}
       aria-disabled={locked || undefined}
     >
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <span className="flex h-12 w-12 items-center justify-center rounded-sm border border-border bg-background text-primary" aria-hidden="true">
-          <Icon className="h-6 w-6" />
-        </span>
-        <div className="flex flex-wrap justify-end gap-1.5">
+      <div className="min-w-0">
+        <h3 className="font-display text-3xl font-normal leading-tight">
+          {locked ? (
+            proc.name
+          ) : (
+            // The title link covers the whole row; the Briefing link sits above it.
+            <Link href={`/simulation?proc=${proc.id}`} className="after:absolute after:inset-0 after:content-[''] group-hover:text-primary">
+              {proc.name}
+            </Link>
+          )}
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground">{proc.specialty}</p>
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {realtime && <Pill tone="terracotta">Real-time OR</Pill>}
           <DifficultyPill difficulty={proc.difficulty[0].toUpperCase() + proc.difficulty.slice(1)} />
         </div>
       </div>
-
-      <h3 className="mb-2 text-lg font-semibold leading-snug tracking-tight text-foreground">
-        {locked ? (
-          proc.name
-        ) : (
-          // The title link covers the whole card; the Briefing link sits above it.
-          <Link href={`/simulation?proc=${proc.id}`} className="after:absolute after:inset-0 after:content-[''] group-hover:text-primary">
-            {proc.name}
-          </Link>
-        )}
-      </h3>
-      <p className="label-mono mb-3">{proc.specialty}</p>
-      <p className="mb-5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{proc.description}</p>
-      <KeyRisks procId={proc.id} />
-
-      <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-4 font-mono-data text-xs text-label">
-        <span className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" aria-hidden="true" /> {proc.time}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Activity className="h-3.5 w-3.5" aria-hidden="true" /> {proc.decisions} decisions
-          </span>
+      <div className="min-w-0">
+        <p className="line-clamp-2 leading-relaxed text-foreground">{proc.description}</p>
+        <KeyRisks procId={proc.id} />
+      </div>
+      <div className="flex flex-row items-start justify-between gap-3 md:flex-col md:items-end">
+        <span className="font-mono-data text-sm text-muted-foreground">
+          {proc.time}, {proc.decisions} decisions
         </span>
         {locked ? (
-          <span className="flex items-center gap-1.5 text-warning">
-            <Lock className="h-3.5 w-3.5" aria-hidden="true" /> {needXp} XP
+          <span className="flex items-center gap-1.5 text-sm text-warning">
+            <Lock className="h-4 w-4" aria-hidden="true" /> Earn {needXp} XP to open
           </span>
         ) : (
-          <Link href={`/learn/${proc.id}`} className="relative z-10 flex items-center gap-1.5 font-sans text-xs font-semibold text-primary hover:underline">
-            <BookOpen className="h-3.5 w-3.5" aria-hidden="true" /> Briefing
+          <Link href={`/learn/${proc.id}`} className="relative z-10 flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+            <BookOpen className="h-4 w-4" aria-hidden="true" /> Briefing
           </Link>
         )}
       </div>
-      {locked && <p className="mt-3 text-xs text-muted-foreground">Earn {needXp} XP to unlock {proc.difficulty} cases.</p>}
-    </motion.li>
+    </li>
   );
 }
+
+const LEVEL_TITLES: Record<Procedure["difficulty"], string> = { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" };
 
 export default function ProcedureLibrary() {
   const { user } = useAuth();
@@ -237,8 +204,7 @@ export default function ProcedureLibrary() {
         <div className="mx-auto max-w-6xl px-4">
           <PageHeader
             eyebrow="Procedure library"
-            title="Choose your"
-            accent="procedure"
+            title="Choose your procedure"
             lead={loading ? "Loading the library…" : `${visible.length} of ${procedures.length} procedures`}
           />
           <div className="mt-8 space-y-4">
@@ -251,22 +217,21 @@ export default function ProcedureLibrary() {
 
       <div className="mx-auto max-w-6xl px-4 py-12">
         {user && (
-          <section aria-labelledby="xp-heading" className="surface mb-12 p-6 md:p-8">
-            <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <h2 id="xp-heading" className="label-mono mb-2">Your experience</h2>
-                <p className="font-mono-data text-4xl font-semibold tracking-tight">
-                  {userXP.toLocaleString()}
-                  <span className="ml-1 text-xl font-bold text-primary">XP</span>
-                </p>
-              </div>
-              <p className={`flex items-center gap-2 text-sm font-medium ${nextTier ? "text-warning" : "text-success"}`}>
-                {nextTier ? <Lock className="h-4 w-4" aria-hidden="true" /> : <Star className="h-4 w-4" aria-hidden="true" />}
-                {nextTier ? `${nextTier.label} unlocks at ${nextTier.at.toLocaleString()} XP` : "All procedures unlocked"}
+          <section aria-labelledby="xp-heading" className="mb-12 grid grid-cols-1 items-end gap-6 border-y border-border py-6 md:grid-cols-[auto_minmax(0,1fr)]">
+            <div>
+              <h2 id="xp-heading" className="font-sans text-sm text-muted-foreground">Your experience</h2>
+              <p className="mt-1 font-mono-data text-4xl">
+                {userXP.toLocaleString()} <span className="text-xl text-primary">XP</span>
               </p>
             </div>
-            <div className="h-1.5 w-full bg-accent" role="progressbar" aria-label={nextTier ? `Progress to ${nextTier.label}` : "All tiers unlocked"} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
-              <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ type: "spring", bounce: 0, duration: 1 }} className={`h-full ${nextTier ? (userXP >= 500 ? "bg-warning" : "bg-primary") : "bg-success"}`} />
+            <div className="min-w-0">
+              <p className={`mb-3 flex items-center gap-2 text-sm font-medium ${nextTier ? "text-warning" : "text-success"}`}>
+                {nextTier ? <Lock className="h-4 w-4" aria-hidden="true" /> : <Star className="h-4 w-4" aria-hidden="true" />}
+                {nextTier ? `${nextTier.label} cases open at ${nextTier.at.toLocaleString()} XP` : "Every procedure is open"}
+              </p>
+              <div className="h-1.5 w-full bg-accent" role="progressbar" aria-label={nextTier ? `Progress to ${nextTier.label}` : "All tiers unlocked"} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
+                <div style={{ transform: `scaleX(${progress / 100})` }} className={`h-full origin-left transition-transform duration-700 ${nextTier ? (userXP >= 500 ? "bg-warning" : "bg-primary") : "bg-success"}`} />
+              </div>
             </div>
           </section>
         )}
@@ -278,17 +243,30 @@ export default function ProcedureLibrary() {
         )}
 
         {loading ? (
-          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+          <ul className="border-t border-foreground" aria-hidden="true">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <li key={i} className="h-72 animate-pulse rounded-sm border border-border bg-muted" />
+              <li key={i} className="h-28 animate-pulse border-b border-border bg-muted/60" />
             ))}
           </ul>
         ) : visible.length > 0 ? (
-          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {visible.map((proc, i) => (
-              <ProcedureCard key={proc.id} proc={proc} locked={isLocked(proc)} index={i} />
-            ))}
-          </ul>
+          <div className="space-y-16">
+            {(["beginner", "intermediate", "advanced"] as const)
+              .map((d) => ({ d, items: visible.filter((p) => p.difficulty === d) }))
+              .filter((g) => g.items.length)
+              .map((g) => (
+                <section key={g.d} aria-labelledby={`level-${g.d}`}>
+                  <div className="mb-4 flex items-baseline justify-between gap-4">
+                    <h2 id={`level-${g.d}`} className="text-4xl">{LEVEL_TITLES[g.d]}</h2>
+                    <span className="font-mono-data text-sm text-muted-foreground">{g.items.length}</span>
+                  </div>
+                  <ul className="border-t border-foreground">
+                    {g.items.map((proc) => (
+                      <ProcedureRow key={proc.id} proc={proc} locked={isLocked(proc)} />
+                    ))}
+                  </ul>
+                </section>
+              ))}
+          </div>
         ) : (
           <EmptyState
             icon={<Search />}

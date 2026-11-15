@@ -26,7 +26,7 @@ export default function ReplayInfoPanel() {
   return (
     <div className="p-4 bg-card border border-border rounded-sm mt-4">
       <h4 className="text-foreground font-bold text-sm mb-2">
-        Replay Details – Tick {replayTick}
+        Replay details, tick {replayTick}
       </h4>
       <div className="grid grid-cols-2 gap-2 text-xs text-foreground">
         {/* Vitals */}

@@ -35,8 +35,7 @@ export default function Leaderboard() {
         <div className="mx-auto max-w-4xl px-4">
           <PageHeader
             eyebrow="All-time rankings"
-            title="Leader"
-            accent="board"
+            title="Leaderboard"
             lead="XP from every completed case: 100 per case plus a tenth of your score."
           />
         </div>
@@ -59,10 +58,10 @@ export default function Leaderboard() {
                 You're not in the top {entries.length} yet. Complete cases to earn XP and climb the board.
               </p>
             )}
-            <div className="surface overflow-x-auto">
+            <div className="overflow-x-auto border-t border-foreground">
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Top {entries.length} surgeons by all-time XP</caption>
-                <thead className="border-b border-border font-mono-data text-[11px] uppercase tracking-[0.14em] text-label">
+                <thead className="border-b border-border text-sm text-muted-foreground">
                   <tr>
                     <th scope="col" className="w-16 px-5 py-3 font-normal">Rank</th>
                     <th scope="col" className="px-5 py-3 font-normal">Surgeon</th>
@@ -76,14 +75,18 @@ export default function Leaderboard() {
                     return (
                       <tr key={e.user_id} className={cn("transition-colors hover:bg-background", me && "bg-primary/5")} aria-current={me ? "true" : undefined}>
                         <td className="px-5 py-4">
-                          <span className="flex h-9 w-9 items-center justify-center rounded-sm border border-border">
+                          <span className="flex h-9 w-9 items-center justify-center">
                             <RankMark rank={i + 1} />
                           </span>
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex min-w-0 items-center gap-3">
                             <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-border bg-muted">
-                              {e.avatar_url ? <img src={e.avatar_url} alt="" className="h-full w-full object-cover" /> : <User className="h-5 w-5 text-label" aria-hidden="true" />}
+                              {e.avatar_url ? (
+                                <img src={e.avatar_url} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" onError={(ev) => { ev.currentTarget.style.display = "none"; }} />
+                              ) : (
+                                <User className="h-5 w-5 text-label" aria-hidden="true" />
+                              )}
                             </span>
                             <span className="truncate font-semibold">{e.username || "Unknown"}</span>
                             {me && <Pill tone="terracotta">You</Pill>}

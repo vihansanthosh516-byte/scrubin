@@ -47,9 +47,9 @@ export function AlarmBar({ alarms }: { alarms: string[] }) {
         <span
           key={a}
           className={cn(
-            "rounded-sm px-2.5 py-1 font-mono-data text-xs font-semibold uppercase tracking-wide",
-            isCritical(a) ? "bg-destructive text-destructive-foreground" : "border border-destructive/40 text-destructive",
-          )}
+"rounded-sm px-2.5 py-1 font-mono-data text-xs font-semibold",
+ isCritical(a) ?"bg-destructive text-destructive-foreground" :"border border-destructive/40 text-destructive",
+ )}
         >
           {alarmLabel(a)}
         </span>

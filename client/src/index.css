@@ -1,3 +1,7 @@
+/* Hallmark · redesign: full · theme: brand (ScrubIn cream, terracotta, Instrument Serif) · genre: editorial · built: the project */
+/* critique: one terracotta signal on cream; serif heads, Inter body, labels in plain sentence case; the dark monitor stays */
+/* Hallmark · answered 48 · ScopeView3D keeps literal hex · WebGL materials cannot read CSS variables */
+/* Hallmark · waive 7b · white cards on cream · the brand's card surface, named in the ScrubIn design system */
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -11,6 +15,7 @@
 */
 
 @theme inline {
+  --font-sans: var(--font-body);
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
@@ -71,9 +76,162 @@
   --color-sage: #2E6B4B;
   --color-carmine: #A32A2A;
   --color-border-warm: #E2DDD1;
+  --color-amber: #C27820;
+  /* Night palette: the dark OR consoles and the dark theme's fixed marks */
+  --color-night: #161310; --color-night-deep: #221F1C; --color-night-card: #1E1A16; --color-night-raised: #26211B;
+  --color-night-accent: #332C24; --color-night-line: #3A342C; --color-night-muted: #A89F95; --color-night-soft: #C2BBB0; --color-night-text: #EDEAE4;
+  --color-carmine-soft: #E08080; --color-carmine-deep: #8B2323; --color-carmine-night: #3A0F0F; --color-alarm: #E04040;
+  --color-amber-soft: #E0B060; --color-amber-deep: #8A5A00; --color-amber-ochre: #9A6A12; --color-amber-night: #3A2A0A; --color-amber-umber: #2A1A08;
+  --color-sage-soft: #8FBFA4; --color-sage-mint: #8FBF9A; --color-sage-night: #5E8C74;
+  --color-terracotta-night: #E06D53; --color-terracotta-soft: #E8A99A;
+  --color-monitor: #050B14;
 }
 
 :root {
+  /* Illustration palette: anatomy in the scope views and bedside colours on the monitor (fixed in both themes) */
+  --ill-000000: #000000;
+  --ill-050b14: #050B14;
+  --ill-1a0503: #1A0503;
+  --ill-22d3ee: #22D3EE;
+  --ill-2a0e0e: #2A0E0E;
+  --ill-2b2f33: #2B2F33;
+  --ill-331414: #331414;
+  --ill-34a853: #34A853;
+  --ill-35150f: #35150F;
+  --ill-35160f: #35160F;
+  --ill-3a0000: #3A0000;
+  --ill-3a0a08: #3A0A08;
+  --ill-3a1414: #3A1414;
+  --ill-3a1616: #3A1616;
+  --ill-3c4248: #3C4248;
+  --ill-4285f4: #4285F4;
+  --ill-4a5ea8: #4A5EA8;
+  --ill-4ade80: #4ADE80;
+  --ill-4f8f96: #4F8F96;
+  --ill-5a0f0a: #5A0F0A;
+  --ill-5b6fb0: #5B6FB0;
+  --ill-6b2a2a: #6B2A2A;
+  --ill-6b3a30: #6B3A30;
+  --ill-6b4a3a: #6B4A3A;
+  --ill-6e0000: #6E0000;
+  --ill-6e3434: #6E3434;
+  --ill-6e3a2c: #6E3A2C;
+  --ill-6f8f4a: #6F8F4A;
+  --ill-7a0000: #7A0000;
+  --ill-7a1f2e: #7A1F2E;
+  --ill-7a2e26: #7A2E26;
+  --ill-7a3535: #7A3535;
+  --ill-7a3a3a: #7A3A3A;
+  --ill-7a3a4a: #7A3A4A;
+  --ill-808080: #808080;
+  --ill-8a4a3c: #8A4A3C;
+  --ill-8a4a44: #8A4A44;
+  --ill-8a5a36: #8A5A36;
+  --ill-8a96a1: #8A96A1;
+  --ill-8c3a3a: #8C3A3A;
+  --ill-8c6a2a: #8C6A2A;
+  --ill-8c827a: #8C827A;
+  --ill-8e3b33: #8E3B33;
+  --ill-8f7a3a: #8F7A3A;
+  --ill-8fae5c: #8FAE5C;
+  --ill-9a3b3b: #9A3B3B;
+  --ill-9a4a50: #9A4A50;
+  --ill-9a5a4a: #9A5A4A;
+  --ill-9aa7b3: #9AA7B3;
+  --ill-9c0a0a: #9C0A0A;
+  --ill-9fb8c4: #9FB8C4;
+  --ill-a14b52: #A14B52;
+  --ill-a7f3d0: #A7F3D0;
+  --ill-a8403a: #A8403A;
+  --ill-a8473a: #A8473A;
+  --ill-a85a58: #A85A58;
+  --ill-a85a5a: #A85A5A;
+  --ill-aeb8c2: #AEB8C2;
+  --ill-b30000: #B30000;
+  --ill-b56a5c: #B56A5C;
+  --ill-b85a6a: #B85A6A;
+  --ill-b8c2ca: #B8C2CA;
+  --ill-b97a6a: #B97A6A;
+  --ill-b98a6e: #B98A6E;
+  --ill-bfc8cf: #BFC8CF;
+  --ill-bfe3ff: #BFE3FF;
+  --ill-c0392b: #C0392B;
+  --ill-c46a5c: #C46A5C;
+  --ill-c47a7a: #C47A7A;
+  --ill-c4b5fd: #C4B5FD;
+  --ill-c7a25a: #C7A25A;
+  --ill-c8707c: #C8707C;
+  --ill-c88f6a: #C88F6A;
+  --ill-c9786a: #C9786A;
+  --ill-c97b6b: #C97B6B;
+  --ill-c98a5a: #C98A5A;
+  --ill-c98a7a: #C98A7A;
+  --ill-c98a82: #C98A82;
+  --ill-c9b04a: #C9B04A;
+  --ill-c9dde0: #C9DDE0;
+  --ill-cc553d: #CC553D;
+  --ill-cfd5da: #CFD5DA;
+  --ill-cfd8dc: #CFD8DC;
+  --ill-d18a78: #D18A78;
+  --ill-d29783: #D29783;
+  --ill-d48f7e: #D48F7E;
+  --ill-d6b27a: #D6B27A;
+  --ill-d7907f: #D7907F;
+  --ill-d8a0a0: #D8A0A0;
+  --ill-d8c25a: #D8C25A;
+  --ill-d8c26a: #D8C26A;
+  --ill-d98f80: #D98F80;
+  --ill-d99a86: #D99A86;
+  --ill-d9a77a: #D9A77A;
+  --ill-d9a88a: #D9A88A;
+  --ill-d9c9b0: #D9C9B0;
+  --ill-d9e7ee: #D9E7EE;
+  --ill-dc9a88: #DC9A88;
+  --ill-dddddd: #DDDDDD;
+  --ill-e07a66: #E07A66;
+  --ill-e0a080: #E0A080;
+  --ill-e2e8f0: #E2E8F0;
+  --ill-e3b56a: #E3B56A;
+  --ill-e3c07e: #E3C07E;
+  --ill-e6cf8a: #E6CF8A;
+  --ill-e6cf9a: #E6CF9A;
+  --ill-e6d39a: #E6D39A;
+  --ill-e6d7b8: #E6D7B8;
+  --ill-e7b9a0: #E7B9A0;
+  --ill-e7c9b0: #E7C9B0;
+  --ill-e8c3a8: #E8C3A8;
+  --ill-e8c9b8: #E8C9B8;
+  --ill-e8d6c0: #E8D6C0;
+  --ill-e8d8d0: #E8D8D0;
+  --ill-e8e8e8: #E8E8E8;
+  --ill-e9c47c: #E9C47C;
+  --ill-ea4335: #EA4335;
+  --ill-eac47c: #EAC47C;
+  --ill-eef3f5: #EEF3F5;
+  --ill-f0c9a6: #F0C9A6;
+  --ill-f0d6cf: #F0D6CF;
+  --ill-f0e6d4: #F0E6D4;
+  --ill-f1e8dc: #F1E8DC;
+  --ill-f2d98a: #F2D98A;
+  --ill-f2dc9a: #F2DC9A;
+  --ill-f2e6c8: #F2E6C8;
+  --ill-f3d3a0: #F3D3A0;
+  --ill-f3e7a0: #F3E7A0;
+  --ill-f3f3f3: #F3F3F3;
+  --ill-f4efe4: #F4EFE4;
+  --ill-f4f0e4: #F4F0E4;
+  --ill-f5c451: #F5C451;
+  --ill-f6e27a: #F6E27A;
+  --ill-f87171: #F87171;
+  --ill-fbbc05: #FBBC05;
+  --ill-ff6b6b: #FF6B6B;
+  --ill-ffd54a: #FFD54A;
+  --ill-ffd9cc: #FFD9CC;
+  --ill-ffe27a: #FFE27A;
+  --ill-fff4e6: #FFF4E6;
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-data: 'JetBrains Mono', 'Space Mono', monospace;
   --radius: 0.25rem;
   --background: #FBF9F5;
   --foreground: #191919;
@@ -92,7 +250,7 @@
   --destructive: #A32A2A;
   --destructive-foreground: #FFFFFF;
   --border: #E2DDD1;
-  --input: #E2DDD1;
+  --input: #8C827A; /* field edges need 3:1 against the card */
   --ring: #B5472F;
   --chart-1: #CC553D;
   --chart-2: #D99B26;
@@ -151,7 +309,7 @@
   --destructive: #C84040;
   --destructive-foreground: #FFFFFF;
   --border: #3A342C;
-  --input: #3A342C;
+  --input: #7A7067;
   --ring: #E06D53;
   --chart-1: #D95338;
   --chart-2: #D99B26;
@@ -191,9 +349,9 @@
   * { @apply border-border outline-ring/50; }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: var(--font-body);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    overflow-x: hidden;
+    overflow-x: clip;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
     text-rendering: optimizeLegibility;
@@ -201,14 +359,15 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
   /* Size-specific tracking and leading: tighter as type grows, body left near zero */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', -apple-system, sans-serif;
-    font-weight: 700;
+  h1, h2 { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.015em; overflow-wrap: break-word; min-width: 0; }
+  h3, h4, h5, h6 {
+    font-family: var(--font-body);
+    font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.15;
     text-wrap: balance;
   }
-  h1 { letter-spacing: -0.03em; line-height: 1.05; }
+  h1 { line-height: 1.04; }
   h4, h5, h6 { letter-spacing: -0.01em; }
   p { text-wrap: pretty; }
   button:not(:disabled), [role="button"]:not([aria-disabled="true"]),
@@ -217,8 +376,8 @@
   input[type="checkbox"]:not(:disabled), input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
   }
-  html { scroll-behavior: smooth; }
-  ::selection { background-color: rgba(204, 85, 61, 0.18); color: inherit; }
+  html { scroll-behavior: smooth; overflow-x: clip; }
+  ::selection { background-color: var(--pill-terracotta-bg); color: inherit; }
   /* A visible keyboard focus everywhere; components with their own ring override this. */
   :where(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 }
@@ -229,10 +388,10 @@
   @media (min-width: 1024px) { .container { padding-left: 2rem; padding-right: 2rem; max-width: 1280px; } }
 
   /* Editorial typography helpers */
-  .font-display { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; letter-spacing: -0.015em; line-height: 1.04; }
-  .font-mono-data { font-family: 'JetBrains Mono', 'Space Mono', monospace; }
-  .section-tag { font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--label); }
-  .label-mono { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--label); }
+  .font-display { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.015em; line-height: 1.04; }
+  .font-mono-data { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+  .section-tag { font-family: var(--font-body); font-size: 0.875rem; font-weight: 500; color: var(--label); }
+  .label-mono { font-family: var(--font-body); font-size: 0.8125rem; font-weight: 500; color: var(--label); }
 
   /* Surfaces: white on cream, 1px warm hairline, 4px corners, almost no shadow.
      .surface is static; add .surface-hover only when the whole surface is a link or button. */
@@ -248,8 +407,7 @@
   .procedure-card, .stats-card { position: relative; overflow: hidden; }
   /* Lift only where hover exists (no sticky hover on touch); press responds on pointer-down everywhere */
   @media (hover: hover) and (pointer: fine) {
-    .surface-hover:hover, .stats-card:hover { transform: translateY(-2px); border-color: var(--surface-hover-border); box-shadow: var(--shadow-hover); }
-    .procedure-card:hover { transform: translateY(-3px); border-color: var(--surface-hover-border); box-shadow: var(--shadow-lift); }
+    .surface-hover:hover, .stats-card:hover, .procedure-card:hover { border-color: var(--primary); }
   }
   a.surface-hover:active, button.surface-hover:active, a.procedure-card:active, .procedure-card:has(> a:active),
   a.surface:active, a.stats-card:active {
@@ -257,11 +415,7 @@
   }
 
   /* Translucent material for floating chrome: blur + saturate, a soft edge instead of a hard divider */
-  .material-bar {
-    background: var(--material-bar);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    backdrop-filter: blur(20px) saturate(180%);
-  }
+  .material-bar { background: var(--background); }
   .material-bar[data-scrolled="true"] { box-shadow: 0 1px 0 var(--border), 0 8px 24px -16px var(--material-edge); }
   .achievement-card.unlocked { border-color: var(--pill-sage-border); }
   .achievement-card.locked { opacity: 0.55; filter: grayscale(0.4); }
@@ -274,17 +428,15 @@
   .pill-neutral { background: var(--muted); color: var(--muted-foreground); border: 1px solid var(--border); }
 
   /* Skip link: visible only on keyboard focus */
-  .skip-link { position: absolute; left: 1rem; top: -3rem; z-index: 100; padding: 0.5rem 1rem; border-radius: 0.125rem; background: var(--primary); color: var(--primary-foreground); font-weight: 600; font-size: 0.875rem; transition: top 0.15s ease; }
-  .skip-link:focus { top: 1rem; }
+  .skip-link { position: absolute; left: 1rem; top: 1rem; transform: translateY(-4rem); z-index: 100; padding: 0.5rem 1rem; border-radius: 0.125rem; background: var(--primary); color: var(--primary-foreground); font-weight: 600; font-size: 0.875rem; transition: transform 0.15s ease; }
+  .skip-link:focus { transform: none; }
 }
 
-@keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-.animate-gradient-shift { background-size: 200% 200%; animation: gradient-shift 15s ease infinite; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(140, 130, 122, 0.35); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(140, 130, 122, 0.55); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--label); }
 
 @media (prefers-reduced-transparency: reduce) {
   .material-bar { background: var(--background); -webkit-backdrop-filter: none; backdrop-filter: none; }

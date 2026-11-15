@@ -63,7 +63,7 @@ function ScopeOverlay({ s, showIap = true }: { s: NonNullable<CaseState["surgery
             <span className="font-mono-data">{Math.round(s.running.progress * 100)}%</span>
           </div>
           <div className="mt-1 h-1 rounded-sm bg-white/20">
-            <div className="h-1 rounded-sm bg-[#8FBFA4]" style={{ width: `${s.running.progress * 100}%` }} />
+            <div className="h-1 rounded-sm bg-sage-soft" style={{ width: `${s.running.progress * 100}%` }} />
           </div>
         </div>
       )}
@@ -84,11 +84,11 @@ function FlatScopeView({ state }: { state: CaseState }) {
       {cameraIn && procedureScope(state) ? (
         procedureScope(state)
       ) : cameraIn ? (
-        <svg viewBox="0 0 320 180" className="w-full h-full">
+        <svg aria-hidden="true" viewBox="0 0 320 180" className="w-full h-full">
           <defs>
             <radialGradient id="scope" cx="50%" cy="50%" r="60%">
-              <stop offset="0%" stopColor="#6b2a2a" />
-              <stop offset="70%" stopColor="#3a1414" />
+              <stop offset="0%" stopColor="var(--ill-6b2a2a)" />
+              <stop offset="70%" stopColor="var(--ill-3a1414)" />
               <stop offset="100%" stopColor="#000" />
             </radialGradient>
             <radialGradient id="vignette" cx="50%" cy="50%" r="50%">
@@ -98,32 +98,32 @@ function FlatScopeView({ state }: { state: CaseState }) {
           </defs>
           <rect width="320" height="180" fill="url(#scope)" />
           {/* bowel loops */}
-          <path d="M20 150 C 60 110, 100 170, 140 130 S 220 150, 260 120" stroke="#c97b6b" strokeWidth="22" fill="none" opacity="0.8" />
-          <path d="M40 60 C 90 30, 130 80, 170 50" stroke="#b56a5c" strokeWidth="18" fill="none" opacity={state.position === "left_side_down" ? 0.25 : 0.85} />
+          <path d="M20 150 C 60 110, 100 170, 140 130 S 220 150, 260 120" stroke="var(--ill-c97b6b)" strokeWidth="22" fill="none" opacity="0.8" />
+          <path d="M40 60 C 90 30, 130 80, 170 50" stroke="var(--ill-b56a5c)" strokeWidth="18" fill="none" opacity={state.position === "left_side_down" ? 0.25 : 0.85} />
           {/* cecum */}
-          <ellipse cx="215" cy="95" rx="42" ry="30" fill="#d18a78" opacity="0.95" />
+          <ellipse cx="215" cy="95" rx="42" ry="30" fill="var(--ill-d18a78)" opacity="0.95" />
           {/* appendix */}
           {!appendixGone && (
             <path
               d={done.has("mobilize_cecum") || !s.findings.join(" ").includes("retrocecal") ? "M205 118 C 195 140, 170 150, 150 158" : "M235 110 C 250 120, 258 132, 262 146"}
-              stroke={s.findings.join(" ").includes("perforated") ? "#8c6a2a" : "#e0a080"}
+              stroke={s.findings.join(" ").includes("perforated") ? "var(--ill-8c6a2a)" : "var(--ill-e0a080)"}
               strokeWidth={done.has("grasp_appendix") ? 12 : 10}
               strokeLinecap="round"
               fill="none"
               opacity={done.has("explore") ? 1 : 0.35}
             />
           )}
-          {done.has("divide_meso") && !appendixGone && <path d="M190 125 L 170 140" stroke="#f3d3a0" strokeWidth="2" strokeDasharray="3 3" />}
-          {done.has("secure_base") && <circle cx="205" cy="120" r="4" fill="#dddddd" />}
+          {done.has("divide_meso") && !appendixGone && <path d="M190 125 L 170 140" stroke="var(--ill-f3d3a0)" strokeWidth="2" strokeDasharray="3 3" />}
+          {done.has("secure_base") && <circle cx="205" cy="120" r="4" fill="var(--ill-dddddd)" />}
           {/* instruments */}
-          {s.running?.instrument && <line x1="320" y1="20" x2="200" y2="110" stroke="#9aa7b3" strokeWidth="5" strokeLinecap="round" />}
-          {done.has("working_ports") && <line x1="0" y1="10" x2="150" y2="120" stroke="#8a96a1" strokeWidth="4" strokeLinecap="round" opacity="0.8" />}
+          {s.running?.instrument && <line x1="320" y1="20" x2="200" y2="110" stroke="var(--ill-9aa7b3)" strokeWidth="5" strokeLinecap="round" />}
+          {done.has("working_ports") && <line x1="0" y1="10" x2="150" y2="120" stroke="var(--ill-8a96a1)" strokeWidth="4" strokeLinecap="round" opacity="0.8" />}
           {s.bleeding && (
             <g>
-              <circle cx="185" cy="130" r="22" fill="#b30000" opacity="0.75">
+              <circle cx="185" cy="130" r="22" fill="var(--ill-b30000)" opacity="0.75">
                 <animate attributeName="r" values="18;28;18" dur="1.4s" repeatCount="indefinite" />
               </circle>
-              <circle cx="185" cy="130" r="40" fill="#7a0000" opacity="0.35" />
+              <circle cx="185" cy="130" r="40" fill="var(--ill-7a0000)" opacity="0.35" />
             </g>
           )}
           <rect width="320" height="180" fill="url(#vignette)" />
@@ -190,7 +190,7 @@ export function SurgeonStation({ state, act, say }: Props) {
                   >
                     <span className="flex items-center justify-between gap-3">
                       <span className="font-medium">{t.name}</span>
-                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide">
+                      <span className="shrink-0 text-[11px] font-semibold">
                         {fits && <span className="mr-2 text-success">Instrument fits</span>}
                         {running ? <span className="text-success">In progress</span> : t.available ? <span className="text-success">Ready</span> : <span>Blocked</span>}
                       </span>

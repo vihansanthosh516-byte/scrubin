@@ -4,21 +4,12 @@
  */
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
 import { Activity, ArrowRight, BookOpen, Play, RotateCcw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_BASE } from "@/lib/api";
-import { springSoft } from "@/lib/motion";
 import { getLeaderboard, getUserSessions, type PersistedSession } from "@/lib/leaderboard";
 import { ENGINE_SCENARIO } from "@/engine/scenarios";
-import { CtaLink, DifficultyPill, Eyebrow, Pill, StatCard } from "@/components/scrubin";
-
-const REVEAL = {
-  initial: { opacity: 0, y: 20 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, amount: 0.3 },
-  transition: springSoft,
-} as const;
+import { CtaLink, Pill } from "@/components/scrubin";
 
 // The four Beginner cases (unlocked below 500 XP). Ids match the registry; times and decision
 // counts are the engine's own estimates.
@@ -79,21 +70,27 @@ export default function Home() {
   const firstName = user?.name?.split(" ")[0] || user?.login || "Doctor";
   const isNew = mine !== null && mine.cases === 0;
 
+  const record = [
+    { label: "Your XP", value: mine ? mine.xp.toLocaleString() : "Not yet" },
+    { label: "Cases completed", value: mine ? String(mine.cases) : "Not yet" },
+    { label: "Leaderboard rank", value: mine?.rank ? `#${mine.rank}` : "Unranked" },
+    { label: "Procedures available", value: procedureCount != null ? String(procedureCount) : "Loading" },
+  ];
+
   return (
     <div className="bg-background text-foreground">
-      {/* Greeting and the one next action */}
+      {/* First screen: the greeting, the one next action, and the student's own record beside it */}
       <section className="border-b border-border">
-        <div className="mx-auto max-w-6xl px-4 pb-16 pt-28 md:pb-20 md:pt-36">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={springSoft}>
-            <Eyebrow variant="hero" className="mb-6">{greeting()}</Eyebrow>
-            <h1 className="font-display text-5xl leading-[0.98] tracking-tight sm:text-6xl md:text-7xl">
-              {isNew ? <>Your first surgery starts <span className="text-primary">here</span>, {firstName}.</> : <>Welcome back, <span className="text-primary">{firstName}</span>.</>}
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-4 pb-16 pt-28 md:pt-36 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:items-end lg:gap-16">
+          <div className="min-w-0">
+            <h1 className="text-5xl leading-[0.98] sm:text-6xl md:text-7xl">
+              {isNew ? <>{greeting()}, {firstName}. Your first surgery starts here.</> : <>{greeting()}, {firstName}.</>}
             </h1>
             <p className="mt-6 max-w-xl text-lg text-muted-foreground">
               {isNew
-                ? "Step into the OR, make the calls yourself, and see the consequences, with fictional patients and zero real risk."
+                ? "Make the calls yourself on fictional patients, with zero real risk."
                 : lastCase
-                  ? `Your last case was ${lastCase.procedure_name} (${lastCase.score}%). Pick up where you left off or try something new.`
+                  ? `Last case: ${lastCase.procedure_name}, ${lastCase.score}%. Pick it up or try another.`
                   : "Pick a procedure, read the briefing, and scrub in."}
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
@@ -110,78 +107,70 @@ export default function Home() {
                 <Play className="h-5 w-5" aria-hidden="true" /> Browse all procedures
               </CtaLink>
             </div>
-          </motion.div>
-        </div>
-      </section>
+          </div>
 
-      {/* Real numbers only */}
-      <section className="border-b border-border bg-muted/50" aria-labelledby="stats-heading">
-        <div className="mx-auto max-w-6xl px-4 py-12">
-          <h2 id="stats-heading" className="sr-only">Your progress</h2>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <StatCard value={mine ? mine.xp.toLocaleString() : "—"} label="Your XP" />
-            <StatCard value={mine ? mine.cases : "—"} label="Cases completed" />
-            <StatCard value={mine?.rank ? `#${mine.rank}` : "—"} label="Leaderboard rank" />
-            <StatCard value={procedureCount ?? "—"} label="Procedures available" />
+          <div aria-labelledby="stats-heading" role="region" className="min-w-0">
+            <h2 id="stats-heading" className="text-2xl">Your record</h2>
+            <dl className="mt-4 border-t border-foreground">
+              {record.map((r) => (
+                <div key={r.label} className="flex items-baseline justify-between gap-4 border-b border-border py-3">
+                  <dt className="text-sm text-muted-foreground">{r.label}</dt>
+                  <dd className="font-mono-data text-2xl text-foreground">{r.value}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
       </section>
 
-      {/* How a case works */}
-      <section className="border-b border-border">
+      {/* Starter cases, set as an index: one row per case, the whole row is the link */}
+      <section aria-labelledby="starter-heading">
         <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
-          <motion.div {...REVEAL} className="mb-12 max-w-2xl">
-            <Eyebrow className="mb-4 block">How a case works</Eyebrow>
-            <h2 className="font-display text-4xl tracking-tight sm:text-5xl">
-              Three steps to the <span className="text-primary">OR</span>
-            </h2>
-          </motion.div>
-          <ol className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            {STEPS.map((step, i) => (
-              <motion.li key={step.title} {...REVEAL} transition={{ ...springSoft, delay: i * 0.08 }} className="surface p-7">
-                <span className="font-mono-data text-sm font-semibold text-primary">0{i + 1}</span>
-                <h3 className="mt-4 text-lg font-semibold tracking-tight">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
-              </motion.li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* Starter cases */}
-      <section>
-        <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
-          <motion.div {...REVEAL} className="mb-12 flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <Eyebrow className="mb-4 block">Start here</Eyebrow>
-              <h2 className="font-display text-4xl tracking-tight sm:text-5xl">
-                Beginner <span className="text-primary">cases</span>
-              </h2>
+          <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
+            <div className="max-w-xl">
+              <h2 id="starter-heading" className="text-4xl sm:text-5xl">Beginner cases</h2>
+              <p className="mt-3 text-muted-foreground">Open to everyone. Start with any of these four.</p>
             </div>
             <CtaLink href="/learn" variant="outline">
               <BookOpen className="h-4 w-4" aria-hidden="true" /> Read the briefings
             </CtaLink>
-          </motion.div>
-          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {STARTER_CASES.map((c, i) => (
-              <motion.li key={c.id} {...REVEAL} transition={{ ...springSoft, delay: i * 0.06 }}>
-                <Link href={`/simulation?proc=${c.id}`} className="procedure-card group flex h-full flex-col gap-4 p-6">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <DifficultyPill difficulty="Beginner" />
-                    {ENGINE_SCENARIO[c.id] && <Pill tone="terracotta">Real-time OR</Pill>}
-                  </div>
-                  <h3 className="text-lg font-semibold tracking-tight group-hover:text-primary">{c.name}</h3>
-                  <p className="label-mono">{c.tag}</p>
-                  <div className="mt-auto flex items-center justify-between border-t border-border pt-4 font-mono-data text-xs text-label">
-                    <span>
-                      {c.time} · {c.decisions} decisions
-                    </span>
-                    <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" aria-hidden="true" />
-                  </div>
+          </div>
+          <ul className="border-t border-foreground">
+            {STARTER_CASES.map((c) => (
+              <li key={c.id} className="border-b border-border">
+                <Link
+                  href={`/simulation?proc=${c.id}`}
+                  className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-2 py-6 transition-colors hover:bg-muted/60 sm:grid-cols-[minmax(0,5fr)_minmax(0,3fr)_minmax(0,3fr)_auto] sm:px-3"
+                >
+                  <span className="min-w-0">
+                    <h3 className="font-display text-3xl font-normal leading-tight group-hover:text-primary">{c.name}</h3>
+                    {ENGINE_SCENARIO[c.id] && <Pill tone="terracotta" className="mt-2">Real-time OR</Pill>}
+                  </span>
+                  <span className="hidden text-sm text-muted-foreground sm:block">{c.tag}</span>
+                  <span className="hidden font-mono-data text-sm text-muted-foreground sm:block">
+                    {c.time}, {c.decisions} decisions
+                  </span>
+                  <ArrowRight className="h-5 w-5 text-primary transition-transform group-hover:translate-x-1" aria-hidden="true" />
                 </Link>
-              </motion.li>
+              </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      {/* How a case works: three columns on hairlines, no cards */}
+      <section className="border-t border-border bg-muted/50" aria-labelledby="how-heading">
+        <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+          <h2 id="how-heading" className="max-w-2xl text-4xl sm:text-5xl">How a case works</h2>
+          <ol className="mt-12 grid grid-cols-1 md:grid-cols-3">
+            {STEPS.map((step, i) => (
+              <li key={step.title} className="border-t border-foreground py-6 md:border-l md:border-t-0 md:border-border md:px-8 md:first:border-l-0 md:first:pl-0">
+                <span className="font-mono-data text-sm text-primary">Step {i + 1}</span>
+                <h3 className="mt-3 font-display text-3xl font-normal">{step.title}</h3>
+                <p className="mt-3 leading-relaxed text-muted-foreground">{step.body}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
     </div>

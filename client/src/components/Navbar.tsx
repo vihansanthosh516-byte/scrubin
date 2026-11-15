@@ -28,7 +28,7 @@ import { spring } from "@/lib/motion";
 const NAV_LINKS = [
   { href: "/procedures", label: "Procedures" },
   { href: "/learn", label: "Learn" },
-  { href: "/my-simulations", label: "My Simulations" },
+  { href: "/my-simulations", label: "My cases" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/profile", label: "Profile" },
 ];
@@ -96,7 +96,7 @@ export default function Navbar() {
               href={link.href}
               aria-current={isActive(link.href) ? "page" : undefined}
               className={cn(
-                "relative rounded-sm px-3.5 py-2 text-sm font-medium transition-colors",
+                "relative whitespace-nowrap rounded-sm px-2.5 lg:px-3.5 py-2 text-sm font-medium transition-colors",
                 isActive(link.href) ? "text-primary" : "text-nav-link hover:text-primary",
               )}
             >

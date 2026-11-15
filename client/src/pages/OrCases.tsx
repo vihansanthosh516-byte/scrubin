@@ -54,8 +54,7 @@ export default function OrCases() {
       <div className="max-w-5xl mx-auto space-y-8">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-primary">Your OR history</div>
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-3xl">
               My OR cases
             </h1>
           </div>
@@ -74,19 +73,19 @@ export default function OrCases() {
             <Loader2 className="w-4 h-4 animate-spin" /> Loading…
           </div>
         )}
-        {cases && cases.length === 0 && <p className="text-muted-foreground">No cases yet — start one from the procedure library.</p>}
+        {cases && cases.length === 0 && <p className="text-muted-foreground">No cases yet. Start one from the procedure library.</p>}
 
         {inProgress.length > 0 && (
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm uppercase tracking-[0.14em] text-primary">Continue</h2>
+              <h2 className="font-sans text-sm text-primary">Continue</h2>
               <button onClick={removeAllUnfinished} className="text-xs text-muted-foreground hover:text-destructive underline-offset-2 hover:underline">
                 Delete all unfinished
               </button>
             </div>
             {inProgress.map((c) => (
               <CaseRow key={c.id} c={c} onDelete={remove}>
-                <button onClick={() => window.location.assign(`/simulation?proc=${c.scenario}&case=${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-sage/40 text-sage dark:text-[#5E8C74] text-xs hover:bg-sage/10">
+                <button onClick={() => window.location.assign(`/simulation?proc=${c.scenario}&case=${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-sage/40 text-sage dark:text-sage-night text-xs hover:bg-sage/10">
                   <Play className="w-3.5 h-3.5" /> Resume
                 </button>
               </CaseRow>
@@ -96,7 +95,7 @@ export default function OrCases() {
 
         {finished.length > 0 && (
           <section className="space-y-3">
-            <h2 className="text-sm uppercase tracking-[0.14em] text-primary">Completed</h2>
+            <h2 className="font-sans text-sm text-primary">Completed</h2>
             {finished.map((c) => (
               <CaseRow key={c.id} c={c} onDelete={remove}>
                 <button onClick={() => window.location.assign(`/or/replay/${c.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border text-xs hover:bg-primary/10">

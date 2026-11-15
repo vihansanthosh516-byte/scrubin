@@ -33,8 +33,7 @@ export default function LearnHub() {
         <div className="mx-auto max-w-6xl px-4">
           <PageHeader
             eyebrow="Learn"
-            title="Pre-op"
-            accent="briefings"
+            title="Pre-op briefings"
             lead="The patient, the anatomy at risk and the steps of every case, before you scrub in."
           />
           <div className="mt-8 space-y-4">
@@ -46,28 +45,30 @@ export default function LearnHub() {
 
       <div className="mx-auto max-w-6xl px-4 py-12">
         {visible.length ? (
-          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="border-t border-foreground">
             {visible.map((b) => (
-              <li key={b.id} className="surface surface-hover group relative flex flex-col p-6">
-                <div className="mb-4 flex flex-wrap gap-1.5">
-                  <DifficultyPill difficulty={cap(b.difficulty)} />
-                  {b.realtime && <Pill tone="terracotta">Real-time OR</Pill>}
+              <li key={b.id} className="group relative grid grid-cols-1 gap-x-8 gap-y-3 border-b border-border py-7 transition-colors hover:bg-muted/60 md:grid-cols-[minmax(0,5fr)_minmax(0,5fr)_auto] md:px-3">
+                <div className="min-w-0">
+                  <h2 className="text-3xl leading-tight">
+                    <Link href={`/learn/${b.id}`} className="after:absolute after:inset-0 after:content-[''] group-hover:text-primary">
+                      {b.name}
+                    </Link>
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{b.specialty}</p>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <DifficultyPill difficulty={cap(b.difficulty)} />
+                    {b.realtime && <Pill tone="terracotta">Real-time OR</Pill>}
+                  </div>
                 </div>
-                <h2 className="text-lg font-semibold leading-snug tracking-tight">
-                  <Link href={`/learn/${b.id}`} className="after:absolute after:inset-0 after:content-[''] group-hover:text-primary">
-                    {b.name}
-                  </Link>
-                </h2>
-                <p className="label-mono mt-1">{b.specialty}</p>
-                <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                <p className="line-clamp-3 leading-relaxed text-foreground">
                   {b.patient.name}, {b.patient.age}
                   {b.patient.sex ? ` ${b.patient.sex.toLowerCase()}` : ""}. {b.patient.presentation}
                 </p>
-                <div className="mt-auto flex items-center justify-between border-t border-border pt-4 font-mono-data text-xs text-label">
-                  <span>
-                    {b.stepCount} steps · {b.risks.length} key risks
+                <div className="flex items-start justify-between gap-6 md:flex-col md:items-end">
+                  <span className="font-mono-data text-sm text-muted-foreground">
+                    {b.stepCount} steps, {b.risks.length} key risks
                   </span>
-                  <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                  <ArrowRight className="h-5 w-5 text-primary transition-transform group-hover:translate-x-1" aria-hidden="true" />
                 </div>
               </li>
             ))}

@@ -209,8 +209,8 @@ export default function Profile() {
             </span>
           )}
           <div className="min-w-0">
-            <Eyebrow variant="hero" className="mb-3 flex">{user.profession || "Surgeon in training"}</Eyebrow>
             <h1 className="font-display text-4xl leading-[1.02] tracking-tight sm:text-5xl">{name}</h1>
+            <Eyebrow variant="hero" className="mt-3 flex">{user.profession || "Surgeon in training"}</Eyebrow>
             <p className="mt-2 font-mono-data text-sm text-muted-foreground">@{user.customUsername || user.login}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {rankInfo === null ? (
@@ -239,7 +239,7 @@ export default function Profile() {
           </div>
         ) : (
           <section aria-labelledby="stats-h">
-            <h2 id="stats-h" className="section-tag mb-4">Your numbers</h2>
+            <h2 id="stats-h" className="font-sans section-tag mb-4">Your numbers</h2>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               <StatCard icon={<Activity />} value={stats.totalSurgeries} label="Cases completed" />
               <StatCard icon={<Star />} value={`${stats.bestScore}%`} label="Best score" />
@@ -260,25 +260,25 @@ export default function Profile() {
               {unlockedCount} of {ALL_BADGES.length} unlocked
             </p>
           </div>
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-x-12 border-t border-foreground md:grid-cols-2">
             {ALL_BADGES.map((badge) => {
               const [cur, target] = badge.progress(badgeStats);
               const done = cur >= target;
               const pct = Math.min(100, Math.round((cur / target) * 100));
               return (
-                <li key={badge.id} className={`surface flex gap-4 p-5 ${done ? "border-success/40" : ""}`}>
-                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-sm border ${done ? "border-success/40 bg-success/10 text-success" : "border-border bg-muted text-label"}`} aria-hidden="true">
+                <li key={badge.id} className="flex gap-4 border-b border-border py-5">
+                  <span className={`mt-0.5 shrink-0 ${done ? "text-success" : "text-label"}`} aria-hidden="true">
                     <badge.icon className="h-5 w-5" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold">{badge.name}</p>
                     <p className="text-sm text-muted-foreground">{badge.desc}</p>
                     {done ? (
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-success">Unlocked</p>
+                      <p className="mt-2 text-xs font-semibold text-success">Unlocked</p>
                     ) : (
                       <div className="mt-3">
                         <div className="h-1 w-full bg-accent" role="progressbar" aria-label={`${badge.name} progress`} aria-valuemin={0} aria-valuemax={target} aria-valuenow={Math.min(cur, target)}>
-                          <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                          <div className="h-full origin-left bg-primary" style={{ transform: `scaleX(${pct / 100})` }} />
                         </div>
                         <p className="mt-1.5 font-mono-data text-xs text-label">
                           {Math.min(cur, target)} / {target}

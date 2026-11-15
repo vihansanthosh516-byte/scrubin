@@ -42,10 +42,10 @@ export default function Briefing() {
           <Link href="/learn" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All briefings
           </Link>
-          <Eyebrow variant="hero" className="mb-4 flex">
-            Pre-op briefing · {b.specialty}
-          </Eyebrow>
           <h1 className="font-display text-4xl leading-[1.02] tracking-tight sm:text-5xl md:text-6xl">{b.name}</h1>
+          <Eyebrow variant="hero" className="mt-3 flex">
+            Pre-op briefing, {b.specialty}
+          </Eyebrow>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">{b.description}</p>
           <div className="mt-5 flex flex-wrap gap-2">
             <DifficultyPill difficulty={cap(b.difficulty)} />
@@ -63,7 +63,7 @@ export default function Briefing() {
       <div className="mx-auto grid max-w-4xl gap-10 px-4 py-12">
         {/* The patient */}
         <section aria-labelledby="patient-h" className="surface p-6 md:p-8">
-          <h2 id="patient-h" className="section-tag">The patient</h2>
+          <h2 id="patient-h" className="font-sans section-tag">The patient</h2>
           <p className="mt-3 text-xl font-semibold">
             {b.patient.name}, {b.patient.age}
             {b.patient.sex ? `, ${b.patient.sex.toLowerCase()}` : ""}

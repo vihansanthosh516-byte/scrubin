@@ -122,8 +122,8 @@ export default function OrReplay() {
       <div className="mx-auto max-w-[1600px] space-y-4 px-3 lg:px-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <Eyebrow variant="hero" className="mb-2 flex">Replay · {data.role === "anesthesia" ? "Anaesthesiologist" : "Surgeon"}</Eyebrow>
             <h1 className="font-display text-3xl tracking-tight sm:text-4xl">{procName}</h1>
+            <Eyebrow variant="hero" className="mt-2 flex">Replay, {data.role === "anesthesia" ? "Anaesthesiologist" : "Surgeon"}</Eyebrow>
           </div>
           <div className="flex flex-wrap gap-2">
             <CtaLink href="/or/cases" variant="outline" size="sm">All my cases</CtaLink>

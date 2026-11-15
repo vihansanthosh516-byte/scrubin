@@ -214,8 +214,8 @@ export default function OperatingRoom() {
       <div className="min-h-screen bg-background px-4 pb-16 pt-28 text-foreground">
         <div className="mx-auto max-w-5xl space-y-8">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", damping: 25, stiffness: 300 }}>
-            <Eyebrow variant="hero" className="mb-4 flex">Real-time operating room</Eyebrow>
             <h1 className="font-display text-4xl leading-[1.02] tracking-tight sm:text-5xl md:text-6xl">{procName}</h1>
+            <Eyebrow variant="hero" className="mt-3 flex">Real-time operating room</Eyebrow>
             <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
               No multiple choice. The patient runs on a physiological model with real drug pharmacology. Speak or type orders, use the equipment and
               work with your team. Everything you do, and don't do, changes what happens.
@@ -252,7 +252,7 @@ export default function OperatingRoom() {
           {startError && <ErrorBanner>{startError}</ErrorBanner>}
 
           <section aria-labelledby="role-h">
-            <h2 id="role-h" className="section-tag mb-4">Choose your role</h2>
+            <h2 id="role-h" className="font-sans section-tag mb-4">Choose your role</h2>
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
               <RoleCard
                 icon={<Syringe className="h-6 w-6" />}
@@ -322,7 +322,7 @@ export default function OperatingRoom() {
       <div className="sticky top-16 z-30 border-b border-border bg-background">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 py-2.5 lg:px-5">
           <div className="min-w-0">
-            <p className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+            <p className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-primary">
               {role === "anesthesia" ? "You are the anaesthesiologist" : "You are the surgeon"}
               {conn.connected ? (
                 <span className="flex items-center gap-1 text-success">
@@ -426,7 +426,7 @@ export default function OperatingRoom() {
           <section aria-labelledby="chart-h" className="surface-raised p-5">
             <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[1fr_auto]">
               <div className="space-y-3 text-sm">
-                <h2 id="chart-h" className="section-tag">Pre-op chart</h2>
+                <h2 id="chart-h" className="font-sans section-tag">Pre-op chart</h2>
                 <p className="text-base">{p.history}</p>
                 <dl className="flex flex-wrap gap-x-6 gap-y-1 font-mono-data text-xs text-muted-foreground">
                   {[

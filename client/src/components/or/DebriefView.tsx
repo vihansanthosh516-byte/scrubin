@@ -24,7 +24,7 @@ const AXIS = { fill: "var(--muted-foreground)", fontSize: 11 };
 function VitalChart({ title, data, lines, domain, refs }: { title: string; data: Trend[]; lines: { key: keyof Trend; name: string; color: string }[]; domain: [number, number]; refs?: { y: number; label: string; color: string }[] }) {
   return (
     <figure className="surface p-4">
-      <figcaption className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</figcaption>
+      <figcaption className="mb-2 text-xs font-semibold text-muted-foreground">{title}</figcaption>
       <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
@@ -113,10 +113,10 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 text-foreground">
       <header className="flex flex-wrap items-end justify-between gap-6">
         <div className="min-w-0">
-          <Eyebrow variant="hero" className="mb-3 flex">Debrief · {debrief.role === "anesthesia" ? "Anaesthesiologist" : "Surgeon"}</Eyebrow>
           <h1 className="font-display text-4xl leading-[1.02] tracking-tight sm:text-5xl">{procedureName}</h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            {outcomeLabel} · {debrief.duration_min} min · blood loss {debrief.blood_loss_ml} mL · fluids {debrief.fluids_in_ml} mL
+          <Eyebrow variant="hero" className="mt-3 flex">Debrief, {debrief.role === "anesthesia" ? "Anaesthesiologist" : "Surgeon"}</Eyebrow>
+          <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
+            <span>{outcomeLabel}</span><span>{debrief.duration_min} min</span><span>Blood loss {debrief.blood_loss_ml} mL</span><span>Fluids {debrief.fluids_in_ml} mL</span>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -128,12 +128,12 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
       {/* The verdict first: score on its scale, what it means, and where the marks went. */}
       <section aria-labelledby="verdict-h" className="surface-raised grid gap-6 p-6 md:grid-cols-[auto_1fr] md:items-center">
         <div>
-          <h2 id="verdict-h" className="section-tag">Process and outcome score</h2>
+          <h2 id="verdict-h" className="font-sans section-tag">Process and outcome score</h2>
           {debrief.score != null ? (
             <p className="mt-2 font-mono-data tabular-nums">
               <span className="text-6xl font-semibold text-primary">{debrief.score}</span>
               <span className="ml-1 text-xl text-muted-foreground">/ 100</span>
-              <span className="ml-3 rounded-sm border border-border px-2 py-1 align-middle font-sans text-xs font-semibold uppercase tracking-wider">{band(debrief.score)}</span>
+              <span className="ml-3 rounded-sm border border-border px-2 py-1 align-middle font-sans text-xs font-semibold">{band(debrief.score)}</span>
             </p>
           ) : (
             <p className="mt-2 text-lg text-muted-foreground">No score: the case ended before the operation began.</p>
@@ -221,7 +221,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
                       <li key={idx} className={`rounded-sm border p-4 ${G.box}`}>
                         <div className="flex items-center justify-between gap-3">
                           <span className="font-semibold">{i.title}</span>
-                          <span className={`flex shrink-0 items-center gap-1 text-xs font-semibold uppercase tracking-wider ${G.text}`}>
+                          <span className={`flex shrink-0 items-center gap-1 text-xs font-semibold ${G.text}`}>
                             <G.Icon className="h-4 w-4" aria-hidden="true" /> {G.label}
                           </span>
                         </div>
@@ -236,7 +236,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
         </section>
         <aside className="space-y-5">
           <section className="surface p-4" aria-labelledby="notes-h">
-            <h2 id="notes-h" className="section-tag mb-2 text-success">Attending notes</h2>
+            <h2 id="notes-h" className="font-sans section-tag mb-2 text-success">Attending notes</h2>
             {notes ? (
               <p className="whitespace-pre-line text-sm leading-relaxed">{plainNotes(notes)}</p>
             ) : notesError ? (
@@ -246,7 +246,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
             )}
           </section>
           <section className="surface p-4" aria-labelledby="hidden-h">
-            <h2 id="hidden-h" className="section-tag mb-2">What you couldn't see</h2>
+            <h2 id="hidden-h" className="font-sans section-tag mb-2">What you couldn't see</h2>
             <ul className="space-y-1.5 text-sm">
               {Object.entries(debrief.hidden).map(([k, v]) => (
                 <li key={k}>{HIDDEN_LABELS[k]?.(v) ?? `${k}: ${String(v)}`}</li>
@@ -260,7 +260,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
           </section>
           {debrief.surgery.notes.length > 0 && (
             <section className="surface p-4" aria-labelledby="near-h">
-              <h2 id="near-h" className="section-tag mb-2">What almost went wrong</h2>
+              <h2 id="near-h" className="font-sans section-tag mb-2">What almost went wrong</h2>
               <ul className="space-y-1.5 text-sm">
                 {debrief.surgery.notes.map((n, i) => (
                   <li key={`n${i}`}>{n}</li>
@@ -269,7 +269,7 @@ export function DebriefView({ debrief, procedureName, onRestart }: { debrief: De
             </section>
           )}
           <section className="surface p-4" aria-labelledby="timeline-h">
-            <h2 id="timeline-h" className="section-tag mb-2">Timeline</h2>
+            <h2 id="timeline-h" className="font-sans section-tag mb-2">Timeline</h2>
             <ol className="max-h-[360px] space-y-1 overflow-y-auto font-mono-data text-xs">
               {debrief.timeline
                 .filter((e) => !["assess", "say"].includes(e.kind) || (e.kind === "say" && e.intent) || (e.kind === "assess" && e.what === "cuff_leak"))

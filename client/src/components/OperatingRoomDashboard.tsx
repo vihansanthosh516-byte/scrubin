@@ -45,16 +45,16 @@ export default function OperatingRoomDashboard({ scenario, steps, phase }: Dashb
   const stability = computeStability(vitals, baseline);
   const stabilityColor =
     stability === "stable"
-      ? "text-[#2E6B4B]"
+      ? "text-sage"
       : stability === "mild"
-      ? "text-[#C27820]"
-      : "text-[#A32A2A]";
+      ? "text-amber"
+      : "text-carmine";
   const stabilityBorder =
     stability === "stable"
-      ? "border-[#2E6B4B]/40"
+      ? "border-sage/40"
       : stability === "mild"
-      ? "border-[#C27820]/40"
-      : "border-[#A32A2A]/50";
+      ? "border-amber/40"
+      : "border-carmine/50";
 
   const totalTicks = scenario?.totalTicks;
   const remainingTicks = typeof totalTicks === "number" ? totalTicks - currentTick : null;
@@ -72,8 +72,8 @@ export default function OperatingRoomDashboard({ scenario, steps, phase }: Dashb
   const activeComplication = currentState?.active_complication ?? currentState?.activeComplication ?? null;
 
   const Card = ({ label, value, valueClass = "text-foreground", highlight = false }: { label: string; value: any; valueClass?: string; highlight?: boolean }) => (
-    <div className={`p-2.5 surface surface-hover rounded-sm ${highlight ? "border-[#A32A2A]/40" : ""}`}>
-      <div className="text-[11px] text-[#8C827A] dark:text-[#C2BBB0] uppercase tracking-widest font-bold mb-0.5">{label}</div>
+    <div className={`p-2.5 surface surface-hover rounded-sm ${highlight ? "border-carmine/40" : ""}`}>
+      <div className="text-[11px] text-warm-gray-soft dark:text-night-soft font-bold mb-0.5">{label}</div>
       <div className={`text-sm font-bold truncate ${valueClass}`}>{value ?? "-"}</div>
     </div>
   );
@@ -81,8 +81,8 @@ export default function OperatingRoomDashboard({ scenario, steps, phase }: Dashb
   return (
     <div className="p-4 surface surface-hover rounded-sm space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Operating Room</h3>
-        <div className={`px-2 py-0.5 rounded-full border text-[11px] font-black uppercase tracking-wider ${stabilityBorder} ${stabilityColor}`}>
+        <h3 className="text-[10px] font-bold text-muted-foreground">Operating Room</h3>
+        <div className={`px-2 py-0.5 rounded-full border text-[11px] font-black ${stabilityBorder} ${stabilityColor}`}>
           {stability}
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function OperatingRoomDashboard({ scenario, steps, phase }: Dashb
             <Card label="Remaining" value={remainingTicks !== null ? `${remainingTicks} ticks` : "Unknown"} />
           </>
         )}
-        <Card label="Active Complication" value={activeComplication ?? "None"} highlight={!!activeComplication} valueClass={activeComplication ? "text-[#A32A2A]" : "text-[#2E6B4B]"} />
+        <Card label="Active Complication" value={activeComplication ?? "None"} highlight={!!activeComplication} valueClass={activeComplication ? "text-carmine" : "text-sage"} />
         <Card label="Patient Stability" value={stability.charAt(0).toUpperCase() + stability.slice(1)} valueClass={stabilityColor} />
         <Card label="Executive Goal" value={executiveGoal ?? "-"} />
         <Card label="Strategy" value={strategy ?? "-"} />

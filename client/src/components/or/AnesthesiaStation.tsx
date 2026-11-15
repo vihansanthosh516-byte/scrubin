@@ -51,7 +51,7 @@ function ConfirmOrButton({ label, title, description, confirmLabel, tone = "red"
 function CrisisRail({ act }: { act: (a: Action) => void }) {
   return (
     <div className="mb-3 flex flex-wrap items-center gap-1.5 rounded-sm border border-destructive/30 bg-destructive/5 px-3 py-2">
-      <span className="mr-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-destructive">
+      <span className="mr-1 flex items-center gap-1.5 text-[11px] font-semibold text-destructive">
         <HeartPulse className="h-4 w-4" aria-hidden="true" /> Crisis
       </span>
       <OrButton tone="red" onClick={() => act({ type: "cpr", on: true })}>Start CPR</OrButton>
@@ -161,7 +161,7 @@ function DrugCart({ state, drugs, patient, act }: Props) {
               <div className="text-[11px] text-muted-foreground">{selected.notes || selected.concentration}</div>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Bolus ({selected.unit})</label>
+              <label className="text-[10px] text-muted-foreground">Bolus ({selected.unit})</label>
               <div className="flex gap-2">
                 <input autoComplete="off" data-1p-ignore data-lpignore="true"
                   value={dose}
@@ -183,7 +183,7 @@ function DrugCart({ state, drugs, patient, act }: Props) {
             </div>
             {selected.infusion_unit && (
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Infusion ({selected.infusion_unit})</label>
+                <label className="text-[10px] text-muted-foreground">Infusion ({selected.infusion_unit})</label>
                 <div className="flex gap-2">
                   <input autoComplete="off" data-1p-ignore data-lpignore="true"
                     value={rate}
@@ -201,7 +201,7 @@ function DrugCart({ state, drugs, patient, act }: Props) {
             )}
           </>
         ) : (
-          <div className="text-sm text-muted-foreground">Pick a syringe. The usual starting dose is filled in — check it and change it as needed.</div>
+          <div className="text-sm text-muted-foreground">Pick a syringe. The usual starting dose is filled in; check it and change it as needed.</div>
         )}
         {Object.keys(state.infusions).length > 0 && (
           <Section title="Running infusions">

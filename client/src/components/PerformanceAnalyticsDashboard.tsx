@@ -206,12 +206,12 @@ export default function PerformanceAnalyticsDashboard() {
 
   return (
     <div className="p-4 bg-card border border-border rounded-sm text-foreground">
-      <h2 className="text-lg font-bold mb-3">Performance Analytics</h2>
+      <h2 className="font-sans text-lg mb-3">Performance Analytics</h2>
 
       {isDeceased && (
-        <div className="mb-4 p-3 bg-[#3A0F0F] border-2 border-[#A32A2A] rounded-sm">
-          <p className="text-sm font-black text-[#E08080] uppercase tracking-wider">
-            Patient Deceased — performance metrics reflect the terminal outcome
+        <div className="mb-4 p-3 bg-carmine-night border-2 border-carmine rounded-sm">
+          <p className="text-sm font-black text-carmine-soft">
+            Patient deceased. Performance metrics reflect the terminal outcome
           </p>
         </div>
       )}
@@ -225,9 +225,9 @@ export default function PerformanceAnalyticsDashboard() {
         <ResponsiveContainer>
           <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
             <PolarGrid />
-            <PolarAngleAxis dataKey="metric" stroke="#8C827A" />
-            <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} stroke="#8C827A" />
-            <Radar name="Score" dataKey="value" stroke="#CC553D" fill="#CC553D" fillOpacity={0.4} />
+            <PolarAngleAxis dataKey="metric" stroke="var(--ill-8c827a)" />
+            <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} stroke="var(--ill-8c827a)" />
+            <Radar name="Score" dataKey="value" stroke="var(--ill-cc553d)" fill="var(--ill-cc553d)" fillOpacity={0.4} />
           </RadarChart>
         </ResponsiveContainer>
       </div>
@@ -261,10 +261,10 @@ export default function PerformanceAnalyticsDashboard() {
       <div className="w-full h-36 mb-4">
         <ResponsiveContainer>
           <LineChart data={scoreHistory}>
-            <XAxis dataKey="tick" stroke="#8C827A" />
-            <YAxis domain={[0, 100]} stroke="#8C827A" />
+            <XAxis dataKey="tick" stroke="var(--ill-8c827a)" />
+            <YAxis domain={[0, 100]} stroke="var(--ill-8c827a)" />
             <Tooltip />
-            <Line type="monotone" dataKey="score" stroke="#CC553D" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="score" stroke="var(--ill-cc553d)" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>

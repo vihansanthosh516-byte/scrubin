@@ -54,30 +54,30 @@ export default function TimelinePanel() {
   const getSeverityIcon = (severity: string) => {
     switch (severity?.toLowerCase()) {
       case "critical":
-        return <AlertCircle className="w-4 h-4 text-[#A32A2A]" />;
+        return <AlertCircle className="w-4 h-4 text-carmine" />;
       case "warning":
-        return <AlertTriangle className="w-4 h-4 text-[#C27820]" />;
+        return <AlertTriangle className="w-4 h-4 text-amber" />;
       case "info":
       default:
-        return <Info className="w-4 h-4 text-[#CC553D]" />;
+        return <Info className="w-4 h-4 text-terracotta" />;
     }
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity?.toLowerCase()) {
       case "critical":
-        return "bg-[#A32A2A]/8 border-[#A32A2A]/40 text-[#A32A2A]";
+        return "bg-carmine/8 border-carmine/40 text-carmine";
       case "warning":
-        return "bg-[#C27820]/8 border-[#C27820]/40 text-[#C27820]";
+        return "bg-amber/8 border-amber/40 text-amber";
       case "info":
       default:
-        return "bg-[#CC553D]/8 border-[#CC553D]/40 text-[#CC553D]";
+        return "bg-terracotta/8 border-terracotta/40 text-terracotta";
     }
   };
 
   return (
     <div className="min-h-[140px] max-h-[320px] lg:max-h-none flex-1 p-4 surface surface-hover flex flex-col rounded-sm">
-      <h3 className="text-[10px] font-bold text-[#8C827A] dark:text-[#C2BBB0] uppercase tracking-widest mb-3">Event Timeline</h3>
+      <h3 className="text-[10px] font-bold text-warm-gray-soft dark:text-night-soft mb-3">Event Timeline</h3>
       
       <div 
         ref={scrollRef}
@@ -85,7 +85,7 @@ export default function TimelinePanel() {
         style={{ scrollbarWidth: 'thin' }}
       >
         {timeline.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-[#8C827A] dark:text-[#C2BBB0] text-sm">
+          <div className="h-full flex items-center justify-center text-warm-gray-soft dark:text-night-soft text-sm">
             No timeline events yet.
           </div>
         ) : (
@@ -97,7 +97,7 @@ export default function TimelinePanel() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {getSeverityIcon(ev.severity || 'info')}
-                  <span className="text-xs font-bold uppercase">{ev.type}</span>
+                  <span className="text-xs font-bold">{ev.type}</span>
                 </div>
                 <div className="flex items-center gap-2 text-[10px] opacity-70">
                   {ev.timestamp && <span>{ev.timestamp}</span>}

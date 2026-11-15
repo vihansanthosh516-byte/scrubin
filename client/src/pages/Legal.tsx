@@ -9,20 +9,21 @@ function Page({ title, children }: { title: string; children: ReactNode }) {
     <div className="min-h-screen bg-background px-4 pb-16 pt-28">
       <div className="mx-auto max-w-2xl space-y-8">
         <div>
-          <p className="section-tag">ScrubIn</p>
-          <h1 className="mt-3 font-display text-5xl leading-[1.02] tracking-tight">{title}</h1>
+          <h1 className="font-display text-5xl leading-[1.02] tracking-tight">{title}</h1>
           <p className="mt-3 text-sm text-muted-foreground">Last updated {UPDATED}</p>
         </div>
         <div className="space-y-5 text-[15px] leading-relaxed text-foreground">{children}</div>
-        <p className="text-xs text-muted-foreground pt-4">
-          <Link href="/terms" className="underline">Terms</Link> · <Link href="/privacy" className="underline">Privacy</Link> · <Link href="/" className="underline">Home</Link>
-        </p>
+        <nav aria-label="Legal" className="flex gap-6 border-t border-border pt-4 text-sm text-muted-foreground">
+          <Link href="/terms" className="underline">Terms</Link>
+          <Link href="/privacy" className="underline">Privacy</Link>
+          <Link href="/" className="underline">Home</Link>
+        </nav>
       </div>
     </div>
   );
 }
 
-const H = ({ children }: { children: ReactNode }) => <h2 className="pt-3 text-lg font-semibold tracking-tight">{children}</h2>;
+const H = ({ children }: { children: ReactNode }) => <h2 className="font-sans pt-3 text-lg tracking-tight">{children}</h2>;
 
 export function Terms() {
   return (

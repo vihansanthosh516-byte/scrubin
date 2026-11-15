@@ -6,7 +6,7 @@ export function Section({ title, children, right }: { title: string; children: R
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h4 className="text-[11px] uppercase tracking-[0.14em] text-primary font-semibold">{title}</h4>
+        <h4 className="text-[11px] text-primary font-semibold">{title}</h4>
         {right}
       </div>
       {children}
@@ -74,7 +74,7 @@ export function Stepper({
   const clamp = (v: number) => Math.min(max, Math.max(min, Math.round(v / step) * step));
   return (
     <div className="rounded-sm border border-border bg-muted px-2 py-1.5">
-      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-[11px] text-muted-foreground">{label}</div>
       <div className="flex items-center gap-1.5">
         <button type="button" className="h-8 w-8 rounded-sm border border-border bg-card text-base hover:bg-accent" onClick={() => onChange(clamp(value - step))} aria-label={`Decrease ${label}`}>
           −
