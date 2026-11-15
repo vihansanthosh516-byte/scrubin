@@ -84,7 +84,7 @@ function ProcedureRow({ proc, locked }: { proc: Procedure; locked: boolean }) {
   const needXp = REQUIRED_XP[proc.difficulty];
   return (
     <li
-      className={`relative grid grid-cols-1 gap-x-8 gap-y-3 border-b border-border py-7 md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)_minmax(0,2fr)] ${locked ? "opacity-70" : "group transition-colors hover:bg-muted/60 md:px-3"}`}
+      className={`rise relative grid grid-cols-1 gap-x-8 gap-y-3 border-b border-border py-7 md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)_minmax(0,2fr)] ${locked ? "opacity-70" : "group transition-colors hover:bg-muted/60 md:px-3"}`}
       aria-disabled={locked || undefined}
     >
       <div className="min-w-0">

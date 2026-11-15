@@ -8,6 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { CtaLink, Eyebrow, LoadingState, Pill, StatCard } from "@/components/scrubin";
+import { VitalRing } from "@/components/home/VitalRing";
 
 type Stats = { totalSurgeries: number; bestScore: number; streak: number; perfectRun: number; hasReturned: boolean; fastestTime: number };
 
@@ -201,13 +202,17 @@ export default function Profile() {
     <div className="bg-background text-foreground">
       <div className="border-b border-border pb-10 pt-28">
         <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 md:flex-row md:items-center">
-          {user.avatar_url ? (
-            <img src={user.avatar_url} alt="" className="h-20 w-20 rounded-sm border border-border object-cover" />
-          ) : (
-            <span className="flex h-20 w-20 items-center justify-center rounded-sm border border-border bg-muted font-display text-4xl" aria-hidden="true">
-              {name[0]?.toUpperCase()}
-            </span>
-          )}
+          {/* The avatar inside an XP ring: progress to the next tier of cases */}
+          <div className="relative h-28 w-28 shrink-0">
+            <VitalRing fraction={(() => { const x = rankInfo?.totalXp ?? 0; return x < 500 ? x / 500 : x < 2000 ? (x - 500) / 1500 : 1; })()} tone="spo2" stroke={5} animate className="absolute inset-0 h-full w-full" />
+            {user.avatar_url ? (
+              <img src={user.avatar_url} alt="" className="absolute inset-3 h-[calc(100%-1.5rem)] w-[calc(100%-1.5rem)] rounded-full object-cover" />
+            ) : (
+              <span className="absolute inset-3 flex items-center justify-center rounded-full bg-muted font-display text-4xl" aria-hidden="true">
+                {name[0]?.toUpperCase()}
+              </span>
+            )}
+          </div>
           <div className="min-w-0">
             <h1 className="font-display text-4xl leading-[1.02] tracking-tight sm:text-5xl">{name}</h1>
             <Eyebrow variant="hero" className="mt-3 flex">{user.profession || "Surgeon in training"}</Eyebrow>
@@ -266,7 +271,7 @@ export default function Profile() {
               const done = cur >= target;
               const pct = Math.min(100, Math.round((cur / target) * 100));
               return (
-                <li key={badge.id} className="flex gap-4 border-b border-border py-5">
+                <li key={badge.id} className="rise flex gap-4 border-b border-border py-5">
                   <span className={`mt-0.5 shrink-0 ${done ? "text-success" : "text-label"}`} aria-hidden="true">
                     <badge.icon className="h-5 w-5" />
                   </span>

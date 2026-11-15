@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Route, Switch, useLocation } from "wouter";
-import { motion, MotionConfig } from "framer-motion";
+import { motion, MotionConfig, useReducedMotion } from "framer-motion";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -73,6 +73,7 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
 
 function Router() {
   const [location] = useLocation();
+  const reduceMotion = useReducedMotion() ?? false;
   const title = useRouteTitle(location);
   const mainRef = useRef<HTMLElement>(null);
   const [announcement, setAnnouncement] = useState("");
@@ -96,12 +97,12 @@ function Router() {
       <a href="#main-content" className="skip-link">Skip to content</a>
       {showChrome && <Navbar />}
       <main id="main-content" ref={mainRef} tabIndex={-1} className="outline-none">
-        {/* A short fade on enter only: no exit wait, no blur, so navigation feels instant. */}
+        {/* Pages rise in on enter (no exit wait, so navigation still feels instant). */}
         <motion.div
           key={location}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15, ease: "easeOut" }}
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="w-full min-h-screen"
         >
           <Suspense fallback={<LoadingScreen label="Loading page" />}>

@@ -73,7 +73,7 @@ export default function Leaderboard() {
                   {entries.map((e, i) => {
                     const me = i === myIndex;
                     return (
-                      <tr key={e.user_id} className={cn("transition-colors hover:bg-background", me && "bg-primary/5")} aria-current={me ? "true" : undefined}>
+                      <tr key={e.user_id} className={cn("rise transition-colors hover:bg-background", me && "bg-primary/5")} aria-current={me ? "true" : undefined}>
                         <td className="px-5 py-4">
                           <span className="flex h-9 w-9 items-center justify-center">
                             <RankMark rank={i + 1} />

@@ -47,7 +47,7 @@ export default function LearnHub() {
         {visible.length ? (
           <ul className="border-t border-foreground">
             {visible.map((b) => (
-              <li key={b.id} className="group relative grid grid-cols-1 gap-x-8 gap-y-3 border-b border-border py-7 transition-colors hover:bg-muted/60 md:grid-cols-[minmax(0,5fr)_minmax(0,5fr)_auto] md:px-3">
+              <li key={b.id} className="rise group relative grid grid-cols-1 gap-x-8 gap-y-3 border-b border-border py-7 transition-colors hover:bg-muted/60 md:grid-cols-[minmax(0,5fr)_minmax(0,5fr)_auto] md:px-3">
                 <div className="min-w-0">
                   <h2 className="text-3xl leading-tight">
                     <Link href={`/learn/${b.id}`} className="after:absolute after:inset-0 after:content-[''] group-hover:text-foreground">

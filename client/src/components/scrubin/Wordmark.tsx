@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export function Wordmark({ size = "md", href = "/", className }: { size?: "md" | "lg"; href?: string | null; className?: string }) {
   const body = (
     <>
-      <span className={cn("font-display leading-none text-foreground", size === "lg" ? "text-4xl" : "text-2xl")}>ScrubIn</span>
+      <span className={cn("font-display font-medium tracking-tight leading-none text-foreground", size === "lg" ? "text-3xl" : "text-xl")}>ScrubIn</span>
     </>
   );
   const cls = cn("inline-flex items-center gap-2.5", className);
