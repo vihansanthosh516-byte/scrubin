@@ -164,7 +164,7 @@ export default function MySimulations() {
 
   return (
     <div className="bg-background text-foreground">
-      <div className="border-b border-border pb-10 pt-28">
+      <div className="pb-10 pt-28">
         <div className="mx-auto max-w-5xl px-4">
           <PageHeader
             eyebrow="Your case log"
@@ -216,11 +216,11 @@ export default function MySimulations() {
           {loading ? (
             <LoadingState label="Loading saved sessions" />
           ) : sessions.length === 0 ? (
-            <div className="surface p-6 text-sm text-muted-foreground">No saved sessions. Cases you save part-way through appear here so you can resume them.</div>
+            <div className="p-6 text-sm text-muted-foreground">No saved sessions. Cases you save part-way through appear here so you can resume them.</div>
           ) : filteredAndSortedSessions.length === 0 ? (
-            <div className="surface p-6 text-sm text-muted-foreground">No saved sessions match these filters.</div>
+            <div className="p-6 text-sm text-muted-foreground">No saved sessions match these filters.</div>
           ) : (
-            <ul className="surface divide-y divide-border">
+            <ul className="">
               {filteredAndSortedSessions.map((sim: any, i: number) => {
                 const done = isDone(sim);
                 return (
@@ -287,7 +287,7 @@ export default function MySimulations() {
               action={<CtaLink href="/procedures">Choose a procedure</CtaLink>}
             />
           ) : (
-            <ul className="surface divide-y divide-border">
+            <ul className="">
               {completedCases.map((c) => {
                 const xp = c.outcome === "Critical" ? 50 : 100 + Math.floor(Math.max(0, c.score) / 10);
                 return (

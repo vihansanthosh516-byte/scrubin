@@ -22,7 +22,7 @@ export function CtaLink({
 }
 
 const fieldBase =
-  "w-full rounded-sm border border-input bg-card px-4 py-3.5 text-sm text-foreground placeholder:text-label transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-destructive";
+  "w-full rounded-none border-0 border-b border-input bg-transparent px-1 py-3.5 text-base text-foreground placeholder:text-label transition-colors focus-visible:border-b-2 focus-visible:border-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-destructive";
 
 /** Labelled text input. The label is always rendered (visually hidden with `hideLabel`) so screen readers get it. */
 export const TextField = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { label: string; hideLabel?: boolean; hint?: string }>(
@@ -87,14 +87,14 @@ export function SearchField({ label, className, ...props }: InputHTMLAttributes<
       <label htmlFor={id} className="sr-only">
         {label}
       </label>
-      <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-label" aria-hidden="true" />
-      <input id={id} type="search" className={cn(fieldBase, "pl-12")} {...props} />
+      <Search className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-label" aria-hidden="true" />
+      <input id={id} type="search" className={cn(fieldBase, "pl-8")} {...props} />
     </div>
   );
 }
 
 /**
- * A row of square uppercase filter chips with one selected value (toggle-group, so each chip
+ * A row of filter chips with one selected value (toggle-group, so each chip
  * exposes its pressed state). Selecting the active chip again keeps it selected.
  */
 export function FilterChips<T extends string>({
@@ -122,7 +122,7 @@ export function FilterChips<T extends string>({
         <ToggleGroupItem
           key={o.value}
           value={o.value}
-          className="h-auto flex-none rounded-full border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground shadow-none transition-colors first:rounded-full last:rounded-full hover:border-surface-hover-border hover:bg-muted hover:text-foreground data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+          className="h-auto flex-none rounded-full border-0 bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground shadow-none transition-colors first:rounded-full last:rounded-full hover:bg-foreground/[0.07] hover:text-foreground data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
         >
           {o.label}
         </ToggleGroupItem>

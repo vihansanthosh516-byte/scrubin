@@ -319,7 +319,7 @@ export default function OperatingRoom() {
   return (
     <div className="min-h-screen bg-background pt-16 text-foreground">
       {/* Case bar: who, which patient, the clock, and the controls that matter. */}
-      <div className="sticky top-16 z-30 border-b border-border bg-background">
+      <div className="sticky top-16 z-30  bg-background">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 py-2.5 lg:px-5">
           <div className="min-w-0">
             <p className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-foreground">
@@ -525,7 +525,7 @@ export default function OperatingRoom() {
 
       {/* The order bar stays in reach at the bottom of the screen. */}
       {state && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur-sm">
+        <div className="fixed inset-x-0 bottom-0 z-30  bg-background/95 backdrop-blur-sm">
           <div className="mx-auto max-w-[1600px] px-3 py-2 lg:px-5">
             {critical && (
               <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-destructive lg:hidden">
@@ -558,7 +558,7 @@ function RoleCard({ icon, title, text, onClick, href, disabled }: { icon: React.
       <span className="block text-sm text-muted-foreground">{text}</span>
     </>
   );
-  const cls = "surface surface-hover block p-6 text-left disabled:pointer-events-none disabled:opacity-50";
+  const cls = "block rounded-[var(--radius-card)] p-6 text-left transition-colors duration-300 hover:bg-foreground/[0.05] disabled:pointer-events-none disabled:opacity-50";
   // The classic case is a different page: a real link, so it opens in a new tab too.
   if (href)
     return (

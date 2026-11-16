@@ -31,7 +31,7 @@ export default function Leaderboard() {
 
   return (
     <div className="bg-background text-foreground">
-      <div className="border-b border-border pb-10 pt-28">
+      <div className="pb-10 pt-28">
         <div className="mx-auto max-w-4xl px-4">
           <PageHeader
             eyebrow="All-time rankings"
@@ -58,10 +58,10 @@ export default function Leaderboard() {
                 You're not in the top {entries.length} yet. Complete cases to earn XP and climb the board.
               </p>
             )}
-            <div className="overflow-x-auto border-t border-foreground">
+            <div className="overflow-x-auto ">
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Top {entries.length} surgeons by all-time XP</caption>
-                <thead className="border-b border-border text-sm text-muted-foreground">
+                <thead className="text-sm text-muted-foreground">
                   <tr>
                     <th scope="col" className="w-16 px-5 py-3 font-normal">Rank</th>
                     <th scope="col" className="px-5 py-3 font-normal">Surgeon</th>
@@ -69,7 +69,7 @@ export default function Leaderboard() {
                     <th scope="col" className="px-5 py-3 text-right font-normal">XP</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="">
                   {entries.map((e, i) => {
                     const me = i === myIndex;
                     return (

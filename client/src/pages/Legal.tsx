@@ -13,7 +13,7 @@ function Page({ title, children }: { title: string; children: ReactNode }) {
           <p className="mt-3 text-sm text-muted-foreground">Last updated {UPDATED}</p>
         </div>
         <div className="space-y-5 text-[15px] leading-relaxed text-foreground">{children}</div>
-        <nav aria-label="Legal" className="flex gap-6 border-t border-border pt-4 text-sm text-muted-foreground">
+        <nav aria-label="Legal" className="flex gap-6  pt-4 text-sm text-muted-foreground">
           <Link href="/terms" className="underline">Terms</Link>
           <Link href="/privacy" className="underline">Privacy</Link>
           <Link href="/" className="underline">Home</Link>

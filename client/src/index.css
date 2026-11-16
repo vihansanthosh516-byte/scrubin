@@ -107,7 +107,7 @@
   --accent-foreground: oklch(22% 0.03 200);
   --destructive: oklch(50% 0.17 18);
   --destructive-foreground: oklch(98% 0.006 190);
-  --border: oklch(22% 0.03 200 / 0.1);
+  --border: oklch(22% 0.03 200 / 0.06);
   --input: oklch(22% 0.03 200 / 0.42);
   --ring: oklch(52% 0.1 182);
   --success: oklch(46% 0.09 165);
@@ -293,7 +293,7 @@
   --accent-foreground: oklch(95% 0.012 190);
   --destructive: oklch(74% 0.14 15);
   --destructive-foreground: oklch(17% 0.03 200);
-  --border: oklch(95% 0.02 190 / 0.1);
+  --border: oklch(95% 0.02 190 / 0.05);
   --input: oklch(95% 0.02 190 / 0.38);
   --ring: oklch(86% 0.11 172);
   --success: oklch(86% 0.11 172);
@@ -376,8 +376,8 @@
   .surface, .surface-raised, .procedure-card, .stats-card, .achievement-card {
     background: var(--card);
     color: var(--card-foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border: 0;
+    border-radius: var(--radius-card);
     box-shadow: none;
     transition: transform 0.4s var(--ease-fluid), border-color 0.25s ease, box-shadow 0.4s var(--ease-fluid);
   }
@@ -385,7 +385,7 @@
   .procedure-card, .stats-card { position: relative; overflow: hidden; }
   /* Lift only where hover exists (no sticky hover on touch); press responds on pointer-down everywhere */
   @media (hover: hover) and (pointer: fine) {
-    .surface-hover:hover, .stats-card:hover, .procedure-card:hover { border-color: var(--primary); }
+    .surface-hover:hover, .stats-card:hover, .procedure-card:hover { background: var(--muted); }
   }
   a.surface-hover:active, button.surface-hover:active, a.procedure-card:active, .procedure-card:has(> a:active),
   a.surface:active, a.stats-card:active {

@@ -84,7 +84,7 @@ function ProcedureRow({ proc, locked }: { proc: Procedure; locked: boolean }) {
   const needXp = REQUIRED_XP[proc.difficulty];
   return (
     <li
-      className={`rise relative grid grid-cols-1 gap-x-8 gap-y-3 border-b border-border py-7 md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)_minmax(0,2fr)] ${locked ? "opacity-70" : "group transition-colors hover:bg-muted/60 md:px-3"}`}
+      className={`rise relative grid grid-cols-1 gap-x-8 gap-y-3  py-7 md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)_minmax(0,2fr)] ${locked ? "opacity-70" : "group transition-colors hover:bg-muted/60 md:px-3"}`}
       aria-disabled={locked || undefined}
     >
       <div className="min-w-0">
@@ -200,7 +200,7 @@ export default function ProcedureLibrary() {
 
   return (
     <div className="bg-background text-foreground">
-      <div className="border-b border-border pb-10 pt-28">
+      <div className="pb-10 pt-28">
         <div className="mx-auto max-w-6xl px-4">
           <PageHeader
             eyebrow="Procedure library"
@@ -217,7 +217,7 @@ export default function ProcedureLibrary() {
 
       <div className="mx-auto max-w-6xl px-4 py-12">
         {user && (
-          <section aria-labelledby="xp-heading" className="mb-12 grid grid-cols-1 items-end gap-6 border-y border-border py-6 md:grid-cols-[auto_minmax(0,1fr)]">
+          <section aria-labelledby="xp-heading" className="mb-12 grid grid-cols-1 items-end gap-6  py-6 md:grid-cols-[auto_minmax(0,1fr)]">
             <div>
               <h2 id="xp-heading" className="font-sans text-sm text-muted-foreground">Your experience</h2>
               <p className="mt-1 font-mono-data text-4xl">
@@ -243,9 +243,9 @@ export default function ProcedureLibrary() {
         )}
 
         {loading ? (
-          <ul className="border-t border-foreground" aria-hidden="true">
+          <ul className="" aria-hidden="true">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <li key={i} className="h-28 animate-pulse border-b border-border bg-muted/60" />
+              <li key={i} className="h-28 animate-pulse  bg-muted/60" />
             ))}
           </ul>
         ) : visible.length > 0 ? (
@@ -259,7 +259,7 @@ export default function ProcedureLibrary() {
                     <h2 id={`level-${g.d}`} className="text-4xl">{LEVEL_TITLES[g.d]}</h2>
                     <span className="font-mono-data text-sm text-muted-foreground">{g.items.length}</span>
                   </div>
-                  <ul className="border-t border-foreground">
+                  <ul className="">
                     {g.items.map((proc) => (
                       <ProcedureRow key={proc.id} proc={proc} locked={isLocked(proc)} />
                     ))}

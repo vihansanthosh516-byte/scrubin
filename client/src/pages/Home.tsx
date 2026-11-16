@@ -169,55 +169,41 @@ export default function Home() {
       </section>
 
       {/* The student's own record, as rings that fill on arrival */}
-      <section aria-labelledby="stats-heading" className="mx-auto max-w-6xl px-4 py-24 md:py-32">
+      <section aria-labelledby="stats-heading" className="mx-auto max-w-6xl px-4 py-28 md:py-40">
         <h2 id="stats-heading" className="max-w-xl text-4xl sm:text-5xl">Your record</h2>
-        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="mt-14 grid grid-cols-1 gap-14 sm:grid-cols-3 sm:gap-8">
           <RecordRing fraction={tier ? xp / tier.at : 1} tone="spo2" figure={xp.toLocaleString()} unit="XP" caption={tier ? `${(tier.at - xp).toLocaleString()} XP until ${tier.name} cases open` : "Every procedure is open"} />
           <RecordRing fraction={Math.min(1, (mine?.cases ?? 0) / Math.max(1, total))} tone="hr" figure={String(mine?.cases ?? 0)} unit="cases" caption={`Completed, out of ${total} procedures in the library`} />
           <RecordRing fraction={mine?.rank ? 1 - Math.min(1, (mine.rank - 1) / 10) : 0} tone="bp" figure={mine?.rank ? `#${mine.rank}` : "None"} unit="" caption={mine?.rank ? "Your place on the all-time leaderboard" : "Finish a case to join the leaderboard"} />
         </div>
       </section>
 
-      {/* Beginner cases, a row you swipe through */}
-      <section aria-labelledby="starter-heading" className="pb-24 md:pb-32">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-6 px-4">
-          <div className="max-w-xl">
-            <h2 id="starter-heading" className="text-4xl sm:text-5xl">Beginner cases</h2>
-            <p className="mt-3 text-muted-foreground">Open to everyone. Start with any of these four.</p>
-          </div>
-          <CtaLink href="/learn" variant="outline">
-            <BookOpen className="h-4 w-4" aria-hidden="true" /> Read the briefings
-          </CtaLink>
+      {/* Beginner cases: the names themselves are the links, set large, no boxes */}
+      <section aria-labelledby="starter-heading" className="mx-auto max-w-6xl px-4 pb-28 md:pb-40">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <h2 id="starter-heading" className="text-4xl sm:text-5xl">Start with one of these</h2>
+          <Link href="/learn" className="group inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+            <BookOpen className="h-4 w-4" aria-hidden="true" /> Read the briefings first
+          </Link>
         </div>
-        <ul className="mx-auto mt-10 grid max-w-6xl snap-x snap-mandatory auto-cols-[minmax(16rem,1fr)] grid-flow-col gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none]">
+        <ul className="mt-14 space-y-2">
           {STARTER_CASES.map((c, i) => (
             <motion.li
               key={c.id}
-              className="snap-start"
-              initial={reduce ? false : { opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.4 }}
-              transition={{ type: "spring", bounce: 0, duration: 0.7, delay: i * 0.08 }}
+              initial={reduce ? false : { opacity: 0, x: -24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.6 }}
+              transition={{ type: "spring", bounce: 0, duration: 0.8, delay: i * 0.07 }}
             >
-              <Link
-                href={`/simulation?proc=${c.id}`}
-                className="group relative flex h-80 flex-col justify-between overflow-hidden rounded-[var(--radius-card)] border border-border bg-card p-6 transition-[transform,border-color] duration-500 ease-[var(--ease-fluid)] hover:border-surface-hover-border motion-safe:hover:-translate-y-1"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="text-sm text-muted-foreground">{c.tag}</span>
-                  {ENGINE_SCENARIO[c.id] && <Pill tone="terracotta">Real-time OR</Pill>}
-                </div>
-                <div>
-                  <h3 className="font-display text-3xl font-light leading-tight">{c.name}</h3>
-                  <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-                    <span>
-                      {c.time}, {c.decisions} decisions
-                    </span>
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform duration-500 ease-[var(--ease-fluid)] motion-safe:group-hover:translate-x-1">
-                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    </span>
-                  </div>
-                </div>
+              <Link href={`/simulation?proc=${c.id}`} className="group flex flex-wrap items-baseline gap-x-6 gap-y-1 py-3">
+                <span className="font-display text-[clamp(2.25rem,5.5vw,4.5rem)] font-light leading-none text-foreground/55 transition-[color,transform] duration-500 ease-[var(--ease-fluid)] group-hover:text-foreground motion-safe:group-hover:translate-x-3">
+                  {c.name}
+                </span>
+                <span className="flex items-center gap-3 text-sm text-muted-foreground">
+                  {c.tag}, {c.time}
+                  {ENGINE_SCENARIO[c.id] && <span className="text-primary">real-time OR</span>}
+                  <ArrowRight className="h-4 w-4 text-primary opacity-0 transition-[opacity,transform] duration-500 ease-[var(--ease-fluid)] group-hover:opacity-100 motion-safe:group-hover:translate-x-1" aria-hidden="true" />
+                </span>
               </Link>
             </motion.li>
           ))}
@@ -225,10 +211,10 @@ export default function Home() {
       </section>
 
       {/* How a case works, drawn along an ECG trace as you scroll */}
-      <section ref={trace} aria-labelledby="how-heading" className="relative mx-auto max-w-6xl px-4 pb-24 md:pb-32">
+      <section ref={trace} aria-labelledby="how-heading" className="relative mx-auto max-w-6xl px-4 pb-28 md:pb-40">
         <h2 id="how-heading" className="max-w-xl text-4xl sm:text-5xl">How a case works</h2>
         <svg viewBox="0 0 1200 120" className="mt-12 h-24 w-full" fill="none" aria-hidden="true" preserveAspectRatio="none">
-          <path d={ECG_PATH} stroke="var(--border)" strokeWidth="2" />
+          <path d={ECG_PATH} stroke="currentColor" strokeOpacity="0.12" strokeWidth="2" />
           <motion.path d={ECG_PATH} stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" style={{ pathLength: reduce ? 1 : traceProgress }} />
         </svg>
         <ol className="mt-6 grid grid-cols-1 gap-10 md:grid-cols-3">
@@ -242,16 +228,14 @@ export default function Home() {
         </ol>
       </section>
 
-      {/* The way in */}
-      <section className="mx-auto max-w-6xl px-4 pb-28">
-        <div className="relative overflow-hidden rounded-[var(--radius-card)] border border-border bg-card px-8 py-16 md:px-16">
-          <div className="absolute inset-0 bg-[radial-gradient(50%_80%_at_85%_50%,var(--glow),transparent_70%)]" aria-hidden="true" />
-          <div className="relative flex flex-wrap items-end justify-between gap-8">
-            <h2 className="max-w-lg text-4xl sm:text-5xl">The patient is on the table.</h2>
-            <CtaLink href="/simulation?proc=appendectomy" size="lg">
-              <Activity className="h-5 w-5" aria-hidden="true" /> Scrub in
-            </CtaLink>
-          </div>
+      {/* The way in: the line and the action, on the open ground */}
+      <section className="relative isolate mx-auto max-w-6xl px-4 pb-36 pt-8 text-center">
+        <div className="absolute inset-x-0 top-0 -z-10 mx-auto h-72 max-w-3xl bg-[radial-gradient(closest-side,var(--glow),transparent)]" aria-hidden="true" />
+        <h2 className="mx-auto max-w-3xl text-[clamp(2.75rem,6vw,5rem)] leading-[1]">The patient is on the table.</h2>
+        <div className="mt-10 flex justify-center">
+          <CtaLink href="/simulation?proc=appendectomy" size="lg">
+            <Activity className="h-5 w-5" aria-hidden="true" /> Scrub in
+          </CtaLink>
         </div>
       </section>
     </div>
@@ -269,15 +253,15 @@ const ECG_PATH = (() => {
 
 function RecordRing({ fraction, tone, figure, unit, caption }: { fraction: number; tone: "hr" | "spo2" | "bp"; figure: string; unit: string; caption: string }) {
   return (
-    <div className="flex items-center gap-6 rounded-[var(--radius-card)] border border-border bg-card p-6">
-      <div className="relative h-28 w-28 shrink-0">
-        <VitalRing fraction={fraction} tone={tone} animate className="absolute inset-0 h-full w-full" />
+    <div className="flex flex-col items-start">
+      <div className="relative aspect-square w-44 md:w-52">
+        <VitalRing fraction={fraction} tone={tone} stroke={4} animate className="absolute inset-0 h-full w-full" />
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-display text-2xl leading-none">{figure}</span>
-          {unit && <span className="mt-1 text-xs text-muted-foreground">{unit}</span>}
+          <span className="font-display text-5xl font-light leading-none">{figure}</span>
+          {unit && <span className="mt-2 text-sm text-muted-foreground">{unit}</span>}
         </div>
       </div>
-      <p className="text-sm leading-relaxed text-muted-foreground">{caption}</p>
+      <p className="mt-6 max-w-[16rem] leading-relaxed text-muted-foreground">{caption}</p>
     </div>
   );
 }

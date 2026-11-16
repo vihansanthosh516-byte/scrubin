@@ -200,7 +200,7 @@ export default function Profile() {
 
   return (
     <div className="bg-background text-foreground">
-      <div className="border-b border-border pb-10 pt-28">
+      <div className="pb-10 pt-28">
         <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 md:flex-row md:items-center">
           {/* The avatar inside an XP ring: progress to the next tier of cases */}
           <div className="relative h-28 w-28 shrink-0">
@@ -235,7 +235,7 @@ export default function Profile() {
         {!loaded ? (
           <LoadingState label="Loading your cases" />
         ) : stats.totalSurgeries === 0 ? (
-          <div className="surface flex flex-col items-start gap-4 p-8">
+          <div className="flex flex-col items-start gap-4 p-8">
             <h2 className="font-display text-3xl tracking-tight">No cases yet</h2>
             <p className="text-muted-foreground">Your stats, streaks and achievements fill in as you complete cases.</p>
             <CtaLink href="/simulation?proc=appendectomy">
@@ -265,13 +265,13 @@ export default function Profile() {
               {unlockedCount} of {ALL_BADGES.length} unlocked
             </p>
           </div>
-          <ul className="grid grid-cols-1 gap-x-12 border-t border-foreground md:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-x-12  md:grid-cols-2">
             {ALL_BADGES.map((badge) => {
               const [cur, target] = badge.progress(badgeStats);
               const done = cur >= target;
               const pct = Math.min(100, Math.round((cur / target) * 100));
               return (
-                <li key={badge.id} className="rise flex gap-4 border-b border-border py-5">
+                <li key={badge.id} className="rise flex gap-4  py-5">
                   <span className={`mt-0.5 shrink-0 ${done ? "text-success" : "text-label"}`} aria-hidden="true">
                     <badge.icon className="h-5 w-5" />
                   </span>

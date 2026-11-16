@@ -37,7 +37,7 @@ export default function Briefing() {
 
   return (
     <article className="bg-background text-foreground">
-      <header className="border-b border-border pb-10 pt-28">
+      <header className="pb-10 pt-28">
         <div className="mx-auto max-w-4xl px-4">
           <Link href="/learn" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All briefings
@@ -62,7 +62,7 @@ export default function Briefing() {
 
       <div className="mx-auto grid max-w-4xl gap-10 px-4 py-12">
         {/* The patient */}
-        <section aria-labelledby="patient-h" className="surface p-6 md:p-8">
+        <section aria-labelledby="patient-h" className="p-6 md:p-8">
           <h2 id="patient-h" className="font-sans section-tag">The patient</h2>
           <p className="mt-3 text-xl font-semibold">
             {b.patient.name}, {b.patient.age}
@@ -95,7 +95,7 @@ export default function Briefing() {
         {b.know.length > 0 && (
           <section aria-labelledby="know-h">
             <h2 id="know-h" className="font-display text-3xl tracking-tight">Know before you scrub in</h2>
-            <dl className="mt-5 divide-y divide-border border-y border-border">
+            <dl className="mt-5  ">
               {b.know.map((k) => (
                 <div key={k.label} className="grid gap-1 py-3 sm:grid-cols-[200px_1fr] sm:gap-6">
                   <dt className="label-mono pt-0.5">{k.label}</dt>
@@ -131,7 +131,7 @@ export default function Briefing() {
             {b.phases.map((ph) => (
               <div key={ph.name}>
                 <h3 className="section-tag mb-3">{ph.name}</h3>
-                <ol className="surface divide-y divide-border">
+                <ol className="">
                   {ph.steps.map((title, i) => (
                     <li key={i} className="flex gap-4 px-5 py-3">
                       <span className="w-6 shrink-0 pt-0.5 font-mono-data text-xs text-label">{String(i + 1).padStart(2, "0")}</span>
@@ -144,7 +144,7 @@ export default function Briefing() {
           </div>
         </section>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-8">
+        <div className="flex flex-wrap items-center justify-between gap-4  pt-8">
           <p className="text-sm text-muted-foreground">Ready? The patient is on the table.</p>
           <CtaLink href={`/simulation?proc=${b.id}`} size="lg" className="px-8 font-semibold">
             <Activity className="h-5 w-5" aria-hidden="true" /> Start this case
