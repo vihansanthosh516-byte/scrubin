@@ -34,6 +34,7 @@ export default function Leaderboard() {
       <div className="pb-10 pt-28">
         <div className="mx-auto max-w-4xl px-4">
           <PageHeader
+            image="/media/or-03.webp"
             eyebrow="All-time rankings"
             title="Leaderboard"
             lead="XP from every completed case: 100 per case plus a tenth of your score."

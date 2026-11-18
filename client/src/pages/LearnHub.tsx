@@ -32,6 +32,7 @@ export default function LearnHub() {
       <div className="pb-10 pt-28">
         <div className="mx-auto max-w-6xl px-4">
           <PageHeader
+            image="/media/or-07.webp"
             eyebrow="Learn"
             title="Pre-op briefings"
             lead="The patient, the anatomy at risk and the steps of every case, before you scrub in."

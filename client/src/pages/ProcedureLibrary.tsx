@@ -203,6 +203,7 @@ export default function ProcedureLibrary() {
       <div className="pb-10 pt-28">
         <div className="mx-auto max-w-6xl px-4">
           <PageHeader
+            image="/media/or-04.webp"
             eyebrow="Procedure library"
             title="Choose your procedure"
             lead={loading ? "Loading the library…" : `${visible.length} of ${procedures.length} procedures`}

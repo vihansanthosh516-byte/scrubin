@@ -167,6 +167,7 @@ export default function MySimulations() {
       <div className="pb-10 pt-28">
         <div className="mx-auto max-w-5xl px-4">
           <PageHeader
+            image="/media/or-08.webp"
             eyebrow="Your case log"
             title="My simulations"
             lead="Pick up a case in progress or look back at the ones you've finished."
